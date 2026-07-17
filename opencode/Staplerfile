@@ -1,0 +1,121 @@
+name='opencode'
+version=1.18.3
+release=3
+summary='Open source AI coding agent desktop app'
+summary_ru='Десктопное приложение AI-агента OpenCode'
+group='Development/Tools'
+desc='OpenCode is an open source AI coding agent for terminal, IDE and desktop workflows with support for multiple model providers.'
+desc_ru='OpenCode — открытый AI-агент для работы с кодом в терминале, IDE и десктопном приложении с поддержкой разных провайдеров моделей.'
+homepage='https://opencode.ai'
+maintainer='Anomaly Innovations Inc. <hello@opencode.ai>'
+
+architectures=('amd64' 'arm64')
+
+license=('MIT')
+
+provides=()
+replaces=('opencode')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'libxss1' 'libxtst6' 'xdg-utils' 'libatspi2.0-0' 'libuuid1' 'libsecret-1-0')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('gtk3' 'libnotify' 'nss' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'at-spi2-core' 'libuuid' 'libsecret')
+deps_arch=('gtk3' 'libnotify' 'nss' 'libxss' 'libxtst' 'xdg-utils' 'at-spi2-core' 'libutil-linux' 'libsecret')
+deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'libXScrnSaver1' 'libXtst6' 'xdg-utils' 'at-spi2-core' 'libuuid1' 'libsecret-1-0')
+deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libat-spi2-core' 'libuuid' 'libsecret')
+
+opt_deps=()
+opt_deps_debian=('libappindicator3-1' 'gnome-keyring' 'sqlite3')
+opt_deps_ubuntu=("${opt_deps_debian[@]}")
+opt_deps_fedora=('libappindicator-gtk3' 'gnome-keyring' 'sqlite')
+opt_deps_arch=('libappindicator-gtk3' 'gnome-keyring' 'sqlite')
+opt_deps_opensuse=('libappindicator3-1' 'gnome-keyring' 'sqlite3')
+opt_deps_altlinux=('libappindicator-gtk3' 'gnome-keyring' 'sqlite3')
+
+build_deps=('binutils')
+
+sources=(
+	"https://github.com/anomalyco/opencode/releases/download/v${version}/opencode-desktop-linux-amd64.deb?~archive=false&~name=opencode.deb"
+	"local:///opencode-desktop-wrapper"
+	"local:///opencode-desktop-doctor"
+	"local:///opencode-desktop-reset-state"
+	'local:///LICENSE'
+)
+
+sources_arm64=(
+	"https://github.com/anomalyco/opencode/releases/download/v${version}/opencode-desktop-linux-arm64.deb?~archive=false&~name=opencode.deb"
+	"local:///opencode-desktop-wrapper"
+	"local:///opencode-desktop-doctor"
+	"local:///opencode-desktop-reset-state"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:3118180c0a4158a9a773d07d0472e0e5bfe517639eda4bb45bf9211c2978e3ae'
+	'sha256:a34d47dd579b7128dee749cba9a42b293dd9255ae509fe3f00063b6fc9d46cfc'
+	'sha256:214c4163288c44a0a353c4df2a3d8ee2e681a3eb3e585e27196bbde210cd9764'
+	'sha256:cbd2189616f67e7d8019005fbe4691fe9d319ee72ed15781989cdebe342f96c2'
+	'sha256:fc9f70c9476082d62b26d30ccd7695098e8a2023529bae9753ec571389feac15'
+)
+
+checksums_arm64=(
+	'sha256:3021f4130dbd43fdb7651803cfccbf37ab823723522e439d4bcd51f1d7ca0aec'
+	'sha256:a34d47dd579b7128dee749cba9a42b293dd9255ae509fe3f00063b6fc9d46cfc'
+	'sha256:214c4163288c44a0a353c4df2a3d8ee2e681a3eb3e585e27196bbde210cd9764'
+	'sha256:cbd2189616f67e7d8019005fbe4691fe9d319ee72ed15781989cdebe342f96c2'
+	'sha256:fc9f70c9476082d62b26d30ccd7695098e8a2023529bae9753ec571389feac15'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x opencode.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install -dm755 "${pkgdir}/opt"
+	cp -a "${srcdir}/extracted/opt/OpenCode" "${pkgdir}/opt/"
+	chmod 0755 "${pkgdir}/opt/OpenCode/chrome-sandbox"
+	chmod 755 "${pkgdir}/opt/OpenCode/ai.opencode.desktop"
+
+	install -dm755 "${pkgdir}/usr/share"
+	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"
+	cp -a "${srcdir}/extracted/usr/share/icons" "${pkgdir}/usr/share/"
+
+	sed -i 's#Exec=/opt/OpenCode/ai.opencode.desktop#Exec=/usr/bin/opencode-desktop#' \
+		"${pkgdir}"/usr/share/applications/*.desktop
+
+	install -dm755 "${pkgdir}/usr/lib/opencode-desktop"
+	install -Dm755 "${srcdir}/opencode-desktop-wrapper" \
+		"${pkgdir}/usr/lib/opencode-desktop/opencode-desktop-wrapper"
+	install -Dm755 "${srcdir}/opencode-desktop-doctor" \
+		"${pkgdir}/usr/lib/opencode-desktop/opencode-desktop-doctor"
+	install -Dm755 "${srcdir}/opencode-desktop-reset-state" \
+		"${pkgdir}/usr/lib/opencode-desktop/opencode-desktop-reset-state"
+
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -sfn /usr/lib/opencode-desktop/opencode-desktop-wrapper "${pkgdir}/usr/bin/opencode-desktop"
+	ln -sfn /usr/lib/opencode-desktop/opencode-desktop-doctor "${pkgdir}/usr/bin/opencode-desktop-doctor"
+	ln -sfn /usr/lib/opencode-desktop/opencode-desktop-reset-state "${pkgdir}/usr/bin/opencode-desktop-reset-state"
+	install-license "${srcdir}/LICENSE" "opencode/LICENSE.nivora"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/opt/OpenCode/**/*" \
+		"/usr/lib/opencode-desktop/*" \
+		"/usr/share/icons/hicolor/*/apps/ai.opencode.desktop.png"
+}

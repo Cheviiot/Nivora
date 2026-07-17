@@ -1,0 +1,14 @@
+[repo]
+minVersion = "v0.1.1"
+
+title = "Nivora"
+summary = "Независимый каталог Linux-приложений для Stapler"
+description = """
+Nivora содержит открытые рецепты упаковки приложений,
+которых может не быть в системных репозиториях дистрибутива."""
+homepage = "https://github.com/Cheviiot/Nivora"
+icon = "https://raw.githubusercontent.com/Cheviiot/Nivora/main/.github/assets/nivora.svg"
+
+url = "https://github.com/Cheviiot/Nivora.git"
+ref = "main"
+report_url = "https://github.com/Cheviiot/Nivora/issues/new?title={{ .BasePackageName }}"

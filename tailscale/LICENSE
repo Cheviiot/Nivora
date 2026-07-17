@@ -1,0 +1,15 @@
+Сведения о лицензии пакета Tailscale
+
+Лицензия: BSD-3-Clause.
+Исходный проект: https://github.com/tailscale/tailscale
+Официальный сайт: https://tailscale.com
+
+Нюансы пакета:
+- Пакет перепаковывает официальный Linux tar.gz-архив Tailscale.
+- Устанавливаются `tailscale`, `tailscaled`, systemd-сервис и стандартные файлы запуска.
+- Код клиента Tailscale распространяется под BSD-3-Clause.
+- Подключение к control plane Tailscale, учетные записи, ACL и коммерческие функции регулируются условиями сервиса Tailscale.
+- При распространении измененных версий нужно сохранять уведомление об авторских правах и условия BSD-3-Clause.
+
+Полный официальный текст BSD-3-Clause:
+https://opensource.org/license/bsd-3-clause

@@ -1,0 +1,25 @@
+Сведения о лицензии пакета Claude
+
+Лицензия: Proprietary.
+Исходный продукт: https://claude.ai/download
+Документация desktop-приложения Claude: https://code.claude.com/docs/en/desktop-quickstart
+Официальный Linux-репозиторий: https://downloads.claude.ai/claude-desktop/apt/stable
+
+Нюансы пакета:
+- Пакет перепаковывает официальный Linux deb-артефакт `claude-desktop` из APT-репозитория Anthropic.
+- В пакет входит десктопное Electron-приложение Claude с поддержкой сценариев Claude Code.
+- Команды `claude-desktop` и `claude-code-desktop` запускают одно и то же desktop-приложение.
+- Для одновременной работы с двумя аккаунтами пакет добавляет ярлыки `Claude (Аккаунт 1)` и `Claude (Аккаунт 2)`, команды `claude-desktop-account2` / `claude-code-desktop-account2` и отдельную инвертированную иконку второго профиля.
+- Второй профиль использует отдельный каталог web-данных `${XDG_CONFIG_HOME:-~/.config}/Claude-Account-2`, чтобы не смешивать cookies, авторизацию, OAuth-кэш, IndexedDB, Local Storage и Chromium lock-файлы.
+- Локальная память Claude Code в `~/.claude`, MCP-конфиг, расширения, проекты, локальные сессии и Claude Code runtime используются совместно с основным профилем. Изменяемые VM-диски остаются отдельными для защиты от одновременной записи. Существующие заменяемые данные второго профиля сохраняются в `.nivora-unshared-backup-*`.
+- Путь основного профиля можно переопределить через `CLAUDE_DESKTOP_PRIMARY_DIR`, второго — через `CLAUDE_DESKTOP_ACCOUNT2_DIR`; общий локальный слой можно отключить значением `CLAUDE_DESKTOP_ACCOUNT2_SHARE_LOCAL_DATA=0`.
+- Облачные чаты и память Claude не объединяются пакетом: эти данные принадлежат конкретной учетной записи и хранятся на стороне Anthropic.
+- Команда `claude` намеренно не добавляется, чтобы не конфликтовать с отдельным Claude Code CLI.
+- Для полноценной работы требуется учетная запись Anthropic и подходящая подписка или доступ к сервису Claude.
+- Настройки, авторизация, история, рабочие каталоги и данные проектов создаются приложением после запуска и не поставляются внутри пакета.
+- Функции, зависящие от виртуализации или интеграции окружения, могут требовать дополнительные системные компоненты: QEMU, virtiofsd, portal backend, keyring/kwallet и аудиоподсистему.
+- Исходный продукт является проприетарным. Использование Claude, Claude Code, сетевых функций, моделей и учетной записи регулируется юридическими условиями Anthropic.
+- Внутри upstream-пакета также поставляются компоненты Electron/Chromium и virtiofsd со своими лицензиями; их тексты устанавливаются в `/usr/share/licenses/claude-code-desktop`.
+
+Официальные условия:
+https://www.anthropic.com/legal/consumer-terms

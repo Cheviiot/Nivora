@@ -1,0 +1,20 @@
+Сведения о лицензии пакета Chatbox
+
+Лицензия: GPL-3.0-only.
+Исходный проект: https://github.com/chatboxai/chatbox
+Официальный сайт: https://chatboxai.app/ru
+Официальная страница загрузки: https://chatboxai.app/ru
+Условия использования сервиса: https://chatboxai.app/ru/terms
+Политика конфиденциальности: https://chatboxai.app/ru/privacy
+
+Нюансы пакета:
+- Пакет перепаковывает официальный Linux deb-артефакт Chatbox Desktop из релиза `chatboxai/chatbox`.
+- Chatbox Community Edition распространяется как открытый клиент под GPL-3.0; bundled-зависимости Electron/Chromium устанавливаются вместе с upstream-артефактом.
+- Последние релизы Chatbox могут выходить без Linux-артефактов. Пакет Nivora использует последний upstream-релиз, где реально опубликованы Linux deb-файлы для amd64 и arm64.
+- Chatbox может работать с Chatbox AI Service, OpenAI, Claude, Gemini, Ollama и другими внешними провайдерами. Учетные записи, API-ключи, подписки, сетевые функции и модели регулируются условиями соответствующих сервисов.
+- История чатов, настройки, кэш, авторизация и локальные базы данных создаются приложением в домашнем каталоге пользователя после запуска и не поставляются внутри пакета.
+- Пакет добавляет команды `chatbox`, `chatbox-ai` и `chatbox-desktop` для совместимого запуска приложения.
+- В `/usr/share/licenses/chatbox` дополнительно устанавливаются bundled-лицензии Electron/Chromium, если они присутствуют в upstream-артефакте.
+
+Полный официальный текст GPL-3.0:
+https://www.gnu.org/licenses/gpl-3.0.txt

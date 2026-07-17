@@ -1,0 +1,285 @@
+#!/bin/bash
+set -euo pipefail
+
+# ═══════════════════════════════════════════════════════════════════
+#  opencode-desktop-wrapper — безопасный запуск OpenCode Desktop
+#
+#  Возможности:
+#    • Автоопределение доступной памяти (экспериментальное)
+#    • Защита от крашей: повторный запуск с --disable-gpu
+#    • systemd --user scope с MemoryMax/MemoryHigh
+#    • Защита от зацикленных крашей (максимум 3 попытки)
+#    • Кеширование crash-флага для пресечения повторных крашей
+# ═══════════════════════════════════════════════════════════════════
+
+real_binary="${OPENCODE_DESKTOP_EXECUTABLE:-/opt/OpenCode/ai.opencode.desktop}"
+config_home="${XDG_CONFIG_HOME:-${HOME}/.config}"
+
+# Файлы состояния для защиты от крашей
+crash_flag_dir="${config_home}/ai.opencode.desktop"
+crash_flag="${crash_flag_dir}/.wrapper-crash-flag"
+gpu_fallback_marker="${crash_flag_dir}/.wrapper-gpu-fallback"
+gpu_fallback_permanent="${crash_flag_dir}/.wrapper-gpu-disabled"
+
+# Счётчик попыток (внутри одной сессии запуска)
+attempt="${OPENCODE_DESKTOP_ATTEMPT:-0}"
+max_attempts=3
+
+if [[ ! -x "$real_binary" ]]; then
+    echo "opencode-desktop: не найден исполняемый файл ${real_binary}" >&2
+    exit 127
+fi
+
+# ─── Утилиты ────────────────────────────────────────────────────────
+
+detect_available_memory_mb() {
+    # Доступная память прямо сейчас (MemAvailable в /proc/meminfo)
+    if [[ -f /proc/meminfo ]]; then
+        awk '/MemAvailable/ {printf "%.0f", $2/1024}' /proc/meminfo
+    elif command -v free >/dev/null 2>&1; then
+        free -m 2>/dev/null | awk '/^Mem:/{print $7}'
+    else
+        echo "4096"
+    fi
+}
+
+human_size_mb() {
+    local mb="${1:-0}"
+    if [[ "$mb" -ge 1024 ]]; then
+        echo "$(( mb / 1024 ))G"
+    else
+        echo "${mb}M"
+    fi
+}
+
+count_crashpad_reports() {
+    local pending_dir="${crash_flag_dir}/Crashpad/pending"
+    if [[ -d "$pending_dir" ]]; then
+        find "$pending_dir" -name '*.meta' 2>/dev/null | wc -l
+    else
+        echo "0"
+    fi
+}
+
+# ─── Определение лимитов памяти ────────────────────────────────────
+
+available_mem_mb="$(detect_available_memory_mb)"
+
+# Открытые переменные окружения (пользователь может переопределить)
+memory_max_raw="${OPENCODE_DESKTOP_MEMORY_MAX:-}"
+memory_high_raw="${OPENCODE_DESKTOP_MEMORY_HIGH:-}"
+js_heap_mb_raw="${OPENCODE_DESKTOP_JS_HEAP_MB:-}"
+
+# Адаптивные значения по умолчанию
+if [[ -z "$memory_max_raw" ]]; then
+    # MemoryMax = 80% доступной памяти, но не менее 6G и не более 12G
+    memory_max_mb=$(( available_mem_mb * 80 / 100 ))
+    memory_max_mb=$(( memory_max_mb < 6144 ? 6144 : memory_max_mb ))
+    memory_max_mb=$(( memory_max_mb > 12288 ? 12288 : memory_max_mb ))
+else
+    if [[ "$memory_max_raw" =~ ^([0-9]+)(G|M)$ ]]; then
+        local_val="${BASH_REMATCH[1]}"
+        local_unit="${BASH_REMATCH[2]}"
+        if [[ "$local_unit" == "G" ]]; then
+            memory_max_mb=$(( local_val * 1024 ))
+        else
+            memory_max_mb="$local_val"
+        fi
+    elif [[ "$memory_max_raw" == "0" ]]; then
+        memory_max_mb=0
+    else
+        # Fallback — интерпретируем как число
+        memory_max_mb="$memory_max_raw"
+    fi
+fi
+
+if [[ -z "$memory_high_raw" ]]; then
+    # MemoryHigh = 70% от MemoryMax
+    memory_high_mb=$(( memory_max_mb * 70 / 100 ))
+elif [[ "$memory_high_raw" == "0" ]]; then
+    memory_high_mb=0
+else
+    if [[ "$memory_high_raw" =~ ^([0-9]+)(G|M)$ ]]; then
+        local_val="${BASH_REMATCH[1]}"
+        local_unit="${BASH_REMATCH[2]}"
+        if [[ "$local_unit" == "G" ]]; then
+            memory_high_mb=$(( local_val * 1024 ))
+        else
+            memory_high_mb="$local_val"
+        fi
+    else
+        memory_high_mb="$memory_high_raw"
+    fi
+fi
+
+if [[ -z "$js_heap_mb_raw" ]]; then
+    # V8 heap = 30% от MemoryMax, минимум 1024
+    js_heap_mb=$(( memory_max_mb * 30 / 100 ))
+    js_heap_mb=$(( js_heap_mb < 1024 ? 1024 : js_heap_mb ))
+    js_heap_mb=$(( js_heap_mb > 4096 ? 4096 : js_heap_mb ))
+elif [[ "$js_heap_mb_raw" == "0" ]]; then
+    js_heap_mb=0
+else
+    js_heap_mb="$js_heap_mb_raw"
+fi
+
+memory_max="$(human_size_mb "$memory_max_mb")"
+memory_high="$(human_size_mb "$memory_high_mb")"
+
+# ─── GPU fallback ───────────────────────────────────────────────────
+
+should_disable_gpu="0"
+
+# Постоянный флаг — пользователь установил OPENCODE_DESKTOP_DISABLE_GPU=1 ранее
+if [[ -f "$gpu_fallback_permanent" ]]; then
+    should_disable_gpu="1"
+elif [[ "${OPENCODE_DESKTOP_DISABLE_GPU:-0}" == "1" ]]; then
+    should_disable_gpu="1"
+    # Запоминаем для будущих запусков
+    if ! touch "$gpu_fallback_permanent" 2>/dev/null; then
+        echo "opencode-desktop: не удалось сохранить GPU fallback marker" >&2
+    fi
+elif [[ -f "$gpu_fallback_marker" ]]; then
+    # Временный fallback от crash detector'а
+    should_disable_gpu="1"
+fi
+
+# ─── Electron args ──────────────────────────────────────────────────
+
+electron_args=()
+
+if [[ "$js_heap_mb" != "0" ]]; then
+    electron_args+=("--js-flags=--max-old-space-size=${js_heap_mb}")
+fi
+
+if [[ "$should_disable_gpu" == "1" ]]; then
+    electron_args+=("--disable-gpu")
+fi
+
+# ─── Логирование (минимальное) ────────────────────────────────────
+
+log_debug() {
+    if [[ "${OPENCODE_DESKTOP_DEBUG:-0}" == "1" ]]; then
+        echo "[opencode-wrapper] $*" >&2
+    fi
+}
+
+# ─── Проверка системной памяти ──────────────────────────────────────
+
+if [[ "$memory_max_mb" -gt 0 ]] && [[ "$available_mem_mb" -lt 3072 ]]; then
+    echo "opencode-desktop: недостаточно свободной памяти для запуска (${available_mem_mb}M свободно, нужно минимум 3G)." >&2
+    echo "  Освободите память или установите OPENCODE_DESKTOP_MEMORY_MAX=0 для отключения лимитов." >&2
+    exit 1
+fi
+
+# ─── Crash detector (не на первой попытке) ──────────────────────────
+
+if [[ "$attempt" -ge 1 ]]; then
+    # Считаем crash reports в pending
+    crash_count_before="$(count_crashpad_reports)"
+
+    # Если есть новый crash report — включаем GPU fallback
+    if [[ "$crash_count_before" -gt 0 ]] && [[ "$should_disable_gpu" == "0" ]]; then
+        log_debug "обнаружен crash report, переключаюсь в GPU-safe режим"
+        should_disable_gpu="1"
+        electron_args+=("--disable-gpu")
+
+        # Сохраняем маркер для последующих запусков
+        if ! touch "$gpu_fallback_marker" 2>/dev/null; then
+            log_debug "не удалось сохранить временный GPU fallback marker"
+        fi
+        log_debug "gpu fallback marker установлен"
+    fi
+
+    # Если crash произошел и GPU уже отключен — не пробовать снова
+    if [[ "$crash_count_before" -gt 0 ]] && [[ "$should_disable_gpu" == "1" ]] && [[ "$attempt" -ge 2 ]]; then
+        # Если уже пробовали с disable-gpu и всё равно крашится — кешируем флаг
+        if ! touch "$gpu_fallback_permanent" 2>/dev/null; then
+            log_debug "не удалось сохранить постоянный GPU fallback marker"
+        fi
+        log_debug "краш повторяется даже с disable-gpu, флаг постоянный"
+    fi
+fi
+
+# ─── Проверка лимита попыток ─────────────────────────────────────────
+
+if [[ "$attempt" -ge "$max_attempts" ]]; then
+    echo "opencode-desktop: приложение завершилось с ошибкой ${max_attempts} раз подряд." >&2
+    echo "  Попробуйте:" >&2
+    echo "    opencode-desktop-doctor    — диагностика" >&2
+    echo "    opencode-desktop-reset-state --yes — сброс состояния" >&2
+    echo "  Если проблема в GPU, установите OPENCODE_DESKTOP_DISABLE_GPU=1" >&2
+    exit 1
+fi
+
+# ─── Установка crash flag ───────────────────────────────────────────
+
+# Записываем флаг до запуска, после успешного завершения — удалим
+mkdir -p "$crash_flag_dir"
+: > "$crash_flag"
+trap 'rm -f -- "$crash_flag"' EXIT
+
+# ─── systemd --user scope ──────────────────────────────────────────
+
+skip_systemd="0"
+
+if [[ "${OPENCODE_DESKTOP_NO_SYSTEMD_SCOPE:-0}" == "1" ]]; then
+    skip_systemd="1"
+fi
+
+if [[ "${OPENCODE_DESKTOP_SYSTEMD_SCOPE:-0}" == "1" ]]; then
+    skip_systemd="1"
+fi
+
+if [[ "$memory_max_mb" == "0" ]]; then
+    skip_systemd="1"
+fi
+
+if [[ -z "${XDG_RUNTIME_DIR:-}" ]]; then
+    skip_systemd="1"
+    log_debug "XDG_RUNTIME_DIR не задан, systemd scope пропущен"
+fi
+
+if ! command -v systemd-run >/dev/null 2>&1; then
+    skip_systemd="1"
+    log_debug "systemd-run не найден, запуск без cgroup"
+fi
+
+if [[ "$skip_systemd" == "0" ]]; then
+    scope_props=(-p "MemoryMax=${memory_max}")
+    if [[ "$memory_high_mb" -gt 0 ]]; then
+        scope_props+=(-p "MemoryHigh=${memory_high}")
+    fi
+
+    export OPENCODE_DESKTOP_SYSTEMD_SCOPE=1
+    if systemd-run --user --scope --quiet "${scope_props[@]}" "$0" "$@"; then
+        exit 0
+    fi
+
+    echo "opencode-desktop: не удалось создать systemd user scope, запускаю без cgroup MemoryMax" >&2
+fi
+
+# ─── Запуск ─────────────────────────────────────────────────────────
+
+launch_exit_code=0
+if "$real_binary" "${electron_args[@]}" "$@"; then
+    launch_exit_code=0
+else
+    launch_exit_code=$?
+fi
+
+# ─── Post-mortem: обработка краша ───────────────────────────────────
+
+if [[ "$launch_exit_code" -ne 0 ]]; then
+    log_debug "процесс завершился с кодом ${launch_exit_code}"
+
+    # Если это не SystemdScope вызов и не последняя попытка — пробуем снова
+    if [[ "${OPENCODE_DESKTOP_SYSTEMD_SCOPE:-0}" == "1" ]] && [[ "$attempt" -lt "$max_attempts" ]]; then
+        new_attempt=$(( attempt + 1 ))
+        export OPENCODE_DESKTOP_ATTEMPT="$new_attempt"
+        export OPENCODE_DESKTOP_SYSTEMD_SCOPE=0
+        exec "$0" "$@"
+    fi
+fi
+
+exit "$launch_exit_code"

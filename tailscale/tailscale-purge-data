@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -euo pipefail
+
+if [[ "${1:-}" != "--yes" || "$#" -ne 1 ]]; then
+    echo "Использование: sudo tailscale-purge-data --yes" >&2
+    echo "Команда выйдет из сети Tailscale и безвозвратно удалит локальное состояние." >&2
+    exit 2
+fi
+
+if [[ "${EUID}" -ne 0 ]]; then
+    echo "Ошибка: очистку данных Tailscale нужно запускать от root." >&2
+    exit 1
+fi
+
+if command -v tailscale >/dev/null 2>&1; then
+    if ! tailscale logout; then
+        echo "Предупреждение: Tailscale не подтвердил logout; локальные данные всё равно будут удалены." >&2
+    fi
+fi
+
+if command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
+    systemctl stop tailscaled.service
+fi
+
+rm -rf -- \
+    /var/lib/tailscale \
+    /var/cache/tailscale \
+    /var/run/tailscale \
+    /run/tailscale \
+    /etc/tailscale
+rm -f -- /var/log/tailscaled.log /var/log/tailscale.log
+
+echo "Локальные данные Tailscale удалены."

@@ -1,0 +1,123 @@
+name='adwyra'
+version='0.6.1'
+release=3
+summary='Minimal GNOME application launcher'
+summary_ru='Минималистичный лаунчер приложений для GNOME'
+desc='Adwyra is a compact GTK 4/libadwaita application launcher for GNOME with an application grid, search, folders, pinned apps, drag-and-drop ordering, themes, hotkeys and plugin support.'
+desc_ru='Adwyra — компактный лаунчер приложений для GNOME на GTK 4/libadwaita с сеткой приложений, поиском, папками, закреплением, drag-and-drop сортировкой, темами, горячими клавишами и плагинами.'
+group='Graphical desktop/GNOME'
+homepage='https://github.com/Cheviiot/Adwyra'
+maintainer='Cheviiot <https://github.com/Cheviiot>'
+
+architectures=('all')
+
+license=('GPL-3.0-or-later')
+
+provides=()
+replaces=('adwyra')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+# Зависимости для запуска
+deps=(
+	'python3'
+	'gtk4'
+	'libadwaita'
+)
+
+# Скрипты установки/удаления
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+deps_debian=(
+	'python3'
+	'python3-gi'
+	'gir1.2-gtk-4.0'
+	'gir1.2-adw-1'
+)
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=(
+	'python3'
+	'python3-gobject'
+	'gtk4'
+	'libadwaita'
+)
+deps_arch=(
+	'python'
+	'python-gobject'
+	'gtk4'
+	'libadwaita'
+)
+deps_altlinux=(
+	'python3'
+	'python3-module-pygobject3'
+	'libgtk4'
+	'libadwaita'
+)
+deps_opensuse=(
+	'python3'
+	'python3-gobject'
+	'gtk4'
+	'libadwaita'
+)
+
+# Источники - используем архив для предотвращения проблем с кэшем
+sources=(
+	"https://github.com/Cheviiot/adwyra/archive/refs/tags/v${version}.tar.gz"
+	'local:///LICENSE'
+)
+checksums=(
+	'4acb67460a6d302d5c60c369fe68e616baff2aeafb760c421cb65a54dc8df39a'
+	'4acd6128d4fbff11fd374e862520cf93aacad91650de1fe16fc4e424bd1ddc14'
+)
+
+# AppStream
+appstream_app_id='com.github.adwyra'
+
+package() {
+	# GitHub создаёт архив с именем репозитория (Adwyra)
+	src="${srcdir}/Adwyra-${version}"
+
+	# Бинарный файл
+	install -Dm755 "${src}/adwyra" "${pkgdir}/usr/bin/adwyra"
+
+	# Python модуль
+	install -dm755 "${pkgdir}/usr/lib/adwyra"
+	cp -r "${src}/src/adwyra" "${pkgdir}/usr/lib/adwyra/"
+	find "${pkgdir}/usr/lib/adwyra" -depth -path '*/__pycache__*' -delete
+
+	# Обновляем путь в бинарнике
+	sed -i 's|os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")|'\''/usr/lib/adwyra'\''|' \
+		"${pkgdir}/usr/bin/adwyra"
+
+	# Desktop файл
+	install-desktop "${src}/data/com.github.adwyra.desktop"
+
+	# Иконки всех размеров
+	for size in 16 24 32 48 64 128 256 512; do
+		install -Dm644 "${src}/data/icons/hicolor/${size}x${size}/apps/com.github.adwyra.png" \
+			"${pkgdir}/usr/share/icons/hicolor/${size}x${size}/apps/com.github.adwyra.png"
+	done
+
+	# AppStream metainfo
+	install -Dm644 "${src}/data/com.github.adwyra.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/com.github.adwyra.metainfo.xml"
+
+	# Лицензия
+	install-license "${src}/LICENSE" "adwyra/LICENSE.upstream"
+	install-license "${srcdir}/LICENSE" "adwyra/LICENSE.nivora"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/usr/lib/adwyra/**/*" \
+		"/usr/share/icons/hicolor/*/apps/com.github.adwyra.png" \
+		"/usr/share/metainfo/com.github.adwyra.metainfo.xml"
+}

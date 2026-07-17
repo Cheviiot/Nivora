@@ -1,0 +1,56 @@
+name: Ручной clean-build
+
+on:
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: "all или package ID через пробел"
+        required: true
+        default: all
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nivora-clean-build
+  cancel-in-progress: false
+
+env:
+  STPLR_UTILS_COMMIT: c6ddbb5e4e5637d97bb7b2587729178d715c6c52
+
+jobs:
+  build:
+    name: Изолированная сборка
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - name: Получить репозиторий
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Установить Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5
+        with:
+          go-version: 1.26.5
+          cache: false
+
+      - name: Собрать stplr-spec
+        run: |
+          git clone --filter=blob:none https://altlinux.space/stapler/stplr-utils.git "$RUNNER_TEMP/stplr-utils"
+          git -C "$RUNNER_TEMP/stplr-utils" checkout "$STPLR_UTILS_COMMIT"
+          (cd "$RUNNER_TEMP/stplr-utils" && GOBIN="$RUNNER_TEMP/bin" go install ./cmd/stplr-spec)
+          echo "$RUNNER_TEMP/bin" >>"$GITHUB_PATH"
+
+      - name: Собрать пакеты
+        env:
+          REQUESTED_PACKAGES: ${{ inputs.packages }}
+        run: |
+          if [[ "$REQUESTED_PACKAGES" == all ]]; then
+            tools/clean_build.sh --all
+            tools/verify_artifacts.sh --all
+            NIVORA_DEB_BUILD_MODE=host tools/test_package_transitions.sh
+          else
+            read -r -a packages <<<"$REQUESTED_PACKAGES"
+            tools/clean_build.sh "${packages[@]}"
+            tools/verify_artifacts.sh "${packages[@]}"
+          fi

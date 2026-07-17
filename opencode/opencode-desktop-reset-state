@@ -1,0 +1,98 @@
+#!/bin/bash
+set -euo pipefail
+
+yes=0
+include_cli_config=0
+
+for arg in "$@"; do
+    case "$arg" in
+    --yes | -y)
+        yes=1
+        ;;
+    --include-cli-config)
+        include_cli_config=1
+        ;;
+    --help | -h)
+        cat <<'EOF'
+Usage: opencode-desktop-reset-state --yes [--include-cli-config]
+
+Переносит состояние OpenCode Desktop в backup-каталог и не удаляет данные безвозвратно.
+По умолчанию не трогает ~/.config/opencode, где могут храниться конфиг и плагины CLI.
+EOF
+        exit 0
+        ;;
+    *)
+        echo "unknown argument: ${arg}" >&2
+        exit 2
+        ;;
+    esac
+done
+
+config_home="${XDG_CONFIG_HOME:-${HOME}/.config}"
+cache_home="${XDG_CACHE_HOME:-${HOME}/.cache}"
+data_home="${XDG_DATA_HOME:-${HOME}/.local/share}"
+backup_root="${data_home}/opencode-desktop-backups/$(date +%Y%m%dT%H%M%S)"
+
+target_names=(
+    "desktop-config"
+    "cache"
+    "data"
+)
+target_paths=(
+    "${config_home}/ai.opencode.desktop"
+    "${cache_home}/opencode"
+    "${data_home}/opencode"
+)
+
+if [[ "$include_cli_config" == "1" ]]; then
+    target_names+=("cli-config")
+    target_paths+=("${config_home}/opencode")
+fi
+
+if [[ "$yes" != "1" ]]; then
+    echo "Будут перенесены существующие каталоги:"
+    for target in "${target_paths[@]}"; do
+        [[ -e "$target" ]] && echo "  ${target}"
+    done
+    echo
+    echo "Backup-каталог: ${backup_root}"
+    echo "Для выполнения запустите: opencode-desktop-reset-state --yes"
+    exit 1
+fi
+
+stop_matching_processes() {
+    local pattern="$1"
+    local status
+
+    set +e
+    pkill -f "$pattern" 2>/dev/null
+    status=$?
+    set -e
+    if [[ "$status" -ne 1 ]]; then
+        if [[ "$status" -ne 0 ]]; then
+            echo "Не удалось остановить процессы по шаблону: ${pattern}" >&2
+            return "$status"
+        fi
+    fi
+}
+
+stop_matching_processes '/opt/OpenCode/ai.opencode.desktop'
+stop_matching_processes 'chrome_crashpad_handler.*OpenCode'
+
+mkdir -p "$backup_root"
+moved=0
+for index in "${!target_paths[@]}"; do
+    target="${target_paths[$index]}"
+    destination="${backup_root}/${target_names[$index]}"
+    if [[ -e "$target" ]]; then
+        mv "$target" "$destination"
+        moved=1
+        echo "moved: ${target} -> ${destination}"
+    fi
+done
+
+if [[ "$moved" == "0" ]]; then
+    echo "Состояние OpenCode Desktop не найдено, переносить нечего."
+else
+    echo "Готово. Данные сохранены в ${backup_root}"
+fi

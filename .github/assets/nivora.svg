@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Nivora</title>
+  <desc id="desc">Знак в форме буквы N</desc>
+  <rect width="128" height="128" rx="24" fill="#111815"/>
+  <path d="M32 94V34l64 60V34" fill="none" stroke="#73e0ac" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 34h18" fill="none" stroke="#f2f5f3" stroke-width="8" stroke-linecap="round"/>
+</svg>

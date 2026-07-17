@@ -1,0 +1,81 @@
+name='parsec'
+version='150-104a'
+release=3
+summary='Low-latency remote desktop and game streaming client'
+summary_ru='Клиент удаленного рабочего стола и игрового стриминга с низкой задержкой'
+group='Networking/Remote access'
+desc='Parsec is a proprietary low-latency remote desktop and game streaming client distributed as an official Linux deb package for Ubuntu 22.04 LTS Desktop.'
+desc_ru='Parsec — проприетарный клиент удаленного рабочего стола и игрового стриминга с низкой задержкой, распространяемый официальным deb-пакетом для Ubuntu 22.04 LTS Desktop.'
+homepage='https://parsec.app/downloads'
+maintainer='Unity Technologies SF <https://parsec.app/>'
+
+architectures=('amd64')
+
+license=('Custom')
+nonfree=1
+nonfree_msg='Parsec является проприетарным приложением Unity Technologies SF. Использование клиента, учетной записи, удаленного доступа и сетевых функций регулируется условиями Parsec/Unity.'
+nonfree_url='https://parsec.app/terms'
+
+provides=()
+replaces=('parsec')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('libc6' 'libgcc-s1 | libgcc1' 'libstdc++6' 'libudev1' 'libssl3 | libssl1.1' 'libx11-6' 'libxcursor1' 'libxi6' 'libsm6' 'libgl1' 'libasound2' 'libjpeg8 | libjpeg-turbo8' 'libpng16-16' 'libcurl4' 'libavcodec61 | libavcodec60 | libavcodec59 | libavcodec58 | libavcodec57' 'libxrandr2' 'libvulkan1')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('glibc' 'libgcc' 'libstdc++' 'systemd-libs' 'openssl-libs' 'libX11' 'libXcursor' 'libXi' 'libSM' 'mesa-libGL' 'alsa-lib' 'libjpeg-turbo' 'libpng' 'libcurl' 'ffmpeg-libs' 'libXrandr' 'vulkan-loader')
+deps_arch=('glibc' 'gcc-libs' 'systemd-libs' 'openssl' 'libx11' 'libxcursor' 'libxi' 'libsm' 'libglvnd' 'alsa-lib' 'libjpeg-turbo' 'libpng' 'curl' 'ffmpeg' 'libxrandr' 'vulkan-icd-loader')
+deps_opensuse=('glibc' 'libgcc_s1' 'libstdc++6' 'libudev1' 'libopenssl3' 'libX11-6' 'libXcursor1' 'libXi6' 'libSM6' 'Mesa-libGL1' 'libasound2' 'libjpeg8' 'libpng16-16' 'libcurl4' 'libavcodec61' 'libXrandr2' 'libvulkan1')
+deps_altlinux=('glibc' 'libgcc1' 'libstdc++6' 'libudev0' 'libssl3' 'libX11' 'libXcursor' 'libXi' 'libSM' 'libGL' 'libalsa' 'libjpeg8' 'libpng16' 'libcurl' 'libavcodec61' 'libXrandr' 'libvulkan1')
+
+build_deps=('binutils')
+
+sources=(
+	"https://builds.parsec.app/package/parsec-linux.deb?~archive=false&~name=parsec.deb"
+	"local:///parsecd-wrapper"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:c8a4407713d72dcb1c59f082977e81e1b9e8ffd679d0666882cde4c8a0821dd2'
+	'sha256:2830871d7499ac00b70197ea11f2c132382059b4ad8718eb73bdcb28ad13a113'
+	'sha256:d8df7db0c861a3308e59beaabe617703e0e24a92d569044432e8b2c539f1fb6c'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x parsec.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install -Dm755 "${srcdir}/extracted/usr/bin/parsecd" "${pkgdir}/usr/lib/parsec/parsecd"
+	install -Dm755 parsecd-wrapper "${pkgdir}/usr/bin/parsecd"
+	install -Dm644 "${srcdir}/extracted/usr/share/applications/parsecd.desktop" "${pkgdir}/usr/share/applications/parsecd.desktop"
+	sed -i 's/^Categories=.*/Categories=Network;RemoteAccess;/' \
+		"${pkgdir}/usr/share/applications/parsecd.desktop"
+	install -Dm644 "${srcdir}/extracted/usr/share/icons/hicolor/256x256/apps/parsecd.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/parsecd.png"
+
+	mkdir -p "${pkgdir}/usr/share/parsec"
+	cp -a "${srcdir}/extracted/usr/share/parsec/." "${pkgdir}/usr/share/parsec/"
+	install-license "${srcdir}/LICENSE" "parsec/LICENSE.nivora"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/usr/lib/parsec/parsecd" \
+		"/usr/share/icons/hicolor/256x256/apps/parsecd.png" \
+		"/usr/share/parsec/**/*"
+}

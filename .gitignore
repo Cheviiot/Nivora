@@ -1,0 +1,11 @@
+*.deb
+*.rpm
+*.pkg.tar.*
+*.apk
+.stplr-spec-bc-export/
+__pycache__/
+*.pyc
+.venv/
+.idea/
+.vscode/
+*~

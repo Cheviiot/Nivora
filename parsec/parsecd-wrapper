@@ -1,0 +1,109 @@
+#!/bin/bash
+set -euo pipefail
+
+real_binary='/usr/lib/parsec/parsecd'
+parsec_home="${PARSEC_CONFIG_HOME:-${HOME}/.parsec}"
+config_txt="${parsec_home}/config.txt"
+config_json="${parsec_home}/config.json"
+json_notice='See https://parsec.app/config for documentation and example. JSON must be valid before saving or file be will be erased.'
+
+immersive_enabled() {
+    case "${PARSEC_NIVORA_IMMERSIVE:-1}" in
+    0 | false | no | off) return 1 ;;
+    *) return 0 ;;
+    esac
+}
+
+set_config_txt_immersive() {
+    mkdir -p "${parsec_home}"
+    touch "${config_txt}"
+
+    if grep -Eq '^[[:space:]]*client_immersive[[:space:]]*=' "${config_txt}"; then
+        sed -i -E 's/^[[:space:]]*client_immersive[[:space:]]*=.*/client_immersive=2/' "${config_txt}"
+    else
+        printf '\nclient_immersive=2\n' >>"${config_txt}"
+    fi
+}
+
+set_config_json_immersive() {
+    command -v python3 >/dev/null 2>&1 || return 1
+
+    mkdir -p "${parsec_home}"
+    python3 - "${config_json}" "${json_notice}" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+notice = sys.argv[2]
+data = [notice, {}]
+
+if path.exists() and path.stat().st_size:
+    try:
+        with path.open(encoding="utf-8") as fh:
+            data = json.load(fh)
+    except json.JSONDecodeError:
+        raise SystemExit(2)
+
+if isinstance(data, dict):
+    settings = data
+elif isinstance(data, list):
+    while len(data) < 2:
+        data.append({})
+    if not isinstance(data[0], str):
+        data[0] = notice
+    if not isinstance(data[1], dict):
+        data[1] = {}
+    settings = data[1]
+else:
+    data = [notice, {}]
+    settings = data[1]
+
+current = settings.get("client_immersive")
+value = None
+if isinstance(current, dict):
+    value = current.get("value")
+
+if value in (1, 2, "1", "2"):
+    immersive_value = int(value)
+else:
+    immersive_value = 2
+    settings["client_immersive"] = {"value": immersive_value}
+
+tmp = path.with_suffix(path.suffix + ".tmp")
+with tmp.open("w", encoding="utf-8") as fh:
+    json.dump(data, fh, ensure_ascii=False, indent=2, sort_keys=True)
+    fh.write("\n")
+tmp.replace(path)
+print(immersive_value)
+PY
+}
+
+immersive_value=2
+
+if immersive_enabled; then
+    if ! immersive_value="$(set_config_json_immersive)"; then
+        set_config_txt_immersive
+        immersive_value=2
+    fi
+else
+    exec "${real_binary}" "$@"
+fi
+
+for arg in "$@"; do
+    if [[ "${arg}" == *client_immersive=* ]]; then
+        exec "${real_binary}" "$@"
+    fi
+done
+
+if (($# == 0)); then
+    exec "${real_binary}" "client_immersive=${immersive_value}"
+fi
+
+if [[ "$1" == *=* ]]; then
+    first_arg="client_immersive=${immersive_value}:${1}"
+    shift
+    exec "${real_binary}" "${first_arg}" "$@"
+fi
+
+exec "${real_binary}" "$@"

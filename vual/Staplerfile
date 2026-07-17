@@ -1,0 +1,136 @@
+name='vual'
+version='0.3.1'
+release=5
+summary='Launch Cheat Engine for Steam games through Proton'
+summary_ru='Запуск Cheat Engine для Steam-игр через Proton'
+group='Games'
+desc='Vual is a GTK4/libadwaita application for launching Cheat Engine in Steam games
+through Proton. Displays Steam library with cover art, one-click LaunchOptions setup
+for protonhax, and built-in Cheat Engine download and installation.'
+desc_ru='Vual — GTK4/libadwaita-приложение для запуска Cheat Engine в Steam-играх
+через Proton. Отображает библиотеку Steam с обложками, настройка LaunchOptions
+для protonhax одним кликом, встроенная загрузка и установка Cheat Engine.'
+homepage='https://github.com/Cheviiot/Vual'
+maintainer='Cheviiot <https://github.com/Cheviiot>'
+
+architectures=('all')
+
+license=('GPL-3.0-or-later')
+
+provides=()
+replaces=('vual')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=(
+	'python3'
+	'gtk4'
+	'libadwaita'
+)
+deps_debian=(
+	'python3'
+	'python3-gi'
+	'python3-requests'
+	'gir1.2-gtk-4.0'
+	'gir1.2-adw-1'
+)
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=(
+	'python3'
+	'python3-gobject'
+	'python3-requests'
+	'gtk4'
+	'libadwaita'
+)
+deps_arch=(
+	'python'
+	'python-gobject'
+	'python-requests'
+	'gtk4'
+	'libadwaita'
+)
+deps_altlinux=(
+	'python3'
+	'python3-module-pygobject3'
+	'python3-module-requests'
+	'libgtk4'
+	'libadwaita'
+)
+deps_opensuse=(
+	'python3'
+	'python3-gobject'
+	'python3-requests'
+	'gtk4'
+	'libadwaita'
+)
+
+sources=(
+	"https://github.com/Cheviiot/Vual/archive/refs/tags/v${version}.tar.gz"
+	'local:///LICENSE'
+)
+checksums=(
+	'84135424da73aa1e6b6b0ae7146527bf07c9f1ed22d5b78954a190c066195104'
+	'8a79d2011a095671073f0a44096ee200d3ef101979fb039034c6e5f5c9d7156b'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+appstream_app_id='io.github.vual'
+
+package() {
+	# GitHub создаёт архив с именем Vual-<version>
+	src="${srcdir}/Vual-${version}"
+
+	# Python модуль
+	install -dm755 "${pkgdir}/usr/lib/vual"
+	cp -r "${src}/src/vual" "${pkgdir}/usr/lib/vual/"
+	find "${pkgdir}/usr/lib/vual" -depth -path '*/__pycache__*' -delete
+
+	# Переводы
+	if [[ -d "${src}/po" ]]; then
+		cp -r "${src}/po" "${pkgdir}/usr/lib/vual/"
+	fi
+
+	# Лаунчер
+	install -Dm755 "${src}/vual" "${pkgdir}/usr/bin/vual"
+
+	# Обновляем путь в лаунчере: указываем на установленное расположение
+	sed -i 's|sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))|sys.path.insert(0, "/usr/lib/vual")|' \
+		"${pkgdir}/usr/bin/vual"
+	sed -i '/pycache_prefix/d' "${pkgdir}/usr/bin/vual"
+
+	# Desktop файл
+	install-desktop "${src}/data/io.github.vual.desktop"
+	sed -i 's/^Categories=.*/Categories=Game;/' \
+		"${pkgdir}/usr/share/applications/io.github.vual.desktop"
+
+	# Иконки всех размеров
+	for size in 16 24 32 48 64 128 256 512; do
+		install -Dm644 "${src}/data/icons/hicolor/${size}x${size}/apps/io.github.vual.png" \
+			"${pkgdir}/usr/share/icons/hicolor/${size}x${size}/apps/io.github.vual.png"
+	done
+
+	# AppStream metainfo
+	install -Dm644 "${src}/data/io.github.vual.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/io.github.vual.metainfo.xml"
+
+	# Лицензия
+	install-license "${src}/LICENSE" "vual/LICENSE.upstream"
+	install-license "${srcdir}/LICENSE" "vual/LICENSE.nivora"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/usr/lib/vual/**/*" \
+		"/usr/share/icons/hicolor/*/apps/io.github.vual.png" \
+		"/usr/share/metainfo/io.github.vual.metainfo.xml"
+}

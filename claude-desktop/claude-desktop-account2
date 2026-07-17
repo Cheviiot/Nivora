@@ -1,0 +1,119 @@
+#!/bin/sh
+set -eu
+
+if [ -z "${HOME:-}" ] && [ -z "${XDG_CONFIG_HOME:-}" ]; then
+    echo "claude-desktop-account2: HOME or XDG_CONFIG_HOME is required" >&2
+    exit 1
+fi
+
+config_home="${XDG_CONFIG_HOME:-${HOME}/.config}"
+primary_data_dir="${CLAUDE_DESKTOP_PRIMARY_DIR:-${config_home}/Claude}"
+account2_data_dir="${CLAUDE_DESKTOP_ACCOUNT2_DIR:-${config_home}/Claude-Account-2}"
+claude_executable="${CLAUDE_DESKTOP_EXECUTABLE:-/usr/lib/claude-desktop/claude-desktop}"
+
+if [ "${primary_data_dir}" = "${account2_data_dir}" ]; then
+    echo "claude-desktop-account2: primary and account 2 data directories must differ" >&2
+    exit 1
+fi
+
+mkdir -p "${primary_data_dir}" "${account2_data_dir}"
+
+backup_root=''
+
+backup_account2_item() {
+    item_name=$1
+    item_path="${account2_data_dir}/${item_name}"
+
+    if [ -z "${backup_root}" ]; then
+        backup_root="${account2_data_dir}/.nivora-unshared-backup-$(date +%Y%m%d-%H%M%S)-$$"
+        mkdir -p "${backup_root}"
+    fi
+
+    mv -- "${item_path}" "${backup_root}/${item_name}"
+}
+
+share_directory() {
+    item_name=$1
+    primary_item="${primary_data_dir}/${item_name}"
+    account2_item="${account2_data_dir}/${item_name}"
+
+    if [ -L "${account2_item}" ] && [ "$(readlink "${account2_item}")" = "${primary_item}" ]; then
+        return
+    fi
+
+    if [ ! -e "${primary_item}" ] && [ ! -L "${primary_item}" ]; then
+        if [ -d "${account2_item}" ] && [ ! -L "${account2_item}" ]; then
+            mv -- "${account2_item}" "${primary_item}"
+        else
+            mkdir -p "${primary_item}"
+        fi
+    fi
+
+    if [ -e "${account2_item}" ] || [ -L "${account2_item}" ]; then
+        backup_account2_item "${item_name}"
+    fi
+
+    ln -s "${primary_item}" "${account2_item}"
+}
+
+share_file() {
+    item_name=$1
+    primary_item="${primary_data_dir}/${item_name}"
+    account2_item="${account2_data_dir}/${item_name}"
+
+    if [ -L "${account2_item}" ] && [ "$(readlink "${account2_item}")" = "${primary_item}" ]; then
+        return
+    fi
+
+    if [ ! -e "${primary_item}" ] && [ ! -L "${primary_item}" ] &&
+        [ -f "${account2_item}" ] && [ ! -L "${account2_item}" ]; then
+        mv -- "${account2_item}" "${primary_item}"
+    fi
+
+    if [ -e "${account2_item}" ] || [ -L "${account2_item}" ]; then
+        backup_account2_item "${item_name}"
+    fi
+
+    ln -s "${primary_item}" "${account2_item}"
+}
+
+account2_lock="${account2_data_dir}/SingletonLock"
+share_local_data="${CLAUDE_DESKTOP_ACCOUNT2_SHARE_LOCAL_DATA:-1}"
+
+if [ "${share_local_data}" != '0' ] &&
+    [ ! -e "${account2_lock}" ] && [ ! -L "${account2_lock}" ]; then
+    for shared_directory in \
+        'Claude Extensions' \
+        'Claude Extensions Settings' \
+        'Dictionaries' \
+        'claude-code' \
+        'claude-code-sessions' \
+        'claude-code-vm' \
+        'document-baselines' \
+        'local-agent-mode-sessions'; do
+        share_directory "${shared_directory}"
+    done
+
+    for shared_file in \
+        'Custom Dictionary.txt' \
+        'extensions-blocklist.json' \
+        'extensions-installations.json' \
+        'git-worktrees.json'; do
+        share_file "${shared_file}"
+    done
+fi
+
+if [ "${share_local_data}" != '0' ]; then
+    CLAUDE_DESKTOP_CONFIG_FILE="${primary_data_dir}/claude_desktop_config.json"
+    export CLAUDE_DESKTOP_CONFIG_FILE
+fi
+
+if [ ! -x "${claude_executable}" ]; then
+    echo "claude-desktop-account2: executable not found: ${claude_executable}" >&2
+    exit 1
+fi
+
+exec "${claude_executable}" \
+    --user-data-dir="${account2_data_dir}" \
+    --class=claude-desktop-account2 \
+    "$@"

@@ -1,0 +1,317 @@
+name='claude-desktop'
+version=1.22209.0
+release=3
+summary='Claude desktop application'
+summary_ru='Десктопное приложение Claude'
+group='Development/Tools'
+desc='Claude is the Anthropic desktop application for Claude and Claude Code workflows with chat, project context, integrated terminal, editor and visual diff review.'
+desc_ru='Claude — десктопное приложение Anthropic для Claude и сценариев Claude Code: чат, контекст проекта, встроенный терминал, редактор и визуальный просмотр diff.'
+homepage='https://code.claude.com/docs/en/desktop-quickstart'
+maintainer='Anthropic PBC <support@anthropic.com>'
+
+architectures=('amd64' 'arm64')
+
+license=('Custom')
+nonfree=1
+nonfree_msg='Claude Desktop является проприетарным приложением Anthropic. Использование Claude, Claude Code, учетной записи, подписки, сетевых функций и моделей регулируется условиями Anthropic.'
+nonfree_url='https://www.anthropic.com/legal/consumer-terms'
+
+provides=('claude-code-desktop')
+replaces=('claude-code-desktop')
+conflicts=('claude-code-desktop')
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'libc6' 'libxtst6' 'libuuid1' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk | xdg-desktop-portal-gnome | xdg-desktop-portal-kde')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa-libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+deps_arch=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libxtst' 'libutil-linux' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'xdg-utils' 'at-spi2-core' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'glibc' 'libXtst6' 'libuuid1' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'xdg-utils' 'libat-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+
+opt_deps=()
+opt_deps_debian=('libasound2t64 | libasound2 | pulseaudio' 'libayatana-appindicator3-1 | libappindicator3-1' 'ca-certificates' 'gnome-keyring | kwalletd6 | kwalletd5' 'qemu-system-x86' 'ovmf' 'virtiofsd')
+opt_deps_ubuntu=("${opt_deps_debian[@]}")
+opt_deps_fedora=('alsa-lib' 'pulseaudio-libs' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'kwallet' 'qemu-system-x86' 'edk2-ovmf' 'virtiofsd')
+opt_deps_arch=('alsa-lib' 'pulseaudio' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'kwallet' 'qemu-system-x86' 'edk2-ovmf' 'virtiofsd')
+opt_deps_opensuse=('libasound2' 'libpulse0' 'libappindicator3-1' 'ca-certificates' 'gnome-keyring' 'kwallet6' 'qemu-x86' 'ovmf' 'virtiofsd')
+opt_deps_altlinux=('libalsa' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'qemu-system-x86' 'virtiofsd')
+
+build_deps=('binutils')
+build_deps_debian=('binutils' 'python3')
+build_deps_ubuntu=("${build_deps_debian[@]}")
+build_deps_fedora=('binutils' 'python3')
+build_deps_arch=('binutils' 'python')
+build_deps_opensuse=('binutils' 'python3')
+build_deps_altlinux=('binutils' 'python3')
+
+sources=(
+	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_amd64.deb?~archive=false&~name=claude-desktop.deb"
+	"local:///claude-desktop-account2"
+	"local:///claude-desktop-account2.png"
+	'local:///LICENSE'
+)
+
+sources_arm64=(
+	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_arm64.deb?~archive=false&~name=claude-desktop.deb"
+	"local:///claude-desktop-account2"
+	"local:///claude-desktop-account2.png"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:6d18ae792c2bddad01edc97c2c3f4cf489004cefe8fed6760a696ed25c49bf61'
+	'sha256:321b14d2c21f74450eab43aafc90e180ac8e6115e262f2cccdd720666fe907d6'
+	'sha256:9435cc97ec05e81e1672b801d583ce55b144c1652e124b62545a4c5e8f69b78c'
+	'sha256:594692d0157a35cbdaad18a5b218ebbc15e86a9a270a239035191e28d9805639'
+)
+
+checksums_arm64=(
+	'sha256:7323fe6c3ab6b7078e81a9bf0200806e3486e73bc5873420ee9d26f10b66e1e9'
+	'sha256:321b14d2c21f74450eab43aafc90e180ac8e6115e262f2cccdd720666fe907d6'
+	'sha256:9435cc97ec05e81e1672b801d583ce55b144c1652e124b62545a4c5e8f69b78c'
+	'sha256:594692d0157a35cbdaad18a5b218ebbc15e86a9a270a239035191e28d9805639'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x claude-desktop.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install -dm755 "${pkgdir}/usr/lib"
+	cp -a "${srcdir}/extracted/usr/lib/claude-desktop" "${pkgdir}/usr/lib/"
+	chmod 0755 "${pkgdir}/usr/lib/claude-desktop/chrome-sandbox"
+	chmod 755 \
+		"${pkgdir}/usr/lib/claude-desktop/claude-desktop" \
+		"${pkgdir}/usr/lib/claude-desktop/resources/chrome-native-host" \
+		"${pkgdir}/usr/lib/claude-desktop/resources/cowork-linux-helper" \
+		"${pkgdir}/usr/lib/claude-desktop/resources/virtiofsd"
+
+	# Upstream resolves claude_desktop_config.json below Electron userData. Allow
+	# account 2 to use account 1's MCP/preferences file without sharing OAuth state.
+	python3 - "${pkgdir}/usr/lib/claude-desktop/resources/app.asar" <<'PY'
+import copy
+import hashlib
+import json
+import re
+import struct
+import sys
+from pathlib import Path
+
+asar_path = Path(sys.argv[1])
+data = asar_path.read_bytes()
+if len(data) < 16:
+    raise SystemExit("Claude app.asar is too small")
+
+_, _, _, header_size = struct.unpack("<IIII", data[:16])
+header = json.loads(data[16 : 16 + header_size])
+base_offset = 16 + ((header_size + 3) & ~3)
+output = bytearray()
+matches = []
+identifier = rb"[A-Za-z_$][A-Za-z0-9_$]*"
+config_constant_pattern = re.compile(
+    rb"(" + identifier + rb')="claude_desktop_config\.json"'
+)
+
+
+def integrity_for(content: bytes, block_size: int = 4194304) -> dict:
+    blocks = [
+        hashlib.sha256(content[index : index + block_size]).hexdigest()
+        for index in range(0, len(content), block_size)
+    ]
+    if not blocks:
+        blocks = [hashlib.sha256(b"").hexdigest()]
+    return {
+        "algorithm": "SHA256",
+        "hash": hashlib.sha256(content).hexdigest(),
+        "blockSize": block_size,
+        "blocks": blocks,
+    }
+
+
+def patch_config_paths(content: bytes, path: str) -> tuple[bytes, list[str]]:
+    replacements = []
+    patched_functions = []
+    for constant in config_constant_pattern.finditer(content):
+        config_name = re.escape(constant.group(1))
+        function_pattern = re.compile(
+            rb"function ("
+            + identifier
+            + rb")\(\)\{return ("
+            + identifier
+            + rb")\.join\(("
+            + identifier
+            + rb")\(\),"
+            + config_name
+            + rb"\)\}"
+        )
+        functions = list(
+            function_pattern.finditer(
+                content,
+                constant.end(),
+                min(len(content), constant.end() + 4096),
+            )
+        )
+        if len(functions) != 1:
+            raise SystemExit(
+                f"expected one config path function near {path}, got {len(functions)}"
+            )
+        function = functions[0]
+        original = function.group(0)
+        replacement = original.replace(
+            b"{return ",
+            b"{return process.env.CLAUDE_DESKTOP_CONFIG_FILE||",
+            1,
+        )
+        replacements.append((function.start(), function.end(), replacement))
+        patched_functions.append(f"{path}:{function.group(1).decode()}")
+
+    if len({(start, end) for start, end, _ in replacements}) != len(replacements):
+        raise SystemExit(f"duplicate shared config patch target in {path}")
+    for start, end, replacement in sorted(replacements, reverse=True):
+        content = content[:start] + replacement + content[end:]
+    return content, patched_functions
+
+
+def rebuild_node(node: dict, prefix: str = "") -> dict:
+    rebuilt = {}
+    for name, child in node.get("files", {}).items():
+        path = f"{prefix}/{name}" if prefix else name
+        if "files" in child:
+            rebuilt[name] = {
+                **{key: value for key, value in child.items() if key != "files"},
+                "files": rebuild_node(child, path),
+            }
+            continue
+
+        entry = copy.deepcopy(child)
+        if entry.get("unpacked"):
+            rebuilt[name] = entry
+            continue
+
+        offset = int(entry["offset"])
+        size = int(entry["size"])
+        content = data[base_offset + offset : base_offset + offset + size]
+        content, patched = patch_config_paths(content, path)
+        if patched:
+            entry["size"] = len(content)
+            entry["integrity"] = integrity_for(
+                content,
+                entry.get("integrity", {}).get("blockSize", 4194304),
+            )
+            matches.extend(patched)
+
+        entry["offset"] = str(len(output))
+        output.extend(content)
+        rebuilt[name] = entry
+
+    return rebuilt
+
+
+rebuilt_header = {"files": rebuild_node(header)}
+if not matches:
+    raise SystemExit("shared Claude config patch matched no functions")
+
+header_bytes = json.dumps(rebuilt_header, separators=(",", ":")).encode("utf-8")
+header_padded_size = (len(header_bytes) + 3) & ~3
+patched_data = (
+    struct.pack("<IIII", 4, header_padded_size + 8, header_padded_size + 4, len(header_bytes))
+    + header_bytes
+    + (b"\0" * (header_padded_size - len(header_bytes)))
+    + bytes(output)
+)
+override_count = patched_data.count(b"CLAUDE_DESKTOP_CONFIG_FILE")
+if override_count != len(matches):
+    raise SystemExit(
+        f"shared Claude config override count mismatch: {override_count} != {len(matches)}"
+    )
+asar_path.write_bytes(patched_data)
+PY
+
+	install -dm755 "${pkgdir}/usr/share"
+	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"
+	cp -a "${srcdir}/extracted/usr/share/icons" "${pkgdir}/usr/share/"
+
+	desktop_file="$(find "${pkgdir}/usr/share/applications" -maxdepth 1 -type f -name "*.desktop" | head -1)"
+	[[ -n "${desktop_file}" ]] || {
+		echo "Claude desktop file not found" >&2
+		return 1
+	}
+	sed -i \
+		-e '0,/^Name=/{s/^Name=.*/Name=Claude (Account 1)\nName[ru]=Claude (Аккаунт 1)/}' \
+		-e 's/^Categories=.*/Categories=Development;/' \
+		"${desktop_file}"
+
+	install -dm755 "${pkgdir}/usr/lib/claude-code-desktop"
+	install -Dm755 "${srcdir}/claude-desktop-account2" \
+		"${pkgdir}/usr/lib/claude-code-desktop/claude-desktop-account2"
+
+	install -Dm644 "${srcdir}/claude-desktop-account2.png" \
+		"${pkgdir}/usr/share/icons/hicolor/512x512/apps/claude-desktop-account2.png"
+
+	install -Dm644 /dev/stdin "${pkgdir}/usr/share/applications/claude-desktop-account2.desktop" <<'EOF'
+[Desktop Entry]
+Name=Claude (Account 2)
+Name[ru]=Claude (Аккаунт 2)
+Comment=Second Claude account with shared local workspace data
+Comment[ru]=Второй аккаунт Claude с общими локальными данными рабочей среды
+GenericName=AI Assistant
+Keywords=AI;Chat;Assistant;Claude;Code;LLM;
+Exec=claude-desktop-account2 %U
+Icon=claude-desktop-account2
+Type=Application
+StartupNotify=true
+StartupWMClass=claude-desktop-account2
+SingleMainWindow=true
+Categories=Development;
+Actions=NewChat;NewCode;
+
+[Desktop Action NewChat]
+Name=New chat
+Name[ru]=Новый чат
+Exec=claude-desktop-account2 claude://claude.ai/new
+
+[Desktop Action NewCode]
+Name=New Claude Code session
+Name[ru]=Новая сессия Claude Code
+Exec=claude-desktop-account2 claude://code/new
+EOF
+
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -sfn /usr/lib/claude-desktop/claude-desktop "${pkgdir}/usr/bin/claude-desktop"
+	ln -sfn /usr/lib/claude-desktop/claude-desktop "${pkgdir}/usr/bin/claude-code-desktop"
+	ln -sfn /usr/lib/claude-code-desktop/claude-desktop-account2 "${pkgdir}/usr/bin/claude-desktop-account2"
+	ln -sfn /usr/lib/claude-code-desktop/claude-desktop-account2 "${pkgdir}/usr/bin/claude-code-desktop-account2"
+
+	install -dm755 "${pkgdir}/usr/share/licenses/claude-desktop"
+	install-license "${srcdir}/LICENSE" "claude-desktop/LICENSE.nivora"
+	install -Dm644 "${srcdir}/extracted/usr/share/doc/claude-desktop/copyright" \
+		"${pkgdir}/usr/share/licenses/claude-desktop/copyright"
+	install -Dm644 "${srcdir}/extracted/usr/lib/claude-desktop/LICENSES.chromium.html" \
+		"${pkgdir}/usr/share/licenses/claude-desktop/LICENSES.chromium.html"
+	install -Dm644 "${srcdir}/extracted/usr/lib/claude-desktop/resources/virtiofsd.LICENSE-APACHE" \
+		"${pkgdir}/usr/share/licenses/claude-desktop/virtiofsd.LICENSE-APACHE"
+	install -Dm644 "${srcdir}/extracted/usr/lib/claude-desktop/resources/virtiofsd.LICENSE-BSD-3-Clause" \
+		"${pkgdir}/usr/share/licenses/claude-desktop/virtiofsd.LICENSE-BSD-3-Clause"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/usr/lib/claude-desktop/**/*" \
+		"/usr/lib/claude-code-desktop/*" \
+		"/usr/share/icons/hicolor/*/apps/claude-desktop.png" \
+		"/usr/share/icons/hicolor/*/apps/claude-desktop-account2.png"
+}

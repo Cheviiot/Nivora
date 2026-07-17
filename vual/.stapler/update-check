@@ -1,0 +1,6 @@
+#!/bin/bash
+set -euo pipefail
+
+package_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(cd "${package_dir}/.." && pwd)"
+exec "${repo_root}/tools/package_updates.sh" check "$(basename "$package_dir")"

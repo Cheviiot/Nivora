@@ -1,0 +1,142 @@
+#!/bin/bash
+set -euo pipefail
+
+readonly NIVORA_URL='https://github.com/Cheviiot/Nivora.git'
+readonly -a OLD_PACKAGES=(
+    adwyra
+    anidesk
+    chatbox
+    clash-verge
+    claude-code-desktop
+    codex-app
+    fisher
+    happ
+    luma-stplr
+    netbird
+    opencode
+    parsec
+    pineconemc
+    tailscale
+    vual
+)
+
+declare -Ar PACKAGE_MAP=(
+    [adwyra]=adwyra
+    [anidesk]=anidesk
+    [chatbox]=chatbox
+    [clash-verge]=clash-verge-rev
+    [claude-code-desktop]=claude-desktop
+    [codex-app]=codex
+    [fisher]=fisher
+    [happ]=happ
+    [luma-stplr]=nivora-stplr
+    [netbird]=netbird
+    [opencode]=opencode
+    [parsec]=parsec
+    [pineconemc]=pineconemc
+    [tailscale]=tailscale
+    [vual]=vual
+)
+
+usage() {
+    cat <<'EOF'
+Usage: sudo nivora-migrate-from-luma --yes
+
+Заменяет установленные пакеты +stplr-luma пакетами
++stplr-nivora. Старая запись репозитория удаляется только после
+успешной замены и проверки всех известных пакетов.
+
+Команда не удаляет пользовательские каталоги и не выполняет logout.
+EOF
+}
+
+die() {
+    echo "nivora-migrate-from-luma: $*" >&2
+    exit 1
+}
+
+repo_exists() {
+    local requested="$1"
+    stplr repo list --format $'{{ .Name }}\n' | grep -Fxq "$requested"
+}
+
+list_package_names() {
+    if command -v rpm >/dev/null 2>&1; then
+        rpm -qa --qf '%{NAME}\n'
+    elif command -v dpkg-query >/dev/null 2>&1; then
+        dpkg-query -W -f='${binary:Package}\n' | sed 's/:.*$//'
+    elif command -v pacman >/dev/null 2>&1; then
+        pacman -Qq
+    elif command -v apk >/dev/null 2>&1; then
+        apk info
+    else
+        die 'не найден поддерживаемый системный менеджер пакетов'
+    fi
+}
+
+package_is_installed() {
+    local exact_name="$1"
+    list_package_names | grep -Fxq "$exact_name"
+}
+
+main() {
+    case "${1:-}" in
+    --help | -h)
+        usage
+        return 0
+        ;;
+    --yes)
+        shift
+        ;;
+    *)
+        usage >&2
+        die 'для запуска требуется явный флаг --yes'
+        ;;
+    esac
+    [[ "$#" -eq 0 ]] || die 'неизвестные аргументы'
+    command -v stplr >/dev/null 2>&1 || die 'команда stplr не найдена'
+
+    repo_exists nivora || die "сначала добавьте Nivora: stplr repo add nivora ${NIVORA_URL}"
+
+    local old target
+    local migrated=0
+    local -a unknown=()
+    local -A known_old=()
+    for old in "${OLD_PACKAGES[@]}"; do
+        known_old["$old"]=1
+    done
+
+    while IFS= read -r old; do
+        old="${old%+stplr-luma}"
+        [[ -n "${known_old[$old]:-}" ]] || unknown+=("$old")
+    done < <(list_package_names | sed -n 's/+stplr-luma$//p')
+
+    if [[ "${#unknown[@]}" -gt 0 ]]; then
+        printf 'Неизвестные пакеты старого репозитория:' >&2
+        printf ' %s' "${unknown[@]}" >&2
+        printf '\n' >&2
+        die 'миграция остановлена; старая запись репозитория сохранена'
+    fi
+
+    for old in "${OLD_PACKAGES[@]}"; do
+        package_is_installed "${old}+stplr-luma" || continue
+        target="${PACKAGE_MAP[$old]}"
+        printf '==> %s -> %s\n' "$old" "$target"
+        stplr --interactive=false install "nivora/${target}"
+        package_is_installed "${old}+stplr-luma" && die "старый пакет ${old}+stplr-luma остался установлен"
+        package_is_installed "${target}+stplr-nivora" || die "новый пакет ${target}+stplr-nivora не найден"
+        migrated=$((migrated + 1))
+    done
+
+    if list_package_names | grep -q '+stplr-luma$'; then
+        die 'после миграции остались пакеты +stplr-luma; старая запись репозитория сохранена'
+    fi
+
+    if repo_exists luma; then
+        stplr repo rm luma
+    fi
+    stplr refresh
+    printf 'Миграция завершена: заменено пакетов: %d.\n' "$migrated"
+}
+
+main "$@"

@@ -1,6 +1,6 @@
 name='claude-desktop'
 version=1.22209.0
-release=3
+release=4
 summary='Claude desktop application'
 summary_ru='Десктопное приложение Claude'
 group='Development/Tools'
@@ -50,30 +50,30 @@ build_deps_altlinux=('binutils' 'python3')
 
 sources=(
 	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_amd64.deb?~archive=false&~name=claude-desktop.deb"
-	"local:///claude-desktop-account2"
-	"local:///claude-desktop-account2.png"
+	"local:///claude-alt"
+	"local:///claude-alt.png"
 	'local:///LICENSE'
 )
 
 sources_arm64=(
 	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_arm64.deb?~archive=false&~name=claude-desktop.deb"
-	"local:///claude-desktop-account2"
-	"local:///claude-desktop-account2.png"
+	"local:///claude-alt"
+	"local:///claude-alt.png"
 	'local:///LICENSE'
 )
 
 checksums=(
 	'sha256:6d18ae792c2bddad01edc97c2c3f4cf489004cefe8fed6760a696ed25c49bf61'
-	'sha256:321b14d2c21f74450eab43aafc90e180ac8e6115e262f2cccdd720666fe907d6'
-	'sha256:9435cc97ec05e81e1672b801d583ce55b144c1652e124b62545a4c5e8f69b78c'
-	'sha256:594692d0157a35cbdaad18a5b218ebbc15e86a9a270a239035191e28d9805639'
+	'sha256:00d9fe6549d82f564a99c6e8ec54d1380fdf8f0a20c99bb9b3cda1f689adf57d'
+	'sha256:449b0f0174c7da4e04fe2af06cd41ba1bcc7ec3376b85be9f3bb5d3de7545d28'
+	'sha256:4da2f904358b4b0a822b18591b0539d69bc80a8f42dbb04e0f5f8cbffbbbe177'
 )
 
 checksums_arm64=(
 	'sha256:7323fe6c3ab6b7078e81a9bf0200806e3486e73bc5873420ee9d26f10b66e1e9'
-	'sha256:321b14d2c21f74450eab43aafc90e180ac8e6115e262f2cccdd720666fe907d6'
-	'sha256:9435cc97ec05e81e1672b801d583ce55b144c1652e124b62545a4c5e8f69b78c'
-	'sha256:594692d0157a35cbdaad18a5b218ebbc15e86a9a270a239035191e28d9805639'
+	'sha256:00d9fe6549d82f564a99c6e8ec54d1380fdf8f0a20c99bb9b3cda1f689adf57d'
+	'sha256:449b0f0174c7da4e04fe2af06cd41ba1bcc7ec3376b85be9f3bb5d3de7545d28'
+	'sha256:4da2f904358b4b0a822b18591b0539d69bc80a8f42dbb04e0f5f8cbffbbbe177'
 )
 
 scripts=(
@@ -97,13 +97,54 @@ package() {
 		"${pkgdir}/usr/lib/claude-desktop/resources/cowork-linux-helper" \
 		"${pkgdir}/usr/lib/claude-desktop/resources/virtiofsd"
 
-	# Upstream resolves claude_desktop_config.json below Electron userData. Allow
-	# account 2 to use account 1's MCP/preferences file without sharing OAuth state.
-	python3 - "${pkgdir}/usr/lib/claude-desktop/resources/app.asar" <<'PY'
+	# ClaudeAlt получает отдельные executable и app.asar. Остальные неизменяемые
+	# Electron-файлы подключаются к основной копии относительными symlink-ами.
+	# Это сохраняет отдельный resourcesPath, но не удваивает пакет целиком.
+	install -dm755 \
+		"${pkgdir}/usr/lib/claude-alt" \
+		"${pkgdir}/usr/lib/claude-alt/resources"
+	cp -p "${pkgdir}/usr/lib/claude-desktop/claude-desktop" \
+		"${pkgdir}/usr/lib/claude-alt/claude-alt-bin"
+
+	for entry in "${pkgdir}/usr/lib/claude-desktop"/*; do
+		entry_name="${entry##*/}"
+		case "${entry_name}" in
+		claude-desktop | resources) continue ;;
+		esac
+		ln -s "../claude-desktop/${entry_name}" \
+			"${pkgdir}/usr/lib/claude-alt/${entry_name}"
+	done
+
+	for entry in "${pkgdir}/usr/lib/claude-desktop/resources"/*; do
+		entry_name="${entry##*/}"
+		case "${entry_name}" in
+		app.asar)
+			cp -p "${entry}" "${pkgdir}/usr/lib/claude-alt/resources/app.asar"
+			;;
+		icon.png | TrayIconLinux.png | TrayIconLinux-Dark.png)
+			# Эти ресурсы ниже заменяются иконкой ClaudeAlt.
+			;;
+		*)
+			ln -s "../../claude-desktop/resources/${entry_name}" \
+				"${pkgdir}/usr/lib/claude-alt/resources/${entry_name}"
+			;;
+		esac
+	done
+
+	# Electron берёт icon.png для BrowserWindow, а TrayIconLinux*.png —
+	# для значка в системном лотке. Обе точки должны иметь
+	# отдельную идентичность, а не symlink на основной Claude.
+	for icon_name in icon.png TrayIconLinux.png TrayIconLinux-Dark.png; do
+		install -Dm644 "${srcdir}/claude-alt.png" \
+			"${pkgdir}/usr/lib/claude-alt/resources/${icon_name}"
+	done
+
+	alt_asar="${pkgdir}/usr/lib/claude-alt/resources/app.asar"
+
+	python3 - "${alt_asar}" <<'PY'
 import copy
 import hashlib
 import json
-import re
 import struct
 import sys
 from pathlib import Path
@@ -111,17 +152,14 @@ from pathlib import Path
 asar_path = Path(sys.argv[1])
 data = asar_path.read_bytes()
 if len(data) < 16:
-    raise SystemExit("Claude app.asar is too small")
+    raise SystemExit("ClaudeAlt app.asar is too small")
 
 _, _, _, header_size = struct.unpack("<IIII", data[:16])
 header = json.loads(data[16 : 16 + header_size])
 base_offset = 16 + ((header_size + 3) & ~3)
 output = bytearray()
-matches = []
-identifier = rb"[A-Za-z_$][A-Za-z0-9_$]*"
-config_constant_pattern = re.compile(
-    rb"(" + identifier + rb')="claude_desktop_config\.json"'
-)
+patched_package_json = 0
+patched_cowork_socket = 0
 
 
 def integrity_for(content: bytes, block_size: int = 4194304) -> dict:
@@ -139,51 +177,9 @@ def integrity_for(content: bytes, block_size: int = 4194304) -> dict:
     }
 
 
-def patch_config_paths(content: bytes, path: str) -> tuple[bytes, list[str]]:
-    replacements = []
-    patched_functions = []
-    for constant in config_constant_pattern.finditer(content):
-        config_name = re.escape(constant.group(1))
-        function_pattern = re.compile(
-            rb"function ("
-            + identifier
-            + rb")\(\)\{return ("
-            + identifier
-            + rb")\.join\(("
-            + identifier
-            + rb")\(\),"
-            + config_name
-            + rb"\)\}"
-        )
-        functions = list(
-            function_pattern.finditer(
-                content,
-                constant.end(),
-                min(len(content), constant.end() + 4096),
-            )
-        )
-        if len(functions) != 1:
-            raise SystemExit(
-                f"expected one config path function near {path}, got {len(functions)}"
-            )
-        function = functions[0]
-        original = function.group(0)
-        replacement = original.replace(
-            b"{return ",
-            b"{return process.env.CLAUDE_DESKTOP_CONFIG_FILE||",
-            1,
-        )
-        replacements.append((function.start(), function.end(), replacement))
-        patched_functions.append(f"{path}:{function.group(1).decode()}")
-
-    if len({(start, end) for start, end, _ in replacements}) != len(replacements):
-        raise SystemExit(f"duplicate shared config patch target in {path}")
-    for start, end, replacement in sorted(replacements, reverse=True):
-        content = content[:start] + replacement + content[end:]
-    return content, patched_functions
-
-
 def rebuild_node(node: dict, prefix: str = "") -> dict:
+    global patched_cowork_socket, patched_package_json
+
     rebuilt = {}
     for name, child in node.get("files", {}).items():
         path = f"{prefix}/{name}" if prefix else name
@@ -202,16 +198,40 @@ def rebuild_node(node: dict, prefix: str = "") -> dict:
         offset = int(entry["offset"])
         size = int(entry["size"])
         content = data[base_offset + offset : base_offset + offset + size]
-        content, patched = patch_config_paths(content, path)
-        if patched:
+        content_changed = False
+
+        if path == "package.json":
+            package_json = json.loads(content)
+            expected = {
+                "productName": "Claude",
+                "desktopName": "com.anthropic.Claude.desktop",
+            }
+            for field, expected_value in expected.items():
+                if package_json.get(field) != expected_value:
+                    raise SystemExit(
+                        f"unexpected Claude package.json {field}: "
+                        f"{package_json.get(field)!r} != {expected_value!r}"
+                    )
+            package_json["productName"] = "ClaudeAlt"
+            package_json["desktopName"] = "com.anthropic.ClaudeAlt.desktop"
+            content = (json.dumps(package_json, indent=2) + "\n").encode("utf-8")
+            patched_package_json += 1
+            content_changed = True
+
+        socket_name = b"claude-cowork-vm.sock"
+        socket_matches = content.count(socket_name)
+        if socket_matches:
+            content = content.replace(socket_name, b"claude-alt-cowork-vm.sock")
+            patched_cowork_socket += socket_matches
+            content_changed = True
+
+        entry["offset"] = str(len(output))
+        if content_changed:
             entry["size"] = len(content)
             entry["integrity"] = integrity_for(
                 content,
                 entry.get("integrity", {}).get("blockSize", 4194304),
             )
-            matches.extend(patched)
-
-        entry["offset"] = str(len(output))
         output.extend(content)
         rebuilt[name] = entry
 
@@ -219,24 +239,39 @@ def rebuild_node(node: dict, prefix: str = "") -> dict:
 
 
 rebuilt_header = {"files": rebuild_node(header)}
-if not matches:
-    raise SystemExit("shared Claude config patch matched no functions")
+if patched_package_json != 1:
+    raise SystemExit(
+        f"expected one ClaudeAlt package.json, got {patched_package_json}"
+    )
+if patched_cowork_socket != 1:
+    raise SystemExit(
+        f"expected one ClaudeAlt Cowork socket, got {patched_cowork_socket}"
+    )
 
 header_bytes = json.dumps(rebuilt_header, separators=(",", ":")).encode("utf-8")
 header_padded_size = (len(header_bytes) + 3) & ~3
 patched_data = (
-    struct.pack("<IIII", 4, header_padded_size + 8, header_padded_size + 4, len(header_bytes))
+    struct.pack(
+        "<IIII",
+        4,
+        header_padded_size + 8,
+        header_padded_size + 4,
+        len(header_bytes),
+    )
     + header_bytes
     + (b"\0" * (header_padded_size - len(header_bytes)))
     + bytes(output)
 )
-override_count = patched_data.count(b"CLAUDE_DESKTOP_CONFIG_FILE")
-if override_count != len(matches):
-    raise SystemExit(
-        f"shared Claude config override count mismatch: {override_count} != {len(matches)}"
-    )
+if patched_data.count(b"com.anthropic.ClaudeAlt.desktop") != 1:
+    raise SystemExit("ClaudeAlt desktopName was not written exactly once")
+if patched_data.count(b"claude-alt-cowork-vm.sock") != 1:
+    raise SystemExit("ClaudeAlt Cowork socket was not written exactly once")
 asar_path.write_bytes(patched_data)
 PY
+
+	chmod 755 "${pkgdir}/usr/lib/claude-alt/claude-alt-bin"
+	install -Dm755 "${srcdir}/claude-alt" \
+		"${pkgdir}/usr/lib/claude-alt/claude-alt"
 
 	install -dm755 "${pkgdir}/usr/share"
 	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"
@@ -248,30 +283,26 @@ PY
 		return 1
 	}
 	sed -i \
-		-e '0,/^Name=/{s/^Name=.*/Name=Claude (Account 1)\nName[ru]=Claude (Аккаунт 1)/}' \
+		-e '0,/^Name=/{s/^Name=.*/Name=Claude\nName[ru]=Claude/}' \
 		-e 's/^Categories=.*/Categories=Development;/' \
 		"${desktop_file}"
 
-	install -dm755 "${pkgdir}/usr/lib/claude-code-desktop"
-	install -Dm755 "${srcdir}/claude-desktop-account2" \
-		"${pkgdir}/usr/lib/claude-code-desktop/claude-desktop-account2"
+	install -Dm644 "${srcdir}/claude-alt.png" \
+		"${pkgdir}/usr/share/icons/hicolor/512x512/apps/claude-alt.png"
 
-	install -Dm644 "${srcdir}/claude-desktop-account2.png" \
-		"${pkgdir}/usr/share/icons/hicolor/512x512/apps/claude-desktop-account2.png"
-
-	install -Dm644 /dev/stdin "${pkgdir}/usr/share/applications/claude-desktop-account2.desktop" <<'EOF'
+	install -Dm644 /dev/stdin "${pkgdir}/usr/share/applications/com.anthropic.ClaudeAlt.desktop" <<'EOF'
 [Desktop Entry]
-Name=Claude (Account 2)
-Name[ru]=Claude (Аккаунт 2)
-Comment=Second Claude account with shared local workspace data
-Comment[ru]=Второй аккаунт Claude с общими локальными данными рабочей среды
+Name=ClaudeAlt
+Name[ru]=ClaudeAlt
+Comment=Independent secondary Claude desktop application
+Comment[ru]=Независимое второе приложение Claude
 GenericName=AI Assistant
 Keywords=AI;Chat;Assistant;Claude;Code;LLM;
-Exec=claude-desktop-account2 %U
-Icon=claude-desktop-account2
+Exec=claude-alt %U
+Icon=claude-alt
 Type=Application
 StartupNotify=true
-StartupWMClass=claude-desktop-account2
+StartupWMClass=com.anthropic.ClaudeAlt
 SingleMainWindow=true
 Categories=Development;
 Actions=NewChat;NewCode;
@@ -279,19 +310,21 @@ Actions=NewChat;NewCode;
 [Desktop Action NewChat]
 Name=New chat
 Name[ru]=Новый чат
-Exec=claude-desktop-account2 claude://claude.ai/new
+Exec=claude-alt claude://claude.ai/new
 
 [Desktop Action NewCode]
 Name=New Claude Code session
 Name[ru]=Новая сессия Claude Code
-Exec=claude-desktop-account2 claude://code/new
+Exec=claude-alt claude://code/new
 EOF
 
 	install -dm755 "${pkgdir}/usr/bin"
 	ln -sfn /usr/lib/claude-desktop/claude-desktop "${pkgdir}/usr/bin/claude-desktop"
 	ln -sfn /usr/lib/claude-desktop/claude-desktop "${pkgdir}/usr/bin/claude-code-desktop"
-	ln -sfn /usr/lib/claude-code-desktop/claude-desktop-account2 "${pkgdir}/usr/bin/claude-desktop-account2"
-	ln -sfn /usr/lib/claude-code-desktop/claude-desktop-account2 "${pkgdir}/usr/bin/claude-code-desktop-account2"
+	ln -sfn /usr/lib/claude-alt/claude-alt "${pkgdir}/usr/bin/claude-alt"
+	ln -sfn /usr/lib/claude-alt/claude-alt "${pkgdir}/usr/bin/claude-code-alt"
+	ln -sfn /usr/lib/claude-alt/claude-alt "${pkgdir}/usr/bin/claude-desktop-account2"
+	ln -sfn /usr/lib/claude-alt/claude-alt "${pkgdir}/usr/bin/claude-code-desktop-account2"
 
 	install -dm755 "${pkgdir}/usr/share/licenses/claude-desktop"
 	install-license "${srcdir}/LICENSE" "claude-desktop/LICENSE.nivora"
@@ -311,7 +344,7 @@ files() {
 	files-find-license
 	files-find \
 		"/usr/lib/claude-desktop/**/*" \
-		"/usr/lib/claude-code-desktop/*" \
+		"/usr/lib/claude-alt/**/*" \
 		"/usr/share/icons/hicolor/*/apps/claude-desktop.png" \
-		"/usr/share/icons/hicolor/*/apps/claude-desktop-account2.png"
+		"/usr/share/icons/hicolor/*/apps/claude-alt.png"
 }

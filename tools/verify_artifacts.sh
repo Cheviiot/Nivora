@@ -93,6 +93,28 @@ for package in "${packages[@]}"; do
         }
     fi
 
+    if [[ "$package" == 'claude-desktop' ]]; then
+        for required_path in \
+            /usr/bin/claude-alt \
+            /usr/bin/claude-desktop-account2 \
+            /usr/lib/claude-alt/claude-alt-bin \
+            /usr/lib/claude-alt/resources/app.asar \
+            /usr/lib/claude-alt/resources/icon.png \
+            /usr/lib/claude-alt/resources/TrayIconLinux.png \
+            /usr/lib/claude-alt/resources/TrayIconLinux-Dark.png \
+            /usr/share/applications/com.anthropic.ClaudeAlt.desktop \
+            /usr/share/icons/hicolor/512x512/apps/claude-alt.png; do
+            contains_path "$required_path" || {
+                echo "${package}: отсутствует компонент ClaudeAlt: ${required_path}" >&2
+                exit 1
+            }
+        done
+        contains_path '/usr/share/applications/claude-desktop-account2.desktop' && {
+            echo "${package}: обнаружен устаревший desktop-файл второго профиля" >&2
+            exit 1
+        }
+    fi
+
     while read -r path _ _ _ mode _; do
         [[ "$path" == /usr/bin/* || "$path" == /usr/sbin/* ]] || continue
         [[ "$mode" == 0100755 || "$mode" == 0120000 ]] || {

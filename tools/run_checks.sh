@@ -34,6 +34,7 @@ fi
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 bash tests/test_helper.sh
 bash tests/test_migration.sh
+bash tests/test_claude_alt.sh
 python3 tools/validate_repo.py
 
 if command -v stplr-spec >/dev/null 2>&1; then

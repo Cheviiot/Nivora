@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/assets/nivora.svg" width="96" height="96" alt="Nivora">
+  <img src=".github/assets/nivora.png" width="96" height="96" alt="Nivora">
 </p>
 
 # Nivora

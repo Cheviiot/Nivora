@@ -7,23 +7,33 @@ desktop-id `com.anthropic.Claude`.
 sudo stplr install nivora/claude-desktop
 ```
 
-## Команды и профили
+## Два независимых приложения
 
-- `claude-desktop` и `claude-code-desktop` запускают основной профиль.
-- `claude-desktop-account2` и `claude-code-desktop-account2` запускают второй профиль.
+- `claude-desktop` и `claude-code-desktop` запускают основное приложение Claude.
+- `claude-alt` и `claude-code-alt` запускают отдельное приложение ClaudeAlt.
+- `claude-desktop-account2` и `claude-code-desktop-account2` сохранены как совместимые
+  алиасы ClaudeAlt.
 - Команда `claude` не создаётся, чтобы не конфликтовать с Claude Code CLI.
 
-Второй профиль хранит cookies, OAuth, IndexedDB и Chromium locks в
-`${XDG_CONFIG_HOME:-~/.config}/Claude-Account-2`. Локальные проекты, `~/.claude`, MCP-конфигурация и
-сессии Claude Code доступны обоим профилям. Облачные чаты и память остаются привязаны к
-конкретной учётной записи Anthropic.
+ClaudeAlt имеет отдельные executable/resources tree, Electron `productName`, Wayland `app_id`,
+X11 `WM_CLASS`, desktop-файл, Chromium-профиль, Cowork VM socket, оконную и
+tray-иконки. Поэтому окружение рабочего стола группирует Claude и ClaudeAlt как
+разные приложения, а `requestSingleInstanceLock()` и Cowork runtime каждого
+приложения работают независимо.
+
+Новая установка ClaudeAlt хранит cookies, OAuth, IndexedDB и Chromium locks в
+`${XDG_CONFIG_HOME:-~/.config}/ClaudeAlt`. Если уже существует прежний каталог
+`${XDG_CONFIG_HOME:-~/.config}/Claude-Account-2`, launcher использует его, чтобы после обновления
+не потерять авторизацию второго аккаунта. Глобальные данные Claude Code в `~/.claude` могут
+по-прежнему использоваться обоими приложениями.
 
 ## Настройка
 
 | Переменная | Назначение |
 |:--|:--|
-| `CLAUDE_DESKTOP_PRIMARY_DIR` | Каталог основного профиля |
-| `CLAUDE_DESKTOP_ACCOUNT2_DIR` | Каталог второго профиля |
-| `CLAUDE_DESKTOP_ACCOUNT2_SHARE_LOCAL_DATA=0` | Отключить общий локальный слой |
+| `CLAUDE_ALT_DATA_DIR` | Явно задать каталог профиля ClaudeAlt |
+| `CLAUDE_DESKTOP_ACCOUNT2_DIR` | Совместимое имя переменной прежнего второго профиля |
+| `CLAUDE_ALT_EXECUTABLE` | Переопределить executable ClaudeAlt для диагностики |
 
-Переименование package ID не меняет эти пути и не создаёт вторые desktop-ярлыки.
+Основной Claude продолжает использовать upstream desktop-id `com.anthropic.Claude`, а ClaudeAlt
+использует `com.anthropic.ClaudeAlt`.

@@ -41,7 +41,7 @@ def main() -> None:
     )
 
     for package in package_dirs:
-        command = f"stplr install nivora/{package}"
+        command = f"`stplr install nivora/{package}`"
         version, architectures = package_metadata(package)
         matching_lines = [
             index

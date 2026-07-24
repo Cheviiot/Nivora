@@ -20,6 +20,7 @@ readonly -a PACKAGES=(
     parsec
     pineconemc
     tailscale
+    telegram-desktop
     ventoy
     vual
     yandex-browser-stable
@@ -234,6 +235,7 @@ latest_version() {
     parsec) latest_parsec ;;
     pineconemc) github_latest_release ElyPrismLauncher/Launcher ;;
     tailscale) latest_tailscale ;;
+    telegram-desktop) github_latest_release telegramdesktop/tdesktop ;;
     ventoy) github_latest_release ventoy/Ventoy ;;
     vual) github_latest_release Cheviiot/Vual ;;
     yandex-browser-stable) latest_yandex_browser ;;

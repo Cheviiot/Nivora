@@ -2,6 +2,18 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-07-25 — Telegram Desktop
+
+### Добавлено
+
+- В каталог добавлен Telegram Desktop 7.0.5 для `amd64` из официального
+  статически собранного Linux-архива `tsetup.<version>.tar.xz`.
+- Сохранены официальные desktop-id `org.telegram.desktop` и WM-класс
+  `TelegramDesktop`; иконка взята из официального репозитория
+  `telegramdesktop/tdesktop` для закреплённого тега релиза.
+- Пакет добавляет команду `telegram-desktop`; сборка распространяется под
+  GPL-3.0-only с отдельным разрешением на линковку с OpenSSL.
+
 ## 2026-07-25 — Nivora CLI
 
 ### Изменено

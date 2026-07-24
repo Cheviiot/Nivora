@@ -30,6 +30,7 @@ EXPECTED_PACKAGES = (
     "parsec",
     "pineconemc",
     "tailscale",
+    "telegram-desktop",
     "ventoy",
     "vual",
     "yandex-browser-stable",

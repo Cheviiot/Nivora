@@ -1,5 +1,5 @@
 name='msvc-go-wine'
-version=0.1.1
+version=0.1.2
 release=1
 summary='Cross compile with MSVC on Linux via Wine'
 summary_ru='Кросс-компиляция с MSVC на Linux через Wine'
@@ -47,12 +47,12 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:c4193012bab8499cf2000faba61bcd10f77c6faaeea088fe5748e3531f7134e3'
+	'sha256:75222fff15019542fcc2b8d317a221800cbd0993a06d40bf204521810e20ca42'
 	'sha256:693a85757d0e3c527a78af6f12dc5068900c3cd363b92f0998ec41b607b15885'
 )
 
 checksums_arm64=(
-	'sha256:0bc74b95414085acba3e08a2b994063adc3c011cdff61f92e17810c34703ffbc'
+	'sha256:6d6ca9c426a50f5f5f77c670f41c24c36e28c61c5081170efbd3b85de6517c3b'
 	'sha256:693a85757d0e3c527a78af6f12dc5068900c3cd363b92f0998ec41b607b15885'
 )
 

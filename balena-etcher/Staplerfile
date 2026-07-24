@@ -1,0 +1,144 @@
+name='balena-etcher'
+version='2.1.6'
+release=1
+summary='Safe SD card and USB drive image flasher'
+summary_ru='Безопасная запись образов на SD-карты и USB-накопители'
+group='System/Configuration/Hardware'
+desc='balenaEtcher is a graphical utility for writing operating-system images to SD cards and USB drives with validation after flashing.'
+desc_ru='balenaEtcher — графическая утилита для записи образов операционных систем на SD-карты и USB-накопители с проверкой данных после прошивки.'
+homepage='https://etcher.balena.io/'
+maintainer='Balena Ltd. <hello@balena.io>'
+
+architectures=('amd64')
+
+license=('Apache-2.0')
+
+provides=()
+replaces=('balena-etcher')
+conflicts=()
+
+# Electron и нативный helper поставляются в официальном DEB.
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=(
+	'libgtk-3-0' 'libnotify4' 'libnss3' 'libxtst6' 'xdg-utils'
+	'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2'
+	'libatk1.0-0' 'libc6' 'libcairo2' 'libcups2' 'libdbus-1-3' 'libexpat1'
+	'libfontconfig1' 'libfreetype6' 'libgcc1' 'libgdk-pixbuf2.0-0 | libgdk-pixbuf-2.0-0'
+	'libglib2.0-0' 'liblzma5' 'libnspr4' 'libpango1.0-0 | libpango-1.0-0'
+	'libstdc++6' 'libx11-6' 'libxcomposite1' 'libxcursor1' 'libxdamage1'
+	'libxext6' 'libxfixes3' 'libxi6' 'libxrandr2' 'libxrender1' 'libxss1'
+	'kde-cli-tools | kde-runtime | trash-cli | libglib2.0-bin | gvfs-bin'
+	'polkit-1-auth-agent | policykit-1-gnome | polkit-kde-1'
+)
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=(
+	'gtk3' 'libnotify' 'nss' 'libXtst' 'xdg-utils' 'at-spi2-core'
+	'libdrm' 'mesa-libgbm' 'libxcb' 'alsa-lib' 'atk' 'glibc' 'cairo'
+	'cups-libs' 'dbus-libs' 'expat' 'fontconfig' 'freetype' 'libgcc'
+	'gdk-pixbuf2' 'glib2' 'xz-libs' 'nspr' 'pango' 'libstdc++' 'libX11'
+	'libXcomposite' 'libXcursor' 'libXdamage' 'libXext' 'libXfixes' 'libXi'
+	'libXrandr' 'libXrender' 'libXScrnSaver' 'polkit'
+)
+deps_arch=(
+	'gtk3' 'libnotify' 'nss' 'libxtst' 'xdg-utils' 'at-spi2-core'
+	'libdrm' 'mesa' 'libxcb' 'alsa-lib' 'atk' 'glibc' 'cairo' 'cups'
+	'dbus' 'expat' 'fontconfig' 'freetype2' 'gcc-libs' 'gdk-pixbuf2'
+	'glib2' 'xz' 'nspr' 'pango' 'libx11' 'libxcomposite' 'libxcursor'
+	'libxdamage' 'libxext' 'libxfixes' 'libxi' 'libxrandr' 'libxrender'
+	'libxss' 'polkit'
+)
+deps_opensuse=(
+	'gtk3' 'libnotify4' 'mozilla-nss' 'libXtst6' 'xdg-utils' 'at-spi2-core'
+	'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2' 'libatk-1_0-0'
+	'glibc' 'libcairo2' 'libcups2' 'libdbus-1-3' 'libexpat1'
+	'fontconfig' 'libfreetype6' 'libgcc_s1' 'gdk-pixbuf-loader-rsvg'
+	'glib2' 'liblzma5' 'mozilla-nspr' 'libpango-1_0-0' 'libstdc++6'
+	'libX11-6' 'libXcomposite1' 'libXcursor1' 'libXdamage1' 'libXext6'
+	'libXfixes3' 'libXi6' 'libXrandr2' 'libXrender1' 'libXss1' 'polkit'
+)
+deps_altlinux=(
+	'libgtk+3' 'libnotify' 'libnss' 'libXtst' 'xdg-utils' 'libat-spi2-core'
+	'libdrm' 'libgbm' 'libxcb' 'libalsa' 'libatk' 'glibc' 'libcairo'
+	'libcups' 'libdbus' 'libexpat' 'fontconfig' 'libfreetype' 'libgcc1'
+	'libgdk-pixbuf' 'glib2' 'liblzma' 'libnspr' 'libpango' 'libstdc++6'
+	'libX11' 'libXcomposite' 'libXcursor' 'libXdamage' 'libXext' 'libXfixes'
+	'libXi' 'libXrandr' 'libXrender' 'libXScrnSaver' 'polkit'
+)
+
+opt_deps=()
+opt_deps_debian=()
+opt_deps_ubuntu=("${opt_deps_debian[@]}")
+opt_deps_fedora=('polkit-gnome | polkit-kde' 'gvfs')
+opt_deps_arch=('polkit-gnome | polkit-kde-agent' 'gvfs')
+opt_deps_opensuse=('polkit-gnome | polkit-kde-agent-6' 'glib2-tools')
+opt_deps_altlinux=(
+	'polkit-gnome | polkit-kde-agent | lxqt-policykit | xfce-polkit'
+	'gvfs'
+)
+
+build_deps=('binutils')
+
+sources=(
+	"https://github.com/balena-io/etcher/releases/download/v${version}/balena-etcher_${version}_amd64.deb?~archive=false&~name=balena-etcher.deb"
+	"https://raw.githubusercontent.com/balena-io/etcher/v${version}/LICENSE?~archive=false&~name=LICENSE"
+)
+
+checksums=(
+	'sha256:2bdebb46c9f750a9abf11c188ff69a405b4a4fed114333d634c3b3fe59a64057'
+	'sha256:39445b459f86621683f9731fb6a7d070819dc379840e8ef52f62bb1c68942291'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x balena-etcher.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install -dm755 "${pkgdir}/usr/lib"
+	cp -a "${srcdir}/extracted/usr/lib/balena-etcher" "${pkgdir}/usr/lib/"
+	chmod 0755 "${pkgdir}/usr/lib/balena-etcher/chrome-sandbox"
+	chmod 0755 \
+		"${pkgdir}/usr/lib/balena-etcher/balena-etcher" \
+		"${pkgdir}/usr/lib/balena-etcher/resources/etcher-util"
+
+	# Upstream DEB содержит balenaEtcher-ссылку на каталог GitHub Actions.
+	# Сохраняем совместимое имя, но направляем его на локальный executable.
+	ln -sfn balena-etcher "${pkgdir}/usr/lib/balena-etcher/balenaEtcher"
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -sfn ../lib/balena-etcher/balena-etcher \
+		"${pkgdir}/usr/bin/balena-etcher"
+
+	install -Dm644 \
+		"${srcdir}/extracted/usr/share/applications/balena-etcher.desktop" \
+		"${pkgdir}/usr/share/applications/balena-etcher.desktop"
+	install -Dm644 \
+		"${srcdir}/extracted/usr/share/pixmaps/balena-etcher.png" \
+		"${pkgdir}/usr/share/pixmaps/balena-etcher.png"
+
+	install-license LICENSE "balena-etcher/LICENSE"
+	install-license \
+		"${srcdir}/extracted/usr/share/doc/balena-etcher/copyright" \
+		"balena-etcher/copyright"
+	install-license \
+		"${srcdir}/extracted/usr/lib/balena-etcher/LICENSES.chromium.html" \
+		"balena-etcher/LICENSES.chromium.html"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/usr/lib/balena-etcher/**/*" \
+		"/usr/share/pixmaps/balena-etcher.png"
+}

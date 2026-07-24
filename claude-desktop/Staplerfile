@@ -1,0 +1,388 @@
+name='claude-desktop'
+version=1.24012.0
+release=4
+summary='Claude desktop application'
+summary_ru='Десктопное приложение Claude'
+group='Development/Tools'
+desc='Claude is the Anthropic desktop application for Claude and Claude Code workflows with chat, project context, integrated terminal, editor and visual diff review.'
+desc_ru='Claude — десктопное приложение Anthropic для Claude и сценариев Claude Code: чат, контекст проекта, встроенный терминал, редактор и визуальный просмотр diff.'
+homepage='https://code.claude.com/docs/en/desktop-quickstart'
+maintainer='Anthropic PBC <support@anthropic.com>'
+
+architectures=('amd64' 'arm64')
+
+license=('Custom')
+nonfree=1
+nonfree_msg='Claude Desktop является проприетарным приложением Anthropic. Использование Claude, Claude Code, учетной записи, подписки, сетевых функций и моделей регулируется условиями Anthropic.'
+nonfree_url='https://www.anthropic.com/legal/consumer-terms'
+
+provides=()
+replaces=('claude-desktop')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'libc6' 'libxtst6' 'libuuid1' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk | xdg-desktop-portal-gnome | xdg-desktop-portal-kde')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa-libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+deps_arch=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libxtst' 'libutil-linux' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'xdg-utils' 'at-spi2-core' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'glibc' 'libXtst6' 'libuuid1' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'xdg-utils' 'libat-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+
+opt_deps=()
+opt_deps_debian=('libasound2t64 | libasound2 | pulseaudio' 'libayatana-appindicator3-1 | libappindicator3-1' 'ca-certificates' 'gnome-keyring | kwalletd6 | kwalletd5' 'qemu-system-x86' 'ovmf' 'virtiofsd')
+opt_deps_ubuntu=("${opt_deps_debian[@]}")
+opt_deps_fedora=('alsa-lib' 'pulseaudio-libs' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'kwallet' 'qemu-system-x86' 'edk2-ovmf' 'virtiofsd')
+opt_deps_arch=('alsa-lib' 'pulseaudio' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'kwallet' 'qemu-system-x86' 'edk2-ovmf' 'virtiofsd')
+opt_deps_opensuse=('libasound2' 'libpulse0' 'libappindicator3-1' 'ca-certificates' 'gnome-keyring' 'kwallet6' 'qemu-x86' 'ovmf' 'virtiofsd')
+opt_deps_altlinux=('libalsa' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'qemu-system-x86' 'virtiofsd')
+
+build_deps=('binutils')
+build_deps_debian=('binutils' 'python3')
+build_deps_ubuntu=("${build_deps_debian[@]}")
+build_deps_fedora=('binutils' 'python3')
+build_deps_arch=('binutils' 'python')
+build_deps_opensuse=('binutils' 'python3')
+build_deps_altlinux=('binutils' 'python3')
+
+sources=(
+	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_amd64.deb?~archive=false&~name=claude-desktop.deb"
+	"local:///claude-alt"
+	"local:///claude-alt.png"
+	"local:///claude-tray-orange.png"
+	"local:///claude-alt-tray-turquoise.png"
+	'local:///LICENSE'
+)
+
+sources_arm64=(
+	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_arm64.deb?~archive=false&~name=claude-desktop.deb"
+	"local:///claude-alt"
+	"local:///claude-alt.png"
+	"local:///claude-tray-orange.png"
+	"local:///claude-alt-tray-turquoise.png"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:1096a8063956f8430fdbe504bb1c5e02985f31d0f45d082e4966e5d30ea7e3ac'
+	'sha256:00d9fe6549d82f564a99c6e8ec54d1380fdf8f0a20c99bb9b3cda1f689adf57d'
+	'sha256:f23de36a74c3f6ddae92511fc0dc659816853bf1d28520a6e0232fe2606fd0b4'
+	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
+	'sha256:21d1db80c30921346252ed405fa36cb5c48c287afdd8ebe474073389fd88e85e'
+	'sha256:40efe7a2755d02c9fe13f98cae18705e2d31e5bbb24816ebbd4951c5e3a56b3f'
+)
+
+checksums_arm64=(
+	'sha256:37dd5dc1b0bfcb3192561acbd33cb59037806fe9b95221a3ddf38244203196f1'
+	'sha256:00d9fe6549d82f564a99c6e8ec54d1380fdf8f0a20c99bb9b3cda1f689adf57d'
+	'sha256:f23de36a74c3f6ddae92511fc0dc659816853bf1d28520a6e0232fe2606fd0b4'
+	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
+	'sha256:21d1db80c30921346252ed405fa36cb5c48c287afdd8ebe474073389fd88e85e'
+	'sha256:40efe7a2755d02c9fe13f98cae18705e2d31e5bbb24816ebbd4951c5e3a56b3f'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x claude-desktop.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install -dm755 "${pkgdir}/usr/lib"
+	cp -a "${srcdir}/extracted/usr/lib/claude-desktop" "${pkgdir}/usr/lib/"
+	chmod 0755 "${pkgdir}/usr/lib/claude-desktop/chrome-sandbox"
+	chmod 755 \
+		"${pkgdir}/usr/lib/claude-desktop/claude-desktop" \
+		"${pkgdir}/usr/lib/claude-desktop/resources/chrome-native-host" \
+		"${pkgdir}/usr/lib/claude-desktop/resources/cowork-linux-helper" \
+		"${pkgdir}/usr/lib/claude-desktop/resources/virtiofsd"
+
+	# Сохраняем штатный tray-глиф Claude, меняя только его цвет.
+	for icon_name in TrayIconLinux.png TrayIconLinux-Dark.png; do
+		install -Dm644 "${srcdir}/claude-tray-orange.png" \
+			"${pkgdir}/usr/lib/claude-desktop/resources/${icon_name}"
+	done
+
+	# ClaudeAlt получает отдельные executable и app.asar. Остальные неизменяемые
+	# Electron-файлы подключаются к основной копии относительными symlink-ами.
+	# Это сохраняет отдельный resourcesPath, но не удваивает пакет целиком.
+	install -dm755 \
+		"${pkgdir}/usr/lib/claude-alt" \
+		"${pkgdir}/usr/lib/claude-alt/resources"
+	cp -p "${pkgdir}/usr/lib/claude-desktop/claude-desktop" \
+		"${pkgdir}/usr/lib/claude-alt/claude-alt-bin"
+
+	for entry in "${pkgdir}/usr/lib/claude-desktop"/*; do
+		entry_name="${entry##*/}"
+		case "${entry_name}" in
+		claude-desktop | resources) continue ;;
+		esac
+		ln -s "../claude-desktop/${entry_name}" \
+			"${pkgdir}/usr/lib/claude-alt/${entry_name}"
+	done
+
+	for entry in "${pkgdir}/usr/lib/claude-desktop/resources"/*; do
+		entry_name="${entry##*/}"
+		case "${entry_name}" in
+		app.asar)
+			cp -p "${entry}" "${pkgdir}/usr/lib/claude-alt/resources/app.asar"
+			;;
+		icon.png | TrayIconLinux.png | TrayIconLinux-Dark.png)
+			# Эти ресурсы ниже заменяются иконкой ClaudeAlt.
+			;;
+		*)
+			ln -s "../../claude-desktop/resources/${entry_name}" \
+				"${pkgdir}/usr/lib/claude-alt/resources/${entry_name}"
+			;;
+		esac
+	done
+
+	# Большая иконка ClaudeAlt используется окном, а в tray устанавливается
+	# отдельный бирюзовый вариант штатного глифа Claude.
+	install -Dm644 "${srcdir}/claude-alt.png" \
+		"${pkgdir}/usr/lib/claude-alt/resources/icon.png"
+	for icon_name in TrayIconLinux.png TrayIconLinux-Dark.png; do
+		install -Dm644 "${srcdir}/claude-alt-tray-turquoise.png" \
+			"${pkgdir}/usr/lib/claude-alt/resources/${icon_name}"
+	done
+
+	alt_asar="${pkgdir}/usr/lib/claude-alt/resources/app.asar"
+
+	python3 - "${alt_asar}" <<'PY'
+import copy
+import hashlib
+import json
+import struct
+import sys
+from pathlib import Path
+
+asar_path = Path(sys.argv[1])
+data = asar_path.read_bytes()
+if len(data) < 16:
+    raise SystemExit("ClaudeAlt app.asar is too small")
+
+_, _, _, header_size = struct.unpack("<IIII", data[:16])
+header = json.loads(data[16 : 16 + header_size])
+base_offset = 16 + ((header_size + 3) & ~3)
+output = bytearray()
+patched_package_json = 0
+patched_cowork_socket = 0
+patched_user_agent = 0
+
+
+def integrity_for(content: bytes, block_size: int = 4194304) -> dict:
+    blocks = [
+        hashlib.sha256(content[index : index + block_size]).hexdigest()
+        for index in range(0, len(content), block_size)
+    ]
+    if not blocks:
+        blocks = [hashlib.sha256(b"").hexdigest()]
+    return {
+        "algorithm": "SHA256",
+        "hash": hashlib.sha256(content).hexdigest(),
+        "blockSize": block_size,
+        "blocks": blocks,
+    }
+
+
+def rebuild_node(node: dict, prefix: str = "") -> dict:
+    global patched_cowork_socket, patched_package_json, patched_user_agent
+
+    rebuilt = {}
+    for name, child in node.get("files", {}).items():
+        path = f"{prefix}/{name}" if prefix else name
+        if "files" in child:
+            rebuilt[name] = {
+                **{key: value for key, value in child.items() if key != "files"},
+                "files": rebuild_node(child, path),
+            }
+            continue
+
+        entry = copy.deepcopy(child)
+        if entry.get("unpacked"):
+            rebuilt[name] = entry
+            continue
+
+        offset = int(entry["offset"])
+        size = int(entry["size"])
+        content = data[base_offset + offset : base_offset + offset + size]
+        content_changed = False
+
+        if path == "package.json":
+            package_json = json.loads(content)
+            expected = {
+                "productName": "Claude",
+                "desktopName": "com.anthropic.Claude.desktop",
+            }
+            for field, expected_value in expected.items():
+                if package_json.get(field) != expected_value:
+                    raise SystemExit(
+                        f"unexpected Claude package.json {field}: "
+                        f"{package_json.get(field)!r} != {expected_value!r}"
+                    )
+            # Отдельный productName нужен Electron для независимого instance
+            # lock. Официальный User-Agent восстанавливается ниже отдельно.
+            package_json["productName"] = "ClaudeAlt"
+            package_json["desktopName"] = "com.anthropic.ClaudeAlt.desktop"
+            content = (json.dumps(package_json, indent=2) + "\n").encode("utf-8")
+            patched_package_json += 1
+            content_changed = True
+
+        socket_name = b"claude-cowork-vm.sock"
+        socket_matches = content.count(socket_name)
+        if socket_matches:
+            content = content.replace(socket_name, b"claude-alt-cowork-vm.sock")
+            patched_cowork_socket += socket_matches
+            content_changed = True
+
+        user_agent_marker = (
+            b'P.app.isPackaged||P.app.setName("Claude");RRn();'
+        )
+        user_agent_matches = content.count(user_agent_marker)
+        if user_agent_matches:
+            content = content.replace(
+                user_agent_marker,
+                b'P.app.isPackaged||P.app.setName("Claude");'
+                b'P.app.userAgentFallback=P.app.userAgentFallback'
+                b'.replaceAll("ClaudeAlt","Claude");RRn();',
+            )
+            patched_user_agent += user_agent_matches
+            content_changed = True
+
+        entry["offset"] = str(len(output))
+        if content_changed:
+            entry["size"] = len(content)
+            entry["integrity"] = integrity_for(
+                content,
+                entry.get("integrity", {}).get("blockSize", 4194304),
+            )
+        output.extend(content)
+        rebuilt[name] = entry
+
+    return rebuilt
+
+
+rebuilt_header = {"files": rebuild_node(header)}
+if patched_package_json != 1:
+    raise SystemExit(
+        f"expected one ClaudeAlt package.json, got {patched_package_json}"
+    )
+if patched_cowork_socket != 1:
+    raise SystemExit(
+        f"expected one ClaudeAlt Cowork socket, got {patched_cowork_socket}"
+    )
+if patched_user_agent != 1:
+    raise SystemExit(
+        f"expected one ClaudeAlt User-Agent patch, got {patched_user_agent}"
+    )
+
+header_bytes = json.dumps(rebuilt_header, separators=(",", ":")).encode("utf-8")
+header_padded_size = (len(header_bytes) + 3) & ~3
+patched_data = (
+    struct.pack(
+        "<IIII",
+        4,
+        header_padded_size + 8,
+        header_padded_size + 4,
+        len(header_bytes),
+    )
+    + header_bytes
+    + (b"\0" * (header_padded_size - len(header_bytes)))
+    + bytes(output)
+)
+if patched_data.count(b"com.anthropic.ClaudeAlt.desktop") != 1:
+    raise SystemExit("ClaudeAlt desktopName was not written exactly once")
+if patched_data.count(b'"productName": "ClaudeAlt"') != 1:
+    raise SystemExit("ClaudeAlt productName was not written exactly once")
+if patched_data.count(b'.replaceAll("ClaudeAlt","Claude")') != 1:
+    raise SystemExit("ClaudeAlt official User-Agent patch is missing")
+if patched_data.count(b"claude-alt-cowork-vm.sock") != 1:
+    raise SystemExit("ClaudeAlt Cowork socket was not written exactly once")
+asar_path.write_bytes(patched_data)
+PY
+
+	chmod 755 "${pkgdir}/usr/lib/claude-alt/claude-alt-bin"
+	install -Dm755 "${srcdir}/claude-alt" \
+		"${pkgdir}/usr/lib/claude-alt/claude-alt"
+
+	install -dm755 "${pkgdir}/usr/share"
+	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"
+	cp -a "${srcdir}/extracted/usr/share/icons" "${pkgdir}/usr/share/"
+
+	desktop_file="$(find "${pkgdir}/usr/share/applications" -maxdepth 1 -type f -name "*.desktop" | head -1)"
+	[[ -n "${desktop_file}" ]] || {
+		echo "Claude desktop file not found" >&2
+		return 1
+	}
+	sed -i \
+		-e '0,/^Name=/{s/^Name=.*/Name=Claude\nName[ru]=Claude/}' \
+		-e 's/^Categories=.*/Categories=Development;/' \
+		"${desktop_file}"
+
+	install -Dm644 "${srcdir}/claude-alt.png" \
+		"${pkgdir}/usr/share/icons/hicolor/512x512/apps/claude-alt.png"
+
+	install -Dm644 /dev/stdin "${pkgdir}/usr/share/applications/com.anthropic.ClaudeAlt.desktop" <<'EOF'
+[Desktop Entry]
+Name=ClaudeAlt
+Name[ru]=ClaudeAlt
+Comment=Independent secondary Claude desktop application
+Comment[ru]=Независимое второе приложение Claude
+GenericName=AI Assistant
+Keywords=AI;Chat;Assistant;Claude;Code;LLM;
+Exec=claude-alt %U
+Icon=claude-alt
+Type=Application
+StartupNotify=true
+StartupWMClass=com.anthropic.ClaudeAlt
+SingleMainWindow=true
+Categories=Development;
+Actions=NewChat;NewCode;
+
+[Desktop Action NewChat]
+Name=New chat
+Name[ru]=Новый чат
+Exec=claude-alt claude://claude.ai/new
+
+[Desktop Action NewCode]
+Name=New Claude Code session
+Name[ru]=Новая сессия Claude Code
+Exec=claude-alt claude://code/new
+EOF
+
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -sfn /usr/lib/claude-desktop/claude-desktop "${pkgdir}/usr/bin/claude-desktop"
+	ln -sfn /usr/lib/claude-alt/claude-alt "${pkgdir}/usr/bin/claude-alt"
+	ln -sfn /usr/lib/claude-alt/claude-alt "${pkgdir}/usr/bin/claude-code-alt"
+	ln -sfn /usr/lib/claude-alt/claude-alt "${pkgdir}/usr/bin/claude-desktop-account2"
+
+	install -dm755 "${pkgdir}/usr/share/licenses/claude-desktop"
+	install-license "${srcdir}/LICENSE" "claude-desktop/LICENSE.nivora"
+	install -Dm644 "${srcdir}/extracted/usr/share/doc/claude-desktop/copyright" \
+		"${pkgdir}/usr/share/licenses/claude-desktop/copyright"
+	install -Dm644 "${srcdir}/extracted/usr/lib/claude-desktop/LICENSES.chromium.html" \
+		"${pkgdir}/usr/share/licenses/claude-desktop/LICENSES.chromium.html"
+	install -Dm644 "${srcdir}/extracted/usr/lib/claude-desktop/resources/virtiofsd.LICENSE-APACHE" \
+		"${pkgdir}/usr/share/licenses/claude-desktop/virtiofsd.LICENSE-APACHE"
+	install -Dm644 "${srcdir}/extracted/usr/lib/claude-desktop/resources/virtiofsd.LICENSE-BSD-3-Clause" \
+		"${pkgdir}/usr/share/licenses/claude-desktop/virtiofsd.LICENSE-BSD-3-Clause"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/usr/lib/claude-desktop/**/*" \
+		"/usr/lib/claude-alt/**/*" \
+		"/usr/share/icons/hicolor/*/apps/claude-desktop.png" \
+		"/usr/share/icons/hicolor/*/apps/claude-alt.png"
+}

@@ -1,0 +1,54 @@
+name='fisher'
+version='4.4.8'
+release=3
+summary='Fish plugin manager'
+summary_ru='Менеджер плагинов для Fish shell'
+desc='Fisher is a plugin manager for Fish shell — zero configuration, pure Fish, blazing fast concurrent downloads.'
+desc_ru='Fisher — менеджер плагинов для Fish shell. Ноль конфигурации, чистый Fish, молниеносная параллельная загрузка.'
+group='Shells'
+homepage='https://github.com/jorgebucaran/fisher'
+maintainer='Cheviiot <https://github.com/Cheviiot>'
+
+architectures=('all')
+
+license=('MIT')
+
+provides=()
+replaces=('fisher')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=(
+	'fish'
+)
+
+deps_debian=('fish')
+deps_ubuntu=('fish')
+deps_fedora=('fish')
+deps_arch=('fish')
+deps_altlinux=('fish')
+deps_opensuse=('fish')
+
+sources=(
+	"https://raw.githubusercontent.com/jorgebucaran/fisher/${version}/functions/fisher.fish"
+	'local:///LICENSE'
+)
+checksums=(
+	'0fb6c81ae3003e95b5671766fa6c25c3597066e29965b7772f6c1b007387356d'
+	'567ce81f1514e7338d5c1a1e5c2d8ef772c1ff01d77d7b76501e67c148b14dbb'
+)
+
+package() {
+	install -Dm644 "${srcdir}/fisher.fish" \
+		"${pkgdir}/usr/share/fish/vendor_functions.d/fisher.fish"
+	install-license "${srcdir}/LICENSE" "fisher/LICENSE.nivora"
+}
+
+files() {
+	files-find \
+		"/usr/share/fish/vendor_functions.d/fisher.fish"
+	files-find-license
+}

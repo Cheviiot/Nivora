@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+
+binary="${ANIDESK_BINARY:-/usr/lib/anidesk/anidesk}"
+flags=()
+
+case "${ANIDESK_DISABLE_GPU:-0}" in
+1 | true | yes | on)
+    flags+=(
+        '--disable-gpu'
+        '--disable-gpu-compositing'
+        '--disable-software-rasterizer'
+    )
+    ;;
+esac
+
+exec "${binary}" "${flags[@]}" "$@"

@@ -1,0 +1,47 @@
+name: CI · Ручная сборка пакетов
+
+on:
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: "all или package ID через пробел"
+        required: true
+        default: all
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nivora-clean-build
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Изолированная сборка
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - name: Получить репозиторий
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Подготовить инструменты
+        uses: ./.github/actions/setup-stplr-spec
+
+      - name: Собрать пакеты
+        env:
+          REQUESTED_PACKAGES: ${{ inputs.packages }}
+        run: |
+          if [[ "$REQUESTED_PACKAGES" == all ]]; then
+            tools/clean_build.sh --all
+            tools/verify_artifacts.sh --all
+            NIVORA_DEB_BUILD_MODE=host tools/test_package_lifecycle.sh
+          else
+            read -r -a packages <<<"$REQUESTED_PACKAGES"
+            tools/clean_build.sh "${packages[@]}"
+            tools/verify_artifacts.sh "${packages[@]}"
+          fi

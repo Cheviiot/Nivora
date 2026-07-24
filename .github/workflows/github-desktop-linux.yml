@@ -1,0 +1,166 @@
+name: CI · Сборка GitHub Desktop для Linux
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Версия desktop/desktop без префикса release-"
+        required: true
+        type: string
+      publish:
+        description: "Опубликовать tar.gz в GitHub Release Nivora"
+        required: false
+        default: true
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Версия desktop/desktop без префикса release-"
+        required: true
+        default: "3.6.3"
+        type: string
+      publish:
+        description: "Опубликовать tar.gz в GitHub Release Nivora"
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nivora-github-desktop-linux-${{ inputs.version || '3.6.3' }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Linux ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 180
+    steps:
+      - name: Установить Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24.15.0"
+
+      - name: Установить системные зависимости
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libsecret-1-dev pkg-config python3
+
+      - name: Получить официальные исходники GitHub Desktop
+        env:
+          VERSION: ${{ inputs.version || '3.6.3' }}
+        run: |
+          git clone \
+            --branch "release-${VERSION}" \
+            --depth 1 \
+            --recurse-submodules \
+            --shallow-submodules \
+            https://github.com/desktop/desktop.git \
+            github-desktop
+          git -C github-desktop remote set-url origin \
+            https://github.com/desktop/desktop.git
+
+      - name: Добавить поддержку OAuth callback в Linux
+        working-directory: github-desktop
+        run: |
+          main_process='app/src/main-process/main.ts'
+          perl -0pi -e \
+            "s/if \\(__DEV_SECRETS__\\) \\{\\n  possibleProtocols\\.add\\('x-github-desktop-dev-auth'\\)\\n\\} else \\{\\n  possibleProtocols\\.add\\('x-github-desktop-auth'\\)\\n\\}/possibleProtocols.add('x-github-desktop-auth')\\nif (__DEV_SECRETS__) {\\n  possibleProtocols.add('x-github-desktop-dev-auth')\\n}/" \
+            "$main_process"
+          perl -0pi -e \
+            "s/if \\(__WIN32__ && args\\['protocol-launcher'\\] === true\\)/if ((__WIN32__ || __LINUX__) \\&\\& args['protocol-launcher'] === true)/" \
+            "$main_process"
+          grep -Fq "possibleProtocols.add('x-github-desktop-auth')" \
+            "$main_process"
+          grep -Fq "(__WIN32__ || __LINUX__)" "$main_process"
+
+      - name: Установить зависимости из upstream lockfile
+        working-directory: github-desktop
+        run: |
+          node vendor/yarn-1.21.1.js install --frozen-lockfile --non-interactive
+
+      - name: Собрать официальный Electron-клиент
+        working-directory: github-desktop
+        env:
+          NODE_ENV: production
+          RELEASE_CHANNEL: production
+        run: node vendor/yarn-1.21.1.js build:prod
+
+      - name: Упаковать Linux-сборку
+        env:
+          ARCH: ${{ matrix.arch }}
+          VERSION: ${{ inputs.version || '3.6.3' }}
+        run: |
+          dist="github-desktop/dist/desktop-linux-${ARCH}"
+          test -x "${dist}/desktop"
+          grep -aFq 'x-github-desktop-auth' \
+            "${dist}/resources/app/main.js"
+          mkdir -p package/github-desktop
+          cp -a "${dist}/." package/github-desktop/
+          printf '%s\n' "$(git -C github-desktop rev-parse HEAD)" \
+            >package/github-desktop/UPSTREAM_COMMIT
+          tar \
+            --sort=name \
+            --mtime='UTC 2020-01-01' \
+            --owner=0 \
+            --group=0 \
+            --numeric-owner \
+            -C package \
+            -cf "github-desktop-${VERSION}-linux-${ARCH}.tar" \
+            github-desktop
+          gzip -n -9 "github-desktop-${VERSION}-linux-${ARCH}.tar"
+
+      - name: Сохранить артефакт
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: github-desktop-${{ inputs.version || '3.6.3' }}-linux-${{ matrix.arch }}
+          path: github-desktop-${{ inputs.version || '3.6.3' }}-linux-${{ matrix.arch }}.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Опубликовать Linux-артефакты
+    if: ${{ inputs.publish }}
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Скачать обе архитектуры
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: github-desktop-${{ inputs.version || '3.6.3' }}-linux-*
+          merge-multiple: true
+
+      - name: Создать контрольные суммы
+        run: sha256sum github-desktop-*.tar.gz >SHA256SUMS
+
+      - name: Создать или обновить GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ inputs.version || '3.6.3' }}
+        run: |
+          tag="github-desktop-${VERSION}-linux"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" \
+              --title "GitHub Desktop ${VERSION} for Linux" \
+              --notes "Linux artifacts built by Nivora CI from the official desktop/desktop release-${VERSION} source and its pinned submodules."
+          fi
+          gh release upload "$tag" \
+            github-desktop-*.tar.gz \
+            SHA256SUMS \
+            --clobber

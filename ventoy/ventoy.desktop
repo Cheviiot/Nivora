@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Ventoy
+Comment=Create and manage multiboot USB drives
+Comment[ru]=Создание и управление мультизагрузочными USB-накопителями
+Exec=ventoy
+Icon=ventoy
+Terminal=false
+Categories=System;Utility;
+Keywords=USB;ISO;boot;multiboot;flash;
+StartupNotify=true

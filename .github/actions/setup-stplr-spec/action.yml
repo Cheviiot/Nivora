@@ -1,0 +1,42 @@
+name: Подготовить stplr-spec
+description: Устанавливает закреплённые Go, системные инструменты и stplr-spec
+
+inputs:
+  system-packages:
+    description: Дополнительные пакеты Ubuntu через пробел
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Установить Go
+      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5
+      with:
+        go-version: 1.26.5
+        cache: false
+
+    - name: Установить системные инструменты
+      if: ${{ inputs.system-packages != '' }}
+      shell: bash
+      env:
+        SYSTEM_PACKAGES: ${{ inputs.system-packages }}
+      run: |
+        sudo apt-get update
+        read -r -a packages <<<"$SYSTEM_PACKAGES"
+        sudo apt-get install -y "${packages[@]}"
+
+    - name: Собрать закреплённый stplr-spec
+      shell: bash
+      env:
+        STPLR_UTILS_COMMIT: c6ddbb5e4e5637d97bb7b2587729178d715c6c52
+      run: |
+        git clone --filter=blob:none \
+          https://altlinux.space/stapler/stplr-utils.git \
+          "$RUNNER_TEMP/stplr-utils"
+        git -C "$RUNNER_TEMP/stplr-utils" checkout "$STPLR_UTILS_COMMIT"
+        (
+          cd "$RUNNER_TEMP/stplr-utils"
+          GOBIN="$RUNNER_TEMP/bin" go install ./cmd/stplr-spec
+        )
+        echo "$RUNNER_TEMP/bin" >>"$GITHUB_PATH"

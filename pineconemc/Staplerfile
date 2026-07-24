@@ -1,0 +1,102 @@
+name='pineconemc'
+version='11.0.3'
+release=3
+summary='Prism Launcher fork with Ely.by and offline account support'
+summary_ru='Форк Prism Launcher с поддержкой Ely.by и offline-аккаунтов'
+group='Games/Other'
+desc='PineconeMC is a Prism Launcher fork with integrated Ely.by account support, offline accounts, modpack management and Minecraft instance management.'
+desc_ru='PineconeMC — форк Prism Launcher с интеграцией аккаунтов Ely.by, offline-аккаунтами, управлением модпаками и инстансами Minecraft.'
+homepage='https://pineconemc.com/'
+maintainer='PineconeMC contributors <https://github.com/ElyPrismLauncher/Launcher>'
+
+architectures=('amd64' 'arm64')
+
+license=('GPL-3.0-only')
+
+provides=()
+replaces=('pineconemc')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('ca-certificates' 'libc6' 'libdbus-1-3' 'libdrm2' 'libegl1' 'libfontconfig1' 'libfreetype6' 'libgcc-s1' 'libgl1' 'libglib2.0-0' 'libgtk-3-0' 'libice6' 'libnss3' 'libsm6' 'libstdc++6' 'libudev1' 'libx11-6' 'libxcb1' 'libxcomposite1' 'libxcursor1' 'libxdamage1' 'libxext6' 'libxfixes3' 'libxi6' 'libxkbcommon0' 'libxrandr2' 'libxrender1' 'libxtst6' 'zlib1g' 'xdg-utils')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('ca-certificates' 'glibc' 'dbus-libs' 'libdrm' 'mesa-libEGL' 'fontconfig' 'freetype' 'libgcc' 'mesa-libGL' 'glib2' 'gtk3' 'libICE' 'nss' 'libSM' 'libstdc++' 'systemd-libs' 'libX11' 'libxcb' 'libXcomposite' 'libXcursor' 'libXdamage' 'libXext' 'libXfixes' 'libXi' 'libxkbcommon' 'libXrandr' 'libXrender' 'libXtst' 'zlib' 'xdg-utils')
+deps_arch=('ca-certificates' 'glibc' 'dbus' 'libdrm' 'libglvnd' 'fontconfig' 'freetype2' 'gcc-libs' 'glib2' 'gtk3' 'libice' 'nss' 'libsm' 'systemd-libs' 'libx11' 'libxcb' 'libxcomposite' 'libxcursor' 'libxdamage' 'libxext' 'libxfixes' 'libxi' 'libxkbcommon' 'libxrandr' 'libxrender' 'libxtst' 'zlib' 'xdg-utils')
+deps_opensuse=('ca-certificates' 'glibc' 'libdbus-1-3' 'libdrm2' 'Mesa-libEGL1' 'fontconfig' 'libfreetype6' 'libgcc_s1' 'Mesa-libGL1' 'glib2' 'gtk3' 'libICE6' 'mozilla-nss' 'libSM6' 'libstdc++6' 'libudev1' 'libX11-6' 'libxcb1' 'libXcomposite1' 'libXcursor1' 'libXdamage1' 'libXext6' 'libXfixes3' 'libXi6' 'libxkbcommon0' 'libXrandr2' 'libXrender1' 'libXtst6' 'zlib' 'xdg-utils')
+deps_altlinux=('ca-certificates' 'glibc' 'libdbus' 'libdrm' 'libEGL' 'fontconfig' 'libfreetype' 'libgcc1' 'libGL' 'glib2' 'libgtk+3' 'libICE' 'libnss' 'libSM' 'libstdc++6' 'libudev0' 'libX11' 'libxcb' 'libXcomposite' 'libXcursor' 'libXdamage' 'libXext' 'libXfixes' 'libXi' 'libxkbcommon' 'libXrandr' 'libXrender' 'libXtst' 'zlib' 'xdg-utils')
+
+sources=(
+	"https://github.com/ElyPrismLauncher/Launcher/releases/download/${version}/PineconeMC-Linux-Qt6-Portable-${version}.tar.gz?~archive=false&~name=pineconemc.tar.gz"
+	"local:///pineconemc.svg"
+	'local:///LICENSE'
+)
+
+sources_arm64=(
+	"https://github.com/ElyPrismLauncher/Launcher/releases/download/${version}/PineconeMC-Linux-aarch64-Qt6-Portable-${version}.tar.gz?~archive=false&~name=pineconemc.tar.gz"
+	"local:///pineconemc.svg"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'c1693e32668a8897529f3215aa8369e2562efde84adb999a210cc613c58ee916'
+	'256d854b05112270847c29f31990329e880c39dba8ab06a574db9f09749e758a'
+	'794a4007ac816a1425a98fdddf0716728fe1e2d899c4b9c1d505c1405e111ec9'
+)
+
+checksums_arm64=(
+	'0e8d02d91efd7f6f107611163ebf2801e9411c1cbda8c83fd3f6458e24130f02'
+	'256d854b05112270847c29f31990329e880c39dba8ab06a574db9f09749e758a'
+	'794a4007ac816a1425a98fdddf0716728fe1e2d899c4b9c1d505c1405e111ec9'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${pkgdir}/opt/pineconemc"
+	tar --no-same-owner --no-same-permissions -xzf pineconemc.tar.gz -C "${pkgdir}/opt/pineconemc"
+	rm -f "${pkgdir}/opt/pineconemc/portable.txt"
+
+	chmod 755 "${pkgdir}/opt/pineconemc/bin/elyprismlauncher"
+	chmod 755 "${pkgdir}/opt/pineconemc/bin/elyprismlauncher_updater"
+
+	mkdir -p "${pkgdir}/usr/bin"
+	ln -sf /opt/pineconemc/bin/elyprismlauncher "${pkgdir}/usr/bin/elyprismlauncher"
+	ln -sf /opt/pineconemc/bin/elyprismlauncher "${pkgdir}/usr/bin/pineconemc"
+
+	install -Dm644 "${pkgdir}/opt/pineconemc/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop" \
+		"${pkgdir}/usr/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop"
+	sed -i 's/^Categories=.*/Categories=Game;/' \
+		"${pkgdir}/usr/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop"
+	install -Dm644 "${pkgdir}/opt/pineconemc/share/metainfo/io.github.elyprismlauncher.ElyPrismLauncher.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/io.github.elyprismlauncher.ElyPrismLauncher.metainfo.xml"
+	install -Dm644 "${pkgdir}/opt/pineconemc/share/mime/packages/io.github.elyprismlauncher.ElyPrismLauncher.xml" \
+		"${pkgdir}/usr/share/mime/packages/io.github.elyprismlauncher.ElyPrismLauncher.xml"
+	install -Dm644 "${pkgdir}/opt/pineconemc/share/man/man6/elyprismlauncher.6" \
+		"${pkgdir}/usr/share/man/man6/elyprismlauncher.6"
+
+	cp -a "${pkgdir}/opt/pineconemc/share/icons" "${pkgdir}/usr/share/icons"
+	install-license "${srcdir}/LICENSE" "pineconemc/LICENSE.nivora"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/opt" \
+		"/opt/pineconemc" \
+		"/opt/pineconemc/**/*" \
+		"/usr/share/icons/hicolor/*/apps/io.github.elyprismlauncher.ElyPrismLauncher.*" \
+		"/usr/share/man/man6/elyprismlauncher.6" \
+		"/usr/share/metainfo/io.github.elyprismlauncher.ElyPrismLauncher.metainfo.xml" \
+		"/usr/share/mime/packages/io.github.elyprismlauncher.ElyPrismLauncher.xml"
+}

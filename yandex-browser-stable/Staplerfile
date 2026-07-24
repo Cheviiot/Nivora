@@ -1,0 +1,149 @@
+name='yandex-browser-stable'
+version='26.4.1.1110'
+release=3
+summary='Fast and secure Chromium-based web browser from Yandex'
+summary_ru='Быстрый и безопасный браузер Яндекса на основе Chromium'
+group='Networking/WWW'
+desc='Yandex Browser combines Chromium technologies with built-in page translation, security protection, synchronization and Yandex services.'
+desc_ru='Яндекс Браузер объединяет технологии Chromium со встроенным переводом страниц, защитой, синхронизацией и сервисами Яндекса.'
+homepage='https://browser.yandex.ru/'
+maintainer='Yandex Browser Team <browser@support.yandex.ru>'
+
+architectures=('amd64')
+
+license=('Custom')
+nonfree=1
+nonfree_msg='Яндекс Браузер является проприетарным приложением. Использование браузера, синхронизации и сетевых сервисов регулируется лицензионным соглашением Яндекса.'
+nonfree_url='https://yandex.ru/legal/browser_agreement/'
+
+provides=()
+replaces=('yandex-browser-stable')
+conflicts=()
+
+# Chromium и вспомогательные компоненты поставляются в официальном DEB.
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=(
+	'binutils' 'ca-certificates' 'fonts-liberation' 'jq'
+	'libasound2' 'libatk-bridge2.0-0' 'libatk1.0-0' 'libatspi2.0-0'
+	'libc6' 'libcairo2' 'libcups2' 'libcurl4' 'libdbus-1-3' 'libexpat1'
+	'libgbm1' 'libglib2.0-0' 'libgtk-3-0 | libgtk-4-1' 'libnspr4'
+	'libnss3' 'libpango-1.0-0' 'libudev1' 'libvulkan1' 'libx11-6'
+	'libxcb1' 'libxcomposite1' 'libxdamage1' 'libxext6' 'libxfixes3'
+	'libxkbcommon0' 'libxrandr2' 'squashfs-tools' 'wget' 'xdg-utils'
+)
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=(
+	'binutils' 'ca-certificates' 'liberation-fonts' 'jq'
+	'alsa-lib' 'at-spi2-atk' 'at-spi2-core' 'atk' 'glibc' 'cairo'
+	'cups-libs' 'libcurl' 'dbus-libs' 'expat' 'mesa-libgbm' 'glib2'
+	'gtk3' 'nspr' 'nss' 'pango' 'systemd-libs' 'vulkan-loader'
+	'libX11' 'libxcb' 'libXcomposite' 'libXdamage' 'libXext' 'libXfixes'
+	'libxkbcommon' 'libXrandr' 'squashfs-tools' 'wget' 'xdg-utils'
+)
+deps_arch=(
+	'binutils' 'ca-certificates' 'ttf-liberation' 'jq'
+	'alsa-lib' 'at-spi2-core' 'glibc' 'cairo' 'cups' 'curl' 'dbus'
+	'expat' 'mesa' 'glib2' 'gtk3' 'nspr' 'nss' 'pango' 'systemd-libs'
+	'vulkan-icd-loader' 'libx11' 'libxcb' 'libxcomposite' 'libxdamage'
+	'libxext' 'libxfixes' 'libxkbcommon' 'libxrandr' 'squashfs-tools'
+	'wget' 'xdg-utils'
+)
+deps_opensuse=(
+	'binutils' 'ca-certificates' 'liberation-fonts' 'jq'
+	'libasound2' 'libatk-1_0-0' 'libatk-bridge-2_0-0' 'at-spi2-core'
+	'glibc' 'libcairo2' 'libcups2' 'libcurl4' 'libdbus-1-3' 'libexpat1'
+	'libgbm1' 'glib2' 'libgtk-3-0' 'mozilla-nspr' 'mozilla-nss'
+	'libpango-1_0-0' 'libudev1' 'libvulkan1' 'libX11-6' 'libxcb1'
+	'libXcomposite1' 'libXdamage1' 'libXext6' 'libXfixes3'
+	'libxkbcommon0' 'libXrandr2' 'squashfs' 'wget' 'xdg-utils'
+)
+deps_altlinux=(
+	'binutils' 'ca-certificates' 'fonts-ttf-liberation' 'jq'
+	'libalsa' 'at-spi2-atk' 'libatk' 'libat-spi2-core' 'glibc'
+	'libcairo' 'libcups' 'libcurl' 'libdbus' 'libexpat' 'libgbm'
+	'glib2' 'libgtk+3' 'libnspr' 'libnss' 'libpango' 'libudev1'
+	'libvulkan1' 'libX11' 'libxcb' 'libXcomposite' 'libXdamage'
+	'libXext' 'libXfixes' 'libxkbcommon' 'libXrandr' 'squashfs-tools'
+	'wget' 'xdg-utils'
+)
+
+build_deps=('binutils')
+
+sources=(
+	"https://repo.yandex.ru/yandex-browser/deb/pool/main/y/yandex-browser-stable/yandex-browser-stable_${version}-1_amd64.deb?~archive=false&~name=yandex-browser.deb"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:27c8570c68a5e1b475304aaa4e8accefbc21e150b644a9cbc998ed32d952c8ba'
+	'sha256:36fb82bc8a2bb99eea41807712d9abf810edd562fa521955444e2dbef26ff40d'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x yandex-browser.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install -dm755 "${pkgdir}/opt/yandex"
+	cp -a "${srcdir}/extracted/opt/yandex/browser" "${pkgdir}/opt/yandex/"
+	chmod 0755 "${pkgdir}/opt/yandex/browser/yandex_browser-sandbox"
+
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -sfn /opt/yandex/browser/yandex-browser \
+		"${pkgdir}/usr/bin/yandex-browser-stable"
+	ln -sfn yandex-browser-stable "${pkgdir}/usr/bin/yandex-browser"
+
+	install -dm755 "${pkgdir}/usr/share"
+	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"
+	compatibility_desktop="${pkgdir}/usr/share/applications/yandex-browser.desktop"
+	canonical_desktop="${pkgdir}/usr/share/applications/ru.yandex.desktop.browser.desktop"
+	sed -i '/^NoDisplay=true$/d' "${compatibility_desktop}" "${canonical_desktop}"
+	sed -i '/^\[Desktop Entry\]$/a NoDisplay=true' "${compatibility_desktop}"
+	cp -a "${srcdir}/extracted/usr/share/appdata" "${pkgdir}/usr/share/"
+	cp -a "${srcdir}/extracted/usr/share/gnome-control-center" \
+		"${pkgdir}/usr/share/"
+	cp -a "${srcdir}/extracted/usr/share/man" "${pkgdir}/usr/share/"
+	cp -a "${srcdir}/extracted/usr/share/mime" "${pkgdir}/usr/share/"
+	cp -a "${srcdir}/extracted/usr/share/icons" "${pkgdir}/usr/share/"
+
+	install -Dm644 \
+		"${srcdir}/extracted/usr/share/doc/yandex-browser-stable/changelog.gz" \
+		"${pkgdir}/usr/share/doc/yandex-browser-stable/changelog.gz"
+
+	for size in 16 24 32 48 64 128 256; do
+		install -Dm644 \
+			"${pkgdir}/opt/yandex/browser/product_logo_${size}.png" \
+			"${pkgdir}/usr/share/icons/hicolor/${size}x${size}/apps/yandex-browser.png"
+	done
+	install -Dm644 "${pkgdir}/opt/yandex/browser/product_logo_128.png" \
+		"${pkgdir}/usr/share/pixmaps/yandex-browser.png"
+
+	install-license LICENSE "yandex-browser-stable/LICENSE.nivora"
+}
+
+files() {
+	files-find "/opt/yandex/browser/**/*"
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/usr/share/appdata/yandex-browser.appdata.xml" \
+		"/usr/share/doc/yandex-browser-stable/changelog.gz" \
+		"/usr/share/gnome-control-center/default-apps/yandex-browser.xml" \
+		"/usr/share/icons/hicolor/*/apps/yandex-browser.png" \
+		"/usr/share/icons/hicolor/*/mimetypes/application-x-yprotect.*" \
+		"/usr/share/man/man1/yandex-browser*.1.gz" \
+		"/usr/share/mime/packages/yandex-browser-yprotect.xml" \
+		"/usr/share/pixmaps/yandex-browser.png"
+}

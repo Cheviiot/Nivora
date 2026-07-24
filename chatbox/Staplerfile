@@ -1,0 +1,115 @@
+name='chatbox'
+version='1.20.3'
+release=3
+summary='Desktop AI client for multiple LLM providers'
+summary_ru='Десктопный AI-клиент для разных LLM-провайдеров'
+group='Development/Tools'
+desc='Chatbox is a desktop AI client for Chatbox AI, OpenAI, Claude, Gemini, Ollama and other LLM providers with local chat history and file support.'
+desc_ru='Chatbox — десктопный AI-клиент для Chatbox AI, OpenAI, Claude, Gemini, Ollama и других LLM-провайдеров с локальной историей чатов и поддержкой файлов.'
+homepage='https://chatboxai.app/ru'
+maintainer='Chatbox <https://github.com/chatboxai/chatbox>'
+
+architectures=('amd64' 'arm64')
+
+license=('GPL-3.0-only')
+
+provides=()
+replaces=('chatbox')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'libxss1' 'libxtst6' 'xdg-utils' 'libatspi2.0-0' 'libuuid1' 'libsecret-1-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('gtk3' 'libnotify' 'nss' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'at-spi2-core' 'libuuid' 'libsecret' 'libdrm' 'mesa-libgbm' 'libxcb' 'alsa-lib')
+deps_arch=('gtk3' 'libnotify' 'nss' 'libxss' 'libxtst' 'xdg-utils' 'at-spi2-core' 'libutil-linux' 'libsecret' 'libdrm' 'mesa' 'libxcb' 'alsa-lib')
+deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'libXScrnSaver1' 'libXtst6' 'xdg-utils' 'at-spi2-core' 'libuuid1' 'libsecret-1-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2')
+deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libat-spi2-core' 'libuuid' 'libsecret' 'libdrm' 'libgbm' 'libxcb' 'libalsa')
+
+opt_deps=()
+opt_deps_debian=('libappindicator3-1' 'gnome-keyring')
+opt_deps_ubuntu=("${opt_deps_debian[@]}")
+opt_deps_fedora=('libappindicator-gtk3' 'gnome-keyring')
+opt_deps_arch=('libappindicator-gtk3' 'gnome-keyring')
+opt_deps_opensuse=('libappindicator3-1' 'gnome-keyring')
+opt_deps_altlinux=('libappindicator-gtk3' 'gnome-keyring')
+
+build_deps=('binutils')
+
+sources=(
+	"https://github.com/chatboxai/chatbox/releases/download/v${version}/Chatbox-${version}-amd64.deb?~archive=false&~name=chatbox.deb"
+	'local:///LICENSE'
+)
+
+sources_arm64=(
+	"https://github.com/chatboxai/chatbox/releases/download/v${version}/Chatbox-${version}-arm64.deb?~archive=false&~name=chatbox.deb"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:7a5b86200c180142ee7d4ed5d56edaabba3a3b37b3b8d8c4eed32678d327e141'
+	'sha256:9408c95380fe46177c49bb9ba845dc0d706e88cdd2d637b5d2b9168730713acd'
+)
+
+checksums_arm64=(
+	'sha256:909c8ccbb5965a63967af2428210456eb2c9fb7baf88a1a6971e3b07ead81d60'
+	'sha256:9408c95380fe46177c49bb9ba845dc0d706e88cdd2d637b5d2b9168730713acd'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x chatbox.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install -dm755 "${pkgdir}/opt"
+	cp -a "${srcdir}/extracted/opt/Chatbox" "${pkgdir}/opt/"
+	chmod 0755 "${pkgdir}/opt/Chatbox/chrome-sandbox"
+	chmod 755 "${pkgdir}/opt/Chatbox/xyz.chatboxapp.app"
+
+	install -dm755 "${pkgdir}/usr/share"
+	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"
+	cp -a "${srcdir}/extracted/usr/share/icons" "${pkgdir}/usr/share/"
+
+	if [[ -d "${srcdir}/extracted/usr/share/doc" ]]; then
+		cp -a "${srcdir}/extracted/usr/share/doc" "${pkgdir}/usr/share/"
+	fi
+
+	sed -i 's/^Categories=.*/Categories=Development;/' \
+		"${pkgdir}/usr/share/applications/xyz.chatboxapp.app.desktop"
+
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -sfn /opt/Chatbox/xyz.chatboxapp.app "${pkgdir}/usr/bin/chatbox"
+	ln -sfn /opt/Chatbox/xyz.chatboxapp.app "${pkgdir}/usr/bin/chatbox-ai"
+	ln -sfn /opt/Chatbox/xyz.chatboxapp.app "${pkgdir}/usr/bin/chatbox-desktop"
+
+	install-license LICENSE "chatbox/LICENSE.nivora"
+
+	if [[ -f "${srcdir}/extracted/opt/Chatbox/LICENSE.electron.txt" ]]; then
+		install-license "${srcdir}/extracted/opt/Chatbox/LICENSE.electron.txt" \
+			"chatbox/LICENSE.electron.txt"
+	fi
+	if [[ -f "${srcdir}/extracted/opt/Chatbox/LICENSES.chromium.html" ]]; then
+		install-license "${srcdir}/extracted/opt/Chatbox/LICENSES.chromium.html" \
+			"chatbox/LICENSES.chromium.html"
+	fi
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/opt/Chatbox/**/*" \
+		"/usr/share/doc/xyz.chatboxapp.app/*" \
+		"/usr/share/icons/hicolor/*/apps/xyz.chatboxapp.app.png"
+}

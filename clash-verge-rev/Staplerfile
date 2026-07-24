@@ -1,0 +1,91 @@
+name='clash-verge-rev'
+version=2.5.2
+release=2
+summary='Tauri GUI client for Mihomo/Clash proxy profiles'
+summary_ru='GUI-клиент на Tauri для профилей Mihomo/Clash'
+group='Networking/Other'
+desc='Clash Verge Rev is a modern cross-platform GUI client based on Tauri for a tailored proxy experience with Mihomo/Clash profiles.'
+desc_ru='Clash Verge Rev — современный кроссплатформенный GUI-клиент на Tauri для удобной работы с профилями прокси Mihomo/Clash.'
+homepage='https://www.clashverge.dev'
+maintainer='clash-verge-rev contributors <https://github.com/clash-verge-rev/clash-verge-rev>'
+
+architectures=('amd64' 'arm64')
+
+license=('GPL-3.0-only')
+
+provides=()
+replaces=('clash-verge-rev')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('libc6' 'libgtk-3-0' 'libwebkit2gtk-4.1-0' 'libayatana-appindicator3-1' 'libssl3 | libssl3t64' 'libcap2-bin')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('glibc' 'gtk3' 'webkit2gtk4.1' 'libayatana-appindicator' 'openssl-libs' 'libcap')
+deps_arch=('glibc' 'gtk3' 'webkit2gtk-4.1' 'libayatana-appindicator' 'openssl' 'libcap')
+deps_opensuse=('glibc' 'gtk3' 'libwebkit2gtk-4_1-0' 'libayatana-appindicator3-1' 'libopenssl3' 'libcap-progs')
+deps_altlinux=('glibc' 'libgtk+3' 'libwebkit2gtk4.1' 'libayatana-appindicator3-1' 'libssl3' 'libcap-utils')
+
+build_deps=('binutils')
+
+sources=(
+	"https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v${version}/Clash.Verge_${version}_amd64.deb?~archive=false&~name=clash-verge.deb"
+	'local:///LICENSE'
+)
+
+sources_arm64=(
+	"https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v${version}/Clash.Verge_${version}_arm64.deb?~archive=false&~name=clash-verge.deb"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:035c83ed14b16df1dd397e5d710b34bedd5d27beb6678549ceaeeadf9bc167ed'
+	'sha256:5b886bd36073c4604b97926ad81ad26ea64b9172f47f014c127b6a05f80e37a9'
+)
+
+checksums_arm64=(
+	'sha256:598a5a852d7bf9dc40a976780ef2afc9a4e5bfe7b99533e5f956f9e2f9def72f'
+	'sha256:5b886bd36073c4604b97926ad81ad26ea64b9172f47f014c127b6a05f80e37a9'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x clash-verge.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	for path in usr opt etc; do
+		if [[ -d "${srcdir}/extracted/${path}" ]]; then
+			mkdir -p "${pkgdir}/${path}"
+			cp -a "${srcdir}/extracted/${path}/." "${pkgdir}/${path}/"
+		fi
+	done
+
+	chmod 755 \
+		"${pkgdir}/usr/bin/clash-verge" \
+		"${pkgdir}/usr/bin/clash-verge-service" \
+		"${pkgdir}/usr/bin/clash-verge-service-install" \
+		"${pkgdir}/usr/bin/clash-verge-service-uninstall" \
+		"${pkgdir}/usr/bin/verge-mihomo" \
+		"${pkgdir}/usr/bin/verge-mihomo-alpha"
+
+	install-license "${srcdir}/LICENSE" "clash-verge-rev/LICENSE.nivora"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/usr/lib/Clash Verge/**/*" \
+		"/usr/share/icons/**/*"
+}

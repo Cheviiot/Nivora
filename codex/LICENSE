@@ -1,0 +1,21 @@
+Сведения о лицензии пакета codex-app
+
+Лицензия: Custom.
+Источник перепаковки: https://github.com/Boria138/codex-app-linux
+Linux-адаптация: https://github.com/ilysenko/codex-desktop-linux
+Backend Computer Use: https://github.com/agent-sh/computer-use-linux
+
+Нюансы пакета:
+- Пакет устанавливает неофициальную Linux-перепаковку проприетарного настольного приложения.
+- Исходный репозиторий перепаковки не публикует единую корневую лицензию для всего устанавливаемого артефакта.
+- Внутри архива исходного проекта присутствуют отдельные лицензии Electron, Chromium и других компонентов; при сборке они устанавливаются в каталог лицензий пакета.
+- Linux-патчи Computer Use из codex-desktop-linux и backend computer-use-linux
+  распространяются по лицензии MIT; их исходные файлы LICENSE устанавливаются
+  рядом с остальными лицензиями пакета.
+- Использование приложения и сетевых функций регулируется условиями исходного сервиса.
+- Пакет помечен как несвободный через `nonfree=1`.
+
+Справочные ссылки:
+- https://github.com/Boria138/codex-app-linux
+- https://github.com/ilysenko/codex-desktop-linux
+- https://github.com/agent-sh/computer-use-linux

@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -euo pipefail
+
+if [[ "${1:-}" != "--yes" || "$#" -ne 1 ]]; then
+    echo "Использование: sudo netbird-purge-data --yes" >&2
+    echo "Команда отменит регистрацию узла NetBird и безвозвратно удалит локальное состояние." >&2
+    exit 2
+fi
+
+if [[ "${EUID}" -ne 0 ]]; then
+    echo "Ошибка: очистку данных NetBird нужно запускать от root." >&2
+    exit 1
+fi
+
+if command -v netbird >/dev/null 2>&1; then
+    if ! netbird deregister; then
+        echo "Предупреждение: NetBird не подтвердил deregister; локальные данные всё равно будут удалены." >&2
+    fi
+fi
+
+if command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
+    systemctl stop netbird.service
+fi
+
+rm -rf -- /var/lib/netbird /var/cache/netbird /var/log/netbird
+rm -f -- /run/netbird.sock /var/run/netbird.sock
+
+echo "Локальные данные NetBird удалены."

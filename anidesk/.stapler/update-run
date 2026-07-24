@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -euo pipefail
+
+new_version="${1:?new version is required}"
+package_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+staplerfile="${package_dir}/Staplerfile"
+debian_version="${new_version/-beta./.beta.}"
+
+stplr-spec set-field --path "$staplerfile" version "$new_version"
+stplr-spec set-field --path "$staplerfile" release 1
+stplr-spec set-field --path "$staplerfile" debian_version "$debian_version"
+stplr-spec update-checksums --path "$staplerfile"

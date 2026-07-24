@@ -1,0 +1,236 @@
+name='anidesk'
+version='0.0.1-beta.7'
+debian_version='0.0.1.beta.7'
+release=5
+summary='Unofficial Anixart desktop client'
+summary_ru='Неофициальный desktop-клиент Anixart'
+group='Video/Players'
+desc='AniDesk is an unofficial Electron desktop client for Anixart with account support, a built-in video player and Anime4K WebGPU upscaling.'
+desc_ru='AniDesk — неофициальный Electron desktop-клиент Anixart с поддержкой аккаунта, встроенным видеоплеером и Anime4K-апскейлом через WebGPU.'
+homepage='https://github.com/theDesConnet/AniDesk'
+maintainer='DesConnet, hack1exe <https://github.com/theDesConnet/AniDesk>'
+
+architectures=('amd64')
+
+license=('GPL-2.0-only')
+
+provides=()
+replaces=('anidesk')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2' 'libvulkan1' 'mesa-vulkan-drivers')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa-libgbm' 'libxcb' 'alsa-lib' 'vulkan-loader' 'mesa-vulkan-drivers')
+deps_arch=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa' 'libxcb' 'alsa-lib' 'vulkan-icd-loader' 'vulkan-radeon')
+deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'xdg-utils' 'at-spi2-core' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2' 'libvulkan1' 'Mesa-vulkan-device-select')
+deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'xdg-utils' 'libat-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libalsa' 'libvulkan1' 'mesa-dri-drivers')
+
+build_deps=('binutils')
+build_deps_debian=('binutils' 'python3')
+build_deps_ubuntu=("${build_deps_debian[@]}")
+build_deps_fedora=('binutils' 'python3')
+build_deps_arch=('binutils' 'python')
+build_deps_opensuse=('binutils' 'python3')
+build_deps_altlinux=('binutils' 'python3')
+
+opt_deps=()
+opt_deps_debian=('gnome-keyring' 'discord')
+opt_deps_ubuntu=("${opt_deps_debian[@]}")
+opt_deps_fedora=('gnome-keyring' 'discord')
+opt_deps_arch=('gnome-keyring' 'discord')
+opt_deps_opensuse=('gnome-keyring' 'discord')
+opt_deps_altlinux=('gnome-keyring')
+
+sources=(
+	"https://github.com/theDesConnet/AniDesk/releases/download/v${version}/anidesk_${debian_version}_amd64.deb?~archive=false&~name=anidesk.deb"
+	"local:///anidesk.png"
+	"local:///anidesk-wrapper"
+	"local:///LICENSE"
+)
+
+checksums=(
+	'sha256:70fc1207824757f7ddab63f9e210f31bb907ea43dee3d2827fe79c3ef00252b6'
+	'sha256:6d7791424bd7db712b121f7e66206289b1d31eb2a8ea998d9aeced2c7075dfe8'
+	'sha256:f58b9f720bd63ff49053f949dd3f0a738afc2aa2cee57fedbd2b73440c123721'
+	'sha256:892e6b268f44a850a102cc6367fec45853fe3556840d44a6106f08487553e6c4'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x anidesk.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install -dm755 "${pkgdir}/usr/lib"
+	cp -a "${srcdir}/extracted/usr/lib/anidesk" "${pkgdir}/usr/lib/"
+	chmod 0755 "${pkgdir}/usr/lib/anidesk/chrome-sandbox"
+	chmod 755 "${pkgdir}/usr/lib/anidesk/anidesk"
+
+	python3 - "${pkgdir}/usr/lib/anidesk/resources/app.asar" <<'PY'
+import copy
+import hashlib
+import json
+import struct
+import sys
+from pathlib import Path
+
+asar_path = Path(sys.argv[1])
+data = asar_path.read_bytes()
+_, _, _, header_size = struct.unpack("<IIII", data[:16])
+header = json.loads(data[16 : 16 + header_size])
+base_offset = 16 + ((header_size + 3) & ~3)
+
+
+def iter_files(node, prefix=""):
+    for name, entry in node.get("files", {}).items():
+        path_name = f"{prefix}{name}"
+        if "files" in entry:
+            yield from iter_files(entry, f"{path_name}/")
+        else:
+            yield path_name, entry
+
+
+entries = []
+for path_name, entry in iter_files(header):
+    if "offset" not in entry or "size" not in entry:
+        continue
+    offset = int(entry["offset"])
+    size = int(entry["size"])
+    content = data[base_offset + offset : base_offset + offset + size]
+    entries.append((path_name, content))
+
+patched = {}
+bundle_patch_applied = False
+source_patch_applied = False
+
+for path_name, content in entries:
+    if path_name == "public/build/bundle.js":
+        text = content.decode()
+        old = (
+            'onChangeCallback:(e,t)=>{x.set(t),set(o,!0),'
+            'baseSettings.restartRequired=!0}'
+        )
+        new = (
+            'onChangeCallback:(e,t)=>{get(n)!==t&&(x.set(t),set(o,!0),'
+            'baseSettings.restartRequired=!0,queueMicrotask(()=>location.reload()))}'
+        )
+        if old not in text:
+            raise SystemExit("AniDesk ASAR patch failed: endpoint dropdown marker not found")
+        patched[path_name] = text.replace(old, new, 1).encode()
+        bundle_patch_applied = True
+    elif path_name == "src/app/settings-pages/SettingsApp.svelte":
+        text = content.decode()
+        old = """        onChangeCallback={(e, v) => {
+            endpointUrlRaw.set(v);
+            restartRequired = true;
+            baseSettings.restartRequired = true;
+        }}
+"""
+        new = """        onChangeCallback={(e, v) => {
+            if (endpointUrl === v) {
+                return;
+            }
+            endpointUrlRaw.set(v);
+            restartRequired = true;
+            baseSettings.restartRequired = true;
+            queueMicrotask(() => window.location.reload());
+        }}
+"""
+        if old not in text:
+            raise SystemExit("AniDesk ASAR patch failed: endpoint source marker not found")
+        patched[path_name] = text.replace(old, new, 1).encode()
+        source_patch_applied = True
+
+if not bundle_patch_applied:
+    raise SystemExit("AniDesk ASAR patch failed: runtime bundle was not patched")
+if not source_patch_applied:
+    raise SystemExit("AniDesk ASAR patch failed: source view was not patched")
+
+
+def rebuild(node, prefix="", offset_state=None, payload=None):
+    if offset_state is None:
+        offset_state = {"offset": 0}
+    if payload is None:
+        payload = []
+    new_node = copy.deepcopy(node)
+    for name, entry in list(new_node.get("files", {}).items()):
+        path_name = f"{prefix}{name}"
+        if "files" in entry:
+            new_node["files"][name] = rebuild(
+                entry, f"{path_name}/", offset_state, payload
+            )
+            continue
+        content = None
+        for candidate_path, candidate_content in entries:
+            if candidate_path == path_name:
+                content = patched.get(path_name, candidate_content)
+                break
+        if content is None:
+            continue
+        entry["size"] = len(content)
+        entry["offset"] = str(offset_state["offset"])
+        digest = hashlib.sha256(content).hexdigest()
+        entry["integrity"] = {
+            "algorithm": "SHA256",
+            "hash": digest,
+            "blockSize": 4194304,
+            "blocks": [digest],
+        }
+        offset_state["offset"] += len(content)
+        payload.append(content)
+    if prefix == "":
+        return new_node, payload
+    return new_node
+
+
+new_header, payload = rebuild(header)
+header_json = json.dumps(new_header, separators=(",", ":")).encode()
+header_padded_size = (len(header_json) + 3) & ~3
+asar_path.write_bytes(
+    struct.pack("<IIII", 4, header_padded_size + 8, header_padded_size + 4, len(header_json))
+    + header_json
+    + (b"\0" * (header_padded_size - len(header_json)))
+    + b"".join(payload)
+)
+PY
+
+	install -dm755 "${pkgdir}/usr/bin"
+	install -Dm755 anidesk-wrapper "${pkgdir}/usr/bin/anidesk"
+
+	install -dm755 "${pkgdir}/usr/share"
+	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"
+	cp -a "${srcdir}/extracted/usr/share/doc" "${pkgdir}/usr/share/"
+	cp -a "${srcdir}/extracted/usr/share/pixmaps" "${pkgdir}/usr/share/"
+	install -Dm644 anidesk.png "${pkgdir}/usr/share/pixmaps/anidesk.png"
+
+	install -dm755 "${pkgdir}/usr/share/icons/hicolor/256x256/apps"
+	install -Dm644 anidesk.png "${pkgdir}/usr/share/icons/hicolor/256x256/apps/anidesk.png"
+
+	install-license LICENSE "anidesk/LICENSE.nivora"
+	install-license "${srcdir}/extracted/usr/lib/anidesk/LICENSES.chromium.html" \
+		"anidesk/LICENSES.chromium.html"
+	install-license "${srcdir}/extracted/usr/share/doc/anidesk/copyright" \
+		"anidesk/LICENSE.electron"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/usr/lib/anidesk/**/*" \
+		"/usr/share/doc/anidesk/*" \
+		"/usr/share/icons/hicolor/256x256/apps/anidesk.png" \
+		"/usr/share/pixmaps/anidesk.png"
+}

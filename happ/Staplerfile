@@ -1,0 +1,336 @@
+name='happ'
+version=3.3.6
+release=4
+summary='User-friendly GUI proxy client for xray-core'
+summary_ru='Удобный GUI-прокси-клиент для xray-core'
+group='Networking/Other'
+desc='Happ is a GUI client for xray-core with TUN/VPN mode via sing-box, anti-censorship tools, QR code import and subscription management.'
+desc_ru='Happ — GUI-клиент для xray-core с режимом TUN/VPN через sing-box, средствами обхода блокировок, импортом QR-кодов и управлением подписками.'
+homepage='https://happ.su/'
+maintainer='FlyFrog LLC <support@happ.su>'
+
+architectures=('amd64' 'arm64')
+
+license=('Custom')
+nonfree=1
+nonfree_msg='Happ является проприетарным приложением FlyFrog LLC. Использование клиента, подписок и сетевых функций регулируется условиями Happ.'
+nonfree_url='https://happ.su/license'
+
+provides=()
+replaces=('happ')
+conflicts=()
+
+# auto_req отключен — Qt-приложение поставляется с bundled библиотеками
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('libc6' 'libssl3 | libssl3t64')
+deps_ubuntu=('libc6' 'libssl3 | libssl3t64')
+deps_fedora=('glibc' 'openssl-libs')
+deps_arch=('glibc' 'openssl')
+deps_opensuse=('glibc' 'libopenssl1_1')
+deps_altlinux=('glibc' 'libssl3')
+
+build_deps=('binutils')
+build_deps_debian=('binutils' 'python3')
+build_deps_ubuntu=("${build_deps_debian[@]}")
+build_deps_fedora=('binutils' 'python3')
+build_deps_arch=('binutils' 'python')
+build_deps_opensuse=('binutils' 'python3')
+build_deps_altlinux=('binutils' 'python3')
+
+sources=(
+	"https://github.com/Happ-proxy/happ-desktop/releases/download/${version}/Happ.linux.x64.deb?~archive=false&~name=happ.deb"
+	'local:///patch-tray-icons.py'
+	'local:///happ-launcher'
+	'local:///tray-idle.svg'
+	'local:///tray-connected.svg'
+	'local:///LICENSE'
+)
+
+sources_arm64=(
+	"https://github.com/Happ-proxy/happ-desktop/releases/download/${version}/Happ.linux.arm64.deb?~archive=false&~name=happ.deb"
+	'local:///patch-tray-icons.py'
+	'local:///happ-launcher'
+	'local:///tray-idle.svg'
+	'local:///tray-connected.svg'
+	'local:///LICENSE'
+)
+
+checksums=(
+	'a7dac51277387bfe1049b1ad40f40f2e74af233a5eab020b5be1a622effc46a4'
+	'5b0106dda286b039d6bdce45208f44ea3eb7a2deb4e00455190ce7a07177dde0'
+	'fa4d741a4e2df82b0a19291e2c7bad4a8753a1e59237b2bfe5fef7de8c22efd2'
+	'af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'
+	'7e105f63e4535676e15e4d613426d6af843376a09fd25674bbbf367778668ae5'
+	'5f0fbc1b0b0e8399c8a04425512168e3dd87960381e85a7cb62a41d55b054b0f'
+)
+
+checksums_arm64=(
+	'a4d3d6dcab1db61db23cdf0f86bce736014887262b570927befe48cb49f14aa6'
+	'5b0106dda286b039d6bdce45208f44ea3eb7a2deb4e00455190ce7a07177dde0'
+	'fa4d741a4e2df82b0a19291e2c7bad4a8753a1e59237b2bfe5fef7de8c22efd2'
+	'af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'
+	'7e105f63e4535676e15e4d613426d6af843376a09fd25674bbbf367778668ae5'
+	'5f0fbc1b0b0e8399c8a04425512168e3dd87960381e85a7cb62a41d55b054b0f'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/happ-extracted"
+	ar x happ.deb
+	tar -xf data.tar.* -C "${srcdir}/happ-extracted"
+
+	cp -a "${srcdir}/happ-extracted/opt" "${pkgdir}/opt"
+	python3 patch-tray-icons.py \
+		"${pkgdir}/opt/happ/bin/Happ" \
+		tray-idle.svg \
+		tray-connected.svg
+
+	install-systemd "${srcdir}/happ-extracted/etc/systemd/system/happd.service"
+
+	sed -i 's|^Exec=/opt/happ/bin/Happ|Exec=/usr/bin/happ|' \
+		"${srcdir}/happ-extracted/usr/share/applications/Happ.desktop"
+	install-desktop "${srcdir}/happ-extracted/usr/share/applications/Happ.desktop"
+
+	python3 - \
+		"${srcdir}/happ-extracted/usr/share/icons/hicolor/256x256/apps/happ.png" \
+		"${pkgdir}/usr/share/icons/hicolor/512x512/apps/happ.png" <<'PY'
+import math
+import struct
+import sys
+import zlib
+from pathlib import Path
+
+PNG_SIG = b"\x89PNG\r\n\x1a\n"
+
+
+def read_png(path):
+    data = Path(path).read_bytes()
+    if not data.startswith(PNG_SIG):
+        raise ValueError("not a PNG")
+
+    pos = len(PNG_SIG)
+    width = height = bit_depth = color_type = None
+    idat = bytearray()
+    while pos < len(data):
+        length = struct.unpack(">I", data[pos:pos + 4])[0]
+        pos += 4
+        chunk_type = data[pos:pos + 4]
+        pos += 4
+        chunk = data[pos:pos + length]
+        pos += length + 4
+        if chunk_type == b"IHDR":
+            width, height, bit_depth, color_type, _, _, _ = struct.unpack(
+                ">IIBBBBB", chunk
+            )
+        elif chunk_type == b"IDAT":
+            idat.extend(chunk)
+        elif chunk_type == b"IEND":
+            break
+
+    if bit_depth != 8 or color_type not in (2, 6):
+        raise ValueError("unsupported PNG format")
+
+    channels = 4 if color_type == 6 else 3
+    raw = zlib.decompress(bytes(idat))
+    stride = width * channels
+    rows = []
+    prev = [0] * stride
+    index = 0
+
+    for _ in range(height):
+        filter_type = raw[index]
+        index += 1
+        encoded = list(raw[index:index + stride])
+        index += stride
+        row = [0] * stride
+
+        for x, value in enumerate(encoded):
+            left = row[x - channels] if x >= channels else 0
+            up = prev[x]
+            upper_left = prev[x - channels] if x >= channels else 0
+
+            if filter_type == 0:
+                decoded = value
+            elif filter_type == 1:
+                decoded = (value + left) & 255
+            elif filter_type == 2:
+                decoded = (value + up) & 255
+            elif filter_type == 3:
+                decoded = (value + ((left + up) // 2)) & 255
+            elif filter_type == 4:
+                predictor = left + up - upper_left
+                distances = (
+                    abs(predictor - left),
+                    abs(predictor - up),
+                    abs(predictor - upper_left),
+                )
+                decoded = (value + (left, up, upper_left)[distances.index(min(distances))]) & 255
+            else:
+                raise ValueError("unsupported PNG filter")
+
+            row[x] = decoded
+
+        prev = row
+        rows.append(row)
+
+    pixels = []
+    for row in rows:
+        out_row = []
+        for x in range(width):
+            offset = x * channels
+            if channels == 4:
+                out_row.append(tuple(row[offset:offset + 4]))
+            else:
+                out_row.append((row[offset], row[offset + 1], row[offset + 2], 255))
+        pixels.append(out_row)
+
+    return width, height, pixels
+
+
+def write_png(path, width, height, pixels):
+    def chunk(chunk_type, payload):
+        crc = zlib.crc32(chunk_type + payload) & 0xFFFFFFFF
+        return struct.pack(">I", len(payload)) + chunk_type + payload + struct.pack(">I", crc)
+
+    raw = bytearray()
+    for y in range(height):
+        raw.append(0)
+        for x in range(width):
+            raw.extend(bytes(pixels[y][x]))
+
+    ihdr = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).write_bytes(
+        PNG_SIG + chunk(b"IHDR", ihdr) + chunk(b"IDAT", zlib.compress(bytes(raw), 9))
+        + chunk(b"IEND", b"")
+    )
+
+
+def rounded_rect_coverage(px, py, size, margin, radius, samples=4):
+    covered = 0
+    left = top = margin
+    right = bottom = size - margin
+
+    for sy in range(samples):
+        for sx in range(samples):
+            x = px + (sx + 0.5) / samples
+            y = py + (sy + 0.5) / samples
+            if x < left or x > right or y < top or y > bottom:
+                continue
+            cx = min(max(x, left + radius), right - radius)
+            cy = min(max(y, top + radius), bottom - radius)
+            if (x - cx) ** 2 + (y - cy) ** 2 <= radius ** 2:
+                covered += 1
+
+    return covered / (samples * samples)
+
+
+def sample_alpha(alpha, x, y):
+    height = len(alpha)
+    width = len(alpha[0])
+    if x < 0 or y < 0 or x > width - 1 or y > height - 1:
+        return 0.0
+
+    x0 = int(math.floor(x))
+    y0 = int(math.floor(y))
+    x1 = min(x0 + 1, width - 1)
+    y1 = min(y0 + 1, height - 1)
+    dx = x - x0
+    dy = y - y0
+
+    top = alpha[y0][x0] * (1 - dx) + alpha[y0][x1] * dx
+    bottom = alpha[y1][x0] * (1 - dx) + alpha[y1][x1] * dx
+    return top * (1 - dy) + bottom * dy
+
+
+src_path, dest_path = sys.argv[1], sys.argv[2]
+src_width, src_height, source = read_png(src_path)
+background = 43
+
+logo_alpha = []
+for y in range(src_height):
+    row = []
+    for x in range(src_width):
+        r, g, b, a = source[y][x]
+        luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+        row.append(max(0.0, min(1.0, (luminance - background) / (255 - background))) * (a / 255.0))
+    logo_alpha.append(row)
+
+xs = [x for y in range(src_height) for x in range(src_width) if logo_alpha[y][x] > 0.04]
+ys = [y for y in range(src_height) for x in range(src_width) if logo_alpha[y][x] > 0.04]
+left, right = min(xs), max(xs)
+top, bottom = min(ys), max(ys)
+crop_width = right - left + 1
+crop_height = bottom - top + 1
+cropped = [
+    [logo_alpha[y][x] for x in range(left, right + 1)]
+    for y in range(top, bottom + 1)
+]
+
+size = 512
+margin = 38
+radius = 116
+logo_height = 292
+logo_width = round(crop_width * logo_height / crop_height)
+logo_x = (size - logo_width) // 2
+logo_y = (size - logo_height) // 2 + 6
+
+pixels = [[(0, 0, 0, 0) for _ in range(size)] for _ in range(size)]
+for y in range(size):
+    for x in range(size):
+        coverage = rounded_rect_coverage(x, y, size, margin, radius)
+        if coverage:
+            pixels[y][x] = (43, 43, 43, round(255 * coverage))
+
+for y in range(logo_height):
+    source_y = (y + 0.5) * crop_height / logo_height - 0.5
+    target_y = logo_y + y
+    if target_y < 0 or target_y >= size:
+        continue
+
+    for x in range(logo_width):
+        source_x = (x + 0.5) * crop_width / logo_width - 0.5
+        target_x = logo_x + x
+        if target_x < 0 or target_x >= size:
+            continue
+
+        alpha = sample_alpha(cropped, source_x, source_y)
+        if alpha <= 0:
+            continue
+
+        dr, dg, db, da = pixels[target_y][target_x]
+        da_float = da / 255.0
+        out_alpha = alpha + da_float * (1 - alpha)
+        out_rgb = round((255 * alpha + dr * da_float * (1 - alpha)) / out_alpha)
+        pixels[target_y][target_x] = (out_rgb, out_rgb, out_rgb, round(out_alpha * 255))
+
+write_png(dest_path, size, size, pixels)
+PY
+
+	install -Dm644 "${srcdir}/happ-extracted/usr/share/mime/packages/happ-mime.xml" \
+		"${pkgdir}/usr/share/mime/packages/happ-mime.xml"
+
+	install -Dm755 "${srcdir}/happ-launcher" "${pkgdir}/usr/bin/happ"
+	install-license "${srcdir}/LICENSE" "happ/LICENSE.nivora"
+}
+
+files() {
+	files-find "/opt/happ/**/*"
+	files-find-binary
+	files-find-desktop
+	files-find-systemd
+	files-find-license
+	files-find \
+		"/usr/share/icons/hicolor/512x512/apps/happ.png" \
+		"/usr/share/mime/packages/happ-mime.xml"
+}

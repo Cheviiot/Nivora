@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Happ's bundled Qt falls back to the generic GNOME platform theme, which
+# reports Qt::ColorScheme::Unknown. The bundled portal plugin follows the
+# desktop color-scheme setting and emits updates when it changes.
+QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME:-xdgdesktopportal}"
+export QT_QPA_PLATFORMTHEME
+
+exec /opt/happ/bin/Happ "$@"

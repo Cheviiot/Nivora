@@ -1,0 +1,49 @@
+name: CI · Проверка репозитория
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nivora-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  quality:
+    name: Статика, метаданные и тесты
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Получить репозиторий
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Подготовить инструменты
+        uses: ./.github/actions/setup-stplr-spec
+        with:
+          system-packages: jq rpm shellcheck
+
+      - name: Выполнить проверки
+        run: tools/run_checks.sh
+
+      - name: Сверить upstream-версии
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          tools/package_updates.sh check-all
+          status=$?
+          set -e
+          if [[ "$status" -eq 10 ]]; then
+            echo "::warning::Для одного или нескольких пакетов доступны обновления"
+          elif [[ "$status" -ne 0 ]]; then
+            exit "$status"
+          fi

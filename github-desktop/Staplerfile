@@ -1,0 +1,109 @@
+name='github-desktop'
+version='3.6.3'
+release=2
+summary='GitHub Desktop built from the official source'
+summary_ru='GitHub Desktop, собранный из официальных исходников'
+group='Development/Tools'
+desc='The original GitHub Desktop application, built for Linux by Nivora CI directly from the official desktop/desktop source tree without third-party forks.'
+desc_ru='Оригинальное приложение GitHub Desktop, собранное для Linux в CI Nivora напрямую из официального дерева desktop/desktop без сторонних форков.'
+homepage='https://github.com/desktop/desktop'
+maintainer='GitHub <https://github.com/desktop>'
+
+architectures=('amd64' 'arm64')
+
+license=('MIT')
+
+provides=()
+replaces=('github-desktop')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('ca-certificates' 'git' 'libasound2' 'libatk-bridge2.0-0' 'libatk1.0-0' 'libatspi2.0-0' 'libcairo2' 'libcups2' 'libdbus-1-3' 'libexpat1' 'libgbm1' 'libglib2.0-0' 'libgtk-3-0' 'libnspr4' 'libnss3' 'libpango-1.0-0' 'libsecret-1-0' 'libudev1' 'libx11-6' 'libxcb1' 'libxcomposite1' 'libxdamage1' 'libxext6' 'libxfixes3' 'libxkbcommon0' 'libxrandr2' 'libxss1' 'libxtst6' 'xdg-utils')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('ca-certificates' 'git' 'alsa-lib' 'atk' 'at-spi2-atk' 'at-spi2-core' 'cairo' 'cups-libs' 'dbus-libs' 'expat' 'mesa-libgbm' 'glib2' 'gtk3' 'nspr' 'nss' 'pango' 'libsecret' 'systemd-libs' 'libX11' 'libxcb' 'libXcomposite' 'libXdamage' 'libXext' 'libXfixes' 'libxkbcommon' 'libXrandr' 'libXScrnSaver' 'libXtst' 'xdg-utils')
+deps_arch=('ca-certificates' 'git' 'alsa-lib' 'atk' 'at-spi2-atk' 'at-spi2-core' 'cairo' 'cups' 'dbus' 'expat' 'libgbm' 'glib2' 'gtk3' 'nspr' 'nss' 'pango' 'libsecret' 'systemd-libs' 'libx11' 'libxcb' 'libxcomposite' 'libxdamage' 'libxext' 'libxfixes' 'libxkbcommon' 'libxrandr' 'libxss' 'libxtst' 'xdg-utils')
+deps_opensuse=('ca-certificates' 'git' 'alsa' 'libatk-1_0-0' 'libatk-bridge-2_0-0' 'libatspi0' 'libcairo2' 'cups-libs' 'libdbus-1-3' 'libexpat1' 'libgbm1' 'glib2' 'gtk3' 'mozilla-nspr' 'mozilla-nss' 'pango' 'libsecret-1-0' 'libudev1' 'libX11-6' 'libxcb1' 'libXcomposite1' 'libXdamage1' 'libXext6' 'libXfixes3' 'libxkbcommon0' 'libXrandr2' 'libXss1' 'libXtst6' 'xdg-utils')
+deps_altlinux=('ca-certificates' 'git' 'libalsa' 'at-spi2-atk' 'libat-spi2-core' 'libatk' 'libcairo' 'libcups' 'libdbus' 'libexpat' 'libgbm' 'glib2' 'libgtk+3' 'libnspr' 'libnss' 'libpango' 'libsecret' 'libudev0' 'libX11' 'libxcb' 'libXcomposite' 'libXdamage' 'libXext' 'libXfixes' 'libxkbcommon' 'libXrandr' 'libXScrnSaver' 'libXtst' 'xdg-utils')
+
+build_deps=('binutils')
+
+sources=(
+	"https://github.com/Cheviiot/Nivora/releases/download/github-desktop-${version}-linux/github-desktop-${version}-linux-x64.tar.gz?~archive=false&~name=github-desktop.tar.gz"
+	"https://raw.githubusercontent.com/desktop/desktop/release-${version}/LICENSE?~archive=false&~name=LICENSE"
+	"https://raw.githubusercontent.com/desktop/desktop/release-${version}/app/static/logos/prod/icon-logo.icon/Assets/1%20%E2%80%93%20Layer%203.svg?~archive=false&~name=github-desktop.svg"
+)
+
+sources_arm64=(
+	"https://github.com/Cheviiot/Nivora/releases/download/github-desktop-${version}-linux/github-desktop-${version}-linux-arm64.tar.gz?~archive=false&~name=github-desktop.tar.gz"
+	"https://raw.githubusercontent.com/desktop/desktop/release-${version}/LICENSE?~archive=false&~name=LICENSE"
+	"https://raw.githubusercontent.com/desktop/desktop/release-${version}/app/static/logos/prod/icon-logo.icon/Assets/1%20%E2%80%93%20Layer%203.svg?~archive=false&~name=github-desktop.svg"
+)
+
+checksums=(
+	'sha256:78d55b126a200c3585c7d0e3a32b95fe5d0d19e71921169c3e376af520d9a179'
+	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
+	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
+)
+
+checksums_arm64=(
+	'sha256:b1934f1d8d621ee879ef6b7d7dabe9704134c4dc861813b776f42deedce5a038'
+	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
+	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	tar -xzf github-desktop.tar.gz
+	[[ -x "${srcdir}/github-desktop/desktop" ]]
+
+	install -dm755 "${pkgdir}/opt/github-desktop"
+	cp -a "${srcdir}/github-desktop/." "${pkgdir}/opt/github-desktop/"
+	chmod 0755 "${pkgdir}/opt/github-desktop/desktop"
+	if [[ -f "${pkgdir}/opt/github-desktop/chrome-sandbox" ]]; then
+		chmod 0755 "${pkgdir}/opt/github-desktop/chrome-sandbox"
+	fi
+
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -sfn /opt/github-desktop/desktop "${pkgdir}/usr/bin/github-desktop"
+
+	install -Dm644 github-desktop.svg \
+		"${pkgdir}/usr/share/icons/hicolor/scalable/apps/github-desktop.svg"
+	install -Dm644 /dev/stdin \
+		"${pkgdir}/usr/share/applications/github-desktop.desktop" <<'EOF'
+[Desktop Entry]
+Name=GitHub Desktop
+Comment=Simple collaboration from your desktop
+Comment[ru]=Графический клиент для работы с GitHub
+Exec=/usr/bin/github-desktop --protocol-launcher %U
+Terminal=false
+Type=Application
+Icon=github-desktop
+Categories=Development;RevisionControl;
+MimeType=x-scheme-handler/x-github-desktop-auth;x-scheme-handler/x-github-client;x-scheme-handler/github-mac;
+StartupWMClass=desktop
+EOF
+
+	install-license LICENSE "github-desktop/LICENSE"
+	install -Dm644 "${srcdir}/github-desktop/LICENSE" \
+		"${pkgdir}/usr/share/licenses/github-desktop/LICENSE.electron.txt"
+	install -Dm644 "${srcdir}/github-desktop/LICENSES.chromium.html" \
+		"${pkgdir}/usr/share/licenses/github-desktop/LICENSES.chromium.html"
+}
+
+files() {
+	files-find "/opt/github-desktop/**/*"
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find "/usr/share/icons/hicolor/*/apps/github-desktop.svg"
+}

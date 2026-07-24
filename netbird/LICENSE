@@ -1,0 +1,16 @@
+Сведения о лицензии пакета NetBird
+
+Лицензии: BSD-3-Clause и AGPL-3.0-only.
+Исходный проект: https://github.com/netbirdio/netbird
+Официальный сайт: https://netbird.io/
+
+Нюансы пакета:
+- Пакет перепаковывает официальный deb-артефакт NetBird CLI/daemon для Linux.
+- Основные части репозитория NetBird распространяются под BSD-3-Clause.
+- Отдельные серверные компоненты исходного репозитория, включая management, signal, relay и combined, лицензированы под AGPL-3.0.
+- Данный пакет устанавливает клиентский бинарник и systemd-сервис; серверная инфраструктура NetBird в пакет не входит.
+- Подключение к облачному или собственному management-серверу регулируется условиями соответствующего сервиса.
+
+Официальные тексты лицензий:
+- https://opensource.org/license/bsd-3-clause
+- https://www.gnu.org/licenses/agpl-3.0.txt

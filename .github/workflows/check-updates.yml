@@ -1,0 +1,201 @@
+name: CI · Автономное обновление пакетов
+
+on:
+  schedule:
+    # 03:00 Asia/Vladivostok (UTC+10)
+    - cron: "0 17 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: nivora-autonomous-updates
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  detect:
+    name: Найти обновления
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      packages: ${{ steps.updates.outputs.packages }}
+      has_updates: ${{ steps.updates.outputs.has_updates }}
+      github_desktop_update: ${{ steps.updates.outputs.github_desktop_update }}
+      github_desktop_version: ${{ steps.updates.outputs.github_desktop_version }}
+    steps:
+      - name: Получить репозиторий
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Подготовить инструменты
+        uses: ./.github/actions/setup-stplr-spec
+        with:
+          system-packages: jq
+
+      - name: Сформировать план обновления
+        id: updates
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          packages_output="$(tools/package_updates.sh outdated)"
+          mapfile -t packages <<<"$packages_output"
+          if [[ -z "$packages_output" ]]; then
+            packages=()
+          fi
+          if [[ "${#packages[@]}" -eq 0 ]]; then
+            {
+              echo 'packages=[]'
+              echo 'has_updates=false'
+              echo 'github_desktop_update=false'
+              echo 'github_desktop_version='
+            } >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          packages_json="$(
+            printf '%s\n' "${packages[@]}" |
+              jq -Rsc 'split("\n") | map(select(length > 0))'
+          )"
+          github_desktop_update=false
+          github_desktop_version=''
+          for package in "${packages[@]}"; do
+            if [[ "$package" == github-desktop ]]; then
+              github_desktop_update=true
+              read -r _ github_desktop_version < <(
+                tools/package_updates.sh check github-desktop
+              )
+            fi
+          done
+          {
+            echo "packages=${packages_json}"
+            echo 'has_updates=true'
+            echo "github_desktop_update=${github_desktop_update}"
+            echo "github_desktop_version=${github_desktop_version}"
+          } >>"$GITHUB_OUTPUT"
+
+  github-desktop:
+    name: Подготовить GitHub Desktop
+    needs: detect
+    if: ${{ needs.detect.outputs.github_desktop_update == 'true' }}
+    uses: ./.github/workflows/github-desktop-linux.yml
+    with:
+      version: ${{ needs.detect.outputs.github_desktop_version }}
+      publish: true
+    permissions:
+      contents: write
+
+  update:
+    name: Изолированно обновить и опубликовать
+    needs:
+      - detect
+      - github-desktop
+    if: >-
+      ${{
+        always() &&
+        needs.detect.result == 'success' &&
+        needs.detect.outputs.has_updates == 'true'
+      }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - name: Получить репозиторий
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Подготовить инструменты
+        uses: ./.github/actions/setup-stplr-spec
+        with:
+          system-packages: jq rpm shellcheck
+
+      - name: Изолированно обновить и проверить каждый пакет
+        id: isolated
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PACKAGES_JSON: ${{ needs.detect.outputs.packages }}
+          AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
+        run: |
+          mapfile -t packages < <(jq -r '.[]' <<<"$PACKAGES_JSON")
+          tools/autonomous_package_updates.sh "${packages[@]}"
+
+          successful_json="$(
+            jq -Rsc 'split("\n") | map(select(length > 0))' \
+              <"$AUTONOMOUS_UPDATE_RESULTS_DIR/successful-packages"
+          )"
+          failed_json="$(
+            cut -f1 "$AUTONOMOUS_UPDATE_RESULTS_DIR/failed-packages" |
+              jq -Rsc 'split("\n") | map(select(length > 0))'
+          )"
+          echo "successful=${successful_json}" >>"$GITHUB_OUTPUT"
+          echo "failed=${failed_json}" >>"$GITHUB_OUTPUT"
+
+      - name: Сохранить журналы и diff каждого пакета
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: autonomous-update-diagnostics-${{ github.run_id }}
+          path: ${{ runner.temp }}/update-results
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Применить только успешные обновления
+        env:
+          AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
+        run: |
+          while IFS= read -r package; do
+            [[ -n "$package" ]] || continue
+            git apply \
+              "$AUTONOMOUS_UPDATE_RESULTS_DIR/${package}/update.patch"
+          done <"$AUTONOMOUS_UPDATE_RESULTS_DIR/successful-packages"
+          tools/sync_readme_versions.py
+          tools/run_checks.sh
+
+      - name: Отправить обновления прямо в main
+        id: publish
+        env:
+          SUCCESSFUL_PACKAGES: ${{ steps.isolated.outputs.successful }}
+        run: |
+          if git diff --quiet; then
+            echo 'Изменений после обновления нет'
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md ./*/Staplerfile
+          packages="$(jq -r 'join(", ")' <<<"$SUCCESSFUL_PACKAGES")"
+          git commit -m "chore: autonomously update ${packages}"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Синхронизировать постоянные отчёты о сбоях
+        if: ${{ always() && steps.isolated.outcome == 'success' }}
+        env:
+          AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
+          GH_TOKEN: ${{ github.token }}
+        run: tools/report_update_failures.sh
+
+      - name: Сообщить о несовместимых пакетах
+        if: ${{ always() && steps.isolated.outputs.failed != '[]' }}
+        env:
+          FAILED_PACKAGES: ${{ steps.isolated.outputs.failed }}
+          AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
+        run: |
+          {
+            echo '## Требуется ручная диагностика'
+            echo
+            echo 'Обновление остальных пакетов продолжено и опубликовано.'
+            echo 'Для несовместимых пакетов сохранён artifact с логами и diff:'
+            echo
+            while IFS=$'\t' read -r package phase; do
+              printf -- '- **%s**: сбой на фазе **%s**\n' "$package" "$phase"
+            done <"$AUTONOMOUS_UPDATE_RESULTS_DIR/failed-packages"
+          } >>"$GITHUB_STEP_SUMMARY"
+
+          echo "::warning::Требуется ручная диагностика: $(jq -r 'join(\", \")' <<<"$FAILED_PACKAGES")"

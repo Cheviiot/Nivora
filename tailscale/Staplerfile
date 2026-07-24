@@ -1,0 +1,84 @@
+name='tailscale'
+version='1.98.9'
+release=3
+summary='Mesh VPN built on WireGuard'
+summary_ru='Mesh VPN на базе WireGuard'
+group='Networking/Other'
+desc='Tailscale is a secure mesh VPN built on WireGuard and identity-based access that connects devices and services across networks.'
+desc_ru='Tailscale — безопасный mesh VPN на базе WireGuard и identity-based access для соединения устройств и сервисов между сетями.'
+homepage='https://tailscale.com'
+maintainer='Tailscale Inc <info@tailscale.com>'
+
+architectures=('amd64' 'arm64')
+
+license=('BSD-3-Clause')
+
+provides=()
+replaces=('tailscale')
+conflicts=()
+
+backup=('/etc/default/tailscaled')
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('iptables' 'iproute2' 'ca-certificates')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('iptables' 'iproute' 'ca-certificates')
+deps_arch=('iptables' 'iproute2' 'ca-certificates')
+deps_opensuse=('iptables' 'iproute2' 'ca-certificates')
+deps_altlinux=('iptables' 'iproute2' 'ca-certificates')
+
+sources=(
+	"https://pkgs.tailscale.com/stable/tailscale_${version}_amd64.tgz?~archive=false&~name=tailscale.tgz"
+	"local:///tailscale-purge-data"
+	'local:///LICENSE'
+)
+
+sources_arm64=(
+	"https://pkgs.tailscale.com/stable/tailscale_${version}_arm64.tgz?~archive=false&~name=tailscale.tgz"
+	"local:///tailscale-purge-data"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'11be30ad301d48f84ff52fec34f8a2f78eb3e3dee1be4e9624d19fccc8df5540'
+	'fc0e166481e2f97c21dca773ad4bfe673842268935ce1628c14b96af98e70555'
+	'3c7a7d6d7f09890d5e682901acaeb12bda9542fc6450a709c9dc296a91e726a5'
+)
+
+checksums_arm64=(
+	'fa554ee808d7d07ee8e3ebbc0215ea087157e2a0abbf408e6e18ea7532554db6'
+	'fc0e166481e2f97c21dca773ad4bfe673842268935ce1628c14b96af98e70555'
+	'3c7a7d6d7f09890d5e682901acaeb12bda9542fc6450a709c9dc296a91e726a5'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	tar -xzf tailscale.tgz
+	src="$(find "${srcdir}" -maxdepth 1 -type d -name "tailscale_${version}_*" | head -1)"
+
+	install-binary "${src}/tailscale"
+	install-binary "${srcdir}/tailscale-purge-data"
+	install -Dm755 "${src}/tailscaled" "${pkgdir}/usr/sbin/tailscaled"
+	install-systemd "${src}/systemd/tailscaled.service"
+	install-config "${src}/systemd/tailscaled.defaults" "default/tailscaled"
+	install-license "${srcdir}/LICENSE" "tailscale/LICENSE.nivora"
+}
+
+files() {
+	files-find-binary
+	files-find-systemd
+	files-find-license
+	files-find \
+		"/usr/sbin/tailscaled" \
+		"/etc/default/tailscaled"
+}

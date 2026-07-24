@@ -1,0 +1,239 @@
+#!/bin/bash
+set -euo pipefail
+
+repo_prefix="${NIVORA_STPLR_REPO:-}"
+
+usage() {
+    cat <<'EOF'
+Nivora Stapler Helper
+
+Usage:
+  sl <command> [args...]
+  sli <package> [stplr args...]      sudo stplr install <package>
+  slr <package> [stplr args...]      sudo stplr remove <package>
+  slu [stplr args...]                sudo stplr up
+  slf [stplr args...]                sudo stplr fix
+  slref [stplr args...]              sudo stplr refresh
+  sls <query> [stplr args...]        stplr search <query>
+  slii <package> [stplr args...]     stplr info <package>
+  sll [stplr args...]                stplr list
+
+Commands:
+  install, in, i       install package with sudo
+  remove, rm, r        remove package with sudo
+  up, upgrade, u       upgrade installed packages with sudo
+  fix, f               run stplr fix with sudo
+  refresh, ref         refresh repositories with sudo
+  search, s            search packages
+  info, show           show package info
+  list, ls             list repository packages
+  help                 show this help
+
+Options:
+  --repo <name>        prefix short package names with repository, e.g. sli --repo nivora parsec
+
+Environment:
+  NIVORA_STPLR_REPO      optional repository prefix for short names, default: disabled
+  NIVORA_STPLR_SUDO      privilege command, default: sudo
+  NIVORA_STPLR_QUIET=1   do not print command before execution
+EOF
+}
+
+die() {
+    echo "nivora-stplr: $*" >&2
+    exit 2
+}
+
+need_stplr() {
+    command -v stplr >/dev/null 2>&1 || die "команда stplr не найдена"
+}
+
+sudo_cmd() {
+    if [[ "${EUID}" -eq 0 ]]; then
+        return 0
+    fi
+
+    local command_name="${NIVORA_STPLR_SUDO:-sudo}"
+    command -v "${command_name}" >/dev/null 2>&1 || die "команда ${command_name} не найдена"
+    printf '%s\n' "${command_name}"
+}
+
+is_package_token() {
+    local value="$1"
+
+    [[ -n "${value}" ]] || return 1
+    [[ "${value}" == -* ]] && return 1
+    [[ "${value}" == */* ]] && return 1
+    [[ "${value}" == ./* || "${value}" == ../* || "${value}" == /* ]] && return 1
+    [[ "${value}" == *.rpm || "${value}" == *.deb || "${value}" == *.pkg.tar.* ]] && return 1
+    return 0
+}
+
+normalize_package() {
+    local value="$1"
+
+    if [[ -n "${repo_prefix}" ]] && is_package_token "${value}"; then
+        printf '%s/%s\n' "${repo_prefix}" "${value}"
+    else
+        printf '%s\n' "${value}"
+    fi
+}
+
+normalize_package_args() {
+    local arg
+
+    for arg in "$@"; do
+        normalize_package "${arg}"
+    done
+}
+
+extract_repo_option() {
+    local -n output_ref="$1"
+    shift
+
+    output_ref=()
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+        --repo)
+            [[ "$#" -ge 2 ]] || die "для --repo нужно имя репозитория"
+            repo_prefix="$2"
+            shift 2
+            ;;
+        --repo=*)
+            repo_prefix="${1#--repo=}"
+            shift
+            ;;
+        *)
+            output_ref+=("$1")
+            shift
+            ;;
+        esac
+    done
+}
+
+print_and_exec() {
+    local -a command=("$@")
+
+    if [[ "${NIVORA_STPLR_QUIET:-0}" != "1" ]]; then
+        printf '=>'
+        printf ' %q' "${command[@]}"
+        printf '\n'
+    fi
+
+    exec "${command[@]}"
+}
+
+run_stplr() {
+    local mode="$1"
+    shift
+
+    need_stplr
+
+    local -a command=()
+    if [[ "${mode}" == "sudo" ]]; then
+        local privilege
+        privilege="$(sudo_cmd)"
+        if [[ -n "${privilege}" ]]; then
+            command+=("${privilege}")
+        fi
+    fi
+
+    command+=(stplr "$@")
+    print_and_exec "${command[@]}"
+}
+
+require_args() {
+    local command_name="$1"
+    local count="$2"
+
+    if [[ "${count}" -eq 0 ]]; then
+        die "для команды ${command_name} нужен аргумент"
+    fi
+}
+
+dispatch() {
+    local command_name="$1"
+    shift
+
+    case "${command_name}" in
+    install | in | i)
+        require_args "${command_name}" "$#"
+        local -a args=()
+        extract_repo_option args "$@"
+        require_args "${command_name}" "${#args[@]}"
+        mapfile -t normalized < <(normalize_package_args "${args[@]}")
+        run_stplr sudo install "${normalized[@]}"
+        ;;
+    remove | rm | r | erase | delete | del)
+        require_args "${command_name}" "$#"
+        local -a args=()
+        extract_repo_option args "$@"
+        require_args "${command_name}" "${#args[@]}"
+        mapfile -t normalized < <(normalize_package_args "${args[@]}")
+        run_stplr sudo remove "${normalized[@]}"
+        ;;
+    up | upgrade | u)
+        run_stplr sudo up "$@"
+        ;;
+    fix | f)
+        run_stplr sudo fix "$@"
+        ;;
+    refresh | ref)
+        run_stplr sudo refresh "$@"
+        ;;
+    search | s)
+        require_args "${command_name}" "$#"
+        run_stplr user search "$@"
+        ;;
+    info | show)
+        require_args "${command_name}" "$#"
+        local -a args=()
+        extract_repo_option args "$@"
+        require_args "${command_name}" "${#args[@]}"
+        mapfile -t normalized < <(normalize_package_args "${args[@]}")
+        run_stplr user info "${normalized[@]}"
+        ;;
+    list | ls | l)
+        run_stplr user list "$@"
+        ;;
+    version | support)
+        run_stplr user "${command_name}" "$@"
+        ;;
+    help | -h | --help | "")
+        usage
+        ;;
+    *)
+        die "неизвестная команда: ${command_name}. Запустите: sl help"
+        ;;
+    esac
+}
+
+main() {
+    local invoked
+    invoked="$(basename "$0")"
+
+    case "${invoked}" in
+    sli) dispatch install "$@" ;;
+    slr) dispatch remove "$@" ;;
+    slu) dispatch up "$@" ;;
+    slf) dispatch fix "$@" ;;
+    slref) dispatch refresh "$@" ;;
+    sls) dispatch search "$@" ;;
+    slii) dispatch info "$@" ;;
+    sll) dispatch list "$@" ;;
+    sl)
+        if [[ "$#" -eq 0 ]]; then
+            usage
+            return 0
+        fi
+        local command_name="$1"
+        shift
+        dispatch "${command_name}" "$@"
+        ;;
+    *)
+        die "неизвестное имя запуска: ${invoked}"
+        ;;
+    esac
+}
+
+main "$@"

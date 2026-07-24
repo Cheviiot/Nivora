@@ -1,0 +1,25 @@
+#!/bin/bash
+set -euo pipefail
+
+install_dir="${VENTOY_INSTALL_DIR:-/opt/ventoy}"
+
+case "$(uname -m)" in
+x86_64 | amd64)
+    gui='VentoyGUI.x86_64'
+    ;;
+aarch64 | arm64)
+    gui='VentoyGUI.aarch64'
+    ;;
+*)
+    echo "Ventoy: неподдерживаемая архитектура $(uname -m)" >&2
+    exit 1
+    ;;
+esac
+
+if [[ ! -x "${install_dir}/${gui}" ]]; then
+    echo "Ventoy: не найден исполняемый файл ${install_dir}/${gui}" >&2
+    exit 1
+fi
+
+cd "$install_dir"
+exec "./${gui}" "$@"

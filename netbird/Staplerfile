@@ -1,0 +1,90 @@
+name='netbird'
+version=0.75.0
+release=1
+summary='WireGuard-based mesh VPN client'
+summary_ru='Mesh VPN-клиент на базе WireGuard'
+group='Networking/Other'
+desc='NetBird is a WireGuard-based mesh VPN client with SSO, MFA and policy-based access control for connecting devices and private networks.'
+desc_ru='NetBird — mesh VPN-клиент на базе WireGuard с SSO, MFA и политиками доступа для соединения устройств и приватных сетей.'
+homepage='https://netbird.io/'
+maintainer='NetBird GmbH <dev@netbird.io>'
+
+architectures=('amd64' 'arm64')
+
+license=('BSD-3-Clause' 'AGPL-3.0-only')
+
+provides=()
+replaces=('netbird')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('ca-certificates' 'iproute2' 'iptables')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('ca-certificates' 'iproute' 'iptables')
+deps_arch=('ca-certificates' 'iproute2' 'iptables')
+deps_opensuse=('ca-certificates' 'iproute2' 'iptables')
+deps_altlinux=('ca-certificates' 'iproute2' 'iptables')
+
+build_deps=('binutils')
+
+sources=(
+	"https://github.com/netbirdio/netbird/releases/download/v${version}/netbird_${version}_linux_amd64.deb?~archive=false&~name=netbird.deb"
+	"local:///netbird.png"
+	"local:///netbird.service"
+	"local:///netbird-purge-data"
+	'local:///LICENSE'
+)
+
+sources_arm64=(
+	"https://github.com/netbirdio/netbird/releases/download/v${version}/netbird_${version}_linux_arm64.deb?~archive=false&~name=netbird.deb"
+	"local:///netbird.png"
+	"local:///netbird.service"
+	"local:///netbird-purge-data"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:b65f65d7f32831639ebdd44c241e7a2310287723b64dbc03c93292853042ee6f'
+	'sha256:71b133636e91eb67f221f64592f64fa04a3b2337f4d616be36492efae0cff643'
+	'sha256:abd8064281462a4ce12c2fdf2e9436d9ae6932ff3b366668a175f2a556169012'
+	'sha256:bb5c44ab330db0d63a82b582f2c508681a6922ea65f3bf2becaeed87693215b1'
+	'sha256:11555e8308e949c3965a681f48b83f7f2488cff03b09772d8af4a20d376464e7'
+)
+
+checksums_arm64=(
+	'sha256:9e57e854da0bbaf392cc6f99e37db75809e21c3effde0fca9f3bc9dc90245c02'
+	'sha256:71b133636e91eb67f221f64592f64fa04a3b2337f4d616be36492efae0cff643'
+	'sha256:abd8064281462a4ce12c2fdf2e9436d9ae6932ff3b366668a175f2a556169012'
+	'sha256:bb5c44ab330db0d63a82b582f2c508681a6922ea65f3bf2becaeed87693215b1'
+	'sha256:11555e8308e949c3965a681f48b83f7f2488cff03b09772d8af4a20d376464e7'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x netbird.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install-binary "${srcdir}/extracted/usr/bin/netbird"
+	install-binary "${srcdir}/netbird-purge-data"
+	install-systemd "${srcdir}/netbird.service"
+	install-license "${srcdir}/LICENSE" "netbird/LICENSE.nivora"
+	install -Dm644 "${srcdir}/netbird.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/netbird.png"
+}
+
+files() {
+	files-find-binary
+	files-find-systemd
+	files-find-license
+	files-find "/usr/share/icons/hicolor/256x256/apps/netbird.png"
+}

@@ -1,0 +1,141 @@
+name='ventoy'
+version=1.1.17
+release=1
+summary='Create and manage multiboot USB drives'
+summary_ru='Создание и управление мультизагрузочными USB-накопителями'
+group='System/Configuration/Hardware'
+desc='Ventoy is an open source tool for creating multiboot USB drives for ISO, WIM, IMG, VHD(x) and EFI files. This package includes the official native Linux GUI.'
+desc_ru='Ventoy — открытая утилита для создания мультизагрузочных USB-накопителей с файлами ISO, WIM, IMG, VHD(x) и EFI. Пакет включает официальный нативный GUI для Linux.'
+homepage='https://www.ventoy.net/'
+maintainer='Ventoy Project <admin@ventoy.net>'
+
+architectures=('amd64' 'arm64')
+
+license=('GPL-3.0-only')
+
+provides=()
+replaces=('ventoy')
+conflicts=()
+
+# В официальном архиве находятся готовые нативные программы и низкоуровневые
+# инструменты для работы с дисками.
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=(
+	'libgtk-3-0' 'policykit-1' 'parted' 'fdisk' 'dosfstools'
+	'dmsetup' 'udev' 'xz-utils'
+)
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=(
+	'gtk3' 'polkit' 'parted' 'util-linux' 'dosfstools'
+	'device-mapper' 'systemd-udev' 'xz'
+)
+deps_arch=(
+	'gtk3' 'polkit' 'parted' 'util-linux' 'dosfstools'
+	'device-mapper' 'systemd' 'xz'
+)
+deps_opensuse=(
+	'gtk3' 'polkit' 'parted' 'util-linux' 'dosfstools'
+	'device-mapper' 'systemd-udev' 'xz'
+)
+deps_altlinux=(
+	'libgtk+3' 'polkit' 'parted' 'fdisk' 'dosfstools'
+	'dmsetup' 'udev' 'xz'
+)
+
+opt_deps=()
+opt_deps_debian=('libqt5widgets5')
+opt_deps_ubuntu=("${opt_deps_debian[@]}")
+opt_deps_fedora=('qt5-qtbase-gui')
+opt_deps_arch=('qt5-base')
+opt_deps_opensuse=('libQt5Widgets5')
+opt_deps_altlinux=('libqt5-widgets')
+
+sources=(
+	"https://github.com/ventoy/Ventoy/releases/download/v${version}/ventoy-${version}-linux.tar.gz?~archive=false&~name=ventoy.tar.gz"
+	"https://raw.githubusercontent.com/ventoy/Ventoy/v${version}/COPYING?~archive=false&~name=COPYING"
+	'local:///ventoy'
+	'local:///ventoy.desktop'
+)
+
+sources_arm64=(
+	"https://github.com/ventoy/Ventoy/releases/download/v${version}/ventoy-${version}-linux.tar.gz?~archive=false&~name=ventoy.tar.gz"
+	"https://raw.githubusercontent.com/ventoy/Ventoy/v${version}/COPYING?~archive=false&~name=COPYING"
+	'local:///ventoy'
+	'local:///ventoy.desktop'
+)
+
+checksums=(
+	'sha256:7fb4ed08cef6a6b4d39dd19260d8c80291a78dfdf9af7d461571e23cbbc43805'
+	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
+	'sha256:8f0a81d29a973844791d3fb5dd0f572684855b6a66edcc48f9d39f4e77f72de2'
+	'sha256:98c00e3911109644ee139e2194ea00531f847d89289ddbd062566f28a34823c1'
+)
+
+checksums_arm64=(
+	'sha256:7fb4ed08cef6a6b4d39dd19260d8c80291a78dfdf9af7d461571e23cbbc43805'
+	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
+	'sha256:8f0a81d29a973844791d3fb5dd0f572684855b6a66edcc48f9d39f4e77f72de2'
+	'sha256:98c00e3911109644ee139e2194ea00531f847d89289ddbd062566f28a34823c1'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	tar -xzf ventoy.tar.gz
+	source_root="${srcdir}/ventoy-${version}"
+
+	case "$(uname -m)" in
+	x86_64 | amd64)
+		upstream_arch='x86_64'
+		;;
+	aarch64 | arm64)
+		upstream_arch='aarch64'
+		;;
+	*)
+		echo "Неподдерживаемая архитектура сборки: $(uname -m)" >&2
+		return 1
+		;;
+	esac
+
+	install -dm755 "${pkgdir}/opt/ventoy"
+	cp -a "${source_root}/." "${pkgdir}/opt/ventoy/"
+
+	for candidate in x86_64 aarch64 i386 mips64el; do
+		if [[ "$candidate" == "$upstream_arch" ]]; then
+			continue
+		fi
+
+		find "${pkgdir}/opt/ventoy/VentoyGUI.${candidate}" \
+			-maxdepth 0 -type f -delete 2>/dev/null || true
+		if [[ -d "${pkgdir}/opt/ventoy/tool/${candidate}" ]]; then
+			find "${pkgdir}/opt/ventoy/tool/${candidate}" -mindepth 1 -delete
+			rmdir "${pkgdir}/opt/ventoy/tool/${candidate}"
+		fi
+	done
+
+	install-binary ventoy
+	install-desktop ventoy.desktop
+	install -Dm644 \
+		"${source_root}/WebUI/static/img/VentoyLogo.png" \
+		"${pkgdir}/usr/share/icons/hicolor/128x128/apps/ventoy.png"
+	install-license COPYING "ventoy/COPYING"
+	install-license "${source_root}/README" "ventoy/README"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/opt/ventoy/**/*" \
+		"/usr/share/icons/hicolor/128x128/apps/ventoy.png"
+}

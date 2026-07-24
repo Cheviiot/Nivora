@@ -20,7 +20,7 @@ Stapler сам добавляет текущее `name` в generated `Provides` 
 | `claude` | Upstream DEB: `Package: claude-desktop`; desktop-id `com.anthropic.Claude` сохранён; старое имя пакета `claude-desktop` заменяется |
 | `codex` | Отображаемое имя `Codex`; команда и desktop-id `codex-app` сохранены |
 | `github-desktop` | Официальный upstream `desktop/desktop`; Linux-сборка без стороннего форка |
-| `nivora-stplr` | Собственный helper Nivora |
+| `nivora-cli` | Многоязычная оболочка Nivora для Stapler |
 
 ## Локальные проверки
 

@@ -1,0 +1,55 @@
+name='nivora-cli'
+version='1.0.0'
+release=1
+summary='Friendly multilingual command shell for Stapler'
+summary_ru='Удобная многоязычная оболочка для Stapler'
+desc='Nivora CLI is a compact bilingual command shell for everyday Stapler package management, repository administration, diagnostics, interactive navigation and shell completion.'
+desc_ru='Nivora CLI — компактная двуязычная оболочка для управления пакетами и репозиториями Stapler, диагностики, интерактивной навигации и автодополнения.'
+group='System/Configuration/Packaging'
+homepage='https://github.com/Cheviiot/Nivora'
+maintainer='Cheviiot <https://github.com/Cheviiot>'
+
+architectures=('all')
+license=('MIT')
+
+provides=()
+replaces=('nivora-cli')
+conflicts=()
+
+auto_reqprov_method='dirty'
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('bash' 'sudo')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('bash' 'sudo')
+deps_arch=('bash' 'sudo')
+deps_altlinux=('bash' 'sudo')
+deps_opensuse=('bash' 'sudo')
+
+sources=(
+	'local:///nivora'
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:438a5b3b73cd8f69108174b25e647b0f8013b3c16f4fcd5ca9e9769fd19f98b7'
+	'sha256:16f1438f500706ac85b363c2549b392daef3a920b24139fca6b30f5648a7801a'
+)
+
+package() {
+	install -Dm755 "${srcdir}/nivora" "${pkgdir}/usr/bin/nv"
+
+	shortcut=''
+	for shortcut in nvi nve nvu nvs nvqi nvqa nvr nvrl nvf nvd nvc; do
+		ln -sfn nv "${pkgdir}/usr/bin/${shortcut}"
+	done
+
+	install-license "${srcdir}/LICENSE" 'nivora-cli/LICENSE.nivora'
+}
+
+files() {
+	files-find-binary
+	files-find-license
+}

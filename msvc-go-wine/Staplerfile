@@ -1,0 +1,68 @@
+name='msvc-go-wine'
+version=0.1.1
+release=1
+summary='Cross compile with MSVC on Linux via Wine'
+summary_ru='Кросс-компиляция с MSVC на Linux через Wine'
+group='Development/Tools'
+desc='msvc-go-wine is a single-binary tool for cross compiling with the real MSVC toolchain on Linux via Wine. Once you run its download/install subcommands, cl, link, lib, rc, midl, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd and findstr all work as drop-in commands, exactly like on Windows.'
+desc_ru='msvc-go-wine — однобинарный инструмент для кросс-компиляции с реальным MSVC на Linux через Wine. После выполнения его подкоманд download/install команды cl, link, lib, rc, midl, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd и findstr работают как обычные команды, точно как в Windows.'
+homepage='https://github.com/Cheviiot/msvc-go-wine'
+maintainer='Cheviiot <https://github.com/Cheviiot>'
+
+architectures=('amd64' 'arm64')
+
+license=('MIT')
+
+provides=()
+replaces=('msvc-go-wine')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+# wine/msitools/git are needed at runtime by `msvc-go-wine download`/`install`
+# and by the tool wrappers themselves, not just at build time.
+deps=()
+deps_debian=('wine' 'msitools' 'git')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('wine' 'msitools' 'git')
+deps_arch=('wine' 'msitools' 'git')
+deps_opensuse=('wine' 'msitools' 'git')
+deps_altlinux=('wine' 'msitools' 'git')
+
+build_deps=('binutils')
+
+# Prebuilt by msvc-go-wine's own CI (.github/workflows/release.yml) and
+# published to its GitHub Releases; renamed to a common local name so
+# package() doesn't need to branch on architecture.
+sources=(
+	"https://github.com/Cheviiot/msvc-go-wine/releases/download/v${version}/msvc-go-wine-linux-amd64?~archive=false&~name=msvc-go-wine"
+	'local:///LICENSE'
+)
+
+sources_arm64=(
+	"https://github.com/Cheviiot/msvc-go-wine/releases/download/v${version}/msvc-go-wine-linux-arm64?~archive=false&~name=msvc-go-wine"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:c4193012bab8499cf2000faba61bcd10f77c6faaeea088fe5748e3531f7134e3'
+	'sha256:693a85757d0e3c527a78af6f12dc5068900c3cd363b92f0998ec41b607b15885'
+)
+
+checksums_arm64=(
+	'sha256:0bc74b95414085acba3e08a2b994063adc3c011cdff61f92e17810c34703ffbc'
+	'sha256:693a85757d0e3c527a78af6f12dc5068900c3cd363b92f0998ec41b607b15885'
+)
+
+package() {
+	cd "${srcdir}"
+	install-binary "${srcdir}/msvc-go-wine"
+	install-license "${srcdir}/LICENSE" "msvc-go-wine/LICENSE"
+}
+
+files() {
+	files-find-binary
+	files-find-license
+}

@@ -1,0 +1,16 @@
+Сведения о лицензии пакета Nivora CLI
+
+Лицензия: MIT.
+Исходный проект: https://github.com/Cheviiot/Nivora
+
+Нюансы пакета:
+- Пакет устанавливает оболочку Stapler с командами `nv`, `nvi`, `nve`, `nvu`, `nvs`, `nvqi`, `nvqa`, `nvr`, `nvrl`, `nvf`, `nvd` и `nvc`.
+- Nivora CLI не заменяет Stapler: все операции выполняются через системную команду `stplr`.
+- Через команду повышения привилегий запускаются только `install`, `remove`, `up`, `fix` и `refresh`.
+- Команды чтения `search`, `info` и `list` выполняются без повышения привилегий.
+- Префикс репозитория задается через `--repo <name>` или `NIVORA_REPO`; по умолчанию используется репозиторий `nivora`.
+- Пути вида `repo/package` не изменяются.
+- Nivora CLI не исполняет произвольные shell-строки через `sudo`.
+
+Полный официальный текст MIT:
+https://opensource.org/licenses/MIT

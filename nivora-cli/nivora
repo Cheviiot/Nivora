@@ -1,0 +1,546 @@
+#!/bin/bash
+set -euo pipefail
+
+readonly NIVORA_VERSION='1.0.0'
+readonly DEFAULT_REPOSITORY='nivora'
+
+language="${NIVORA_LANG:-}"
+repository="${NIVORA_REPO:-${DEFAULT_REPOSITORY}}"
+dry_run=0
+color_mode="${NIVORA_COLOR:-auto}"
+
+detect_language() {
+    [[ -n "$language" ]] && return
+    case "${LC_ALL:-${LC_MESSAGES:-${LANG:-en}}}" in
+        ru* | RU*) language='ru' ;;
+        *) language='en' ;;
+    esac
+}
+
+message() {
+    local key="$1"
+    case "${language}:${key}" in
+        ru:title) printf 'Простое управление пакетами Stapler' ;;
+        ru:usage) printf 'Использование' ;;
+        ru:packages) printf 'Пакеты' ;;
+        ru:system) printf 'Система' ;;
+        ru:install) printf 'Установить' ;;
+        ru:remove) printf 'Удалить' ;;
+        ru:upgrade) printf 'Обновить' ;;
+        ru:search) printf 'Найти' ;;
+        ru:info) printf 'Информация' ;;
+        ru:all_packages) printf 'Все пакеты' ;;
+        ru:refresh) printf 'Обновить репозитории' ;;
+        ru:repositories) printf 'Репозитории' ;;
+        ru:fix) printf 'Исправить' ;;
+        ru:doctor) printf 'Диагностика' ;;
+        ru:config) printf 'Конфигурация' ;;
+        ru:help) printf 'Справка' ;;
+        ru:exit) printf 'Выход' ;;
+        ru:choose) printf 'Выберите действие' ;;
+        ru:package_prompt) printf 'Имя пакета' ;;
+        ru:query_prompt) printf 'Поисковый запрос' ;;
+        ru:unknown_command) printf 'неизвестная команда' ;;
+        ru:unknown_choice) printf 'нет такого пункта' ;;
+        ru:missing_argument) printf 'необходим аргумент' ;;
+        ru:invalid_language) printf 'поддерживаются языки ru и en' ;;
+        ru:invalid_repository) printf 'некорректное имя репозитория' ;;
+        ru:stapler_missing) printf 'команда stplr не найдена' ;;
+        ru:privilege_missing) printf 'команда повышения привилегий не найдена' ;;
+        ru:running) printf 'Выполняется' ;;
+        ru:preview) printf 'Предпросмотр' ;;
+        ru:diagnostics) printf 'Диагностика окружения' ;;
+        ru:ready) printf 'Система готова к работе' ;;
+        ru:problems) printf 'Обнаружены проблемы' ;;
+        ru:available) printf 'доступен' ;;
+        ru:missing) printf 'не найден' ;;
+        ru:language) printf 'Язык' ;;
+        ru:repository) printf 'Репозиторий' ;;
+        ru:privileges) printf 'Привилегии' ;;
+        ru:commands) printf 'Короткие команды' ;;
+        ru:options) printf 'Параметры' ;;
+        ru:examples) printf 'Примеры' ;;
+        en:title) printf 'Simple Stapler package management' ;;
+        en:usage) printf 'Usage' ;;
+        en:packages) printf 'Packages' ;;
+        en:system) printf 'System' ;;
+        en:install) printf 'Install' ;;
+        en:remove) printf 'Remove' ;;
+        en:upgrade) printf 'Upgrade' ;;
+        en:search) printf 'Search' ;;
+        en:info) printf 'Information' ;;
+        en:all_packages) printf 'All packages' ;;
+        en:refresh) printf 'Refresh repositories' ;;
+        en:repositories) printf 'Repositories' ;;
+        en:fix) printf 'Repair' ;;
+        en:doctor) printf 'Diagnostics' ;;
+        en:config) printf 'Configuration' ;;
+        en:help) printf 'Help' ;;
+        en:exit) printf 'Exit' ;;
+        en:choose) printf 'Choose an action' ;;
+        en:package_prompt) printf 'Package name' ;;
+        en:query_prompt) printf 'Search query' ;;
+        en:unknown_command) printf 'unknown command' ;;
+        en:unknown_choice) printf 'unknown choice' ;;
+        en:missing_argument) printf 'an argument is required' ;;
+        en:invalid_language) printf 'supported languages are ru and en' ;;
+        en:invalid_repository) printf 'invalid repository name' ;;
+        en:stapler_missing) printf 'stplr command was not found' ;;
+        en:privilege_missing) printf 'privilege command was not found' ;;
+        en:running) printf 'Running' ;;
+        en:preview) printf 'Preview' ;;
+        en:diagnostics) printf 'Environment diagnostics' ;;
+        en:ready) printf 'The system is ready' ;;
+        en:problems) printf 'Problems found' ;;
+        en:available) printf 'available' ;;
+        en:missing) printf 'missing' ;;
+        en:language) printf 'Language' ;;
+        en:repository) printf 'Repository' ;;
+        en:privileges) printf 'Privileges' ;;
+        en:commands) printf 'Short commands' ;;
+        en:options) printf 'Options' ;;
+        en:examples) printf 'Examples' ;;
+        *) printf '%s' "$key" ;;
+    esac
+}
+
+setup_style() {
+    if [[ "$color_mode" == 'never' || -n "${NO_COLOR:-}" || ! -t 1 ]]; then
+        bold=''; dim=''; cyan=''; blue=''; green=''; red=''; reset=''
+        return
+    fi
+    bold=$'\033[1m'
+    dim=$'\033[2m'
+    cyan=$'\033[38;5;44m'
+    blue=$'\033[38;5;75m'
+    green=$'\033[38;5;78m'
+    red=$'\033[38;5;203m'
+    reset=$'\033[0m'
+}
+
+fail() {
+    printf '%s%sNivora:%s %s\n' "$bold" "$red" "$reset" "$*" >&2
+    exit 2
+}
+
+validate_settings() {
+    case "$language" in
+        ru | en) ;;
+        *)
+            local invalid_language="$language"
+            language='en'
+            fail "$(message invalid_language): ${invalid_language}"
+            ;;
+    esac
+    if [[ "$repository" != 'none' &&
+          ! "$repository" =~ ^[[:alnum:]_.-]+$ ]]; then
+        fail "$(message invalid_repository): ${repository}"
+    fi
+}
+
+parse_options() {
+    arguments=()
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            --lang)
+                [[ "$#" -ge 2 ]] || fail "$(message missing_argument): --lang"
+                language="$2"
+                shift 2
+                ;;
+            --lang=*)
+                language="${1#--lang=}"
+                shift
+                ;;
+            --repo)
+                [[ "$#" -ge 2 ]] || fail "$(message missing_argument): --repo"
+                repository="$2"
+                shift 2
+                ;;
+            --repo=*)
+                repository="${1#--repo=}"
+                shift
+                ;;
+            --dry-run)
+                dry_run=1
+                shift
+                ;;
+            --no-color)
+                color_mode='never'
+                shift
+                ;;
+            --)
+                shift
+                arguments+=("$@")
+                break
+                ;;
+            *)
+                arguments+=("$1")
+                shift
+                ;;
+        esac
+    done
+    setup_style
+    validate_settings
+}
+
+print_header() {
+    printf '%s%s╭─ NIVORA ─────────────────────────────╮%s\n' "$bold" "$cyan" "$reset"
+    if [[ "$language" == 'ru' ]]; then
+        printf '%s%s│%s Простое управление пакетами Stapler  %s%s│%s\n' \
+            "$cyan" "$bold" "$reset" "$bold" "$cyan" "$reset"
+    else
+        printf '%s%s│%s Simple Stapler package management     %s%s│%s\n' \
+            "$cyan" "$bold" "$reset" "$bold" "$cyan" "$reset"
+    fi
+    printf '%s%s╰──────────────────────────────────────╯%s\n' "$bold" "$cyan" "$reset"
+}
+
+menu_row() {
+    local key="$1"
+    local label="$2"
+    local shortcut="$3"
+    local padding=$((23 - ${#label}))
+    [[ "$padding" -lt 1 ]] && padding=1
+    printf '  %s[%s]%s %s' "$cyan" "$key" "$reset" "$label"
+    printf '%*s' "$padding" ''
+    printf '%s%s%s\n' "$dim" "$shortcut" "$reset"
+}
+
+interactive_menu() {
+    if [[ ! -t 0 || ! -t 1 ]]; then
+        show_help
+        return
+    fi
+
+    print_header
+    printf '\n  %s%s%s\n' "$bold" "$(message packages)" "$reset"
+    menu_row i "$(message install)" nvi
+    menu_row e "$(message remove)" nve
+    menu_row u "$(message upgrade)" nvu
+    menu_row s "$(message search)" nvs
+    menu_row q "$(message info)" nvqi
+    menu_row a "$(message all_packages)" nvqa
+    printf '\n  %s%s%s\n' "$bold" "$(message system)" "$reset"
+    menu_row r "$(message refresh)" nvr
+    menu_row l "$(message repositories)" nvrl
+    menu_row f "$(message fix)" nvf
+    menu_row d "$(message doctor)" nvd
+    local help_label
+    help_label="$(message help)"
+    printf '\n  %s[h]%s %s' "$cyan" "$reset" "$help_label"
+    printf '%*s' "$((23 - ${#help_label}))" ''
+    printf '%s[x]%s %s\n\n' "$cyan" "$reset" "$(message exit)"
+    printf '%s › ' "$(message choose)"
+    read -r choice
+    case "$choice" in
+        i) prompt_and_dispatch install package ;;
+        e) prompt_and_dispatch remove package ;;
+        u) dispatch upgrade ;;
+        s) prompt_and_dispatch search query ;;
+        q) prompt_and_dispatch info package ;;
+        a) dispatch list ;;
+        r) dispatch refresh ;;
+        l) dispatch repo-list ;;
+        f) dispatch fix ;;
+        d) doctor ;;
+        h) show_help ;;
+        x | q!) return ;;
+        *) fail "$(message unknown_choice): ${choice}" ;;
+    esac
+}
+
+prompt_and_dispatch() {
+    local command_name="$1"
+    local prompt_type="$2"
+    local value
+    if [[ "$prompt_type" == 'package' ]]; then
+        printf '%s › ' "$(message package_prompt)"
+    else
+        printf '%s › ' "$(message query_prompt)"
+    fi
+    read -r value
+    [[ -n "$value" ]] || fail "$(message missing_argument): ${command_name}"
+    dispatch "$command_name" "$value"
+}
+
+show_help() {
+    print_header
+    if [[ "$language" == 'ru' ]]; then
+        cat <<EOF
+
+${bold}$(message usage)${reset}
+  nv                          интерактивное меню
+  nv <команда> [аргументы]   выполнить команду
+
+${bold}$(message commands)${reset}
+  ${cyan}nvi${reset}  <пакет...>    установить       ${cyan}nvr${reset}   обновить репозитории
+  ${cyan}nve${reset}  <пакет...>    удалить          ${cyan}nvrl${reset}  показать репозитории
+  ${cyan}nvu${reset}                обновить пакеты  ${cyan}nvf${reset}   исправить Stapler
+  ${cyan}nvs${reset}  <запрос>      найти            ${cyan}nvd${reset}   запустить диагностику
+  ${cyan}nvqi${reset} <пакет>       информация       ${cyan}nvc${reset}   конфигурация Stapler
+  ${cyan}nvqa${reset}               каталог пакетов
+
+${bold}$(message options)${reset}
+  --repo <имя|none>   репозиторий коротких имён (по умолчанию: nivora)
+  --lang <ru|en>      язык интерфейса
+  --dry-run           показать команду без выполнения
+  --no-color          отключить цвета
+
+${bold}$(message examples)${reset}
+  nvi codex
+  nvs editor
+  nvqi codex
+  nv --repo none install other/package
+EOF
+    else
+        cat <<EOF
+
+${bold}$(message usage)${reset}
+  nv                          interactive menu
+  nv <command> [arguments]   run a command
+
+${bold}$(message commands)${reset}
+  ${cyan}nvi${reset}  <package...>  install          ${cyan}nvr${reset}   refresh repositories
+  ${cyan}nve${reset}  <package...>  remove           ${cyan}nvrl${reset}  list repositories
+  ${cyan}nvu${reset}               upgrade packages ${cyan}nvf${reset}   repair Stapler
+  ${cyan}nvs${reset}  <query>       search           ${cyan}nvd${reset}   run diagnostics
+  ${cyan}nvqi${reset} <package>     information      ${cyan}nvc${reset}   configure Stapler
+  ${cyan}nvqa${reset}               package catalog
+
+${bold}$(message options)${reset}
+  --repo <name|none>   repository for short names (default: nivora)
+  --lang <ru|en>       interface language
+  --dry-run            print the command without running it
+  --no-color           disable colors
+
+${bold}$(message examples)${reset}
+  nvi codex
+  nvs editor
+  nvqi codex
+  nv --repo none install other/package
+EOF
+    fi
+}
+
+need_stapler() {
+    command -v stplr >/dev/null 2>&1 || fail "$(message stapler_missing)"
+}
+
+privilege_command() {
+    [[ "$EUID" -eq 0 ]] && return
+    local command_name="${NIVORA_SUDO:-sudo}"
+    command -v "$command_name" >/dev/null 2>&1 ||
+        fail "$(message privilege_missing): ${command_name}"
+    printf '%s\n' "$command_name"
+}
+
+is_package_name() {
+    local value="$1"
+    [[ -n "$value" &&
+       "$value" != -* &&
+       "$value" != */* &&
+       "$value" != ./* &&
+       "$value" != ../* &&
+       "$value" != /* &&
+       "$value" != *.rpm &&
+       "$value" != *.deb &&
+       "$value" != *.pkg.tar.* ]]
+}
+
+normalize_packages() {
+    local argument
+    for argument in "$@"; do
+        if [[ "$repository" != 'none' ]] && is_package_name "$argument"; then
+            printf '%s/%s\n' "$repository" "$argument"
+        else
+            printf '%s\n' "$argument"
+        fi
+    done
+}
+
+print_command() {
+    local label
+    if [[ "$dry_run" -eq 1 ]]; then
+        label="$(message preview)"
+    else
+        label="$(message running)"
+    fi
+    printf '%s%s%s%s %s›%s' "$bold" "$blue" "$label" "$reset" "$cyan" "$reset" >&2
+    printf ' %q' "$@" >&2
+    printf '\n' >&2
+}
+
+run_stapler() {
+    local access="$1"
+    shift
+    need_stapler
+
+    local -a command=()
+    local privilege
+    if [[ "$access" == 'privileged' ]]; then
+        privilege="$(privilege_command)"
+        [[ -n "$privilege" ]] && command+=("$privilege")
+    fi
+    command+=(stplr "$@")
+
+    [[ "${NIVORA_QUIET:-0}" == '1' ]] || print_command "${command[@]}"
+    [[ "$dry_run" -eq 1 ]] && return
+    exec "${command[@]}"
+}
+
+require_arguments() {
+    local command_name="$1"
+    local count="$2"
+    [[ "$count" -gt 0 ]] || fail "$(message missing_argument): ${command_name}"
+}
+
+doctor() {
+    local failures=0
+    local privilege="${NIVORA_SUDO:-sudo}"
+    printf '%s%s%s\n\n' "$bold" "$(message diagnostics)" "$reset"
+
+    if command -v stplr >/dev/null 2>&1; then
+        printf '  %s●%s %-14s %s\n' "$green" "$reset" 'Stapler' "$(message available)"
+    else
+        printf '  %s●%s %-14s %s\n' "$red" "$reset" 'Stapler' "$(message missing)"
+        failures=1
+    fi
+
+    if [[ "$EUID" -eq 0 ]] || command -v "$privilege" >/dev/null 2>&1; then
+        printf '  %s●%s %-14s %s\n' \
+            "$green" "$reset" "$(message privileges)" \
+            "$([[ "$EUID" -eq 0 ]] && printf 'root' || printf '%s' "$privilege")"
+    else
+        printf '  %s●%s %-14s %s\n' \
+            "$red" "$reset" "$(message privileges)" "$(message missing)"
+        failures=1
+    fi
+
+    printf '  %s●%s %-14s %s\n' "$green" "$reset" "$(message language)" "$language"
+    printf '  %s●%s %-14s %s\n\n' \
+        "$green" "$reset" "$(message repository)" "$repository"
+
+    if [[ "$failures" -eq 0 ]]; then
+        printf '%s✓ %s%s\n' "$green" "$(message ready)" "$reset"
+    else
+        printf '%s✗ %s%s\n' "$red" "$(message problems)" "$reset"
+    fi
+    return "$failures"
+}
+
+completion() {
+    local shell="${1:-}"
+    case "$shell" in
+        bash)
+            cat <<'EOF'
+_nivora() {
+    local commands='install remove upgrade search info list refresh repo-list fix doctor config completion version help'
+    if (( COMP_CWORD == 1 )); then
+        COMPREPLY=($(compgen -W "$commands" -- "${COMP_WORDS[COMP_CWORD]}"))
+    fi
+}
+complete -F _nivora nv
+EOF
+            ;;
+        fish)
+            cat <<'EOF'
+complete -c nv -f -n '__fish_use_subcommand' -a 'install remove upgrade search info list refresh repo-list fix doctor config completion version help'
+EOF
+            ;;
+        zsh)
+            cat <<'EOF'
+#compdef nv
+_arguments '1:command:(install remove upgrade search info list refresh repo-list fix doctor config completion version help)' '*::argument:->arguments'
+EOF
+            ;;
+        *) fail "$(message missing_argument): completion <bash|fish|zsh>" ;;
+    esac
+}
+
+dispatch() {
+    local command_name="${1:-help}"
+    [[ "$#" -gt 0 ]] && shift
+
+    case "$command_name" in
+        install | i)
+            require_arguments "$command_name" "$#"
+            local -a packages=()
+            mapfile -t packages < <(normalize_packages "$@")
+            run_stapler privileged install "${packages[@]}"
+            ;;
+        remove | erase | e)
+            require_arguments "$command_name" "$#"
+            local -a packages=()
+            mapfile -t packages < <(normalize_packages "$@")
+            run_stapler privileged remove "${packages[@]}"
+            ;;
+        upgrade | update | u) run_stapler privileged up "$@" ;;
+        search | s)
+            require_arguments "$command_name" "$#"
+            run_stapler user search "$@"
+            ;;
+        info | query-info | qi)
+            require_arguments "$command_name" "$#"
+            local -a packages=()
+            mapfile -t packages < <(normalize_packages "$@")
+            run_stapler user info "${packages[@]}"
+            ;;
+        list | packages | query-all | qa) run_stapler user list "$@" ;;
+        refresh | r) run_stapler privileged refresh "$@" ;;
+        repo-list | rl) run_stapler user repo list "$@" ;;
+        repo)
+            if [[ "$#" -eq 0 ]]; then
+                run_stapler user repo list
+            elif [[ "${1:-}" == 'list' || "${1:-}" == 'ls' ]]; then
+                run_stapler user repo "$@"
+            else
+                run_stapler privileged repo "$@"
+            fi
+            ;;
+        fix | f) run_stapler privileged fix "$@" ;;
+        doctor | d) doctor ;;
+        config | c)
+            if [[ "$#" -eq 0 ]]; then
+                run_stapler user config show
+            else
+                run_stapler user config "$@"
+            fi
+            ;;
+        completion) completion "$@" ;;
+        support) run_stapler user support "$@" ;;
+        version | v | --version)
+            printf 'Nivora CLI %s\n' "$NIVORA_VERSION"
+            command -v stplr >/dev/null 2>&1 && stplr version
+            ;;
+        help | h | -h | --help) show_help ;;
+        *) fail "$(message unknown_command): ${command_name}" ;;
+    esac
+}
+
+main() {
+    detect_language
+    setup_style
+    parse_options "$@"
+    set -- "${arguments[@]}"
+
+    case "$(basename "$0")" in
+        nv)
+            if [[ "$#" -eq 0 ]]; then interactive_menu; else dispatch "$@"; fi
+            ;;
+        nvi) dispatch install "$@" ;;
+        nve) dispatch remove "$@" ;;
+        nvu) dispatch upgrade "$@" ;;
+        nvs) dispatch search "$@" ;;
+        nvqi) dispatch info "$@" ;;
+        nvqa) dispatch list "$@" ;;
+        nvr) dispatch refresh "$@" ;;
+        nvrl) dispatch repo-list "$@" ;;
+        nvf) dispatch fix "$@" ;;
+        nvd) doctor ;;
+        nvc) dispatch config "$@" ;;
+        nivora) dispatch "$@" ;;
+        *) fail "$(message unknown_command): $(basename "$0")" ;;
+    esac
+}
+
+main "$@"

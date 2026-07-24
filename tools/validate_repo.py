@@ -23,8 +23,9 @@ EXPECTED_PACKAGES = (
     "fisher",
     "github-desktop",
     "happ",
+    "msvc-go-wine",
     "netbird",
-    "nivora-stplr",
+    "nivora-cli",
     "opencode",
     "parsec",
     "pineconemc",
@@ -48,7 +49,7 @@ REQUIRED_ROOT_FILES = {
     Path("docs/packages/codex.md"),
     Path("docs/packages/github-desktop.md"),
     Path("docs/packages/opencode.md"),
-    Path("docs/packages/nivora-stplr.md"),
+    Path("docs/packages/nivora-cli.md"),
     Path("docs/packages/ventoy.md"),
 }
 

@@ -13,8 +13,9 @@ readonly -a PACKAGES=(
     fisher
     github-desktop
     happ
+    msvc-go-wine
     netbird
-    nivora-stplr
+    nivora-cli
     opencode
     parsec
     pineconemc
@@ -226,8 +227,9 @@ latest_version() {
         github_latest_release desktop/desktop | sed 's/^release-//'
         ;;
     happ) github_latest_release Happ-proxy/happ-desktop ;;
+    msvc-go-wine) github_latest_release Cheviiot/msvc-go-wine ;;
     netbird) github_latest_release netbirdio/netbird ;;
-    nivora-stplr) current_version nivora-stplr ;;
+    nivora-cli) current_version nivora-cli ;;
     opencode) github_latest_release anomalyco/opencode ;;
     parsec) latest_parsec ;;
     pineconemc) github_latest_release ElyPrismLauncher/Launcher ;;

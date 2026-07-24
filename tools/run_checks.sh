@@ -32,7 +32,7 @@ if [[ "${#python_files[@]}" -gt 0 ]]; then
 fi
 
 python3 -m unittest discover -s tests -p 'test_*.py' -v
-bash tests/test_helper.sh
+bash tests/test_nivora_cli.sh
 bash tests/test_claude_alt.sh
 bash tests/test_codex_computer_use.sh
 bash tests/test_happ_theme.sh

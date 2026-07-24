@@ -13,7 +13,6 @@ readonly -a PACKAGES=(
     fisher
     github-desktop
     happ
-    msvc-go-wine
     netbird
     nivora-cli
     opencode
@@ -22,6 +21,7 @@ readonly -a PACKAGES=(
     tailscale
     telegram-desktop
     ventoy
+    vintner
     vual
     yandex-browser-stable
 )
@@ -228,7 +228,6 @@ latest_version() {
         github_latest_release desktop/desktop | sed 's/^release-//'
         ;;
     happ) github_latest_release Happ-proxy/happ-desktop ;;
-    msvc-go-wine) github_latest_release Cheviiot/msvc-go-wine ;;
     netbird) github_latest_release netbirdio/netbird ;;
     nivora-cli) current_version nivora-cli ;;
     opencode) github_latest_release anomalyco/opencode ;;
@@ -237,6 +236,7 @@ latest_version() {
     tailscale) latest_tailscale ;;
     telegram-desktop) github_latest_release telegramdesktop/tdesktop ;;
     ventoy) github_latest_release ventoy/Ventoy ;;
+    vintner) github_latest_release Cheviiot/vintner ;;
     vual) github_latest_release Cheviiot/Vual ;;
     yandex-browser-stable) latest_yandex_browser ;;
     *) die "unknown package: $1" ;;

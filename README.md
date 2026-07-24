@@ -67,8 +67,8 @@ stplr info nivora/codex
 | [ClaudeAlt](docs/packages/claude-alt.md) | `1.24012.0` | `amd64`, `arm64` | `stplr install nivora/claude-alt` |
 | [Codex](docs/packages/codex.md) | `26.721.31836` | `amd64` | `stplr install nivora/codex` |
 | [GitHub Desktop](docs/packages/github-desktop.md) | `3.6.3` | `amd64`, `arm64` | `stplr install nivora/github-desktop` |
-| [msvc-go-wine](https://github.com/Cheviiot/msvc-go-wine) | `0.1.2` | `amd64`, `arm64` | `stplr install nivora/msvc-go-wine` |
 | [OpenCode](https://opencode.ai/) | `1.18.4` | `amd64`, `arm64` | `stplr install nivora/opencode` |
+| [Vintner](https://github.com/Cheviiot/vintner) | `0.2.0` | `amd64`, `arm64` | `stplr install nivora/vintner` |
 
 ### Рабочий стол
 

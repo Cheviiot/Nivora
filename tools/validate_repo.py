@@ -23,7 +23,6 @@ EXPECTED_PACKAGES = (
     "fisher",
     "github-desktop",
     "happ",
-    "msvc-go-wine",
     "netbird",
     "nivora-cli",
     "opencode",
@@ -32,6 +31,7 @@ EXPECTED_PACKAGES = (
     "tailscale",
     "telegram-desktop",
     "ventoy",
+    "vintner",
     "vual",
     "yandex-browser-stable",
 )

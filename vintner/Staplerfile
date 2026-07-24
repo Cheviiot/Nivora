@@ -1,0 +1,68 @@
+name='vintner'
+version=0.2.0
+release=1
+summary='Cross compile with MSVC on Linux via Wine'
+summary_ru='Кросс-компиляция с MSVC на Linux через Wine'
+group='Development/Tools'
+desc='vintner is a single-binary tool for cross compiling with the real MSVC toolchain on Linux via Wine. Once you run its download/install subcommands, cl, link, lib, rc, midl, mc, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd and findstr all work as drop-in commands, exactly like on Windows. Supports building real KMDF/UMDF drivers via the Windows Driver Kit (--with-wdk), and its own CLI is available in English and Russian.'
+desc_ru='vintner — однобинарный инструмент для кросс-компиляции с реальным MSVC на Linux через Wine. После выполнения его подкоманд download/install команды cl, link, lib, rc, midl, mc, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd и findstr работают как обычные команды, точно как в Windows. Поддерживает сборку настоящих KMDF/UMDF-драйверов через Windows Driver Kit (--with-wdk), а сам CLI доступен на английском и русском.'
+homepage='https://github.com/Cheviiot/vintner'
+maintainer='Cheviiot <https://github.com/Cheviiot>'
+
+architectures=('amd64' 'arm64')
+
+license=('MIT')
+
+provides=()
+replaces=('vintner')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+# wine/msitools/git are needed at runtime by `vintner download`/`install`
+# and by the tool wrappers themselves, not just at build time.
+deps=()
+deps_debian=('wine' 'msitools' 'git')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('wine' 'msitools' 'git')
+deps_arch=('wine' 'msitools' 'git')
+deps_opensuse=('wine' 'msitools' 'git')
+deps_altlinux=('wine' 'msitools' 'git')
+
+build_deps=('binutils')
+
+# Prebuilt by vintner's own CI (.github/workflows/release.yml) and
+# published to its GitHub Releases; renamed to a common local name so
+# package() doesn't need to branch on architecture.
+sources=(
+	"https://github.com/Cheviiot/vintner/releases/download/v${version}/vintner-linux-amd64?~archive=false&~name=vintner"
+	'local:///LICENSE'
+)
+
+sources_arm64=(
+	"https://github.com/Cheviiot/vintner/releases/download/v${version}/vintner-linux-arm64?~archive=false&~name=vintner"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:8b8d318c2dcebf46078c4619515839945f36597950581fd221c0c37b7b8c413e'
+	'sha256:e377b84adc5315cf372c3d80ecbd3008402d8b07f248e711c7553784e0c33168'
+)
+
+checksums_arm64=(
+	'sha256:739a1681492320af8ce98e043dd3a150c1b5f2734abc40ab21bdfb8b0eefa165'
+	'sha256:e377b84adc5315cf372c3d80ecbd3008402d8b07f248e711c7553784e0c33168'
+)
+
+package() {
+	cd "${srcdir}"
+	install-binary "${srcdir}/vintner"
+	install-license "${srcdir}/LICENSE" "vintner/LICENSE"
+}
+
+files() {
+	files-find-binary
+	files-find-license
+}

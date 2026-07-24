@@ -13,6 +13,7 @@ grep -Fq 'compatibility_desktop=' "$recipe"
 grep -Fq 'canonical_desktop=' "$recipe"
 grep -Fq "sed -i '/^NoDisplay=true\$/d'" "$recipe"
 grep -Fq "sed -i '/^\\[Desktop Entry\\]\$/a NoDisplay=true'" "$recipe"
+grep -Fq 'StartupWMClass=Yandex-browser' "$recipe"
 grep -Fq 'update_codecs' "$postinstall"
 
 if grep -Eq '/etc/(cron|xdg/autostart)' "$recipe"; then

@@ -1,6 +1,6 @@
 name='yandex-browser-stable'
 version='26.4.1.1110'
-release=3
+release=4
 summary='Fast and secure Chromium-based web browser from Yandex'
 summary_ru='Быстрый и безопасный браузер Яндекса на основе Chromium'
 group='Networking/WWW'
@@ -110,6 +110,9 @@ package() {
 	canonical_desktop="${pkgdir}/usr/share/applications/ru.yandex.desktop.browser.desktop"
 	sed -i '/^NoDisplay=true$/d' "${compatibility_desktop}" "${canonical_desktop}"
 	sed -i '/^\[Desktop Entry\]$/a NoDisplay=true' "${compatibility_desktop}"
+	sed -i '/^StartupWMClass=/d' "${canonical_desktop}"
+	sed -i '/^\[Desktop Entry\]$/a StartupWMClass=Yandex-browser' \
+		"${canonical_desktop}"
 	cp -a "${srcdir}/extracted/usr/share/appdata" "${pkgdir}/usr/share/"
 	cp -a "${srcdir}/extracted/usr/share/gnome-control-center" \
 		"${pkgdir}/usr/share/"

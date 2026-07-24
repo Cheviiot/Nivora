@@ -1,0 +1,134 @@
+name='claude-alt'
+version=1.24012.0
+release=1
+summary='Independent secondary Claude desktop application'
+summary_ru='Независимое второе приложение Claude'
+group='Development/Tools'
+desc='A fully independent secondary Claude Desktop installation with its own runtime, profile, desktop identity and Nivora icons.'
+desc_ru='Полностью независимая вторая установка Claude Desktop с собственным runtime, профилем, desktop-идентичностью и иконками Nivora.'
+homepage='https://github.com/Cheviiot/Nivora'
+maintainer='Nivora <https://github.com/Cheviiot/Nivora>'
+architectures=('amd64' 'arm64')
+license=('Custom')
+nonfree=1
+nonfree_msg='ClaudeAlt использует проприетарный Claude Desktop и условия Anthropic.'
+nonfree_url='https://www.anthropic.com/legal/consumer-terms'
+provides=()
+replaces=('claude-alt')
+conflicts=()
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'libc6' 'libxtst6' 'libuuid1' 'xdg-desktop-portal')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa-libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal')
+deps_arch=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libxtst' 'libutil-linux' 'xdg-desktop-portal')
+deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'xdg-utils' 'at-spi2-core' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'glibc' 'libXtst6' 'libuuid1' 'xdg-desktop-portal')
+deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'xdg-utils' 'libat-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal')
+
+build_deps=('binutils')
+build_deps_debian=('binutils' 'python3')
+build_deps_ubuntu=("${build_deps_debian[@]}")
+build_deps_fedora=('binutils' 'python3')
+build_deps_arch=('binutils' 'python')
+build_deps_opensuse=('binutils' 'python3')
+build_deps_altlinux=('binutils' 'python3')
+
+sources=(
+	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_amd64.deb?~archive=false&~name=claude-desktop.deb"
+	"local:///claude-alt"
+	"https://raw.githubusercontent.com/Cheviiot/Nivora/main/claude-desktop/claude-alt.png?~archive=false&~name=claude-alt.png"
+	"https://raw.githubusercontent.com/Cheviiot/Nivora/main/claude-desktop/claude-alt-tray-turquoise.png?~archive=false&~name=claude-alt-tray.png"
+	"local:///patch-asar.py"
+)
+sources_arm64=(
+	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_arm64.deb?~archive=false&~name=claude-desktop.deb"
+	"local:///claude-alt"
+	"https://raw.githubusercontent.com/Cheviiot/Nivora/main/claude-desktop/claude-alt.png?~archive=false&~name=claude-alt.png"
+	"https://raw.githubusercontent.com/Cheviiot/Nivora/main/claude-desktop/claude-alt-tray-turquoise.png?~archive=false&~name=claude-alt-tray.png"
+	"local:///patch-asar.py"
+)
+checksums=(
+	'sha256:1096a8063956f8430fdbe504bb1c5e02985f31d0f45d082e4966e5d30ea7e3ac'
+	'sha256:b5264918d7cc3436bde057057e5790f617e42ccfcd1237d9170d26aea12799b8'
+	'sha256:f23de36a74c3f6ddae92511fc0dc659816853bf1d28520a6e0232fe2606fd0b4'
+	'sha256:21d1db80c30921346252ed405fa36cb5c48c287afdd8ebe474073389fd88e85e'
+	'sha256:14e0a5ce4da6afb25b13b3cee0b0264fbd896430dae85ade1f3394d8ca999e7d'
+)
+checksums_arm64=(
+	'sha256:37dd5dc1b0bfcb3192561acbd33cb59037806fe9b95221a3ddf38244203196f1'
+	'sha256:b5264918d7cc3436bde057057e5790f617e42ccfcd1237d9170d26aea12799b8'
+	'sha256:f23de36a74c3f6ddae92511fc0dc659816853bf1d28520a6e0232fe2606fd0b4'
+	'sha256:21d1db80c30921346252ed405fa36cb5c48c287afdd8ebe474073389fd88e85e'
+	'sha256:14e0a5ce4da6afb25b13b3cee0b0264fbd896430dae85ade1f3394d8ca999e7d'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+	mkdir -p extracted
+	ar x claude-desktop.deb
+	tar -xf data.tar.* -C extracted
+	install -dm755 "${pkgdir}/usr/lib"
+	cp -a extracted/usr/lib/claude-desktop "${pkgdir}/usr/lib/claude-alt"
+	mv "${pkgdir}/usr/lib/claude-alt/claude-desktop" \
+		"${pkgdir}/usr/lib/claude-alt/claude-alt-bin"
+	chmod 0755 "${pkgdir}/usr/lib/claude-alt/claude-alt-bin" \
+		"${pkgdir}/usr/lib/claude-alt/chrome-sandbox"
+	python3 patch-asar.py "${pkgdir}/usr/lib/claude-alt/resources/app.asar"
+	install -Dm755 claude-alt "${pkgdir}/usr/lib/claude-alt/claude-alt"
+	install -Dm644 claude-alt.png "${pkgdir}/usr/lib/claude-alt/resources/icon.png"
+	for icon in TrayIconLinux.png TrayIconLinux-Dark.png; do
+		install -Dm644 claude-alt-tray.png \
+			"${pkgdir}/usr/lib/claude-alt/resources/${icon}"
+	done
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -s /usr/lib/claude-alt/claude-alt "${pkgdir}/usr/bin/claude-alt"
+	ln -s claude-alt "${pkgdir}/usr/bin/claude-code-alt"
+	install -Dm644 claude-alt.png \
+		"${pkgdir}/usr/share/icons/hicolor/512x512/apps/claude-alt.png"
+	install -Dm644 /dev/stdin \
+		"${pkgdir}/usr/share/applications/com.anthropic.ClaudeAlt.desktop" <<'EOF'
+[Desktop Entry]
+Name=ClaudeAlt
+Name[ru]=ClaudeAlt
+Comment=Independent secondary Claude desktop application
+Comment[ru]=Независимое второе приложение Claude
+GenericName=AI Assistant
+Keywords=AI;Chat;Assistant;Claude;Code;LLM;
+Exec=/usr/bin/claude-alt %U
+Icon=claude-alt
+Type=Application
+StartupNotify=true
+StartupWMClass=com.anthropic.ClaudeAlt
+SingleMainWindow=true
+Categories=Development;
+Actions=NewChat;NewCode;
+
+[Desktop Action NewChat]
+Name=New chat
+Name[ru]=Новый чат
+Exec=/usr/bin/claude-alt claude://claude.ai/new
+
+[Desktop Action NewCode]
+Name=New Claude Code session
+Name[ru]=Новая сессия Claude Code
+Exec=/usr/bin/claude-alt claude://code/new
+EOF
+	install-license extracted/usr/share/doc/claude-desktop/copyright \
+		"claude-alt/copyright"
+}
+
+files() {
+	files-find "/usr/lib/claude-alt/**/*"
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find "/usr/share/icons/hicolor/*/apps/claude-alt.png"
+}

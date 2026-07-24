@@ -1,0 +1,36 @@
+#!/bin/sh
+set -eu
+
+if [ -z "${HOME:-}" ] && [ -z "${XDG_CONFIG_HOME:-}" ]; then
+    echo "claude-alt: HOME or XDG_CONFIG_HOME is required" >&2
+    exit 1
+fi
+
+config_home="${XDG_CONFIG_HOME:-${HOME}/.config}"
+default_data_dir="${config_home}/ClaudeAlt"
+legacy_data_dir="${CLAUDE_DESKTOP_ACCOUNT2_DIR:-${config_home}/Claude-Account-2}"
+claude_alt_executable="${CLAUDE_ALT_EXECUTABLE:-/usr/lib/claude-alt/claude-alt-bin}"
+
+if [ -n "${CLAUDE_ALT_DATA_DIR:-}" ]; then
+    data_dir="${CLAUDE_ALT_DATA_DIR}"
+elif [ -d "${default_data_dir}" ]; then
+    data_dir="${default_data_dir}"
+elif [ -d "${legacy_data_dir}" ]; then
+    data_dir="${legacy_data_dir}"
+else
+    data_dir="${default_data_dir}"
+fi
+
+if [ ! -x "${claude_alt_executable}" ]; then
+    echo "claude-alt: executable not found: ${claude_alt_executable}" >&2
+    exit 1
+fi
+
+mkdir -p "${data_dir}"
+CHROME_DESKTOP='com.anthropic.ClaudeAlt.desktop'
+export CHROME_DESKTOP
+
+exec "${claude_alt_executable}" \
+    --user-data-dir="${data_dir}" \
+    --class=com.anthropic.ClaudeAlt \
+    "$@"

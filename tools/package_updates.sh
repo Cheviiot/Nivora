@@ -7,6 +7,7 @@ readonly -a PACKAGES=(
     balena-etcher
     chatbox
     clash-verge-rev
+    claude-alt
     claude-desktop
     codex
     fisher
@@ -218,7 +219,7 @@ latest_version() {
     balena-etcher) github_latest_release balena-io/etcher ;;
     chatbox) latest_chatbox ;;
     clash-verge-rev) github_latest_release clash-verge-rev/clash-verge-rev ;;
-    claude-desktop) latest_claude_desktop ;;
+    claude-alt | claude-desktop) latest_claude_desktop ;;
     codex) github_latest_release Boria138/codex-app-linux ;;
     fisher) github_latest_release jorgebucaran/fisher ;;
     github-desktop)

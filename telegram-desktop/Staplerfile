@@ -59,7 +59,7 @@ scripts=(
 package() {
 	cd "${srcdir}"
 
-	tar -xJf tsetup.tar.xz
+	tar --no-same-owner --no-same-permissions -xJf tsetup.tar.xz
 
 	install -dm755 "${pkgdir}/opt/telegram-desktop"
 	install -Dm755 "Telegram/Telegram" "${pkgdir}/opt/telegram-desktop/Telegram"

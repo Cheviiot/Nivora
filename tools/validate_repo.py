@@ -17,8 +17,8 @@ EXPECTED_PACKAGES = (
     "balena-etcher",
     "chatbox",
     "clash-verge-rev",
+    "claude",
     "claude-alt",
-    "claude-desktop",
     "codex",
     "fisher",
     "github-desktop",
@@ -43,7 +43,7 @@ REQUIRED_ROOT_FILES = {
     Path("stapler-repo.toml"),
     Path("docs/maintenance.md"),
     Path("docs/security-model.md"),
-    Path("docs/packages/claude-desktop.md"),
+    Path("docs/packages/claude.md"),
     Path("docs/packages/claude-alt.md"),
     Path("docs/packages/codex.md"),
     Path("docs/packages/github-desktop.md"),
@@ -166,8 +166,13 @@ def validate_package(package: str, errors: list[str]) -> dict[str, object]:
 
     if provides != [] or conflicts != []:
         errors.append(f"{package}: provides/conflicts must not contain binary aliases")
-    if replaces != [package]:
-        errors.append(f"{package}: replaces must contain only its own base package name")
+    expected_replaces = [package]
+    if package == "claude":
+        expected_replaces.append("claude-desktop")
+    if replaces != expected_replaces:
+        errors.append(
+            f"{package}: replaces must be {expected_replaces}, got {replaces}"
+        )
 
     if "package()" not in text or "files()" not in text:
         errors.append(f"{package}: package() or files() is missing")
@@ -241,7 +246,7 @@ def validate_readme(metadata: dict[str, dict[str, object]], errors: list[str]) -
         errors.append("README.md: catalog must contain exactly six categories")
 
     for package, values in metadata.items():
-        command = f"stplr install nivora/{package}"
+        command = f"`stplr install nivora/{package}`"
         catalog_rows = [
             line for line in text.splitlines() if line.startswith("|") and command in line
         ]

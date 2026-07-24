@@ -3,10 +3,10 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 launcher="${repo_root}/claude-alt/claude-alt"
-icon="${repo_root}/claude-desktop/claude-alt.png"
-primary_tray_icon="${repo_root}/claude-desktop/claude-tray-orange.png"
-alternate_tray_icon="${repo_root}/claude-desktop/claude-alt-tray-turquoise.png"
-primary_recipe="${repo_root}/claude-desktop/Staplerfile"
+icon="${repo_root}/claude/claude-alt.png"
+primary_tray_icon="${repo_root}/claude/claude-tray-orange.png"
+alternate_tray_icon="${repo_root}/claude/claude-alt-tray-turquoise.png"
+primary_recipe="${repo_root}/claude/Staplerfile"
 alternate_recipe="${repo_root}/claude-alt/Staplerfile"
 temp_dir="$(mktemp -d)"
 

@@ -26,7 +26,7 @@ esac
 # package | command | persistent state marker | desktop/unit | icon
 readonly -a lifecycle_packages=(
     'clash-verge-rev|/usr/bin/clash-verge|/home/nivora-test/.local/share/io.github.clash-verge-rev.clash-verge-rev/nivora-lifecycle-state|/usr/share/applications/Clash Verge.desktop|/usr/share/icons/hicolor/128x128/apps/clash-verge.png'
-    'claude-desktop|/usr/bin/claude-desktop|/home/nivora-test/.config/Claude/nivora-lifecycle-state|/usr/share/applications/com.anthropic.Claude.desktop|/usr/share/icons/hicolor/128x128/apps/claude-desktop.png'
+    'claude|/usr/bin/claude-desktop|/home/nivora-test/.config/Claude/nivora-lifecycle-state|/usr/share/applications/com.anthropic.Claude.desktop|/usr/share/icons/hicolor/128x128/apps/claude-desktop.png'
     'codex|/usr/bin/codex-app|/home/nivora-test/.codex/nivora-lifecycle-state|/usr/share/applications/codex-app.desktop|/usr/share/icons/hicolor/512x512/apps/codex-app.png'
     'nivora-stplr|/usr/bin/sl|/home/nivora-test/.config/nivora-stplr/nivora-lifecycle-state|-|-'
     'opencode|/usr/bin/opencode-desktop|/home/nivora-test/.config/opencode/nivora-lifecycle-state|/usr/share/applications/opencode-desktop.desktop|/usr/share/icons/hicolor/128x128/apps/ai.opencode.desktop.png'

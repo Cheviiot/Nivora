@@ -1,20 +1,20 @@
-# Claude Desktop
+# Claude
 
-Пакет `claude-desktop` переупаковывает DEB из APT-источника Anthropic и сохраняет upstream
+Пакет `claude` переупаковывает DEB из APT-источника Anthropic и сохраняет upstream
 desktop-id `com.anthropic.Claude`.
 
 ```bash
-sudo stplr install nivora/claude-desktop
+sudo stplr install nivora/claude
 ```
 
-## Два независимых приложения
+При установке новый пакет заменяет прежнее имя `nivora/claude-desktop`.
+Исполняемая команда `/usr/bin/claude-desktop` сохраняется, чтобы не
+конфликтовать с Claude Code CLI, использующим команду `claude`.
 
-- `claude-desktop` запускает основное приложение Claude.
-- `claude-alt` и `claude-code-alt` запускают отдельное приложение ClaudeAlt.
-- `claude-desktop-account2` — дополнительное имя запуска ClaudeAlt.
-- Команда `claude` не создаётся, чтобы не конфликтовать с Claude Code CLI.
+## Два независимых пакета
 
-ClaudeAlt имеет отдельные executable/resources tree, Electron `productName`, Wayland `app_id`,
+`claude-alt` устанавливается отдельной командой и имеет собственные
+executable/resources tree, Electron `productName`, Wayland `app_id`,
 X11 `WM_CLASS`, desktop-файл, Chromium-профиль, Cowork VM socket, оконную и
 tray-иконки. В системном лотке используется штатный глиф Claude: оранжевый у
 основного приложения и бирюзовый у ClaudeAlt. Большие app-иконки окон при этом

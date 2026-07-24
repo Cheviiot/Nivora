@@ -17,7 +17,7 @@ Stapler сам добавляет текущее `name` в generated `Provides` 
 | Package ID | Основание |
 |:--|:--|
 | `clash-verge-rev` | Upstream-репозиторий и release title: Clash Verge Rev |
-| `claude-desktop` | Upstream DEB: `Package: claude-desktop`; desktop-id `com.anthropic.Claude` сохранён |
+| `claude` | Upstream DEB: `Package: claude-desktop`; desktop-id `com.anthropic.Claude` сохранён; старое имя пакета `claude-desktop` заменяется |
 | `codex` | Отображаемое имя `Codex`; команда и desktop-id `codex-app` сохранены |
 | `github-desktop` | Официальный upstream `desktop/desktop`; Linux-сборка без стороннего форка |
 | `nivora-stplr` | Собственный helper Nivora |

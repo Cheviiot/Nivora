@@ -1,6 +1,6 @@
-name='claude-desktop'
+name='claude'
 version=1.24012.0
-release=5
+release=1
 summary='Claude desktop application'
 summary_ru='Десктопное приложение Claude'
 group='Development/Tools'
@@ -17,7 +17,7 @@ nonfree_msg='Claude Desktop является проприетарным прил
 nonfree_url='https://www.anthropic.com/legal/consumer-terms'
 
 provides=()
-replaces=('claude-desktop')
+replaces=('claude' 'claude-desktop')
 conflicts=()
 
 auto_reqprov_method="dirty"

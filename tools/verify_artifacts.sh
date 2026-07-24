@@ -93,17 +93,23 @@ for package in "${packages[@]}"; do
         }
     fi
 
-    if [[ "$package" == 'claude-desktop' ]]; then
+    if [[ "$package" == 'claude' ]]; then
+        for forbidden_path in \
+            /usr/bin/claude-alt \
+            /usr/lib/claude-alt/claude-alt-bin \
+            /usr/share/applications/com.anthropic.ClaudeAlt.desktop; do
+            contains_path "$forbidden_path" && {
+                echo "${package}: обнаружен компонент отдельного пакета ClaudeAlt: ${forbidden_path}" >&2
+                exit 1
+            }
+        done
+    fi
+
+    if [[ "$package" == 'claude-alt' ]]; then
         for required_path in \
             /usr/bin/claude-alt \
-            /usr/bin/claude-desktop-account2 \
-            /usr/lib/claude-desktop/resources/TrayIconLinux.png \
-            /usr/lib/claude-desktop/resources/TrayIconLinux-Dark.png \
             /usr/lib/claude-alt/claude-alt-bin \
             /usr/lib/claude-alt/resources/app.asar \
-            /usr/lib/claude-alt/resources/icon.png \
-            /usr/lib/claude-alt/resources/TrayIconLinux.png \
-            /usr/lib/claude-alt/resources/TrayIconLinux-Dark.png \
             /usr/share/applications/com.anthropic.ClaudeAlt.desktop \
             /usr/share/icons/hicolor/512x512/apps/claude-alt.png; do
             contains_path "$required_path" || {
@@ -111,10 +117,6 @@ for package in "${packages[@]}"; do
                 exit 1
             }
         done
-        contains_path '/usr/share/applications/claude-desktop-account2.desktop' && {
-            echo "${package}: обнаружен устаревший desktop-файл второго профиля" >&2
-            exit 1
-        }
     fi
 
     if [[ "$package" == 'balena-etcher' ]]; then

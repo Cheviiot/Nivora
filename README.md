@@ -62,7 +62,7 @@ stplr info nivora/codex
 | Приложение | Версия | Архитектуры | Установка |
 |:--|:--:|:--:|:--|
 | [Chatbox](https://chatboxai.app/ru) | `1.20.3` | `amd64`, `arm64` | `stplr install nivora/chatbox` |
-| [Claude](https://code.claude.com/docs/en/desktop-quickstart) | `1.24012.0` | `amd64`, `arm64` | `stplr install nivora/claude-desktop` |
+| [Claude](docs/packages/claude.md) | `1.24012.0` | `amd64`, `arm64` | `stplr install nivora/claude` |
 | [ClaudeAlt](docs/packages/claude-alt.md) | `1.24012.0` | `amd64`, `arm64` | `stplr install nivora/claude-alt` |
 | [Codex](docs/packages/codex.md) | `26.721.31836` | `amd64` | `stplr install nivora/codex` |
 | [GitHub Desktop](docs/packages/github-desktop.md) | `3.6.3` | `amd64`, `arm64` | `stplr install nivora/github-desktop` |

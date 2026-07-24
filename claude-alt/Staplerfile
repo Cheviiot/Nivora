@@ -39,15 +39,15 @@ build_deps_altlinux=('binutils' 'python3')
 sources=(
 	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_amd64.deb?~archive=false&~name=claude-desktop.deb"
 	"local:///claude-alt"
-	"https://raw.githubusercontent.com/Cheviiot/Nivora/main/claude-desktop/claude-alt.png?~archive=false&~name=claude-alt.png"
-	"https://raw.githubusercontent.com/Cheviiot/Nivora/main/claude-desktop/claude-alt-tray-turquoise.png?~archive=false&~name=claude-alt-tray.png"
+	"https://raw.githubusercontent.com/Cheviiot/Nivora/main/claude/claude-alt.png?~archive=false&~name=claude-alt.png"
+	"https://raw.githubusercontent.com/Cheviiot/Nivora/main/claude/claude-alt-tray-turquoise.png?~archive=false&~name=claude-alt-tray.png"
 	"local:///patch-asar.py"
 )
 sources_arm64=(
 	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_arm64.deb?~archive=false&~name=claude-desktop.deb"
 	"local:///claude-alt"
-	"https://raw.githubusercontent.com/Cheviiot/Nivora/main/claude-desktop/claude-alt.png?~archive=false&~name=claude-alt.png"
-	"https://raw.githubusercontent.com/Cheviiot/Nivora/main/claude-desktop/claude-alt-tray-turquoise.png?~archive=false&~name=claude-alt-tray.png"
+	"https://raw.githubusercontent.com/Cheviiot/Nivora/main/claude/claude-alt.png?~archive=false&~name=claude-alt.png"
+	"https://raw.githubusercontent.com/Cheviiot/Nivora/main/claude/claude-alt-tray-turquoise.png?~archive=false&~name=claude-alt-tray.png"
 	"local:///patch-asar.py"
 )
 checksums=(

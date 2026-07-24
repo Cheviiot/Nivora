@@ -1,6 +1,6 @@
 name='telegram-desktop'
 version='7.0.5'
-release=1
+release=2
 summary='Official Telegram messaging client'
 summary_ru='Официальный клиент мессенджера Telegram'
 group='Networking/Instant messaging'
@@ -46,7 +46,7 @@ sources=(
 
 checksums=(
 	'sha256:37e23ce08333340504623042120b826f7a2a5650c831187219ab9c520740eb42'
-	'sha256:8ceb3f6aea1003f84f1b5757cd857f8237b294bb18456e5e0e54d96e6fff04ba'
+	'sha256:bf4db283db2b5706498646393c8853e56b41dee6ac14f18611041a8512eaf286'
 	'sha256:3fb1400c7dc9bbc3b5cb3ffedcbf4a9b09c53e28b57a7ff33a8a6b9048864090'
 	'sha256:f3ad1b5ecdc1c9e5ab3719a0b084a3e0b4fc87ad424fbf81043df9637be3d1f5'
 )

@@ -1,8 +1,8 @@
 [Desktop Entry]
 Name=Telegram
 Comment=New era of messaging
-TryExec=telegram-desktop
-Exec=telegram-desktop -- %U
+TryExec=/opt/telegram-desktop/Telegram
+Exec=/opt/telegram-desktop/Telegram -- %U
 Icon=org.telegram.desktop
 Terminal=false
 StartupWMClass=TelegramDesktop
@@ -17,6 +17,6 @@ X-GNOME-UsesNotifications=true
 X-GNOME-SingleWindow=true
 
 [Desktop Action quit]
-Exec=telegram-desktop -quit
+Exec=/opt/telegram-desktop/Telegram -quit
 Name=Quit Telegram
 Icon=application-exit

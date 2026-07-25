@@ -1,5 +1,5 @@
 name='vintner'
-version=0.3.0
+version=0.3.1
 release=1
 summary='Cross compile with MSVC on Linux via Wine'
 summary_ru='Кросс-компиляция с MSVC на Linux через Wine'
@@ -47,12 +47,12 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:fe6aae318969a05b0598ec6b3b2798dcdee04e3e930a095d143f26ec843f9833'
+	'sha256:e71e93ff9e20680ae8b734ed863393be0eed97a0037bbac0db402bd6209ede29'
 	'sha256:e377b84adc5315cf372c3d80ecbd3008402d8b07f248e711c7553784e0c33168'
 )
 
 checksums_arm64=(
-	'sha256:de1bca8d235e64997f024eb1b32c6539117ebe1beb2b1732de51b01bbef118ce'
+	'sha256:6bce45dbde502563d764f253bd99d1428f9ced1252fe7bf5b0a3cdeff0d6d7d9'
 	'sha256:e377b84adc5315cf372c3d80ecbd3008402d8b07f248e711c7553784e0c33168'
 )
 

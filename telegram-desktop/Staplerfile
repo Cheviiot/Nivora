@@ -1,6 +1,6 @@
 name='telegram-desktop'
 version='7.0.5'
-release=5
+release=6
 summary='Official Telegram messaging client'
 summary_ru='Официальный клиент мессенджера Telegram'
 group='Networking/Instant messaging'
@@ -64,29 +64,29 @@ package() {
 	install -dm755 "${pkgdir}/opt/telegram-desktop"
 	install -Dm755 "Telegram/Telegram" "${pkgdir}/opt/telegram-desktop/Telegram"
 
-	install -Dm755 /dev/stdin "${pkgdir}/usr/bin/telegram-desktop" <<'EOF'
-#!/bin/sh
-# Telegram self-installs a shadow ~/.local/share/applications/*.desktop (and
-# a D-Bus service file) on every launch unless this env var is set; see
-# InstallLauncher() in Telegram/SourceFiles/platform/linux/specific_linux.cpp.
-export DESKTOPINTEGRATION=1
-exec /opt/telegram-desktop/Telegram "$@"
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -sfn /opt/telegram-desktop/Telegram "${pkgdir}/usr/bin/telegram-desktop"
+
+	# Telegram's own Launcher::ComputeExternalUpdater() (SourceFiles/core/
+	# launcher.cpp) looks for a file under <exe-dir>/externalupdater.d/ that
+	# contains a line matching its own full executable path; if found, it
+	# calls SetUpdaterDisabledAtStartup(), which is the *documented* way for
+	# distro/repo packagers to tell Telegram "I manage updates, not you".
+	# This one flag fixes two things at once: it makes InstallLauncher() skip
+	# self-writing a shadow ~/.local/share/applications/*.desktop and D-Bus
+	# .service file on every launch, and it makes QGuiApplication's
+	# desktopFileName() (the Wayland app_id used to match the running window
+	# to an icon) use the plain "org.telegram.desktop" id instead of a
+	# per-install-path hashed one — which is what was breaking the
+	# taskbar/window icon even after the shadow-file duplicate was silenced.
+	install -Dm644 /dev/stdin \
+		"${pkgdir}/opt/telegram-desktop/externalupdater.d/nivora" <<'EOF'
+/opt/telegram-desktop/Telegram
 EOF
 
 	install-desktop org.telegram.desktop.desktop
 	install -Dm644 telegram-desktop.png \
 		"${pkgdir}/usr/share/icons/hicolor/256x256/apps/org.telegram.desktop.png"
-
-	# Belt-and-braces on top of the /usr/bin wrapper: the wrapper only helps
-	# when something actually launches via that path. A stale desktop-shell
-	# app cache (or any other launcher) can still exec the raw binary
-	# directly, so also export DESKTOPINTEGRATION for the whole graphical
-	# session via environment.d — this covers every launch path regardless
-	# of how the binary was invoked.
-	install -Dm644 /dev/stdin \
-		"${pkgdir}/etc/environment.d/50-telegram-desktop-nivora.conf" <<'EOF'
-DESKTOPINTEGRATION=1
-EOF
 
 	install-license LICENSE "telegram-desktop/LICENSE.nivora"
 }
@@ -96,7 +96,6 @@ files() {
 	files-find-desktop
 	files-find-license
 	files-find \
-		"/etc/environment.d/50-telegram-desktop-nivora.conf" \
 		"/opt/telegram-desktop/**/*" \
 		"/usr/share/icons/hicolor/256x256/apps/org.telegram.desktop.png"
 }

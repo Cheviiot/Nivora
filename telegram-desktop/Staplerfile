@@ -1,6 +1,6 @@
 name='telegram-desktop'
 version='7.0.5'
-release=3
+release=4
 summary='Official Telegram messaging client'
 summary_ru='Официальный клиент мессенджера Telegram'
 group='Networking/Instant messaging'
@@ -46,7 +46,7 @@ sources=(
 
 checksums=(
 	'sha256:37e23ce08333340504623042120b826f7a2a5650c831187219ab9c520740eb42'
-	'sha256:3a5d621a98f14c34f43474d610ce1c8c7c1849ef21093f9666c2cc6556870682'
+	'sha256:8ceb3f6aea1003f84f1b5757cd857f8237b294bb18456e5e0e54d96e6fff04ba'
 	'sha256:3fb1400c7dc9bbc3b5cb3ffedcbf4a9b09c53e28b57a7ff33a8a6b9048864090'
 	'sha256:f3ad1b5ecdc1c9e5ab3719a0b084a3e0b4fc87ad424fbf81043df9637be3d1f5'
 )
@@ -64,8 +64,14 @@ package() {
 	install -dm755 "${pkgdir}/opt/telegram-desktop"
 	install -Dm755 "Telegram/Telegram" "${pkgdir}/opt/telegram-desktop/Telegram"
 
-	install -dm755 "${pkgdir}/usr/bin"
-	ln -sfn /opt/telegram-desktop/Telegram "${pkgdir}/usr/bin/telegram-desktop"
+	install -Dm755 /dev/stdin "${pkgdir}/usr/bin/telegram-desktop" <<'EOF'
+#!/bin/sh
+# Telegram self-installs a shadow ~/.local/share/applications/*.desktop (and
+# a D-Bus service file) on every launch unless this env var is set; see
+# InstallLauncher() in Telegram/SourceFiles/platform/linux/specific_linux.cpp.
+export DESKTOPINTEGRATION=1
+exec /opt/telegram-desktop/Telegram "$@"
+EOF
 
 	install-desktop org.telegram.desktop.desktop
 	install -Dm644 telegram-desktop.png \

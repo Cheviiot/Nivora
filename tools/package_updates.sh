@@ -13,15 +13,17 @@ readonly -a PACKAGES=(
     fisher
     github-desktop
     happ
+    max
     netbird
     nivora-cli
     opencode
     parsec
     pineconemc
     tailscale
-    telegram-desktop
+    telegram
     ventoy
     vintner
+    vk-messenger
     vual
     yandex-browser-stable
 )
@@ -214,6 +216,51 @@ latest_yandex_browser() {
     printf '%s\n' "$version"
 }
 
+latest_max() {
+    local filename ver build
+    filename="$(
+        curl --retry 3 --retry-delay 2 --retry-all-errors \
+            --connect-timeout 30 --max-time 120 -fsSL \
+            'https://download.max.ru/linux/deb/dists/stable/main/binary-amd64/Packages.gz' |
+            gzip -dc |
+            awk '
+                /^Package: max$/ { selected = 1; next }
+                /^Package: / { selected = 0 }
+                selected && /^Filename: / { print $2 }
+            ' |
+            sort -V |
+            tail -1
+    )"
+    [[ -n "$filename" ]] || die 'cannot determine latest MAX version'
+    filename="$(basename "$filename")"
+    filename="${filename#MAX-}"
+    filename="${filename%.deb}"
+    ver="${filename%.*}"
+    build="${filename##*.}"
+    [[ -n "$ver" && -n "$build" ]] || die 'cannot parse latest MAX filename'
+    printf '%s~%s\n' "$ver" "$build"
+}
+
+latest_vk_messenger() {
+    local temp_dir version
+    temp_dir="$(mktemp -d)"
+    curl --retry 3 --retry-delay 2 --retry-all-errors \
+        --connect-timeout 30 --max-time 300 -fsSL \
+        -o "${temp_dir}/vk-messenger.deb" \
+        'https://upload.object2.vk-apps.com/vk-me-desktop-dev-5837a06d-5f28-484a-ac22-045903cb1b1a/latest/vk-messenger.deb'
+    (
+        cd "$temp_dir"
+        ar x vk-messenger.deb
+        tar -xOf control.tar.* ./control
+    ) >"${temp_dir}/control"
+    version="$(awk '$1 == "Version:" {print $2; exit}' "${temp_dir}/control")"
+    version="${version%-*}"
+    [[ -n "$version" ]] || die 'cannot determine latest VK Messenger version'
+    printf '%s\n' "$version"
+    find "$temp_dir" -mindepth 1 -delete
+    rmdir "$temp_dir"
+}
+
 latest_version() {
     case "$1" in
     adwyra) github_latest_release Cheviiot/Adwyra ;;
@@ -228,15 +275,17 @@ latest_version() {
         github_latest_release desktop/desktop | sed 's/^release-//'
         ;;
     happ) github_latest_release Happ-proxy/happ-desktop ;;
+    max) latest_max ;;
     netbird) github_latest_release netbirdio/netbird ;;
     nivora-cli) current_version nivora-cli ;;
     opencode) github_latest_release anomalyco/opencode ;;
     parsec) latest_parsec ;;
     pineconemc) github_latest_release ElyPrismLauncher/Launcher ;;
     tailscale) latest_tailscale ;;
-    telegram-desktop) github_latest_release telegramdesktop/tdesktop ;;
+    telegram) github_latest_release telegramdesktop/tdesktop ;;
     ventoy) github_latest_release ventoy/Ventoy ;;
     vintner) github_latest_release Cheviiot/vintner ;;
+    vk-messenger) latest_vk_messenger ;;
     vual) github_latest_release Cheviiot/Vual ;;
     yandex-browser-stable) latest_yandex_browser ;;
     *) die "unknown package: $1" ;;

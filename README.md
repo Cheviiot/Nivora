@@ -11,7 +11,7 @@ Nivora предлагает открытые рецепты упаковки д�
 официальный репозиторий Stapler и не официальные пакеты upstream-проектов.
 
 <!-- package-count -->
-**22 пакета** · **6 категорий** · `amd64`, `arm64` и `all`
+**24 пакета** · **6 категорий** · `amd64`, `arm64` и `all`
 
 [![Проверка Nivora](https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml/badge.svg)](https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml)
 
@@ -47,9 +47,11 @@ stplr info nivora/codex
 |:--|:--:|:--:|:--|
 | [Clash Verge Rev](https://github.com/clash-verge-rev/clash-verge-rev) | `2.5.2` | `amd64`, `arm64` | `stplr install nivora/clash-verge-rev` |
 | [Happ](https://happ.su/) | `3.3.6` | `amd64`, `arm64` | `stplr install nivora/happ` |
+| [MAX](https://max.ru/) (в песочнице Firejail) | `26.24.0~75261` | `amd64` | `stplr install nivora/max` |
 | [NetBird](https://netbird.io/) | `0.75.0` | `amd64`, `arm64` | `stplr install nivora/netbird` |
 | [Tailscale](https://tailscale.com/) | `1.98.9` | `amd64`, `arm64` | `stplr install nivora/tailscale` |
-| [Telegram Desktop](https://desktop.telegram.org/) | `7.0.5` | `amd64` | `stplr install nivora/telegram-desktop` |
+| [Telegram](https://desktop.telegram.org/) | `7.0.5` | `amd64` | `stplr install nivora/telegram` |
+| [VK Messenger](https://vk.me/app) | `6.0.57` | `amd64` | `stplr install nivora/vk-messenger` |
 | [Яндекс Браузер](https://browser.yandex.ru/) | `26.4.1.1110` | `amd64` | `stplr install nivora/yandex-browser-stable` |
 
 ### Удалённый доступ

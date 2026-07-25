@@ -1,11 +1,11 @@
 name='vintner'
-version=0.3.1
+version=0.4.0
 release=1
 summary='Cross compile with MSVC on Linux via Wine'
 summary_ru='Кросс-компиляция с MSVC на Linux через Wine'
 group='Development/Tools'
-desc='vintner is a single-binary tool for cross compiling with the real MSVC toolchain on Linux via Wine. Once you run its download/install subcommands, cl, link, lib, rc, midl, mc, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd and findstr all work as drop-in commands, exactly like on Windows. Supports building real KMDF/UMDF drivers via the Windows Driver Kit (--with-wdk), and its own CLI is available in English and Russian.'
-desc_ru='vintner — однобинарный инструмент для кросс-компиляции с реальным MSVC на Linux через Wine. После выполнения его подкоманд download/install команды cl, link, lib, rc, midl, mc, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd и findstr работают как обычные команды, точно как в Windows. Поддерживает сборку настоящих KMDF/UMDF-драйверов через Windows Driver Kit (--with-wdk), а сам CLI доступен на английском и русском.'
+desc='vintner is a single-binary tool for cross compiling with the real MSVC toolchain on Linux via Wine. Once you run its download/install subcommands, cl, link, lib, rc, midl, mc, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd and findstr all work as drop-in commands, exactly like on Windows. Supports building real KMDF/UMDF drivers via the Windows Driver Kit (--with-wdk), legacy D3DX9 code via the DirectX SDK (--with-dxsdk), old PlatformToolset-pinned .vcxproj files against the one installed compiler, and its own CLI is available in English and Russian.'
+desc_ru='vintner — однобинарный инструмент для кросс-компиляции с реальным MSVC на Linux через Wine. После выполнения его подкоманд download/install команды cl, link, lib, rc, midl, mc, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd и findstr работают как обычные команды, точно как в Windows. Поддерживает сборку настоящих KMDF/UMDF-драйверов через Windows Driver Kit (--with-wdk), устаревший код D3DX9 через DirectX SDK (--with-dxsdk), старые .vcxproj с закреплённым PlatformToolset против единственного установленного компилятора, а сам CLI доступен на английском и русском.'
 homepage='https://github.com/Cheviiot/vintner'
 maintainer='Cheviiot <https://github.com/Cheviiot>'
 
@@ -21,15 +21,18 @@ auto_reqprov_method="dirty"
 auto_req=0
 auto_prov=0
 
-# wine/msitools/git are needed at runtime by `vintner download`/`install`
-# and by the tool wrappers themselves, not just at build time.
+# wine/msitools/git/cabextract are needed at runtime by `vintner
+# download`/`install` and by the tool wrappers themselves, not just at
+# build time. cabextract is only exercised by --with-dxsdk, but kept a
+# hard dep for the same reason msitools is: small, no heavy transitive
+# deps, and simpler than making package deps conditional on a flag.
 deps=()
-deps_debian=('wine' 'msitools' 'git')
+deps_debian=('wine' 'msitools' 'git' 'cabextract')
 deps_ubuntu=("${deps_debian[@]}")
-deps_fedora=('wine' 'msitools' 'git')
-deps_arch=('wine' 'msitools' 'git')
-deps_opensuse=('wine' 'msitools' 'git')
-deps_altlinux=('wine' 'msitools' 'git')
+deps_fedora=('wine' 'msitools' 'git' 'cabextract')
+deps_arch=('wine' 'msitools' 'git' 'cabextract')
+deps_opensuse=('wine' 'msitools' 'git' 'cabextract')
+deps_altlinux=('wine' 'msitools' 'git' 'cabextract')
 
 build_deps=('binutils')
 
@@ -47,12 +50,12 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:e71e93ff9e20680ae8b734ed863393be0eed97a0037bbac0db402bd6209ede29'
+	'sha256:fa38af5c238a24552282203d6dab161fd075b1b9a5b55118368366b496db1c9c'
 	'sha256:e377b84adc5315cf372c3d80ecbd3008402d8b07f248e711c7553784e0c33168'
 )
 
 checksums_arm64=(
-	'sha256:6bce45dbde502563d764f253bd99d1428f9ced1252fe7bf5b0a3cdeff0d6d7d9'
+	'sha256:178b5f401bdb5369dc6e60f673a4ef2605d9e1fe24aed1e6938533e2d40094b4'
 	'sha256:e377b84adc5315cf372c3d80ecbd3008402d8b07f248e711c7553784e0c33168'
 )
 

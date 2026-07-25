@@ -1,5 +1,5 @@
 name='vintner'
-version=0.2.0
+version=0.3.0
 release=1
 summary='Cross compile with MSVC on Linux via Wine'
 summary_ru='Кросс-компиляция с MSVC на Linux через Wine'
@@ -47,22 +47,27 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:8b8d318c2dcebf46078c4619515839945f36597950581fd221c0c37b7b8c413e'
+	'sha256:fe6aae318969a05b0598ec6b3b2798dcdee04e3e930a095d143f26ec843f9833'
 	'sha256:e377b84adc5315cf372c3d80ecbd3008402d8b07f248e711c7553784e0c33168'
 )
 
 checksums_arm64=(
-	'sha256:739a1681492320af8ce98e043dd3a150c1b5f2734abc40ab21bdfb8b0eefa165'
+	'sha256:de1bca8d235e64997f024eb1b32c6539117ebe1beb2b1732de51b01bbef118ce'
 	'sha256:e377b84adc5315cf372c3d80ecbd3008402d8b07f248e711c7553784e0c33168'
 )
 
 package() {
 	cd "${srcdir}"
+	chmod +x "${srcdir}/vintner"
 	install-binary "${srcdir}/vintner"
 	install-license "${srcdir}/LICENSE" "vintner/LICENSE"
+	"${srcdir}/vintner" completion bash | install-completion bash vintner
+	"${srcdir}/vintner" completion zsh | install-completion zsh vintner
 }
 
 files() {
 	files-find-binary
 	files-find-license
+	files-find "/usr/share/bash-completion/completions/vintner"
+	files-find "/usr/share/zsh/site-functions/_vintner"
 }

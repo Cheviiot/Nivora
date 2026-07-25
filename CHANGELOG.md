@@ -12,6 +12,12 @@
 - Версия поднята до `0.2.0`: добавлена поддержка сборки KMDF/UMDF-драйверов
   через Windows Driver Kit (`download --with-wdk`), короткие алиасы команд
   и локализация CLI на английский и русский (`VINTNER_LANG`).
+- Версия поднята до `0.3.0`: пакет теперь сам регистрирует автодополнение
+  для bash (`/usr/share/bash-completion/completions/vintner`) и zsh
+  (`/usr/share/zsh/site-functions/_vintner`) через хелпер Stapler
+  `install-completion` — работает сразу после `stplr install`, без
+  ручного `source <(vintner completion bash)`. Также добавлена корректная
+  остановка процессов Wine при завершении `vintner` по PID.
 
 ## 2026-07-25 — Telegram Desktop
 

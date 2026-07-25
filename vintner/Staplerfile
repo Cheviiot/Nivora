@@ -1,11 +1,11 @@
 name='vintner'
-version=0.4.0
+version=0.5.0
 release=1
 summary='Cross compile with MSVC on Linux via Wine'
 summary_ru='Кросс-компиляция с MSVC на Linux через Wine'
 group='Development/Tools'
-desc='vintner is a single-binary tool for cross compiling with the real MSVC toolchain on Linux via Wine. Once you run its download/install subcommands, cl, link, lib, rc, midl, mc, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd and findstr all work as drop-in commands, exactly like on Windows. Supports building real KMDF/UMDF drivers via the Windows Driver Kit (--with-wdk), legacy D3DX9 code via the DirectX SDK (--with-dxsdk), old PlatformToolset-pinned .vcxproj files against the one installed compiler, and its own CLI is available in English and Russian.'
-desc_ru='vintner — однобинарный инструмент для кросс-компиляции с реальным MSVC на Linux через Wine. После выполнения его подкоманд download/install команды cl, link, lib, rc, midl, mc, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd и findstr работают как обычные команды, точно как в Windows. Поддерживает сборку настоящих KMDF/UMDF-драйверов через Windows Driver Kit (--with-wdk), устаревший код D3DX9 через DirectX SDK (--with-dxsdk), старые .vcxproj с закреплённым PlatformToolset против единственного установленного компилятора, а сам CLI доступен на английском и русском.'
+desc='vintner is a single-binary tool for cross compiling with the real MSVC toolchain on Linux via Wine. Once you run its download/install subcommands, cl, link, lib, rc, midl, mc, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd and findstr all work as drop-in commands, exactly like on Windows, or can be invoked directly as "vintner cl", "vintner msbuild", etc. without touching PATH. Supports building real KMDF/UMDF drivers via the Windows Driver Kit (--with-wdk), legacy D3DX9 code via the DirectX SDK (--with-dxsdk), old PlatformToolset-pinned .vcxproj files against the one installed compiler, resumes interrupted downloads, and "vintner doctor" diagnoses a broken wine/toolchain setup. Its own CLI is available in English and Russian.'
+desc_ru='vintner — однобинарный инструмент для кросс-компиляции с реальным MSVC на Linux через Wine. После выполнения его подкоманд download/install команды cl, link, lib, rc, midl, mc, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd и findstr работают как обычные команды, точно как в Windows, либо вызываются напрямую как «vintner cl», «vintner msbuild» и т.д., не трогая PATH. Поддерживает сборку настоящих KMDF/UMDF-драйверов через Windows Driver Kit (--with-wdk), устаревший код D3DX9 через DirectX SDK (--with-dxsdk), старые .vcxproj с закреплённым PlatformToolset против единственного установленного компилятора, докачивает прерванные загрузки, а «vintner doctor» диагностирует неисправную настройку wine/toolchain. Сам CLI доступен на английском и русском.'
 homepage='https://github.com/Cheviiot/vintner'
 maintainer='Cheviiot <https://github.com/Cheviiot>'
 
@@ -50,12 +50,12 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:fa38af5c238a24552282203d6dab161fd075b1b9a5b55118368366b496db1c9c'
+	'sha256:c06edc2c6469f3a6bac63bd2a1e811f6fe03cc05c49871413a8f58d5e382732a'
 	'sha256:e377b84adc5315cf372c3d80ecbd3008402d8b07f248e711c7553784e0c33168'
 )
 
 checksums_arm64=(
-	'sha256:178b5f401bdb5369dc6e60f673a4ef2605d9e1fe24aed1e6938533e2d40094b4'
+	'sha256:4ddb97ad6c193058589564f99781b3ef5e5725d243d3c1cbb895b81c35799144'
 	'sha256:e377b84adc5315cf372c3d80ecbd3008402d8b07f248e711c7553784e0c33168'
 )
 

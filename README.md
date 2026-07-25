@@ -70,7 +70,7 @@ stplr info nivora/codex
 | [Codex](docs/packages/codex.md) | `26.721.31836` | `amd64` | `stplr install nivora/codex` |
 | [GitHub Desktop](docs/packages/github-desktop.md) | `3.6.3` | `amd64`, `arm64` | `stplr install nivora/github-desktop` |
 | [OpenCode](https://opencode.ai/) | `1.18.4` | `amd64`, `arm64` | `stplr install nivora/opencode` |
-| [Vintner](https://github.com/Cheviiot/vintner) | `0.4.0` | `amd64`, `arm64` | `stplr install nivora/vintner` |
+| [Vintner](https://github.com/Cheviiot/vintner) | `0.5.0` | `amd64`, `arm64` | `stplr install nivora/vintner` |
 
 ### Рабочий стол
 

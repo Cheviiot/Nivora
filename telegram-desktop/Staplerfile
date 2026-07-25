@@ -1,6 +1,6 @@
 name='telegram-desktop'
 version='7.0.5'
-release=4
+release=5
 summary='Official Telegram messaging client'
 summary_ru='Официальный клиент мессенджера Telegram'
 group='Networking/Instant messaging'
@@ -77,6 +77,17 @@ EOF
 	install -Dm644 telegram-desktop.png \
 		"${pkgdir}/usr/share/icons/hicolor/256x256/apps/org.telegram.desktop.png"
 
+	# Belt-and-braces on top of the /usr/bin wrapper: the wrapper only helps
+	# when something actually launches via that path. A stale desktop-shell
+	# app cache (or any other launcher) can still exec the raw binary
+	# directly, so also export DESKTOPINTEGRATION for the whole graphical
+	# session via environment.d — this covers every launch path regardless
+	# of how the binary was invoked.
+	install -Dm644 /dev/stdin \
+		"${pkgdir}/etc/environment.d/50-telegram-desktop-nivora.conf" <<'EOF'
+DESKTOPINTEGRATION=1
+EOF
+
 	install-license LICENSE "telegram-desktop/LICENSE.nivora"
 }
 
@@ -85,6 +96,7 @@ files() {
 	files-find-desktop
 	files-find-license
 	files-find \
+		"/etc/environment.d/50-telegram-desktop-nivora.conf" \
 		"/opt/telegram-desktop/**/*" \
 		"/usr/share/icons/hicolor/256x256/apps/org.telegram.desktop.png"
 }

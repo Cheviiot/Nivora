@@ -1,6 +1,6 @@
-name='telegram-desktop'
+name='telegram'
 version='7.0.5'
-release=6
+release=1
 summary='Official Telegram messaging client'
 summary_ru='Официальный клиент мессенджера Telegram'
 group='Networking/Instant messaging'
@@ -14,7 +14,7 @@ architectures=('amd64')
 license=('GPL-3.0-only')
 
 provides=()
-replaces=('telegram-desktop')
+replaces=('telegram')
 conflicts=()
 
 auto_reqprov_method="dirty"
@@ -88,7 +88,7 @@ EOF
 	install -Dm644 telegram-desktop.png \
 		"${pkgdir}/usr/share/icons/hicolor/256x256/apps/org.telegram.desktop.png"
 
-	install-license LICENSE "telegram-desktop/LICENSE.nivora"
+	install-license LICENSE "telegram/LICENSE.nivora"
 }
 
 files() {

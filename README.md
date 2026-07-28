@@ -48,11 +48,11 @@ stplr info nivora/codex
 | [Clash Verge Rev](https://github.com/clash-verge-rev/clash-verge-rev) | `2.5.2` | `amd64`, `arm64` | `stplr install nivora/clash-verge-rev` |
 | [Happ](https://happ.su/) | `3.3.6` | `amd64`, `arm64` | `stplr install nivora/happ` |
 | [MAX](https://max.ru/) (в песочнице Firejail) | `26.24.0~75261` | `amd64` | `stplr install nivora/max` |
-| [NetBird](https://netbird.io/) | `0.75.0` | `amd64`, `arm64` | `stplr install nivora/netbird` |
+| [NetBird](https://netbird.io/) | `0.75.1` | `amd64`, `arm64` | `stplr install nivora/netbird` |
 | [Tailscale](https://tailscale.com/) | `1.98.9` | `amd64`, `arm64` | `stplr install nivora/tailscale` |
 | [Telegram](https://desktop.telegram.org/) | `7.0.6` | `amd64` | `stplr install nivora/telegram` |
 | [VK Messenger](https://vk.me/app) | `6.0.57` | `amd64` | `stplr install nivora/vk-messenger` |
-| [Яндекс Браузер](https://browser.yandex.ru/) | `26.4.1.1110` | `amd64` | `stplr install nivora/yandex-browser-stable` |
+| [Яндекс Браузер](https://browser.yandex.ru/) | `26.6.1.1003` | `amd64` | `stplr install nivora/yandex-browser-stable` |
 
 ### Удалённый доступ
 
@@ -69,7 +69,7 @@ stplr info nivora/codex
 | [ClaudeAlt](docs/packages/claude-alt.md) | `1.24012.0` | `amd64`, `arm64` | `stplr install nivora/claude-alt` |
 | [Codex](docs/packages/codex.md) | `26.721.41059` | `amd64` | `stplr install nivora/codex` |
 | [GitHub Desktop](docs/packages/github-desktop.md) | `3.6.3` | `amd64`, `arm64` | `stplr install nivora/github-desktop` |
-| [OpenCode](https://opencode.ai/) | `1.18.7` | `amd64`, `arm64` | `stplr install nivora/opencode` |
+| [OpenCode](https://opencode.ai/) | `1.18.8` | `amd64`, `arm64` | `stplr install nivora/opencode` |
 | [Vintner](https://github.com/Cheviiot/vintner) | `0.5.0` | `amd64`, `arm64` | `stplr install nivora/vintner` |
 
 ### Рабочий стол

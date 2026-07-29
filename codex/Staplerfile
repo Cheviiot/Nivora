@@ -1,5 +1,5 @@
 name='codex'
-version=26.721.41059
+version=26.721.81911
 release=1
 summary='Unofficial Linux repack of the Codex desktop app'
 summary_ru='Неофициальная Linux-перепаковка десктопного приложения Codex'
@@ -51,7 +51,7 @@ sources=(
 )
 
 checksums=(
-	'sha256:6f1a114dc05d307b1144a25cd2cb66aa6dfea82a4c721eff8ba757b15315c8a5'
+	'sha256:87798af5884c55a1faab57c8fef818a827a9f0243241c94d19a467d8216aef31'
 	'sha256:8cde2dac642947cdfab23d302056ef81b574cc7f5684f25f7116f80411ec551c'
 	'sha256:fab36489be4f1e92591d2ebcd28a96a95f788b5d1ba87824985623ab7df5e3f4'
 	'sha256:9259dc4b9ae217855d55414b2266db08d9b40c5b0cdbca20a183234ff55ba006'

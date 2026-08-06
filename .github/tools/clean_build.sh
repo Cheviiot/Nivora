@@ -2,8 +2,8 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd "${script_dir}/.." && pwd)"
-# shellcheck source=tools/lib/source_cache.sh
+repo_root="$(cd "${script_dir}/../.." && pwd)"
+# shellcheck source=.github/tools/lib/source_cache.sh
 source "${script_dir}/lib/source_cache.sh"
 cd "$repo_root"
 

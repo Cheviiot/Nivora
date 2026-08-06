@@ -2,7 +2,7 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd "${script_dir}/.." && pwd)"
+repo_root="$(cd "${script_dir}/../.." && pwd)"
 recipe="${repo_root}/codex/Staplerfile"
 driver="${repo_root}/codex/patch-computer-use.js"
 
@@ -16,7 +16,7 @@ grep -Fq 'applyLinuxComputerUseInstallFlowPatch' "$driver"
 grep -Fq 'codexLinuxNativeDesktopApps(' "$driver"
 grep -Fq 'codexLinuxRegisterComputerUseCursorHandler' "$driver"
 grep -Fq 'isHostCompatiblePlatform:' "$driver"
-grep -Fq 'computer-use@openai-bundled' "${repo_root}/docs/packages/codex.md"
+grep -Fq 'computer-use@openai-bundled' "${repo_root}/.github/docs/packages/codex.md"
 
 python3 - "$repo_root" <<'PY'
 import hashlib

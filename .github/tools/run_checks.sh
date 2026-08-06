@@ -2,7 +2,7 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd "${script_dir}/.." && pwd)"
+repo_root="$(cd "${script_dir}/../.." && pwd)"
 cd "$repo_root"
 
 mapfile -d '' shell_files < <(
@@ -31,14 +31,14 @@ if [[ "${#python_files[@]}" -gt 0 ]]; then
     python3 -m py_compile "${python_files[@]}"
 fi
 
-python3 -m unittest discover -s tests -p 'test_*.py' -v
-bash tests/test_nivora_cli.sh
-bash tests/test_claude_alt.sh
-bash tests/test_codex_computer_use.sh
-bash tests/test_happ_theme.sh
-bash tests/test_ventoy.sh
-bash tests/test_yandex_browser.sh
-python3 tools/validate_repo.py
+python3 -m unittest discover -s .github/tests -p 'test_*.py' -v
+bash .github/tests/test_nivora_cli.sh
+bash .github/tests/test_claude_alt.sh
+bash .github/tests/test_codex_computer_use.sh
+bash .github/tests/test_happ_theme.sh
+bash .github/tests/test_ventoy.sh
+bash .github/tests/test_yandex_browser.sh
+python3 .github/tools/validate_repo.py
 
 if command -v stplr-spec >/dev/null 2>&1; then
     for staplerfile in */Staplerfile; do

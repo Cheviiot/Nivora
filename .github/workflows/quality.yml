@@ -32,14 +32,14 @@ jobs:
           system-packages: jq rpm shellcheck
 
       - name: Выполнить проверки
-        run: tools/run_checks.sh
+        run: .github/tools/run_checks.sh
 
       - name: Сверить upstream-версии
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set +e
-          tools/package_updates.sh check-all
+          .github/tools/package_updates.sh check-all
           status=$?
           set -e
           if [[ "$status" -eq 10 ]]; then

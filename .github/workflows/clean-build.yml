@@ -37,11 +37,11 @@ jobs:
           REQUESTED_PACKAGES: ${{ inputs.packages }}
         run: |
           if [[ "$REQUESTED_PACKAGES" == all ]]; then
-            tools/clean_build.sh --all
-            tools/verify_artifacts.sh --all
-            NIVORA_DEB_BUILD_MODE=host tools/test_package_lifecycle.sh
+            .github/tools/clean_build.sh --all
+            .github/tools/verify_artifacts.sh --all
+            NIVORA_DEB_BUILD_MODE=host .github/tools/test_package_lifecycle.sh
           else
             read -r -a packages <<<"$REQUESTED_PACKAGES"
-            tools/clean_build.sh "${packages[@]}"
-            tools/verify_artifacts.sh "${packages[@]}"
+            .github/tools/clean_build.sh "${packages[@]}"
+            .github/tools/verify_artifacts.sh "${packages[@]}"
           fi

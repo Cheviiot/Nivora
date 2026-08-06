@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 EXPECTED_PACKAGES = (
     "anidesk",
@@ -39,15 +39,15 @@ REQUIRED_ROOT_FILES = {
     Path("SECURITY.md"),
     Path("LICENSE"),
     Path("stapler-repo.toml"),
-    Path("docs/maintenance.md"),
-    Path("docs/security-model.md"),
-    Path("docs/packages/claude.md"),
-    Path("docs/packages/claude-alt.md"),
-    Path("docs/packages/codex.md"),
-    Path("docs/packages/github-desktop.md"),
-    Path("docs/packages/opencode.md"),
-    Path("docs/packages/nivora-cli.md"),
-    Path("docs/packages/ventoy.md"),
+    Path(".github/docs/maintenance.md"),
+    Path(".github/docs/security-model.md"),
+    Path(".github/docs/packages/claude.md"),
+    Path(".github/docs/packages/claude-alt.md"),
+    Path(".github/docs/packages/codex.md"),
+    Path(".github/docs/packages/github-desktop.md"),
+    Path(".github/docs/packages/opencode.md"),
+    Path(".github/docs/packages/nivora-cli.md"),
+    Path(".github/docs/packages/ventoy.md"),
 }
 
 CHECKSUM_RE = re.compile(r"(?:sha256:)?[0-9a-f]{64}\Z")
@@ -267,7 +267,7 @@ def validate_repository_text(errors: list[str]) -> None:
         except UnicodeDecodeError:
             continue
 
-        scans_validator_source = relative == Path("tools/validate_repo.py")
+        scans_validator_source = relative == Path(".github/tools/validate_repo.py")
         if not scans_validator_source and (
             "/home/cheviiot" in text or "/.codex/attachments/" in text
         ):
@@ -309,7 +309,7 @@ def main() -> int:
         metadata[package] = validate_package(package, errors)
 
     validate_readme(metadata, errors)
-    for path in sorted([*ROOT.glob("*.md"), *ROOT.glob("docs/**/*.md")]):
+    for path in sorted([*ROOT.glob("*.md"), *ROOT.glob(".github/docs/**/*.md")]):
         validate_links(path, errors)
     validate_repository_text(errors)
 

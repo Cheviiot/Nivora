@@ -4,6 +4,9 @@
 
 - В репозитории ровно 18 каталогов с `Staplerfile`.
 - Каталог совпадает с `name` и командой в README.
+- Инфраструктура (`tools/`, `docs/`, `tests/`) живёт внутри `.github/`, чтобы
+  корень репозитория состоял только из каталогов пакетов и стандартных
+  файлов (README, CHANGELOG, LICENSE и т.д.).
 - Upstream-версия не меняется из-за патча рецепта; для этого повышается `release`.
 - Desktop-id, AppStream component-id, units и пути данных не меняются без отдельной миграции.
 - `provides` и `conflicts` остаются пустыми, а `replaces` содержит только собственное
@@ -25,10 +28,10 @@ Stapler сам добавляет текущее `name` в generated `Provides` 
 ## Локальные проверки
 
 ```bash
-tools/run_checks.sh
-tools/package_updates.sh check-all
-tools/verify_artifacts.sh --all
-tools/test_package_lifecycle.sh
+.github/tools/run_checks.sh
+.github/tools/package_updates.sh check-all
+.github/tools/verify_artifacts.sh --all
+.github/tools/test_package_lifecycle.sh
 ```
 
 `run_checks.sh` выполняет `bash -n`, ShellCheck, Python compile, unit-тесты, validator и чтение
@@ -63,11 +66,11 @@ Stapler временный builder включается в группу `wheel`,
 ```bash
 stplr-spec update-package package
 stplr-spec verify-checksums --path package/Staplerfile
-tools/run_checks.sh
-tools/clean_build.sh package
+.github/tools/run_checks.sh
+.github/tools/clean_build.sh package
 ```
 
-Нестандартная логика обнаружения версий находится в `tools/package_updates.sh`, а каждый
+Нестандартная логика обнаружения версий находится в `.github/tools/package_updates.sh`, а каждый
 `.stapler/update-check` вызывает его для своего package ID.
 
 Плановый workflow обновляет пакеты автономно и отправляет проверенные изменения
@@ -84,9 +87,9 @@ tools/clean_build.sh package
 ## Clean-build
 
 ```bash
-tools/clean_build.sh package
-tools/clean_build.sh --all
-tools/verify_artifacts.sh --all
+.github/tools/clean_build.sh package
+.github/tools/clean_build.sh --all
+.github/tools/verify_artifacts.sh --all
 ```
 
 Скрипт всегда выполняет сборку в собственном одноразовом контейнере ALT и не
@@ -102,5 +105,5 @@ tools/verify_artifacts.sh --all
 4. Проверить `Provides/Replaces/Conflicts`, payload и тестовый файл.
 5. Проверить удаление пакета без удаления пользовательского состояния.
 
-Автоматизированная проверка выполняется командой `tools/test_package_lifecycle.sh` в
+Автоматизированная проверка выполняется командой `.github/tools/test_package_lifecycle.sh` в
 одноразовых контейнерах, а не на рабочей системе сопровождающего.

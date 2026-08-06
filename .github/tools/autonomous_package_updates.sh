@@ -2,7 +2,7 @@
 set -uo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd "${script_dir}/.." && pwd)"
+repo_root="$(cd "${script_dir}/../.." && pwd)"
 results_dir="${AUTONOMOUS_UPDATE_RESULTS_DIR:?AUTONOMOUS_UPDATE_RESULTS_DIR is required}"
 
 [[ "$#" -gt 0 ]] || {
@@ -42,16 +42,16 @@ for package in "$@"; do
         stplr-spec update-package "$package"
 
         echo sync-catalog >"$phase_file"
-        tools/sync_readme_versions.py
+        .github/tools/sync_readme_versions.py
 
         echo static-checks >"$phase_file"
-        tools/run_checks.sh
+        .github/tools/run_checks.sh
 
         echo clean-build >"$phase_file"
-        tools/clean_build.sh "$package"
+        .github/tools/clean_build.sh "$package"
 
         echo verify-artifact >"$phase_file"
-        tools/verify_artifacts.sh "$package"
+        .github/tools/verify_artifacts.sh "$package"
     ) >"$log_file" 2>&1; then
         git -C "$worktree" diff --binary -- "$package" \
             >"${package_result}/update.patch"

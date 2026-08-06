@@ -24,4 +24,4 @@
 Не публикуйте пароли, API-ключи, setup keys, cookies и диагностические архивы без
 предварительной проверки.
 
-Подробная модель доверия: [docs/security-model.md](docs/security-model.md).
+Подробная модель доверия: [.github/docs/security-model.md](.github/docs/security-model.md).

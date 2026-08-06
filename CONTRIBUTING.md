@@ -22,9 +22,9 @@
 ## Проверка
 
 ```bash
-tools/run_checks.sh
+.github/tools/run_checks.sh
 stplr-spec verify-checksums --path package/Staplerfile
-tools/clean_build.sh package
+.github/tools/clean_build.sh package
 ```
 
 Для изменения package ID нужны отдельные DEB/RPM-тесты замены и проверка

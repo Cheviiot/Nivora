@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 launcher="${repo_root}/claude-alt/claude-alt"
 icon="${repo_root}/claude/claude-alt.png"
 primary_tray_icon="${repo_root}/claude/claude-tray-orange.png"

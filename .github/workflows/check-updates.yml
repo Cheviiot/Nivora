@@ -42,7 +42,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          packages_output="$(tools/package_updates.sh outdated)"
+          packages_output="$(.github/tools/package_updates.sh outdated)"
           mapfile -t packages <<<"$packages_output"
           if [[ -z "$packages_output" ]]; then
             packages=()
@@ -67,7 +67,7 @@ jobs:
             if [[ "$package" == github-desktop ]]; then
               github_desktop_update=true
               read -r _ github_desktop_version < <(
-                tools/package_updates.sh check github-desktop
+                .github/tools/package_updates.sh check github-desktop
               )
             fi
           done
@@ -122,7 +122,7 @@ jobs:
           AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
         run: |
           mapfile -t packages < <(jq -r '.[]' <<<"$PACKAGES_JSON")
-          tools/autonomous_package_updates.sh "${packages[@]}"
+          .github/tools/autonomous_package_updates.sh "${packages[@]}"
 
           successful_json="$(
             jq -Rsc 'split("\n") | map(select(length > 0))' \
@@ -153,8 +153,8 @@ jobs:
             git apply \
               "$AUTONOMOUS_UPDATE_RESULTS_DIR/${package}/update.patch"
           done <"$AUTONOMOUS_UPDATE_RESULTS_DIR/successful-packages"
-          tools/sync_readme_versions.py
-          tools/run_checks.sh
+          .github/tools/sync_readme_versions.py
+          .github/tools/run_checks.sh
 
       - name: Отправить обновления прямо в main
         id: publish
@@ -179,7 +179,7 @@ jobs:
         env:
           AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
           GH_TOKEN: ${{ github.token }}
-        run: tools/report_update_failures.sh
+        run: .github/tools/report_update_failures.sh
 
       - name: Сообщить о несовместимых пакетах
         if: ${{ always() && steps.isolated.outputs.failed != '[]' }}

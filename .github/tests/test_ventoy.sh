@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 package_dir="${repo_root}/ventoy"
 launcher="${package_dir}/ventoy"
 desktop="${package_dir}/ventoy.desktop"

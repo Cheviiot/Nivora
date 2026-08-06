@@ -41,13 +41,7 @@ REQUIRED_ROOT_FILES = {
     Path("stapler-repo.toml"),
     Path(".github/docs/maintenance.md"),
     Path(".github/docs/security-model.md"),
-    Path(".github/docs/packages/claude.md"),
-    Path(".github/docs/packages/claude-alt.md"),
-    Path(".github/docs/packages/codex.md"),
-    Path(".github/docs/packages/github-desktop.md"),
-    Path(".github/docs/packages/opencode.md"),
-    Path(".github/docs/packages/nivora-cli.md"),
-    Path(".github/docs/packages/ventoy.md"),
+    *(Path(f"{package}/README.md") for package in EXPECTED_PACKAGES),
 }
 
 CHECKSUM_RE = re.compile(r"(?:sha256:)?[0-9a-f]{64}\Z")
@@ -309,7 +303,11 @@ def main() -> int:
         metadata[package] = validate_package(package, errors)
 
     validate_readme(metadata, errors)
-    for path in sorted([*ROOT.glob("*.md"), *ROOT.glob(".github/docs/**/*.md")]):
+    for path in sorted([
+        *ROOT.glob("*.md"),
+        *ROOT.glob(".github/docs/**/*.md"),
+        *ROOT.glob("*/README.md"),
+    ]):
         validate_links(path, errors)
     validate_repository_text(errors)
 

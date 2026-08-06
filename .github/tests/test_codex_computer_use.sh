@@ -16,7 +16,7 @@ grep -Fq 'applyLinuxComputerUseInstallFlowPatch' "$driver"
 grep -Fq 'codexLinuxNativeDesktopApps(' "$driver"
 grep -Fq 'codexLinuxRegisterComputerUseCursorHandler' "$driver"
 grep -Fq 'isHostCompatiblePlatform:' "$driver"
-grep -Fq 'computer-use@openai-bundled' "${repo_root}/.github/docs/packages/codex.md"
+grep -Fq 'computer-use@openai-bundled' "${repo_root}/codex/README.md"
 
 python3 - "$repo_root" <<'PY'
 import hashlib

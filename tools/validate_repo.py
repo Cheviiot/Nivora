@@ -12,11 +12,8 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 
 EXPECTED_PACKAGES = (
-    "adwyra",
     "anidesk",
     "balena-etcher",
-    "chatbox",
-    "clash-verge-rev",
     "claude",
     "claude-alt",
     "codex",
@@ -24,7 +21,6 @@ EXPECTED_PACKAGES = (
     "github-desktop",
     "happ",
     "max",
-    "netbird",
     "nivora-cli",
     "opencode",
     "parsec",
@@ -283,7 +279,6 @@ def validate_repository_text(errors: list[str]) -> None:
         if not scans_validator_source and re.search(r"\brm\s+-rf\b", text):
             allowed_purge = relative in {
                 Path("tailscale/tailscale-purge-data"),
-                Path("netbird/netbird-purge-data"),
             }
             if not allowed_purge or "--yes" not in text:
                 errors.append(f"{relative}: unsafe rm -rf")

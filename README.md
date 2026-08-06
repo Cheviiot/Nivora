@@ -1,19 +1,34 @@
 <p align="center">
-  <img src=".github/assets/nivora.png" width="96" height="96" alt="Nivora">
+  <img src=".github/assets/nivora.png" width="112" height="112" alt="Nivora">
 </p>
 
-# Nivora
+<h1 align="center">Nivora</h1>
 
-**Независимый каталог Linux-приложений для Stapler.**
+<p align="center">
+  <strong>Независимый каталог Linux-приложений для Stapler</strong>
+</p>
 
-Nivora предлагает открытые рецепты упаковки десктопных приложений и
-инструментов, которых может не быть в системном репозитории. Это не
-официальный репозиторий Stapler и не официальные пакеты upstream-проектов.
+<p align="center">
+  <a href="https://stplr.dev/docs/intro/"><img src="https://img.shields.io/badge/Stapler-Community%20Repo-6366F1?style=for-the-badge" alt="Stapler Community Repo"></a>
+  <img src="https://img.shields.io/badge/пакетов-20-2ea043?style=for-the-badge" alt="20 пакетов">
+  <a href="https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/quality.yml?branch=main&style=for-the-badge&label=CI" alt="CI"></a>
+</p>
+
+<p align="center">
+  Открытые рецепты упаковки десктопных приложений и инструментов, которых
+  может не быть в системном репозитории. Это не официальный репозиторий
+  Stapler и не официальные пакеты upstream-проектов.
+</p>
+
+<p align="center">
+  <a href="CHANGELOG.md">Changelog</a> •
+  <a href="CONTRIBUTING.md">Контрибьюторам</a> •
+  <a href="SECURITY.md">Безопасность</a> •
+  <a href="LICENSE">Лицензия</a>
+</p>
 
 <!-- package-count -->
-**24 пакета** · **6 категорий** · `amd64`, `arm64` и `all`
-
-[![Проверка Nivora](https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml/badge.svg)](https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml)
+**20 пакетов** · **6 категорий** · `amd64`, `arm64` и `all`
 
 ## Подключение
 
@@ -43,57 +58,53 @@ stplr info nivora/codex
 
 ### Интернет, сеть и VPN
 
-| Приложение | Версия | Архитектуры | Установка |
-|:--|:--:|:--:|:--|
-| [Clash Verge Rev](https://github.com/clash-verge-rev/clash-verge-rev) | `2.5.2` | `amd64`, `arm64` | `stplr install nivora/clash-verge-rev` |
-| [Happ](https://happ.su/) | `3.3.6` | `amd64`, `arm64` | `stplr install nivora/happ` |
-| [MAX](https://max.ru/) (в песочнице Firejail) | `26.24.0~75261` | `amd64` | `stplr install nivora/max` |
-| [NetBird](https://netbird.io/) | `0.75.0` | `amd64`, `arm64` | `stplr install nivora/netbird` |
-| [Tailscale](https://tailscale.com/) | `1.98.9` | `amd64`, `arm64` | `stplr install nivora/tailscale` |
-| [Telegram](https://desktop.telegram.org/) | `7.0.5` | `amd64` | `stplr install nivora/telegram` |
-| [VK Messenger](https://vk.me/app) | `6.0.57` | `amd64` | `stplr install nivora/vk-messenger` |
-| [Яндекс Браузер](https://browser.yandex.ru/) | `26.4.1.1110` | `amd64` | `stplr install nivora/yandex-browser-stable` |
+| | Приложение | Версия | Архитектуры | Установка |
+|:---:|---|:--:|:--:|---|
+| <img src="https://happ.su/imgs/apple-touch-icon.png" width="32" height="32" alt="Happ"> | [Happ](https://happ.su/) | `3.3.6` | `amd64`, `arm64` | `stplr install nivora/happ` |
+| <img src="https://max.ru/favicon.png" width="32" height="32" alt="MAX"> | [MAX](https://max.ru/) (в песочнице Firejail) | `26.26.0~76189` | `amd64` | `stplr install nivora/max` |
+| <img src="https://tailscale.com/favicon.png" width="32" height="32" alt="Tailscale"> | [Tailscale](https://tailscale.com/) | `1.102.2` | `amd64`, `arm64` | `stplr install nivora/tailscale` |
+| <img src="telegram/telegram-desktop.png" width="32" height="32" alt="Telegram"> | [Telegram](https://desktop.telegram.org/) | `7.0.9` | `amd64` | `stplr install nivora/telegram` |
+| <img src="https://vk.me/favicon.ico" width="32" height="32" alt="VK Messenger"> | [VK Messenger](https://vk.me/app) | `6.0.57` | `amd64` | `stplr install nivora/vk-messenger` |
+| <img src="https://browser.yandex.ru/apple-touch-icon.png" width="32" height="32" alt="Яндекс Браузер"> | [Яндекс Браузер](https://browser.yandex.ru/) | `26.6.1.1003` | `amd64` | `stplr install nivora/yandex-browser-stable` |
 
 ### Удалённый доступ
 
-| Приложение | Версия | Архитектуры | Установка |
-|:--|:--:|:--:|:--|
-| [Parsec](https://parsec.app/downloads) | `150-104a` | `amd64` | `stplr install nivora/parsec` |
+| | Приложение | Версия | Архитектуры | Установка |
+|:---:|---|:--:|:--:|---|
+| <img src="https://parsec.app/favicon.ico" width="32" height="32" alt="Parsec"> | [Parsec](https://parsec.app/downloads) | `150-104a` | `amd64` | `stplr install nivora/parsec` |
 
 ### AI и разработка
 
-| Приложение | Версия | Архитектуры | Установка |
-|:--|:--:|:--:|:--|
-| [Chatbox](https://chatboxai.app/ru) | `1.20.3` | `amd64`, `arm64` | `stplr install nivora/chatbox` |
-| [Claude](docs/packages/claude.md) | `1.24012.0` | `amd64`, `arm64` | `stplr install nivora/claude` |
-| [ClaudeAlt](docs/packages/claude-alt.md) | `1.24012.0` | `amd64`, `arm64` | `stplr install nivora/claude-alt` |
-| [Codex](docs/packages/codex.md) | `26.721.31836` | `amd64` | `stplr install nivora/codex` |
-| [GitHub Desktop](docs/packages/github-desktop.md) | `3.6.3` | `amd64`, `arm64` | `stplr install nivora/github-desktop` |
-| [OpenCode](https://opencode.ai/) | `1.18.4` | `amd64`, `arm64` | `stplr install nivora/opencode` |
-| [Vintner](https://github.com/Cheviiot/vintner) | `0.5.0` | `amd64`, `arm64` | `stplr install nivora/vintner` |
+| | Приложение | Версия | Архитектуры | Установка |
+|:---:|---|:--:|:--:|---|
+| <img src="claude/claude-tray-orange.png" width="32" height="32" alt="Claude"> | [Claude](docs/packages/claude.md) | `1.24012.11` | `amd64`, `arm64` | `stplr install nivora/claude` |
+| <img src="claude/claude-alt.png" width="32" height="32" alt="ClaudeAlt"> | [ClaudeAlt](docs/packages/claude-alt.md) | `1.24012.11` | `amd64`, `arm64` | `stplr install nivora/claude-alt` |
+| <img src="codex/codex-app.png" width="32" height="32" alt="Codex"> | [Codex](docs/packages/codex.md) | `26.721.81911` | `amd64` | `stplr install nivora/codex` |
+| <img src="https://github.githubassets.com/favicons/favicon.png" width="32" height="32" alt="GitHub Desktop"> | [GitHub Desktop](docs/packages/github-desktop.md) | `3.6.3` | `amd64`, `arm64` | `stplr install nivora/github-desktop` |
+| <img src="https://opencode.ai/apple-touch-icon.png" width="32" height="32" alt="OpenCode"> | [OpenCode](https://opencode.ai/) | `1.18.14` | `amd64`, `arm64` | `stplr install nivora/opencode` |
+| | [Vintner](https://github.com/Cheviiot/vintner) | `0.5.0` | `amd64`, `arm64` | `stplr install nivora/vintner` |
 
 ### Рабочий стол
 
-| Приложение | Версия | Архитектуры | Установка |
-|:--|:--:|:--:|:--|
-| [Adwyra](https://github.com/Cheviiot/Adwyra) | `0.6.1` | `all` | `stplr install nivora/adwyra` |
-| [AniDesk](https://github.com/theDesConnet/AniDesk) | `0.0.1-beta.7` | `amd64` | `stplr install nivora/anidesk` |
+| | Приложение | Версия | Архитектуры | Установка |
+|:---:|---|:--:|:--:|---|
+| <img src="anidesk/anidesk.png" width="32" height="32" alt="AniDesk"> | [AniDesk](https://github.com/theDesConnet/AniDesk) | `0.0.1-beta.7` | `amd64` | `stplr install nivora/anidesk` |
 
 ### Игры
 
-| Приложение | Версия | Архитектуры | Установка |
-|:--|:--:|:--:|:--|
-| [PineconeMC](https://pineconemc.com/) | `11.0.3` | `amd64`, `arm64` | `stplr install nivora/pineconemc` |
-| [Vual](https://github.com/Cheviiot/Vual) | `0.3.1` | `all` | `stplr install nivora/vual` |
+| | Приложение | Версия | Архитектуры | Установка |
+|:---:|---|:--:|:--:|---|
+| <img src="pineconemc/pineconemc.svg" width="32" height="32" alt="PineconeMC"> | [PineconeMC](https://pineconemc.com/) | `11.0.3` | `amd64`, `arm64` | `stplr install nivora/pineconemc` |
+| <img src="https://raw.githubusercontent.com/Cheviiot/Vual/main/data/Vual.png" width="32" height="32" alt="Vual"> | [Vual](https://github.com/Cheviiot/Vual) | `0.3.1` | `all` | `stplr install nivora/vual` |
 
 ### Системные инструменты
 
-| Приложение | Версия | Архитектуры | Установка |
-|:--|:--:|:--:|:--|
-| [balenaEtcher](https://etcher.balena.io/) | `2.1.6` | `amd64` | `stplr install nivora/balena-etcher` |
-| [Fisher](https://github.com/jorgebucaran/fisher) | `4.4.8` | `all` | `stplr install nivora/fisher` |
-| [Nivora CLI](docs/packages/nivora-cli.md) | `1.0.0` | `all` | `stplr install nivora/nivora-cli` |
-| [Ventoy](docs/packages/ventoy.md) | `1.1.17` | `amd64`, `arm64` | `stplr install nivora/ventoy` |
+| | Приложение | Версия | Архитектуры | Установка |
+|:---:|---|:--:|:--:|---|
+| <img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="32" height="32" alt="balenaEtcher"> | [balenaEtcher](https://etcher.balena.io/) | `2.1.6` | `amd64` | `stplr install nivora/balena-etcher` |
+| | [Fisher](https://github.com/jorgebucaran/fisher) | `4.4.8` | `all` | `stplr install nivora/fisher` |
+| <img src=".github/assets/nivora.png" width="32" height="32" alt="Nivora CLI"> | [Nivora CLI](docs/packages/nivora-cli.md) | `1.0.0` | `all` | `stplr install nivora/nivora-cli` |
+| <img src="https://raw.githubusercontent.com/ventoy/Ventoy/master/ICON/logo_128.png" width="32" height="32" alt="Ventoy"> | [Ventoy](docs/packages/ventoy.md) | `1.1.17` | `amd64`, `arm64` | `stplr install nivora/ventoy` |
 
 ## Обновление
 

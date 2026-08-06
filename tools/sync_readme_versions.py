@@ -56,10 +56,10 @@ def main() -> None:
 
         index = matching_lines[0]
         cells = lines[index].split("|")
-        if len(cells) != 6:
+        if len(cells) != 7:
             raise RuntimeError(f"{package}: malformed README catalog row")
-        cells[2] = f" `{version}` "
-        cells[3] = " " + ", ".join(
+        cells[3] = f" `{version}` "
+        cells[4] = " " + ", ".join(
             f"`{architecture}`" for architecture in architectures
         ) + " "
         lines[index] = "|".join(cells)

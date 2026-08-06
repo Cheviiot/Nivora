@@ -2,11 +2,8 @@
 set -euo pipefail
 
 readonly -a PACKAGES=(
-    adwyra
     anidesk
     balena-etcher
-    chatbox
-    clash-verge-rev
     claude-alt
     claude
     codex
@@ -14,7 +11,6 @@ readonly -a PACKAGES=(
     github-desktop
     happ
     max
-    netbird
     nivora-cli
     opencode
     parsec
@@ -121,25 +117,6 @@ latest_anidesk() {
             tail -1
     )"
     [[ -n "$version" ]] || die 'cannot determine latest AniDesk version'
-    printf '%s\n' "$version"
-}
-
-latest_chatbox() {
-    local version
-    version="$(
-        github_json 'https://api.github.com/repos/chatboxai/chatbox/releases?per_page=30' |
-            jq -er '
-                [
-                    .[]
-                    | select(.draft == false and .prerelease == false)
-                    | . as $release
-                    | $release.assets[]?
-                    | select(.name | test("^Chatbox-[0-9]+(?:\\.[0-9]+)+-amd64\\.deb$"))
-                    | $release.tag_name
-                ][0]
-            ' |
-            sed 's/^v//'
-    )" || die 'cannot determine latest Chatbox Linux release'
     printf '%s\n' "$version"
 }
 
@@ -263,11 +240,8 @@ latest_vk_messenger() {
 
 latest_version() {
     case "$1" in
-    adwyra) github_latest_release Cheviiot/Adwyra ;;
     anidesk) latest_anidesk ;;
     balena-etcher) github_latest_release balena-io/etcher ;;
-    chatbox) latest_chatbox ;;
-    clash-verge-rev) github_latest_release clash-verge-rev/clash-verge-rev ;;
     claude | claude-alt) latest_claude_desktop ;;
     codex) github_latest_release Boria138/codex-app-linux ;;
     fisher) github_latest_release jorgebucaran/fisher ;;
@@ -276,7 +250,6 @@ latest_version() {
         ;;
     happ) github_latest_release Happ-proxy/happ-desktop ;;
     max) latest_max ;;
-    netbird) github_latest_release netbirdio/netbird ;;
     nivora-cli) current_version nivora-cli ;;
     opencode) github_latest_release anomalyco/opencode ;;
     parsec) latest_parsec ;;

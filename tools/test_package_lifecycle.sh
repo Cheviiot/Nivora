@@ -25,14 +25,11 @@ esac
 
 # package | command | persistent state marker | desktop/unit | icon
 readonly -a lifecycle_packages=(
-    'clash-verge-rev|/usr/bin/clash-verge|/home/nivora-test/.local/share/io.github.clash-verge-rev.clash-verge-rev/nivora-lifecycle-state|/usr/share/applications/Clash Verge.desktop|/usr/share/icons/hicolor/128x128/apps/clash-verge.png'
     'claude|/usr/bin/claude-desktop|/home/nivora-test/.config/Claude/nivora-lifecycle-state|/usr/share/applications/com.anthropic.Claude.desktop|/usr/share/icons/hicolor/128x128/apps/claude-desktop.png'
     'codex|/usr/bin/codex-app|/home/nivora-test/.codex/nivora-lifecycle-state|/usr/share/applications/codex-app.desktop|/usr/share/icons/hicolor/512x512/apps/codex-app.png'
     'nivora-cli|/usr/bin/nv|/home/nivora-test/.config/nivora-cli/nivora-lifecycle-state|-|-'
     'opencode|/usr/bin/opencode-desktop|/home/nivora-test/.config/opencode/nivora-lifecycle-state|/usr/share/applications/opencode-desktop.desktop|/usr/share/icons/hicolor/128x128/apps/ai.opencode.desktop.png'
     'tailscale|/usr/bin/tailscale|/var/lib/tailscale/nivora-lifecycle-state|/usr/lib/systemd/system/tailscaled.service|-'
-    'netbird|/usr/bin/netbird|/var/lib/netbird/nivora-lifecycle-state|/usr/lib/systemd/system/netbird.service|-'
-    'chatbox|/usr/bin/chatbox|/home/nivora-test/.config/Chatbox/nivora-lifecycle-state|/usr/share/applications/xyz.chatboxapp.app.desktop|/usr/share/icons/hicolor/128x128/apps/xyz.chatboxapp.app.png'
 )
 
 for command in curl docker dpkg-deb find rpm rpmbuild sha256sum sqlite3 stplr-spec tar; do

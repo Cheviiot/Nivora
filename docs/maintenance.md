@@ -2,7 +2,7 @@
 
 ## Инварианты
 
-- В репозитории ровно 24 каталога с `Staplerfile`.
+- В репозитории ровно 20 каталогов с `Staplerfile`.
 - Каталог совпадает с `name` и командой в README.
 - Upstream-версия не меняется из-за патча рецепта; для этого повышается `release`.
 - Desktop-id, AppStream component-id, units и пути данных не меняются без отдельной миграции.
@@ -16,7 +16,6 @@ Stapler сам добавляет текущее `name` в generated `Provides` 
 
 | Package ID | Основание |
 |:--|:--|
-| `clash-verge-rev` | Upstream-репозиторий и release title: Clash Verge Rev |
 | `claude` | Upstream DEB: `Package: claude-desktop`; desktop-id `com.anthropic.Claude` сохранён; старое имя пакета `claude-desktop` заменяется |
 | `codex` | Отображаемое имя `Codex`; команда и desktop-id `codex-app` сохранены |
 | `github-desktop` | Официальный upstream `desktop/desktop`; Linux-сборка без стороннего форка |
@@ -48,7 +47,7 @@ RPM из clean-build. Минимальные fixtures изображают пр�
 3. наличие команды, desktop-файла или systemd unit;
 4. сохранение пользовательского состояния после обновления и удаления.
 
-Полный жизненный цикл проверяется для восьми критичных пакетов. Остальные пакеты
+Полный жизненный цикл проверяется для пяти критичных пакетов. Остальные пакеты
 покрываются validator, clean-build и проверкой payload.
 
 Локально DEB собираются в привилегированном контейнере. На GitHub-hosted runner используется

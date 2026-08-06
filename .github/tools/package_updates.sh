@@ -17,6 +17,7 @@ readonly -a PACKAGES=(
     tailscale
     telegram
     ventoy
+    vesktop
     vintner
     vual
     yandex-browser-stable
@@ -209,6 +210,7 @@ latest_version() {
     tailscale) latest_tailscale ;;
     telegram) github_latest_release telegramdesktop/tdesktop ;;
     ventoy) github_latest_release ventoy/Ventoy ;;
+    vesktop) github_latest_release Vencord/Vesktop ;;
     vintner) github_latest_release Cheviiot/vintner ;;
     vual) github_latest_release Cheviiot/Vual ;;
     yandex-browser-stable) latest_yandex_browser ;;

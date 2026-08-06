@@ -2,7 +2,7 @@
 
 ## Инварианты
 
-- В репозитории ровно 18 каталогов с `Staplerfile`.
+- В репозитории ровно 19 каталогов с `Staplerfile`.
 - Каталог совпадает с `name` и командой в README.
 - Инфраструктура (`tools/`, `docs/`, `tests/`) живёт внутри `.github/`, чтобы
   корень репозитория состоял только из каталогов пакетов и стандартных
@@ -24,6 +24,7 @@ Stapler сам добавляет текущее `name` в generated `Provides` 
 | `github-desktop` | Официальный upstream `desktop/desktop`; Linux-сборка без стороннего форка |
 | `nivora-cli` | Многоязычная оболочка Nivora для Stapler |
 | `telegram` | Upstream-тарбол не даёт своего package ID; desktop-id `org.telegram.desktop` сохранён; каталог и package ID переименованы с `telegram-desktop`. В отличие от `claude`/`claude-desktop`, `replaces` не включает старое имя (это разрешено только для `claude` в `validate_repo.py`) — у кого установлен `telegram-desktop`, нужно вручную `stplr install telegram` и `stplr remove telegram-desktop` |
+| `vesktop` | Пакет намеренно не называется `discord`: официальный `.deb`/`.tar.gz` Discord — самообновляющийся bootstrap без пригодного для SHA-256-пиннинга payload (см. `vesktop/README.md`). `vesktop` — реальный upstream package ID стороннего клиента Vencord, ставится как есть |
 
 ## Локальные проверки
 

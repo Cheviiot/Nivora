@@ -27,6 +27,7 @@ EXPECTED_PACKAGES = (
     "tailscale",
     "telegram",
     "ventoy",
+    "vesktop",
     "vintner",
     "vual",
     "yandex-browser-stable",

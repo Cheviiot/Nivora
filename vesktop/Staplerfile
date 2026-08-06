@@ -1,0 +1,106 @@
+name='vesktop'
+version=1.6.5
+release=1
+summary='Unofficial Discord desktop client with better Linux support'
+summary_ru='Неофициальный десктопный клиент Discord с улучшенной поддержкой Linux'
+group='Networking/Instant messaging'
+desc='Vesktop is an unofficial Discord desktop app built by the Vencord team, aiming to give better performance and improved Linux support than the official Electron client.'
+desc_ru='Vesktop — неофициальное десктопное приложение Discord от команды Vencord, нацеленное на лучшую производительность и полноценную поддержку Linux по сравнению с официальным Electron-клиентом.'
+homepage='https://vencord.dev/'
+maintainer='Vendicated and Vencord contributors <https://github.com/Vencord/Vesktop>'
+
+architectures=('amd64' 'arm64')
+
+license=('GPL-3.0-or-later')
+
+provides=()
+replaces=('vesktop')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+deps=()
+deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'libxss1' 'libxtst6' 'xdg-utils' 'libatspi2.0-0' 'libuuid1' 'libsecret-1-0')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('gtk3' 'libnotify' 'nss' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'at-spi2-core' 'libuuid' 'libsecret')
+deps_arch=('gtk3' 'libnotify' 'nss' 'libxss' 'libxtst' 'xdg-utils' 'at-spi2-core' 'util-linux-libs' 'libsecret')
+deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'libXss1' 'libXtst6' 'xdg-utils' 'at-spi2-core' 'libuuid1' 'libsecret-1-0')
+deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libat-spi2-core' 'libuuid' 'libsecret')
+
+opt_deps=()
+opt_deps_debian=('libayatana-appindicator3-1 | libappindicator3-1' 'gnome-keyring | kwalletd6 | kwalletd5')
+opt_deps_ubuntu=("${opt_deps_debian[@]}")
+opt_deps_fedora=('libappindicator-gtk3' 'gnome-keyring' 'kwallet')
+opt_deps_arch=('libappindicator-gtk3' 'gnome-keyring' 'kwallet')
+opt_deps_opensuse=('libappindicator3-1' 'gnome-keyring' 'kwallet6')
+opt_deps_altlinux=('libappindicator-gtk3' 'gnome-keyring')
+
+build_deps=('binutils')
+build_deps_debian=('binutils')
+build_deps_ubuntu=("${build_deps_debian[@]}")
+build_deps_fedora=('binutils')
+build_deps_arch=('binutils')
+build_deps_opensuse=('binutils')
+build_deps_altlinux=('binutils')
+
+sources=(
+	"https://github.com/Vencord/Vesktop/releases/download/v${version}/vesktop_${version}_amd64.deb?~archive=false&~name=vesktop.deb"
+	'local:///LICENSE'
+)
+
+sources_arm64=(
+	"https://github.com/Vencord/Vesktop/releases/download/v${version}/vesktop_${version}_arm64.deb?~archive=false&~name=vesktop.deb"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:2d4c97abe4810703561d59c63cb12b1926f591fe1fe2bf9e914db66c6cc31cf5'
+	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
+)
+
+checksums_arm64=(
+	'sha256:3ba8e5b14d4eafa641f407c8720fb0ec489a9ee6276423f98e967218b5d6cd38'
+	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x vesktop.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install -dm755 "${pkgdir}/opt"
+	cp -a "${srcdir}/extracted/opt/Vesktop" "${pkgdir}/opt/"
+	chmod 0755 "${pkgdir}/opt/Vesktop/chrome-sandbox"
+	chmod 755 "${pkgdir}/opt/Vesktop/vesktop"
+
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -sfn /opt/Vesktop/vesktop "${pkgdir}/usr/bin/vesktop"
+
+	install -dm755 "${pkgdir}/usr/share"
+	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"
+	cp -a "${srcdir}/extracted/usr/share/icons" "${pkgdir}/usr/share/"
+
+	install-license LICENSE "vesktop/LICENSE.nivora"
+	install -Dm644 "${srcdir}/extracted/opt/Vesktop/LICENSES.chromium.html" \
+		"${pkgdir}/usr/share/licenses/vesktop/LICENSES.chromium.html"
+	install -Dm644 "${srcdir}/extracted/opt/Vesktop/LICENSE.electron.txt" \
+		"${pkgdir}/usr/share/licenses/vesktop/LICENSE.electron.txt"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/opt/Vesktop/**/*" \
+		"/usr/share/icons/hicolor/scalable/apps/vesktop.svg"
+}

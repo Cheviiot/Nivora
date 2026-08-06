@@ -2,7 +2,7 @@
 
 ## Инварианты
 
-- В репозитории ровно 20 каталогов с `Staplerfile`.
+- В репозитории ровно 18 каталогов с `Staplerfile`.
 - Каталог совпадает с `name` и командой в README.
 - Upstream-версия не меняется из-за патча рецепта; для этого повышается `release`.
 - Desktop-id, AppStream component-id, units и пути данных не меняются без отдельной миграции.
@@ -19,7 +19,6 @@ Stapler сам добавляет текущее `name` в generated `Provides` 
 | `claude` | Upstream DEB: `Package: claude-desktop`; desktop-id `com.anthropic.Claude` сохранён; старое имя пакета `claude-desktop` заменяется |
 | `codex` | Отображаемое имя `Codex`; команда и desktop-id `codex-app` сохранены |
 | `github-desktop` | Официальный upstream `desktop/desktop`; Linux-сборка без стороннего форка |
-| `max` | Upstream package name `max`; версия хранится как `VERSION~BUILD` (совпадает с номером сборки в имени deb-файла, как у ALT eepm) для воспроизводимости; пакет всегда запускает бинарник через Firejail (`/etc/firejail/max.profile`), `/usr/bin/max` — не симлинк, а обёртка с `exec firejail` |
 | `nivora-cli` | Многоязычная оболочка Nivora для Stapler |
 | `telegram` | Upstream-тарбол не даёт своего package ID; desktop-id `org.telegram.desktop` сохранён; каталог и package ID переименованы с `telegram-desktop`. В отличие от `claude`/`claude-desktop`, `replaces` не включает старое имя (это разрешено только для `claude` в `validate_repo.py`) — у кого установлен `telegram-desktop`, нужно вручную `stplr install telegram` и `stplr remove telegram-desktop` |
 

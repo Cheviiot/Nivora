@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://stplr.dev/docs/intro/"><img src="https://img.shields.io/badge/Stapler-Community%20Repo-6366F1?style=for-the-badge" alt="Stapler Community Repo"></a>
-  <img src="https://img.shields.io/badge/пакетов-20-2ea043?style=for-the-badge" alt="20 пакетов">
+  <img src="https://img.shields.io/badge/пакетов-18-2ea043?style=for-the-badge" alt="18 пакетов">
   <a href="https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/quality.yml?branch=main&style=for-the-badge&label=CI" alt="CI"></a>
 </p>
 
@@ -28,7 +28,7 @@
 </p>
 
 <!-- package-count -->
-**20 пакетов** · **6 категорий** · `amd64`, `arm64` и `all`
+**18 пакетов** · **6 категорий** · `amd64`, `arm64` и `all`
 
 ## Подключение
 
@@ -61,10 +61,8 @@ stplr info nivora/codex
 | | Приложение | Версия | Архитектуры | Установка |
 |:---:|---|:--:|:--:|---|
 | <img src="https://happ.su/imgs/apple-touch-icon.png" width="32" height="32" alt="Happ"> | [Happ](https://happ.su/) | `3.3.6` | `amd64`, `arm64` | `stplr install nivora/happ` |
-| <img src="https://max.ru/favicon.png" width="32" height="32" alt="MAX"> | [MAX](https://max.ru/) (в песочнице Firejail) | `26.26.0~76189` | `amd64` | `stplr install nivora/max` |
 | <img src="https://tailscale.com/favicon.png" width="32" height="32" alt="Tailscale"> | [Tailscale](https://tailscale.com/) | `1.102.2` | `amd64`, `arm64` | `stplr install nivora/tailscale` |
 | <img src="telegram/telegram-desktop.png" width="32" height="32" alt="Telegram"> | [Telegram](https://desktop.telegram.org/) | `7.0.9` | `amd64` | `stplr install nivora/telegram` |
-| <img src="https://vk.me/favicon.ico" width="32" height="32" alt="VK Messenger"> | [VK Messenger](https://vk.me/app) | `6.0.57` | `amd64` | `stplr install nivora/vk-messenger` |
 | <img src="https://browser.yandex.ru/apple-touch-icon.png" width="32" height="32" alt="Яндекс Браузер"> | [Яндекс Браузер](https://browser.yandex.ru/) | `26.6.1.1003` | `amd64` | `stplr install nivora/yandex-browser-stable` |
 
 ### Удалённый доступ

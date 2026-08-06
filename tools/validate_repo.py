@@ -20,7 +20,6 @@ EXPECTED_PACKAGES = (
     "fisher",
     "github-desktop",
     "happ",
-    "max",
     "nivora-cli",
     "opencode",
     "parsec",
@@ -29,7 +28,6 @@ EXPECTED_PACKAGES = (
     "telegram",
     "ventoy",
     "vintner",
-    "vk-messenger",
     "vual",
     "yandex-browser-stable",
 )

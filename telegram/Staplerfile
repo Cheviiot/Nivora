@@ -1,5 +1,5 @@
 name='telegram'
-version='7.0.5'
+version=7.0.9
 release=1
 summary='Official Telegram messaging client'
 summary_ru='Официальный клиент мессенджера Telegram'
@@ -45,7 +45,7 @@ sources=(
 )
 
 checksums=(
-	'sha256:37e23ce08333340504623042120b826f7a2a5650c831187219ab9c520740eb42'
+	'sha256:d3c05df0259ab116d11d8c1cdc1403019d2a3be303ad3b46d16a84e19df6615f'
 	'sha256:8ceb3f6aea1003f84f1b5757cd857f8237b294bb18456e5e0e54d96e6fff04ba'
 	'sha256:3fb1400c7dc9bbc3b5cb3ffedcbf4a9b09c53e28b57a7ff33a8a6b9048864090'
 	'sha256:f3ad1b5ecdc1c9e5ab3719a0b084a3e0b4fc87ad424fbf81043df9637be3d1f5'

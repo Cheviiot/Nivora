@@ -1,5 +1,5 @@
 name='max'
-version='26.24.0~75261'
+version='26.26.0~76189'
 release=1
 summary='MAX messenger client, sandboxed with Firejail'
 summary_ru='Клиент мессенджера MAX в песочнице Firejail'

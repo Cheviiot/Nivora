@@ -28,6 +28,8 @@ jobs:
       has_updates: ${{ steps.updates.outputs.has_updates }}
       github_desktop_update: ${{ steps.updates.outputs.github_desktop_update }}
       github_desktop_version: ${{ steps.updates.outputs.github_desktop_version }}
+      distroshelf_update: ${{ steps.updates.outputs.distroshelf_update }}
+      distroshelf_version: ${{ steps.updates.outputs.distroshelf_version }}
     steps:
       - name: Получить репозиторий
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -53,6 +55,8 @@ jobs:
               echo 'has_updates=false'
               echo 'github_desktop_update=false'
               echo 'github_desktop_version='
+              echo 'distroshelf_update=false'
+              echo 'distroshelf_version='
             } >>"$GITHUB_OUTPUT"
             exit 0
           fi
@@ -63,11 +67,19 @@ jobs:
           )"
           github_desktop_update=false
           github_desktop_version=''
+          distroshelf_update=false
+          distroshelf_version=''
           for package in "${packages[@]}"; do
             if [[ "$package" == github-desktop ]]; then
               github_desktop_update=true
               read -r _ github_desktop_version < <(
                 .github/tools/package_updates.sh check github-desktop
+              )
+            fi
+            if [[ "$package" == distroshelf ]]; then
+              distroshelf_update=true
+              read -r _ distroshelf_version < <(
+                .github/tools/package_updates.sh check distroshelf
               )
             fi
           done
@@ -76,6 +88,8 @@ jobs:
             echo 'has_updates=true'
             echo "github_desktop_update=${github_desktop_update}"
             echo "github_desktop_version=${github_desktop_version}"
+            echo "distroshelf_update=${distroshelf_update}"
+            echo "distroshelf_version=${distroshelf_version}"
           } >>"$GITHUB_OUTPUT"
 
   github-desktop:
@@ -89,11 +103,23 @@ jobs:
     permissions:
       contents: write
 
+  distroshelf:
+    name: Подготовить DistroShelf
+    needs: detect
+    if: ${{ needs.detect.outputs.distroshelf_update == 'true' }}
+    uses: ./.github/workflows/distroshelf-linux.yml
+    with:
+      version: ${{ needs.detect.outputs.distroshelf_version }}
+      publish: true
+    permissions:
+      contents: write
+
   update:
     name: Изолированно обновить и опубликовать
     needs:
       - detect
       - github-desktop
+      - distroshelf
     if: >-
       ${{
         always() &&

@@ -1,0 +1,188 @@
+name: CI · Сборка DistroShelf для Linux
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Версия ranfdev/DistroShelf без префикса v"
+        required: true
+        type: string
+      publish:
+        description: "Опубликовать tar.gz в GitHub Release Nivora"
+        required: false
+        default: true
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Версия ranfdev/DistroShelf без префикса v"
+        required: true
+        default: "1.5.2"
+        type: string
+      publish:
+        description: "Опубликовать tar.gz в GitHub Release Nivora"
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nivora-distroshelf-linux-${{ inputs.version || '1.5.2' }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Linux x64 (ALT p11)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Собрать DistroShelf под ALT p11 с bundled VTE-GTK4
+        env:
+          VERSION: ${{ inputs.version || '1.5.2' }}
+        run: |
+          cat >build-in-container.sh <<'SCRIPT'
+          set -euo pipefail
+
+          # ALT p11 не публикует GTK4-флейвор VTE (vte3-gtk4) вообще, и его
+          # системный glib2/libadwaita младше версий, которые по умолчанию
+          # запрашивает Cargo.toml DistroShelf (gnome_49 / v1_9). Сборка
+          # идёт в официальном контейнере ветки p11 — только так glibc
+          # результата гарантированно совместим с реальными установками
+          # ALT Workstation 11; Sisyphus и другие дистрибутивы дают более
+          # новый glibc, incompatible в обратную сторону.
+          apt-get update -qq
+          apt-get install -y \
+            gcc gcc-c++ meson ninja-build rust pkgconfig gettext-tools \
+            libgtk4-devel libadwaita-devel glib2-devel liblz4 \
+            libpcre2-devel liblz4-devel libfribidi-devel libgnutls-devel \
+            libsystemd-devel desktop-file-utils appstream curl tar xz sed
+
+          curl -sSL -o /tmp/vte.tar.xz \
+            'https://download.gnome.org/sources/vte/0.82/vte-0.82.1.tar.xz'
+          echo '79376d70402d271e2d38424418e1aea72357934d272e321e3906b71706a78e3a  /tmp/vte.tar.xz' |
+            sha256sum -c -
+          tar -xf /tmp/vte.tar.xz -C /tmp
+          (
+            cd /tmp/vte-0.82.1
+            meson setup builddir --prefix=/usr --libdir=lib \
+              -Ddocs=false -Dgtk3=false -Dgtk4=true -Dvapi=false -Dgir=false
+            meson compile -C builddir
+            meson install -C builddir
+          )
+          mkdir -p /tmp/vte-license
+          cp /tmp/vte-0.82.1/COPYING.LGPL3 /tmp/vte-license/LICENSE.vte
+
+          curl -sSL -o /tmp/distroshelf.tar.xz \
+            "https://github.com/ranfdev/DistroShelf/releases/download/v${VERSION}/distroshelf-${VERSION}.tar.xz"
+          tar -xf /tmp/distroshelf.tar.xz -C /tmp
+
+          cd "/tmp/distroshelf-${VERSION}"
+          # Понижаем фичи привязки gtk4-rs/libadwaita-rs до версий, реально
+          # доступных на ALT p11 (glib 2.84, gtk4 4.20, libadwaita 1.8).
+          # DistroShelf не вызывает никакой API, специфичный для gnome_49
+          # или libadwaita v1_9 (проверено вручную по исходникам перед
+          # первым включением этого workflow) — понижение безопасно.
+          grep -q 'features = \["gnome_49"\]' Cargo.toml
+          grep -q 'features = \["v1_9"\]' Cargo.toml
+          sed -i 's/features = \["gnome_49"\]/features = ["gnome_48"]/' Cargo.toml
+          sed -i 's/features = \["v1_9"\]/features = ["v1_8"]/' Cargo.toml
+
+          export PKG_CONFIG_PATH=/usr/lib/pkgconfig
+          meson setup builddir --prefix=/usr --buildtype=release -Doffline=true
+          meson compile -C builddir
+          DESTDIR=/tmp/pkg meson install -C builddir
+
+          mkdir -p /tmp/pkg/usr/lib/distroshelf
+          cp -a /usr/lib/libvte-2.91-gtk4.so.0 /tmp/pkg/usr/lib/distroshelf/
+          install -Dm644 /tmp/vte-license/LICENSE.vte \
+            /tmp/pkg/usr/share/licenses/distroshelf/LICENSE.vte
+          mv /tmp/pkg/usr/bin/distroshelf /tmp/pkg/usr/lib/distroshelf/distroshelf.bin
+          cat >/tmp/pkg/usr/bin/distroshelf <<'WRAP'
+          #!/bin/sh
+          # ALT does not package the GTK4 flavor of VTE yet (landed
+          # upstream in VTE 0.82, late 2025) — bundle our own build.
+          LD_LIBRARY_PATH="/usr/lib/distroshelf${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          export LD_LIBRARY_PATH
+          exec /usr/lib/distroshelf/distroshelf.bin "$@"
+          WRAP
+          chmod 0755 /tmp/pkg/usr/bin/distroshelf \
+            /tmp/pkg/usr/lib/distroshelf/distroshelf.bin
+
+          # Дымовой тест: установить staged-дерево в реальный /usr этого
+          # одноразового контейнера и убедиться, что бинарник стартует.
+          cp -a /tmp/pkg/usr/. /usr/
+          distroshelf --help >/dev/null
+
+          mkdir -p /workspace/package
+          cp -a /tmp/pkg/usr /workspace/package/usr
+          SCRIPT
+
+          docker run --rm \
+            -v "${PWD}:/workspace" -w /workspace \
+            -e VERSION="${VERSION}" \
+            registry.altlinux.org/p11/base:latest \
+            bash /workspace/build-in-container.sh
+
+      - name: Упаковать Linux-сборку
+        env:
+          VERSION: ${{ inputs.version || '1.5.2' }}
+        run: |
+          test -x package/usr/lib/distroshelf/distroshelf.bin
+          test -x package/usr/bin/distroshelf
+          tar \
+            --sort=name \
+            --mtime='UTC 2020-01-01' \
+            --owner=0 \
+            --group=0 \
+            --numeric-owner \
+            -C package \
+            -cf "distroshelf-${VERSION}-linux-x64.tar" \
+            usr
+          gzip -n -9 "distroshelf-${VERSION}-linux-x64.tar"
+
+      - name: Сохранить артефакт
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: distroshelf-${{ inputs.version || '1.5.2' }}-linux-x64
+          path: distroshelf-${{ inputs.version || '1.5.2' }}-linux-x64.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Опубликовать Linux-артефакт
+    if: ${{ inputs.publish }}
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Скачать артефакт
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: distroshelf-${{ inputs.version || '1.5.2' }}-linux-*
+          merge-multiple: true
+
+      - name: Создать контрольные суммы
+        run: sha256sum distroshelf-*.tar.gz >SHA256SUMS
+
+      - name: Создать или обновить GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ inputs.version || '1.5.2' }}
+        run: |
+          tag="distroshelf-${VERSION}-linux"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" \
+              --title "DistroShelf ${VERSION} for Linux (ALT-compatible build)" \
+              --notes "x86_64-артефакт, собранный Nivora CI из официального исходного tar.xz ranfdev/DistroShelf v${VERSION} под стек glibc/gtk4/libadwaita ALT p11, со встроенным VTE-GTK4 0.82.1 (ALT ещё не публикует GTK4-флейвор VTE)."
+          fi
+          gh release upload "$tag" \
+            distroshelf-*.tar.gz \
+            SHA256SUMS \
+            --clobber

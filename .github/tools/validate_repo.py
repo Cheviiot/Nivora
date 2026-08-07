@@ -17,6 +17,7 @@ EXPECTED_PACKAGES = (
     "claude",
     "claude-alt",
     "codex",
+    "distroshelf",
     "fisher",
     "github-desktop",
     "happ",

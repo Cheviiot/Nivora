@@ -2,7 +2,7 @@
 
 ## Инварианты
 
-- В репозитории ровно 19 каталогов с `Staplerfile`.
+- В репозитории ровно 20 каталогов с `Staplerfile`.
 - Каталог совпадает с `name` и командой в README.
 - Инфраструктура (`tools/`, `docs/`, `tests/`) живёт внутри `.github/`, чтобы
   корень репозитория состоял только из каталогов пакетов и стандартных
@@ -21,6 +21,7 @@ Stapler сам добавляет текущее `name` в generated `Provides` 
 |:--|:--|
 | `claude` | Upstream DEB: `Package: claude-desktop`; desktop-id `com.anthropic.Claude` сохранён; старое имя пакета `claude-desktop` заменяется |
 | `codex` | Отображаемое имя `Codex`; команда и desktop-id `codex-app` сохранены |
+| `distroshelf` | Единственный пакет, собираемый из исходников (meson+cargo), а не из готового upstream-бинарника — upstream не публикует прекомпилированный Linux-релиз, только vendored source tarball. См. раздел «Сборка из исходников» ниже |
 | `github-desktop` | Официальный upstream `desktop/desktop`; Linux-сборка без стороннего форка |
 | `nivora-cli` | Многоязычная оболочка Nivora для Stapler |
 | `telegram` | Upstream-тарбол не даёт своего package ID; desktop-id `org.telegram.desktop` сохранён; каталог и package ID переименованы с `telegram-desktop`. В отличие от `claude`/`claude-desktop`, `replaces` не включает старое имя (это разрешено только для `claude` в `validate_repo.py`) — у кого установлен `telegram-desktop`, нужно вручную `stplr install telegram` и `stplr remove telegram-desktop` |
@@ -84,6 +85,29 @@ stplr-spec verify-checksums --path package/Staplerfile
 обновляют его, а успешное восстановление автоматически закрывает. Ожидаемый сбой
 отдельного пакета помечается предупреждением и не делает весь этап обновления
 неуспешным.
+
+## Сборка из исходников
+
+Почти все пакеты Nivora переупаковывают готовый upstream-бинарник (`.deb`,
+`.tar.xz`) без компиляции. `distroshelf` — исключение: upstream публикует
+только vendored source tarball (meson dist со всеми Cargo-крейтами внутри,
+без обращения к crates.io на этапе сборки), поэтому `package()` реально
+выполняет `meson setup` + `meson compile` + `meson install
+DESTDIR="${pkgdir}"` внутри clean-build контейнера.
+
+Для такого пакета:
+
+- `build_deps_altlinux` перечисляет полный тулчейн (`meson`, `ninja-build`,
+  `rust`, `pkgconfig`, `gcc-c++`, dev-пакеты нужных библиотек) — без него
+  `stplr build` не соберёт исходники;
+- `deps_altlinux` содержит только прямые runtime-библиотеки (без
+  `auto_reqprov_method="dirty"`/`auto_req=0` — те нужны только Electron-пакетам
+  с bundled-библиотеками); транзитивные зависимости резолвит сам пакетный
+  менеджер через `Requires` перечисленных пакетов;
+- контрольная сумма фиксирует только сам source tarball — она не покрывает
+  версии системных библиотек ALT, с которыми линкуется бинарник на этапе
+  сборки, поэтому `clean-build` для этого пакета воспроизводим лишь в
+  границах одного снапшота Sisyphus.
 
 ## Clean-build
 

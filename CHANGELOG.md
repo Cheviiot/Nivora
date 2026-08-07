@@ -2,6 +2,20 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-08-07 — DistroShelf
+
+### Добавлено
+
+- Пакет `distroshelf` — GTK4/libadwaita клиент для управления контейнерами
+  Distrobox (GPL-3.0-or-later, GitHub Releases).
+
+Первый пакет в каталоге, собираемый из исходников (meson + cargo), а не из
+готового upstream-бинарника: upstream публикует только vendored source
+tarball, без прекомпилированного Linux-релиза. Рецепт и полная изолированная
+сборка проверены через `clean_build.sh`/`verify_artifacts.sh`, бинарник
+протестирован на чистом рантайме без build-зависимостей. Подробности — в
+[`.github/docs/maintenance.md`](.github/docs/maintenance.md#сборка-из-исходников).
+
 ## 2026-08-06 — Vesktop вместо официального Discord
 
 ### Добавлено

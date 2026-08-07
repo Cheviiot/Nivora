@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://stplr.dev/docs/intro/"><img src="https://img.shields.io/badge/Stapler-Community%20Repo-6366F1?style=for-the-badge" alt="Stapler Community Repo"></a>
-  <img src="https://img.shields.io/badge/пакетов-19-2ea043?style=for-the-badge" alt="19 пакетов">
+  <img src="https://img.shields.io/badge/пакетов-20-2ea043?style=for-the-badge" alt="20 пакетов">
   <a href="https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/quality.yml?branch=main&style=for-the-badge&label=CI" alt="CI"></a>
 </p>
 
@@ -28,7 +28,7 @@
 </p>
 
 <!-- package-count -->
-**19 пакетов** · **6 категорий** · `amd64`, `arm64` и `all`
+**20 пакетов** · **6 категорий** · `amd64`, `arm64` и `all`
 
 ## Подключение
 
@@ -101,6 +101,7 @@ stplr info nivora/codex
 | | Приложение | Версия | Архитектуры | Установка |
 |:---:|---|:--:|:--:|---|
 | <img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="32" height="32" alt="balenaEtcher"> | [balenaEtcher](https://etcher.balena.io/) | `2.1.6` | `amd64` | `stplr install nivora/balena-etcher` |
+| <img src="https://raw.githubusercontent.com/ranfdev/DistroShelf/main/data/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg" width="32" height="32" alt="DistroShelf"> | [DistroShelf](distroshelf/README.md) | `1.5.2` | `amd64` | `stplr install nivora/distroshelf` |
 | | [Fisher](https://github.com/jorgebucaran/fisher) | `4.4.8` | `all` | `stplr install nivora/fisher` |
 | <img src=".github/assets/nivora.png" width="32" height="32" alt="Nivora CLI"> | [Nivora CLI](nivora-cli/README.md) | `1.0.0` | `all` | `stplr install nivora/nivora-cli` |
 | <img src="https://raw.githubusercontent.com/ventoy/Ventoy/master/ICON/logo_128.png" width="32" height="32" alt="Ventoy"> | [Ventoy](ventoy/README.md) | `1.1.17` | `amd64`, `arm64` | `stplr install nivora/ventoy` |

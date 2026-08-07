@@ -7,6 +7,7 @@ readonly -a PACKAGES=(
     claude-alt
     claude
     codex
+    distroshelf
     fisher
     github-desktop
     happ
@@ -198,6 +199,7 @@ latest_version() {
     balena-etcher) github_latest_release balena-io/etcher ;;
     claude | claude-alt) latest_claude_desktop ;;
     codex) github_latest_release Boria138/codex-app-linux ;;
+    distroshelf) github_latest_release ranfdev/DistroShelf ;;
     fisher) github_latest_release jorgebucaran/fisher ;;
     github-desktop)
         github_latest_release desktop/desktop | sed 's/^release-//'

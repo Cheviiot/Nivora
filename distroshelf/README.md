@@ -34,18 +34,26 @@ Distrobox, экспорта приложений и бинарников из к
 
 ## Технические детали
 
-В отличие от остальных пакетов Nivora, DistroShelf собирается из
-исходников, а не переупаковывается из готового upstream-бинарника: сам
-проект публикует на GitHub Releases только vendored source tarball (`meson
-dist` со всеми Cargo-крейтами внутри) — прекомпилированного статического
-Linux-релиза upstream не существует, основной канал распространения —
-Flathub.
+Upstream не публикует готовый Linux-релиз DistroShelf — только vendored
+source tarball (основной канал распространения — Flathub). Как и
+[GitHub Desktop](../github-desktop/README.md), пакет собирается CI Nivora
+из исходников на отдельном workflow
+(`.github/workflows/distroshelf-linux.yml`) и публикуется в
+[собственном релизе Nivora](https://github.com/Cheviiot/Nivora/releases/tag/distroshelf-1.5.2-linux)
+— `Staplerfile` только скачивает и переупаковывает готовый результат, как
+и любой другой пакет каталога. Никакой компиляции при установке не
+происходит.
 
-Сборка полностью офлайновая (`meson setup -Doffline=true` + `meson compile`
-+ `meson install`) — вся сеть, нужная Cargo, уже упакована в
-зафиксированный по SHA-256 tarball, дополнительных запросов к crates.io
-на этапе сборки нет. Тулчейн (Rust, meson, ninja, заголовки GTK4/libadwaita/
-VTE-GTK4) нужен только для сборки пакета и не входит в его runtime-зависимости.
+Сборка идёт в официальном контейнере ветки **ALT p11**, а не Sisyphus,
+Fedora или Ubuntu — у них более новый glibc, и собранный там бинарник
+не запускается на системах со старым glibc. ALT p11 также не публикует
+GTK4-флейвор VTE (`vte3-gtk4`) вообще, поэтому workflow собирает VTE
+0.82.1 с `-Dgtk4=true` из исходников и встраивает получившуюся
+`libvte-2.91-gtk4.so.0` прямо в пакет (`/usr/lib/distroshelf/`) вместе с
+wrapper-скриптом — это единственная bundled-библиотека, всё остальное
+(GTK4, libadwaita, glib2, liblz4) — обычные системные зависимости.
+Подробности — в
+[`.github/docs/maintenance.md`](../.github/docs/maintenance.md#сборка-в-ci-github-desktop-distroshelf).
 
 ---
 

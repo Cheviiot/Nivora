@@ -18,12 +18,12 @@ replaces=('distroshelf')
 conflicts=()
 
 deps=()
-deps_debian=('libgtk-4-1' 'libadwaita-1-0' 'libvte-2.91-gtk4-0' 'libglib2.0-0')
+deps_debian=('libgtk-4-1' 'libadwaita-1-0' 'libglib2.0-0' 'liblz4-1')
 deps_ubuntu=("${deps_debian[@]}")
-deps_fedora=('gtk4' 'libadwaita' 'vte291-gtk4' 'glib2')
-deps_arch=('gtk4' 'libadwaita' 'vte4' 'glib2')
-deps_opensuse=('gtk4' 'libadwaita' 'vte-gtk4' 'glib2')
-deps_altlinux=('libgtk4' 'libadwaita' 'vte3-gtk4' 'glib2')
+deps_fedora=('gtk4' 'libadwaita' 'glib2' 'lz4-libs')
+deps_arch=('gtk4' 'libadwaita' 'glib2' 'lz4')
+deps_opensuse=('gtk4' 'libadwaita' 'glib2' 'liblz4-1')
+deps_altlinux=('libgtk4' 'libadwaita' 'glib2' 'liblz4')
 
 opt_deps=()
 opt_deps_debian=('distrobox')
@@ -33,21 +33,15 @@ opt_deps_arch=('distrobox')
 opt_deps_opensuse=('distrobox')
 opt_deps_altlinux=('distrobox')
 
-build_deps=('meson' 'ninja-build' 'pkgconfig')
-build_deps_debian=('build-essential' 'meson' 'ninja-build' 'rustc' 'cargo' 'pkg-config' 'gettext' 'libgtk-4-dev' 'libadwaita-1-dev' 'libvte-2.91-gtk4-dev' 'desktop-file-utils' 'appstream')
-build_deps_ubuntu=("${build_deps_debian[@]}")
-build_deps_fedora=('gcc' 'gcc-c++' 'meson' 'ninja-build' 'rust' 'cargo' 'pkgconf-pkg-config' 'gettext' 'gtk4-devel' 'libadwaita-devel' 'vte291-gtk4-devel' 'desktop-file-utils' 'appstream')
-build_deps_arch=('base-devel' 'meson' 'ninja' 'rust' 'gtk4' 'libadwaita' 'vte4' 'gettext' 'desktop-file-utils' 'appstream')
-build_deps_opensuse=('gcc-c++' 'meson' 'ninja' 'rust' 'cargo' 'pkg-config' 'gettext-tools' 'gtk4-devel' 'libadwaita-devel' 'vte-gtk4-devel' 'desktop-file-utils' 'appstream')
-build_deps_altlinux=('gcc' 'gcc-c++' 'meson' 'ninja-build' 'rust' 'pkgconfig' 'gettext-tools' 'libgtk4-devel' 'libadwaita-devel' 'vte3-gtk4' 'libvte3-devel' 'desktop-file-utils' 'appstream')
+build_deps=('binutils')
 
 sources=(
-	"https://github.com/ranfdev/DistroShelf/releases/download/v${version}/distroshelf-${version}.tar.xz?~archive=false&~name=distroshelf.tar.xz"
+	"https://github.com/Cheviiot/Nivora/releases/download/distroshelf-${version}-linux/distroshelf-${version}-linux-x64.tar.gz?~archive=false&~name=distroshelf.tar.gz"
 	'local:///LICENSE'
 )
 
 checksums=(
-	'sha256:14483d069335cfdbefb0df541a45e478daf4c9cd3935ae372e217b4c88d3a79d'
+	'sha256:50a03baa5cc75a9bf95e60043b63d6876d588322b5a0c1188d4e0ae80b377115'
 	'sha256:b69c62829f176a47dc482840afa24e9d63d66cb963c4b0a994547576d7d2acf4'
 )
 
@@ -58,17 +52,15 @@ scripts=(
 
 package() {
 	cd "${srcdir}"
-	tar --no-same-owner --no-same-permissions -xJf distroshelf.tar.xz
-	cd "distroshelf-${version}"
+	tar --no-same-owner --no-same-permissions -xzf distroshelf.tar.gz
 
-	meson setup builddir --prefix=/usr --buildtype=release -Doffline=true
-	meson compile -C builddir
-	DESTDIR="${pkgdir}" meson install -C builddir
+	cp -a usr "${pkgdir}/usr"
 
-	install-license COPYING "distroshelf/LICENSE.nivora"
+	install-license LICENSE "distroshelf/LICENSE.nivora"
 }
 
 files() {
+	files-find "/usr/lib/distroshelf/**/*"
 	files-find-binary
 	files-find-desktop
 	files-find-license

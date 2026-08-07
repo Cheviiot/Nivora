@@ -21,7 +21,7 @@ Stapler сам добавляет текущее `name` в generated `Provides` 
 |:--|:--|
 | `claude` | Upstream DEB: `Package: claude-desktop`; desktop-id `com.anthropic.Claude` сохранён; старое имя пакета `claude-desktop` заменяется |
 | `codex` | Отображаемое имя `Codex`; команда и desktop-id `codex-app` сохранены |
-| `distroshelf` | Единственный пакет, собираемый из исходников (meson+cargo), а не из готового upstream-бинарника — upstream не публикует прекомпилированный Linux-релиз, только vendored source tarball. См. раздел «Сборка из исходников» ниже |
+| `distroshelf` | Upstream не публикует готовый Linux-релиз — Nivora CI собирает пакет из исходников и публикует результат в собственном GitHub Release, как и для `github-desktop`. См. раздел «Сборка в CI» ниже |
 | `github-desktop` | Официальный upstream `desktop/desktop`; Linux-сборка без стороннего форка |
 | `nivora-cli` | Многоязычная оболочка Nivora для Stapler |
 | `telegram` | Upstream-тарбол не даёт своего package ID; desktop-id `org.telegram.desktop` сохранён; каталог и package ID переименованы с `telegram-desktop`. В отличие от `claude`/`claude-desktop`, `replaces` не включает старое имя (это разрешено только для `claude` в `validate_repo.py`) — у кого установлен `telegram-desktop`, нужно вручную `stplr install telegram` и `stplr remove telegram-desktop` |
@@ -86,28 +86,46 @@ stplr-spec verify-checksums --path package/Staplerfile
 отдельного пакета помечается предупреждением и не делает весь этап обновления
 неуспешным.
 
-## Сборка из исходников
+## Сборка в CI (github-desktop, distroshelf)
 
-Почти все пакеты Nivora переупаковывают готовый upstream-бинарник (`.deb`,
-`.tar.xz`) без компиляции. `distroshelf` — исключение: upstream публикует
-только vendored source tarball (meson dist со всеми Cargo-крейтами внутри,
-без обращения к crates.io на этапе сборки), поэтому `package()` реально
-выполняет `meson setup` + `meson compile` + `meson install
-DESTDIR="${pkgdir}"` внутри clean-build контейнера.
+Два пакета не переупаковывают готовый upstream-бинарник, а собираются
+Nivora CI из исходников на отдельном workflow и публикуются в собственный
+GitHub Release Nivora — `Staplerfile` только скачивает и переупаковывает
+готовый результат, как и любой другой пакет.
 
-Для такого пакета:
+`distroshelf`: upstream публикует только vendored source tarball (meson
+dist со всеми Cargo-крейтами внутри, без обращения к crates.io на этапе
+сборки), готового Linux-релиза нет вообще — основной канал upstream это
+Flathub. `.github/workflows/distroshelf-linux.yml` собирает пакет внутри
+официального контейнера `registry.altlinux.org/p11/base` — **не**
+Sisyphus, Fedora или Ubuntu: у них более новый glibc, а собранный там
+бинарник не запускается на системах со старым glibc (ALT p11 — glibc
+2.38); собирать нужно на окружении с glibc не новее, чем у самой старой
+поддерживаемой цели.
 
-- `build_deps_altlinux` перечисляет полный тулчейн (`meson`, `ninja-build`,
-  `rust`, `pkgconfig`, `gcc-c++`, dev-пакеты нужных библиотек) — без него
-  `stplr build` не соберёт исходники;
-- `deps_altlinux` содержит только прямые runtime-библиотеки (без
-  `auto_reqprov_method="dirty"`/`auto_req=0` — те нужны только Electron-пакетам
-  с bundled-библиотеками); транзитивные зависимости резолвит сам пакетный
-  менеджер через `Requires` перечисленных пакетов;
-- контрольная сумма фиксирует только сам source tarball — она не покрывает
-  версии системных библиотек ALT, с которыми линкуется бинарник на этапе
-  сборки, поэтому `clean-build` для этого пакета воспроизводим лишь в
-  границах одного снапшота Sisyphus.
+ALT p11 не публикует GTK4-флейвор VTE (`vte3-gtk4`) вообще, а системные
+glib2/libadwaita младше версий, которые Cargo.toml DistroShelf запрашивает
+по умолчанию (`gnome_49`/`v1_9`). Workflow:
+
+1. собирает VTE 0.82.1 с `-Dgtk4=true` из исходников (закреплённый SHA-256
+   архива `download.gnome.org`);
+2. понижает фичи `gtk4`/`libadwaita` в Cargo.toml до `gnome_48`/`v1_8` —
+   версий, реально доступных на ALT p11 (проверено вручную по исходникам:
+   DistroShelf не вызывает API, специфичный для `gnome_49`/`v1_9`);
+3. собирает DistroShelf офлайн (`-Doffline=true`, все Cargo-крейты уже в
+   tarball) и встраивает собственную сборку `libvte-2.91-gtk4.so.0` в
+   `/usr/lib/distroshelf/` вместе с wrapper-скриптом
+   (`LD_LIBRARY_PATH=/usr/lib/distroshelf`), потому что системного пакета
+   с этой библиотекой на ALT нет ни у кого;
+4. публикует `tar.gz` в `github.com/Cheviiot/Nivora/releases/tag/distroshelf-<version>-linux`
+   с `SHA256SUMS`, откуда `distroshelf/Staplerfile` его и скачивает.
+
+`build_deps` у самого `distroshelf/Staplerfile` — минимальный (`binutils`,
+как у `github-desktop`): весь тулчейн (`meson`, `rust`, dev-пакеты GTK4)
+нужен только workflow, не конечному пользователю. `deps_altlinux`
+перечисляет только прямые runtime-библиотеки (`libgtk4`, `libadwaita`,
+`glib2`, `liblz4`) — `vte3-gtk4` туда не входит, потому что VTE-GTK4
+bundled внутри пакета.
 
 ## Clean-build
 

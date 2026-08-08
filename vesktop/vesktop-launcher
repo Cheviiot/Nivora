@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Electron cannot draw a true libadwaita/CSD window frame under any flag
+# combination — Chromium renders its own window chrome through a legacy
+# GTK3 code path, not GTK4/libadwaita, regardless of settings. This only
+# nudges Electron's own native rendering as close to the desktop as it
+# allows: native Wayland instead of XWayland, and Chromium's GTK4
+# dialog/theming path (--gtk-version probes the library at runtime and
+# falls back to GTK3 on its own if GTK4 isn't installed, so this is safe
+# even without libgtk4 present).
+set -- --gtk-version=4 "$@"
+if [ "$XDG_SESSION_TYPE" = "wayland" ] || [ -n "$WAYLAND_DISPLAY" ]; then
+    set -- --ozone-platform=wayland "$@"
+fi
+exec /opt/Vesktop/vesktop "$@"

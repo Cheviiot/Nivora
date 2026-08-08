@@ -47,21 +47,25 @@ build_deps_altlinux=('binutils')
 
 sources=(
 	"https://github.com/Vencord/Vesktop/releases/download/v${version}/vesktop_${version}_amd64.deb?~archive=false&~name=vesktop.deb"
+	'local:///vesktop-launcher'
 	'local:///LICENSE'
 )
 
 sources_arm64=(
 	"https://github.com/Vencord/Vesktop/releases/download/v${version}/vesktop_${version}_arm64.deb?~archive=false&~name=vesktop.deb"
+	'local:///vesktop-launcher'
 	'local:///LICENSE'
 )
 
 checksums=(
 	'sha256:2d4c97abe4810703561d59c63cb12b1926f591fe1fe2bf9e914db66c6cc31cf5'
+	'sha256:7a51bc8517e4dc70bd8e1eaa101d3939034a71bd4b37705461124837e3b3d0d0'
 	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
 )
 
 checksums_arm64=(
 	'sha256:3ba8e5b14d4eafa641f407c8720fb0ec489a9ee6276423f98e967218b5d6cd38'
+	'sha256:7a51bc8517e4dc70bd8e1eaa101d3939034a71bd4b37705461124837e3b3d0d0'
 	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
 )
 
@@ -83,7 +87,7 @@ package() {
 	chmod 755 "${pkgdir}/opt/Vesktop/vesktop"
 
 	install -dm755 "${pkgdir}/usr/bin"
-	ln -sfn /opt/Vesktop/vesktop "${pkgdir}/usr/bin/vesktop"
+	install -Dm755 vesktop-launcher "${pkgdir}/usr/bin/vesktop"
 
 	install -dm755 "${pkgdir}/usr/share"
 	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"

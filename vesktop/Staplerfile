@@ -1,6 +1,6 @@
 name='vesktop'
 version=1.6.5
-release=1
+release=2
 summary='Unofficial Discord desktop client with better Linux support'
 summary_ru='Неофициальный десктопный клиент Discord с улучшенной поддержкой Linux'
 group='Networking/Instant messaging'

@@ -1,6 +1,6 @@
 name='distroshelf'
 version=1.5.2
-release=1
+release=2
 summary='GTK4 client for managing Distrobox containers'
 summary_ru='GTK4-клиент для управления контейнерами Distrobox'
 group='System/Configuration/Other'

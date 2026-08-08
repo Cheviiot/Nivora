@@ -1,5 +1,5 @@
 name='yandex-browser-stable'
-version=26.6.1.1003
+version=26.6.1.1083
 release=1
 summary='Fast and secure Chromium-based web browser from Yandex'
 summary_ru='Быстрый и безопасный браузер Яндекса на основе Chromium'
@@ -79,7 +79,7 @@ sources=(
 )
 
 checksums=(
-	'sha256:740006518ea877303b70a69e063dcc8531fe05b4d1582f270b783e22a83cf852'
+	'sha256:afb7e5027a0b6a05a7f86b2f9fa9b5b29696274d8b3e77f0348abe57e45d24c5'
 	'sha256:36fb82bc8a2bb99eea41807712d9abf810edd562fa521955444e2dbef26ff40d'
 )
 

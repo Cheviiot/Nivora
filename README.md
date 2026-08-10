@@ -80,7 +80,7 @@ stplr info nivora/codex
 | <img src="claude/claude-alt.png" width="32" height="32" alt="ClaudeAlt"> | [ClaudeAlt](claude-alt/README.md) | `1.24012.11` | `amd64`, `arm64` | `stplr install nivora/claude-alt` |
 | <img src="codex/codex-app.png" width="32" height="32" alt="Codex"> | [Codex](codex/README.md) | `26.721.81911` | `amd64` | `stplr install nivora/codex` |
 | <img src="https://github.githubassets.com/favicons/favicon.png" width="32" height="32" alt="GitHub Desktop"> | [GitHub Desktop](github-desktop/README.md) | `3.6.3` | `amd64`, `arm64` | `stplr install nivora/github-desktop` |
-| <img src="https://opencode.ai/apple-touch-icon.png" width="32" height="32" alt="OpenCode"> | [OpenCode](https://opencode.ai/) | `1.18.15` | `amd64`, `arm64` | `stplr install nivora/opencode` |
+| <img src="https://opencode.ai/apple-touch-icon.png" width="32" height="32" alt="OpenCode"> | [OpenCode](https://opencode.ai/) | `1.18.16` | `amd64`, `arm64` | `stplr install nivora/opencode` |
 | | [Vintner](https://github.com/Cheviiot/vintner) | `0.5.0` | `amd64`, `arm64` | `stplr install nivora/vintner` |
 
 ### Рабочий стол

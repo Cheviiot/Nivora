@@ -91,6 +91,7 @@ github_latest_release() {
                     .[]
                     | select(.draft == false and .prerelease == false)
                     | .tag_name
+                    | select(test("[0-9]+\\.[0-9]"))
                     | select(test("(?:^|[-_.])(alpha|beta|rc|pre|preview)(?:[-_.0-9]|$)"; "i") | not)
                 ][0] // empty
             ' 2>/dev/null

@@ -1,6 +1,6 @@
 name='distroshelf'
 version=1.5.2
-release=2
+release=3
 summary='GTK4 client for managing Distrobox containers'
 summary_ru='GTK4-клиент для управления контейнерами Distrobox'
 group='System/Configuration/Other'
@@ -17,13 +17,19 @@ provides=()
 replaces=('distroshelf')
 conflicts=()
 
+# The bundled libvte-2.91-gtk4.so.0 (see maintenance.md — built by Nivora
+# CI against ALT p11) itself needs libicuuc.so.74/libicudata.so.74 at
+# runtime; the LD_LIBRARY_PATH wrapper only makes VTE itself discoverable,
+# it doesn't help VTE's own transitive deps, which still resolve through
+# the normal system search path. Confirmed missing with ldd against a real
+# install, and confirmed as `libicu74` on both ALT p11 and Sisyphus.
 deps=()
 deps_debian=('libgtk-4-1' 'libadwaita-1-0' 'libglib2.0-0' 'liblz4-1')
 deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('gtk4' 'libadwaita' 'glib2' 'lz4-libs')
 deps_arch=('gtk4' 'libadwaita' 'glib2' 'lz4')
 deps_opensuse=('gtk4' 'libadwaita' 'glib2' 'liblz4-1')
-deps_altlinux=('libgtk4' 'libadwaita' 'glib2' 'liblz4')
+deps_altlinux=('libgtk4' 'libadwaita' 'glib2' 'liblz4' 'libicu74')
 
 opt_deps=()
 opt_deps_debian=('distrobox')

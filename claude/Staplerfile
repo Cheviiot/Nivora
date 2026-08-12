@@ -1,6 +1,6 @@
 name='claude'
 version=1.26832.0
-release=1
+release=2
 summary='Claude desktop application'
 summary_ru='Десктопное приложение Claude'
 group='Development/Tools'
@@ -116,16 +116,16 @@ package() {
 	install -dm755 "${pkgdir}/usr/bin"
 	ln -sfn /usr/lib/claude-desktop/claude-desktop "${pkgdir}/usr/bin/claude-desktop"
 
-	install -dm755 "${pkgdir}/usr/share/licenses/claude-desktop"
-	install-license "${srcdir}/LICENSE" "claude-desktop/LICENSE.nivora"
+	install -dm755 "${pkgdir}/usr/share/licenses/claude"
+	install-license "${srcdir}/LICENSE" "claude/LICENSE.nivora"
 	install -Dm644 "${srcdir}/extracted/usr/share/doc/claude-desktop/copyright" \
-		"${pkgdir}/usr/share/licenses/claude-desktop/copyright"
+		"${pkgdir}/usr/share/licenses/claude/copyright"
 	install -Dm644 "${srcdir}/extracted/usr/lib/claude-desktop/LICENSES.chromium.html" \
-		"${pkgdir}/usr/share/licenses/claude-desktop/LICENSES.chromium.html"
+		"${pkgdir}/usr/share/licenses/claude/LICENSES.chromium.html"
 	install -Dm644 "${srcdir}/extracted/usr/lib/claude-desktop/resources/virtiofsd.LICENSE-APACHE" \
-		"${pkgdir}/usr/share/licenses/claude-desktop/virtiofsd.LICENSE-APACHE"
+		"${pkgdir}/usr/share/licenses/claude/virtiofsd.LICENSE-APACHE"
 	install -Dm644 "${srcdir}/extracted/usr/lib/claude-desktop/resources/virtiofsd.LICENSE-BSD-3-Clause" \
-		"${pkgdir}/usr/share/licenses/claude-desktop/virtiofsd.LICENSE-BSD-3-Clause"
+		"${pkgdir}/usr/share/licenses/claude/virtiofsd.LICENSE-BSD-3-Clause"
 }
 
 files() {

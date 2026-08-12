@@ -9,7 +9,8 @@ import_stplr_source_cache() {
     shift 5
     local packages=("$@")
 
-    if [[ ! -d "$cache_source_dir" ]] || ! command -v sqlite3 >/dev/null 2>&1; then
+    if [[ ! -d "$cache_source_dir" ]] || ! command -v sqlite3 >/dev/null 2>&1 \
+        || ! command -v stplr-spec >/dev/null 2>&1; then
         echo '==> source cache import skipped'
         return 0
     fi

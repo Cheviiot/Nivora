@@ -36,6 +36,23 @@ Stapler сам добавляет текущее `name` в generated `Provides` 
 .github/tools/test_package_lifecycle.sh
 ```
 
+`stplr-spec` не публикуется в репозиториях дистрибутивов — CI собирает его из
+исходников на закреплённом коммите (`.github/actions/setup-stplr-spec`). Для
+локального запуска `verify-checksums`/`update-checksums`/`get-field` собрать
+так же вручную:
+
+```bash
+git clone https://altlinux.space/stapler/stplr-utils.git
+git -C stplr-utils checkout c6ddbb5e4e5637d97bb7b2587729178d715c6c52
+GOBIN="$HOME/.local/bin" go install -C stplr-utils ./cmd/stplr-spec
+```
+
+Без `stplr-spec` в PATH `run_checks.sh` и `clean_build.sh` не падают —
+соответствующие шаги (проверка полей Staplerfile, прогрев source-кэша)
+молча пропускаются, а не сообщают об ошибке конфигурации. Сам `clean_build.sh`
+всё равно соберёт пакет: прогрев кэша — это только ускорение, не обязательное
+условие сборки.
+
 `run_checks.sh` выполняет `bash -n`, ShellCheck, Python compile, unit-тесты, validator и чтение
 всех `Staplerfile` через `stplr-spec`.
 

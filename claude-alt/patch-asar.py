@@ -4,6 +4,7 @@
 import copy
 import hashlib
 import json
+import re
 import struct
 import sys
 from pathlib import Path
@@ -78,16 +79,36 @@ def rebuild(node: dict, prefix: str = "") -> dict:
             counts["socket"] += socket_count
             changed = True
 
-        marker = b'P.app.isPackaged||P.app.setName("Claude");RRn();'
-        marker_count = content.count(marker)
-        if marker_count:
-            content = content.replace(
-                marker,
-                b'P.app.isPackaged||P.app.setName("Claude");'
-                b'P.app.userAgentFallback=P.app.userAgentFallback'
-                b'.replaceAll("ClaudeAlt","Claude");RRn();',
-            )
-            counts["user_agent"] += marker_count
+        # The exact minified statement that used to anchor this patch
+        # (a literal `P.app.setName("Claude");RRn();` snippet) stopped
+        # matching the moment Anthropic re-minified the bundle: the
+        # single-letter identifiers Vite/esbuild hand out are reassigned
+        # on every build and aren't stable across versions. The MSIX
+        # feature-detection line that conditionally appends to
+        # `app.userAgentFallback` is a much better anchor because it's
+        # tied to a real, semantically-required Electron API call rather
+        # than an arbitrary internal function name — so instead of a
+        # literal string, capture whatever the minifier currently calls
+        # the Electron `app` object and reuse that name in the injected
+        # statement.
+        user_agent_pattern = re.compile(
+            rb'(\w+)\.app\.userAgentFallback=`\$\{\1\.app\.userAgentFallback\} MSIX`'
+        )
+        user_agent_matches = user_agent_pattern.findall(content)
+        if user_agent_matches:
+
+            def _inject_user_agent_fix(match: "re.Match[bytes]") -> bytes:
+                receiver = match.group(1)
+                fix = (
+                    receiver
+                    + b".app.userAgentFallback="
+                    + receiver
+                    + b'.app.userAgentFallback.replaceAll("ClaudeAlt","Claude");'
+                )
+                return fix + match.group(0)
+
+            content = user_agent_pattern.sub(_inject_user_agent_fix, content)
+            counts["user_agent"] += len(user_agent_matches)
             changed = True
 
         entry["offset"] = str(len(output))

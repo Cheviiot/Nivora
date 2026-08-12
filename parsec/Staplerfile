@@ -1,6 +1,6 @@
 name='parsec'
 version='150-104a'
-release=3
+release=4
 summary='Low-latency remote desktop and game streaming client'
 summary_ru='Клиент удаленного рабочего стола и игрового стриминга с низкой задержкой'
 group='Networking/Remote access'
@@ -30,7 +30,7 @@ deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('glibc' 'libgcc' 'libstdc++' 'systemd-libs' 'openssl-libs' 'libX11' 'libXcursor' 'libXi' 'libSM' 'mesa-libGL' 'alsa-lib' 'libjpeg-turbo' 'libpng' 'libcurl' 'ffmpeg-libs' 'libXrandr' 'vulkan-loader')
 deps_arch=('glibc' 'gcc-libs' 'systemd-libs' 'openssl' 'libx11' 'libxcursor' 'libxi' 'libsm' 'libglvnd' 'alsa-lib' 'libjpeg-turbo' 'libpng' 'curl' 'ffmpeg' 'libxrandr' 'vulkan-icd-loader')
 deps_opensuse=('glibc' 'libgcc_s1' 'libstdc++6' 'libudev1' 'libopenssl3' 'libX11-6' 'libXcursor1' 'libXi6' 'libSM6' 'Mesa-libGL1' 'libasound2' 'libjpeg8' 'libpng16-16' 'libcurl4' 'libavcodec61' 'libXrandr2' 'libvulkan1')
-deps_altlinux=('glibc' 'libgcc1' 'libstdc++6' 'libudev0' 'libssl3' 'libX11' 'libXcursor' 'libXi' 'libSM' 'libGL' 'libalsa' 'libjpeg8' 'libpng16' 'libcurl' 'libavcodec61' 'libXrandr' 'libvulkan1')
+deps_altlinux=('glibc' 'libgcc1' 'libstdc++6' 'libudev0' 'libssl3' 'libX11' 'libXcursor' 'libXi' 'libSM' 'libGL' 'libalsa' 'libjpeg8' 'libpng16' 'libcurl' 'libavcodec62 | libavcodec61 | libavcodec60' 'libXrandr' 'libvulkan1')
 
 build_deps=('binutils')
 

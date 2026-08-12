@@ -1,6 +1,6 @@
 name='claude-alt'
 version=1.26832.0
-release=1
+release=2
 summary='Independent secondary Claude desktop application'
 summary_ru='Независимое второе приложение Claude'
 group='Development/Tools'
@@ -21,12 +21,26 @@ auto_req=0
 auto_prov=0
 
 deps=()
-deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'libc6' 'libxtst6' 'libuuid1' 'xdg-desktop-portal')
+deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'libc6' 'libxtst6' 'libuuid1' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk | xdg-desktop-portal-gnome | xdg-desktop-portal-kde')
 deps_ubuntu=("${deps_debian[@]}")
-deps_fedora=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa-libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal')
-deps_arch=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libxtst' 'libutil-linux' 'xdg-desktop-portal')
-deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'xdg-utils' 'at-spi2-core' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'glibc' 'libXtst6' 'libuuid1' 'xdg-desktop-portal')
-deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'xdg-utils' 'libat-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal')
+deps_fedora=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa-libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+deps_arch=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libxtst' 'libutil-linux' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'xdg-utils' 'at-spi2-core' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'glibc' 'libXtst6' 'libuuid1' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'xdg-utils' 'libat-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+
+# Тот же upstream-бинарник, что и у claude (идентичные checksums ниже), поэтому
+# набор опциональных рантайм-зависимостей зеркалит claude/Staplerfile: без него
+# в ClaudeAlt молча отваливаются звук, системный keyring, appindicator-трей и,
+# главное, Cowork VM sandbox — patch-asar.py отдельно переименовывает её сокет
+# в claude-alt-cowork-vm.sock именно для того, чтобы эта песочница у ClaudeAlt
+# работала независимо от claude, а не была недоступна.
+opt_deps=()
+opt_deps_debian=('libasound2t64 | libasound2 | pulseaudio' 'libayatana-appindicator3-1 | libappindicator3-1' 'ca-certificates' 'gnome-keyring | kwalletd6 | kwalletd5' 'qemu-system-x86' 'ovmf' 'virtiofsd')
+opt_deps_ubuntu=("${opt_deps_debian[@]}")
+opt_deps_fedora=('alsa-lib' 'pulseaudio-libs' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'kwallet' 'qemu-system-x86' 'edk2-ovmf' 'virtiofsd')
+opt_deps_arch=('alsa-lib' 'pulseaudio' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'kwallet' 'qemu-system-x86' 'edk2-ovmf' 'virtiofsd')
+opt_deps_opensuse=('libasound2' 'libpulse0' 'libappindicator3-1' 'ca-certificates' 'gnome-keyring' 'kwallet6' 'qemu-x86' 'ovmf' 'virtiofsd')
+opt_deps_altlinux=('libalsa' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'qemu-system-x86' 'virtiofsd')
 
 build_deps=('binutils')
 build_deps_debian=('binutils' 'python3')
@@ -55,14 +69,14 @@ checksums=(
 	'sha256:b5264918d7cc3436bde057057e5790f617e42ccfcd1237d9170d26aea12799b8'
 	'sha256:f23de36a74c3f6ddae92511fc0dc659816853bf1d28520a6e0232fe2606fd0b4'
 	'sha256:21d1db80c30921346252ed405fa36cb5c48c287afdd8ebe474073389fd88e85e'
-	'sha256:14e0a5ce4da6afb25b13b3cee0b0264fbd896430dae85ade1f3394d8ca999e7d'
+	'sha256:22a2fc5d78d1702cfc81b2dd142b6e5cc88716c649a2b8f1117a1d7206d0b08c'
 )
 checksums_arm64=(
 	'sha256:c2810fd68b2410f8326e80a45573d2f3e7bcd51aaf810d9ae92d3c0978a1d553'
 	'sha256:b5264918d7cc3436bde057057e5790f617e42ccfcd1237d9170d26aea12799b8'
 	'sha256:f23de36a74c3f6ddae92511fc0dc659816853bf1d28520a6e0232fe2606fd0b4'
 	'sha256:21d1db80c30921346252ed405fa36cb5c48c287afdd8ebe474073389fd88e85e'
-	'sha256:14e0a5ce4da6afb25b13b3cee0b0264fbd896430dae85ade1f3394d8ca999e7d'
+	'sha256:22a2fc5d78d1702cfc81b2dd142b6e5cc88716c649a2b8f1117a1d7206d0b08c'
 )
 
 scripts=(
@@ -81,6 +95,10 @@ package() {
 		"${pkgdir}/usr/lib/claude-alt/claude-alt-bin"
 	chmod 0755 "${pkgdir}/usr/lib/claude-alt/claude-alt-bin" \
 		"${pkgdir}/usr/lib/claude-alt/chrome-sandbox"
+	chmod 755 \
+		"${pkgdir}/usr/lib/claude-alt/resources/chrome-native-host" \
+		"${pkgdir}/usr/lib/claude-alt/resources/cowork-linux-helper" \
+		"${pkgdir}/usr/lib/claude-alt/resources/virtiofsd"
 	python3 patch-asar.py "${pkgdir}/usr/lib/claude-alt/resources/app.asar"
 	install -Dm755 claude-alt "${pkgdir}/usr/lib/claude-alt/claude-alt"
 	install -Dm644 claude-alt.png "${pkgdir}/usr/lib/claude-alt/resources/icon.png"

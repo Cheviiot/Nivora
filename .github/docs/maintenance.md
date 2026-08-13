@@ -27,6 +27,30 @@ Stapler сам добавляет текущее `name` в generated `Provides` 
 | `telegram` | Upstream-тарбол не даёт своего package ID; desktop-id `org.telegram.desktop` сохранён; каталог и package ID переименованы с `telegram-desktop`. В отличие от `claude`/`claude-desktop`, `replaces` не включает старое имя (это разрешено только для `claude` в `validate_repo.py`) — у кого установлен `telegram-desktop`, нужно вручную `stplr install telegram` и `stplr remove telegram-desktop` |
 | `vesktop` | Пакет намеренно не называется `discord`: официальный `.deb`/`.tar.gz` Discord — самообновляющийся bootstrap без пригодного для SHA-256-пиннинга payload (см. `vesktop/README.md`). `vesktop` — реальный upstream package ID стороннего клиента Vencord, ставится как есть |
 
+## Зависимости на ALT
+
+`deps_altlinux`/`opt_deps_altlinux` не поддерживают запись альтернатив
+(«один из нескольких пакетов»), даже когда синтаксис для этого формально
+есть. Проверено установкой настоящего RPM (не просто чтением
+Staplerfile), оба варианта дают одинаковую ошибку:
+
+- debian-style `'a | b'` — `apt-get install <local.rpm>` на ALT видит
+  буквальную строку с `|` как единое имя пакета и валит установку;
+- настоящий RPM rich-dependency `'(a or b)'` — та же ошибка, apt-rpm ALT
+  не разбирает альтернативы в `Requires` локального пакета вообще.
+
+Единственный рабочий вариант в `deps_altlinux` — одно конкретное имя
+пакета. Если версия нужной библиотеки отличается между ветками ALT (так
+было с `libavcodec61` на p11 vs `libavcodec62` на Sisyphus у `parsec`),
+выбирать нужно то имя, что реально стоит на целевой ветке — Stapler не
+поддерживает ветвление `deps_*` по конкретной версии ALT, а не только по
+дистрибутиву.
+
+`opt_deps_altlinux` с `|` — не той же природы: `opt_deps` вообще не
+попадают в `Recommends`/`Suggests` собранного RPM, это информационное
+поле, поэтому там альтернативы синтаксически «работают» просто потому что
+ни на что не влияют.
+
 ## Локальные проверки
 
 ```bash

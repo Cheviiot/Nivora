@@ -1,6 +1,6 @@
 name='parsec'
 version='150-104a'
-release=4
+release=5
 summary='Low-latency remote desktop and game streaming client'
 summary_ru='Клиент удаленного рабочего стола и игрового стриминга с низкой задержкой'
 group='Networking/Remote access'
@@ -30,7 +30,18 @@ deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('glibc' 'libgcc' 'libstdc++' 'systemd-libs' 'openssl-libs' 'libX11' 'libXcursor' 'libXi' 'libSM' 'mesa-libGL' 'alsa-lib' 'libjpeg-turbo' 'libpng' 'libcurl' 'ffmpeg-libs' 'libXrandr' 'vulkan-loader')
 deps_arch=('glibc' 'gcc-libs' 'systemd-libs' 'openssl' 'libx11' 'libxcursor' 'libxi' 'libsm' 'libglvnd' 'alsa-lib' 'libjpeg-turbo' 'libpng' 'curl' 'ffmpeg' 'libxrandr' 'vulkan-icd-loader')
 deps_opensuse=('glibc' 'libgcc_s1' 'libstdc++6' 'libudev1' 'libopenssl3' 'libX11-6' 'libXcursor1' 'libXi6' 'libSM6' 'Mesa-libGL1' 'libasound2' 'libjpeg8' 'libpng16-16' 'libcurl4' 'libavcodec61' 'libXrandr2' 'libvulkan1')
-deps_altlinux=('glibc' 'libgcc1' 'libstdc++6' 'libudev0' 'libssl3' 'libX11' 'libXcursor' 'libXi' 'libSM' 'libGL' 'libalsa' 'libjpeg8' 'libpng16' 'libcurl' 'libavcodec62 | libavcodec61 | libavcodec60' 'libXrandr' 'libvulkan1')
+# Ни debian-style 'a | b', ни настоящий RPM rich-dependency '(a or b)'
+# не работают на ALT через `apt-get install <local.rpm>` — оба были
+# проверены на реальной установке (не только чтением Staplerfile) и оба
+# дают "Depends: ... but it is not installable", апт-rpm просто не умеет
+# разбирать альтернативы в Requires для локального пакета. Единственный
+# рабочий вариант — одно конкретное имя. libavcodec61 — версия на ALT p11
+# (стабильная ветка, ALT Workstation); в Sisyphus (rolling) уже
+# libavcodec62 — там пакет с этой строкой ставиться не будет, это
+# известное ограничение, а не то, что можно починить в рамках одной
+# зависимости без ветвления Staplerfile по версии ALT, которого Stapler не
+# поддерживает.
+deps_altlinux=('glibc' 'libgcc1' 'libstdc++6' 'libudev0' 'libssl3' 'libX11' 'libXcursor' 'libXi' 'libSM' 'libGL' 'libalsa' 'libjpeg8' 'libpng16' 'libcurl' 'libavcodec61' 'libXrandr' 'libvulkan1')
 
 build_deps=('binutils')
 

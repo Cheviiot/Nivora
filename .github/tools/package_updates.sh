@@ -13,6 +13,7 @@ readonly -a PACKAGES=(
     happ
     nivora-cli
     opencode
+    openwhispr
     parsec
     pineconemc
     tailscale
@@ -121,6 +122,26 @@ latest_anidesk() {
     printf '%s\n' "$version"
 }
 
+latest_openwhispr() {
+    local version
+    # OpenWhispr's repo interleaves the app's own vX.Y.Z tags with several
+    # unrelated helper-tool release trains (windows-fast-paste-vN,
+    # linux-text-monitor-vN, meeting-aec-helper-vN, ...). github_latest_release
+    # just takes the first non-prerelease release off a date-sorted list, which
+    # would eventually pick up one of those instead of the app itself — the
+    # same class of bug already hit once with vintner's wine-v1 tag. Anchor to
+    # tags that start with "v" instead, like latest_anidesk does.
+    version="$(
+        GIT_TERMINAL_PROMPT=0 timeout 60s \
+            git ls-remote --tags --refs https://github.com/OpenWhispr/openwhispr.git 'refs/tags/v*' |
+            awk '{sub("refs/tags/v", "", $2); print $2}' |
+            sort -V |
+            tail -1
+    )"
+    [[ -n "$version" ]] || die 'cannot determine latest OpenWhispr version'
+    printf '%s\n' "$version"
+}
+
 latest_claude_desktop() {
     local version
     version="$(
@@ -208,6 +229,7 @@ latest_version() {
     happ) github_latest_release Happ-proxy/happ-desktop ;;
     nivora-cli) current_version nivora-cli ;;
     opencode) github_latest_release anomalyco/opencode ;;
+    openwhispr) latest_openwhispr ;;
     parsec) latest_parsec ;;
     pineconemc) github_latest_release ElyPrismLauncher/Launcher ;;
     tailscale) latest_tailscale ;;

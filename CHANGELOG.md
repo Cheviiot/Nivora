@@ -2,6 +2,32 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-08-14 — Добавлен OpenWhispr
+
+### Добавлено
+
+- Пакет `openwhispr` — голосовой ввод на базе whisper.cpp с локальными
+  (whisper.cpp, sherpa-onnx) и облачными (BYOK) моделями, заметками со
+  встреч и AI-чатом (MIT, GitHub Releases, `amd64`).
+
+`ydotool` и `libpipewire` объявлены жёсткими зависимостями — это `Depends`
+самого upstream DEB, а не решение Nivora: без `ydotool` вставка
+распознанного текста в другие приложения не работает вообще. Пакет
+`ydotool` на ALT сам несёт нужные `udev`-правило и systemd user unit,
+дополнительная настройка со стороны Nivora не потребовалась — только шаг
+`systemctl --user enable --now ydotool.service` для пользователя
+(см. `openwhispr/README.md`).
+
+`.github/tools/package_updates.sh` получил отдельную `latest_openwhispr()`
+вместо общего `github_latest_release`: репозиторий апстрима вперемешку
+публикует релизы самого приложения (`vX.Y.Z`) и released отдельных
+Linux/Windows-хелперов (`windows-fast-paste-vN`, `linux-text-monitor-vN` и
+т.д.) — общая функция берёт первый непререлизный тег с версией из
+отсортированного по дате списка и рано или поздно подхватила бы хелпер
+вместо самого приложения. Тот же класс бага уже чинили один раз для
+`vintner`/`wine-v1`. Новая функция берёт тег напрямую по `refs/tags/v*`,
+как уже сделано для `anidesk`.
+
 ## 2026-08-13 — Реальный install-тест всего каталога на ALT Sisyphus
 
 Продолжение аудита ниже: `clean_build.sh` + реальная установка получившегося

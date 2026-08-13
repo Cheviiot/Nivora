@@ -1,0 +1,111 @@
+name='openwhispr'
+version=1.8.3
+release=1
+summary='Open-source, privacy-first voice dictation app'
+summary_ru='Приложение для голосового ввода с открытым исходным кодом'
+group='Utilities/Other'
+desc='OpenWhispr is a desktop dictation application built on whisper.cpp that transcribes speech to text system-wide, with local or cloud (BYOK) models, meeting notes and AI chat.'
+desc_ru='OpenWhispr — десктопное приложение для диктовки на базе whisper.cpp, преобразующее речь в текст в любом приложении системы, с локальными или облачными (BYOK) моделями, заметками со встреч и AI-чатом.'
+homepage='https://openwhispr.com'
+maintainer='OpenWhispr Team <support@openwhispr.com>'
+
+architectures=('amd64')
+
+license=('MIT')
+
+provides=()
+replaces=('openwhispr')
+conflicts=()
+
+# Electron-приложение с полностью bundled whisper.cpp/llama.cpp/onnxruntime
+# стеком (opt/OpenWhispr/resources/bin) — auto_req на такое дерево выдаёт
+# только шум.
+auto_reqprov_method="dirty"
+auto_req=0
+auto_prov=0
+
+# ydotool и libpipewire — не опциональные удобства, а жёсткие Depends в
+# самом upstream DEB (control-файл): без ydotool диктовка не печатает текст
+# ни в одно другое приложение (fallback на X11 XTest есть только для
+# X11/XWayland — linux-fast-paste), без libpipewire не работает захват
+# системного звука для транскрибации. Пакет ydotool на ALT уже несёт
+# собственные /lib/udev/rules.d/80-uinput.rules и
+# usr/lib/systemd/user/ydotool.service — отдельная настройка Nivora не
+# нужна, только `systemctl --user enable --now ydotool.service` после
+# установки (см. README).
+deps=()
+deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'libxss1' 'libxtst6' 'libxi6' 'xdg-utils' 'libatspi2.0-0' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2' 'ydotool' 'libpipewire-0.3-0')
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('gtk3' 'libnotify' 'nss' 'libXScrnSaver' 'libXtst' 'libXi' 'xdg-utils' 'at-spi2-core' 'libuuid' 'libsecret' 'mesa-libgbm' 'alsa-lib' 'ydotool' 'pipewire-libs')
+deps_arch=('gtk3' 'libnotify' 'nss' 'libxss' 'libxtst' 'libxi' 'xdg-utils' 'at-spi2-core' 'util-linux-libs' 'libsecret' 'libgbm' 'alsa-lib' 'ydotool' 'pipewire')
+deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'libXss1' 'libXtst6' 'libXi6' 'xdg-utils' 'at-spi2-core' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2' 'ydotool' 'libpipewire-0_3-0')
+deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'libXScrnSaver' 'libXtst' 'libXi' 'xdg-utils' 'libat-spi2-core' 'libuuid' 'libsecret' 'libgbm' 'libalsa' 'ydotool' 'pipewire-libs')
+
+opt_deps=()
+opt_deps_debian=('libayatana-appindicator3-1 | libappindicator3-1' 'wl-clipboard' 'xclip' 'xdotool' 'wtype')
+opt_deps_ubuntu=("${opt_deps_debian[@]}")
+opt_deps_fedora=('libappindicator-gtk3' 'wl-clipboard' 'xclip' 'xdotool' 'wtype')
+opt_deps_arch=('libappindicator-gtk3' 'wl-clipboard' 'xclip' 'xdotool' 'wtype')
+opt_deps_opensuse=('libappindicator3-1' 'wl-clipboard' 'xclip' 'xdotool' 'wtype')
+opt_deps_altlinux=('libappindicator-gtk3' 'wl-clipboard' 'xclip' 'xdotool')
+
+build_deps=('binutils')
+build_deps_debian=('binutils')
+build_deps_ubuntu=("${build_deps_debian[@]}")
+build_deps_fedora=('binutils')
+build_deps_arch=('binutils')
+build_deps_opensuse=('binutils')
+build_deps_altlinux=('binutils')
+
+sources=(
+	"https://github.com/OpenWhispr/openwhispr/releases/download/v${version}/OpenWhispr-${version}-linux-amd64.deb?~archive=false&~name=openwhispr.deb"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:db4f1f7f35c6f562cedbcebe615731cad793d048a76f980664d83667ef556dc7'
+	'sha256:ecf1a12d3dc51085d2f3a720dc177c7da3cd075ea3fadcc6a1b719fb44ed30e0'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x openwhispr.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install -dm755 "${pkgdir}/opt"
+	cp -a "${srcdir}/extracted/opt/OpenWhispr" "${pkgdir}/opt/"
+	chmod 0755 "${pkgdir}/opt/OpenWhispr/chrome-sandbox"
+	chmod 755 \
+		"${pkgdir}/opt/OpenWhispr/open-whispr" \
+		"${pkgdir}/opt/OpenWhispr/open-whispr-app"
+	find "${pkgdir}/opt/OpenWhispr/resources/bin" -maxdepth 1 -type f -exec chmod 755 {} +
+
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -sfn /opt/OpenWhispr/open-whispr "${pkgdir}/usr/bin/openwhispr"
+
+	install -dm755 "${pkgdir}/usr/share"
+	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"
+	cp -a "${srcdir}/extracted/usr/share/icons" "${pkgdir}/usr/share/"
+
+	install-license LICENSE "openwhispr/LICENSE.nivora"
+	install -Dm644 "${srcdir}/extracted/opt/OpenWhispr/LICENSES.chromium.html" \
+		"${pkgdir}/usr/share/licenses/openwhispr/LICENSES.chromium.html"
+	install -Dm644 "${srcdir}/extracted/opt/OpenWhispr/LICENSE.electron.txt" \
+		"${pkgdir}/usr/share/licenses/openwhispr/LICENSE.electron.txt"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/opt/OpenWhispr/**/*" \
+		"/usr/share/icons/hicolor/256x256/apps/open-whispr.png"
+}

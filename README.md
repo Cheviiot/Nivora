@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://stplr.dev/docs/intro/"><img src="https://img.shields.io/badge/Stapler-Community%20Repo-6366F1?style=for-the-badge" alt="Stapler Community Repo"></a>
-  <img src="https://img.shields.io/badge/пакетов-20-2ea043?style=for-the-badge" alt="20 пакетов">
+  <img src="https://img.shields.io/badge/пакетов-21-2ea043?style=for-the-badge" alt="21 пакет">
   <a href="https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/quality.yml?branch=main&style=for-the-badge&label=CI" alt="CI"></a>
 </p>
 
@@ -28,7 +28,7 @@
 </p>
 
 <!-- package-count -->
-**20 пакетов** · **6 категорий** · `amd64`, `arm64` и `all`
+**21 пакет** · **6 категорий** · `amd64`, `arm64` и `all`
 
 ## Подключение
 
@@ -81,6 +81,7 @@ stplr info nivora/codex
 | <img src="codex/codex-app.png" width="32" height="32" alt="Codex"> | [Codex](codex/README.md) | `26.721.81911` | `amd64` | `stplr install nivora/codex` |
 | <img src="https://github.githubassets.com/favicons/favicon.png" width="32" height="32" alt="GitHub Desktop"> | [GitHub Desktop](github-desktop/README.md) | `3.6.3` | `amd64`, `arm64` | `stplr install nivora/github-desktop` |
 | <img src="https://opencode.ai/apple-touch-icon.png" width="32" height="32" alt="OpenCode"> | [OpenCode](https://opencode.ai/) | `1.18.16` | `amd64`, `arm64` | `stplr install nivora/opencode` |
+| <img src="openwhispr/openwhispr.png" width="32" height="32" alt="OpenWhispr"> | [OpenWhispr](openwhispr/README.md) | `1.8.3` | `amd64` | `stplr install nivora/openwhispr` |
 | | [Vintner](https://github.com/Cheviiot/vintner) | `0.5.0` | `amd64`, `arm64` | `stplr install nivora/vintner` |
 
 ### Рабочий стол

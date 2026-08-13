@@ -23,6 +23,7 @@ EXPECTED_PACKAGES = (
     "happ",
     "nivora-cli",
     "opencode",
+    "openwhispr",
     "parsec",
     "pineconemc",
     "tailscale",

@@ -1,6 +1,6 @@
 name='github-desktop'
-version='3.6.3'
-release=3
+version=3.6.4
+release=1
 summary='GitHub Desktop built from the official source'
 summary_ru='GitHub Desktop, собранный из официальных исходников'
 group='Development/Tools'
@@ -51,13 +51,13 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:78d55b126a200c3585c7d0e3a32b95fe5d0d19e71921169c3e376af520d9a179'
+	'sha256:3f46256f3acaf21bd711d0dbaef8471f6d11bf003e94ff7b293c5453bc5009e9'
 	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
 	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
 )
 
 checksums_arm64=(
-	'sha256:b1934f1d8d621ee879ef6b7d7dabe9704134c4dc861813b776f42deedce5a038'
+	'sha256:09a7733b5e443eefdaef7a74dc39455072f35fd7d3f7669136d19dd709dba487'
 	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
 	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
 )

@@ -1,5 +1,5 @@
 name='claude'
-version=1.28929.0
+version=1.30096.1
 release=1
 summary='Claude desktop application'
 summary_ru='Десктопное приложение Claude'
@@ -61,13 +61,13 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:3ceb391268bde9a7fec32520d349b704043166204cdd571c62d1e950701f48fc'
+	'sha256:09e41a20a5b47ea0e5bc226d4fffa77af43ad450c7cbf5e66e56d6e4fd4ad2e9'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
 	'sha256:40efe7a2755d02c9fe13f98cae18705e2d31e5bbb24816ebbd4951c5e3a56b3f'
 )
 
 checksums_arm64=(
-	'sha256:7a5b8bd5fcda0a6b1a6b3711e0142704662e44938a94683068fd90c398c7394d'
+	'sha256:16949f5c06387806bd01eb1b2b402af8ed515d37e4ffc6f2d6aae5808af873c8'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
 	'sha256:40efe7a2755d02c9fe13f98cae18705e2d31e5bbb24816ebbd4951c5e3a56b3f'
 )

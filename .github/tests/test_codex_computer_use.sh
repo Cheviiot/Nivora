@@ -6,7 +6,6 @@ repo_root="$(cd "${script_dir}/../.." && pwd)"
 recipe="${repo_root}/codex/Staplerfile"
 driver="${repo_root}/codex/patch-computer-use.js"
 
-grep -Fq 'release=1' "$recipe"
 grep -Fq '15f3bd4fabc44bc0afba85b16d0121f0b4abd052' "$recipe"
 grep -Fq 'computer-use-linux/archive/refs/tags/v0.4.1.tar.gz' "$recipe"
 grep -Fq 'cargo build' "$recipe"

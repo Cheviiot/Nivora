@@ -2,6 +2,23 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-08-15 — codex переведён на гибридный auto_req
+
+### Изменено
+
+- `codex`: та же схема auto_req + explicit-остаток. У этого пакета
+  несколько ELF-файлов помимо главного бинарника — bundled Node-аддоны
+  (`better_sqlite3.node`, `pty.node`) и отдельно собранный Rust-бинарник
+  `codex-computer-use-linux` — все проверены `readelf -d` внутри
+  контейнера. `resources/codex` статически слинкован. `libcurl` и
+  `libxkbfile` ни разу не встретились ни в одном `DT_NEEDED`, но, в
+  отличие от `libnotify`/`libsecret`/`libXtst` у соседних Electron-пакетов,
+  для них нет подтверждённого dlopen-паттерна — оставлены explicit из
+  осторожности, а не потому что доказано, что они не нужны.
+
+Проверено реальной установкой в контейнерах `registry.altlinux.org/p11`
+и `.../sisyphus`.
+
 ## 2026-08-15 — claude, claude-alt и anidesk переведены на гибридный auto_req
 
 ### Изменено

@@ -2,6 +2,25 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-08-15 — balena-etcher переведён на гибридный auto_req
+
+### Изменено
+
+- `balena-etcher`: auto_req + explicit-остаток. У этого пакета явный
+  список был заметно больше, чем у соседних Electron-пакетов — `polkit`,
+  `fontconfig`, `libfreetype`, `libgdk-pixbuf`, `liblzma`, `libXcursor`,
+  `libXi`, `libXrender` ни разу не встретились в `DT_NEEDED` ни одного
+  бинарника или bundled `.so` (проверено `readelf -d` на главном
+  бинарнике, `resources/etcher-util`, `libEGL.so`/`libGLESv2.so`/
+  `libvk_swiftshader.so` и native-модуле). В отличие от подтверждённого
+  dlopen-паттерна Chromium (`libnotify`/`libXtst`/`libXScrnSaver` — тоже
+  остались explicit), для этих восьми нет прямого доказательства, что они
+  подключаются через dlopen или транзитивно — оставлены explicit из
+  осторожности.
+
+Проверено реальной установкой в контейнерах `registry.altlinux.org/p11`
+и `.../sisyphus`.
+
 ## 2026-08-15 — github-desktop переведён на гибридный auto_req
 
 ### Изменено

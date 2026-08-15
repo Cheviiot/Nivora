@@ -1,6 +1,6 @@
 name='balena-etcher'
 version='2.1.6'
-release=1
+release=2
 summary='Safe SD card and USB drive image flasher'
 summary_ru='Безопасная запись образов на SD-карты и USB-накопители'
 group='System/Configuration/Hardware'
@@ -17,10 +17,20 @@ provides=()
 replaces=('balena-etcher')
 conflicts=()
 
-# Electron and the native helper ship prebuilt in the official DEB.
+# auto_req covers the real DT_NEEDED (readelf -d confirmed across the main
+# binary, resources/etcher-util, and the bundled libEGL/libGLESv2/
+# libvk_swiftshader/native-module files: gtk3, nss, at-spi2, gbm, xcb,
+# alsa, atk, cairo, cups, dbus, expat, glib2, nspr, pango, X11 stack,
+# glibc/libstdc++). The rest stays explicit: xdg-utils is a subprocess
+# tool, libnotify/libXtst/libXScrnSaver are dlopen'd by Chromium like the
+# rest of the catalog's Electron packages, and polkit/fontconfig/
+# libfreetype/libgdk-pixbuf/liblzma/libXcursor/libXi/libXrender never show
+# up in any binary's DT_NEEDED either - unlike the confirmed-dlopen'd
+# libraries there's no direct evidence for *why*, so they stay explicit
+# out of caution instead of being dropped on an assumption.
 auto_reqprov_method="dirty"
-auto_req=0
-auto_prov=0
+auto_req=1
+auto_prov=1
 
 deps=()
 deps_debian=(
@@ -61,12 +71,9 @@ deps_opensuse=(
 	'libXfixes3' 'libXi6' 'libXrandr2' 'libXrender1' 'libXss1' 'polkit'
 )
 deps_altlinux=(
-	'libgtk+3' 'libnotify' 'libnss' 'libXtst' 'xdg-utils' 'libat-spi2-core'
-	'libdrm' 'libgbm' 'libxcb' 'libalsa' 'libatk' 'glibc' 'libcairo'
-	'libcups' 'libdbus' 'libexpat' 'fontconfig' 'libfreetype' 'libgcc1'
-	'libgdk-pixbuf' 'glib2' 'liblzma' 'libnspr' 'libpango' 'libstdc++6'
-	'libX11' 'libXcomposite' 'libXcursor' 'libXdamage' 'libXext' 'libXfixes'
-	'libXi' 'libXrandr' 'libXrender' 'libXScrnSaver' 'polkit'
+	'libnotify' 'libXtst' 'xdg-utils' 'fontconfig' 'libfreetype'
+	'libgdk-pixbuf' 'liblzma' 'libXcursor' 'libXi' 'libXrender'
+	'libXScrnSaver' 'polkit'
 )
 
 opt_deps=()

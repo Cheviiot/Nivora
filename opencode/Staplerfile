@@ -1,6 +1,6 @@
 name='opencode'
 version=1.18.18
-release=1
+release=2
 summary='Open source AI coding agent desktop app'
 summary_ru='Десктопное приложение AI-агента OpenCode'
 group='Development/Tools'
@@ -18,16 +18,21 @@ replaces=('opencode')
 conflicts=()
 
 auto_reqprov_method="dirty"
-auto_req=0
-auto_prov=0
+auto_req=1
+auto_prov=1
 
+# auto_req covers the real Chromium DT_NEEDED (readelf -d confirmed:
+# gtk3, nss, at-spi2, glibc, ...). The rest stays explicit: xdg-utils is a
+# subprocess tool, and libnotify/libXScrnSaver/libXtst/libuuid/libsecret
+# are dlopen'd by Chromium's Linux integration layer, same as claude/
+# vesktop/anidesk/codex.
 deps=()
 deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'libxss1' 'libxtst6' 'xdg-utils' 'libatspi2.0-0' 'libuuid1' 'libsecret-1-0')
 deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('gtk3' 'libnotify' 'nss' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'at-spi2-core' 'libuuid' 'libsecret')
 deps_arch=('gtk3' 'libnotify' 'nss' 'libxss' 'libxtst' 'xdg-utils' 'at-spi2-core' 'libutil-linux' 'libsecret')
 deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'libXScrnSaver1' 'libXtst6' 'xdg-utils' 'at-spi2-core' 'libuuid1' 'libsecret-1-0')
-deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libat-spi2-core' 'libuuid' 'libsecret')
+deps_altlinux=('libnotify' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libuuid' 'libsecret')
 
 opt_deps=()
 opt_deps_debian=('libappindicator3-1' 'gnome-keyring')
@@ -73,6 +78,13 @@ package() {
 
 	install -dm755 "${pkgdir}/opt"
 	cp -a "${srcdir}/extracted/opt/OpenCode" "${pkgdir}/opt/"
+
+	# musl-linked native addon variants are dead weight on ALT's glibc: they're
+	# never loaded (Node's own platform detection picks the glibc build), but
+	# rpm's dependency scanner still reads their musl-style unversioned
+	# `libc.so` NEEDED entry and turns it into an uninstallable Requires.
+	find "${pkgdir}/opt/OpenCode" -type f \
+		\( -name '*.musl.node' -o -path '*-musl/*.node' \) -delete
 
 	install -dm755 "${pkgdir}/usr/share"
 	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"

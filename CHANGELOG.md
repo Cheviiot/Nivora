@@ -2,6 +2,30 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-08-15 — happ и vesktop переведены на гибридный auto_req
+
+### Изменено
+
+- `happ`: `auto_req=1`/`auto_prov=1` покрывает весь бандловый стек Qt6/GL
+  (подтверждено `readelf -d` на всех бинарниках payload — Happ, happd,
+  happ-tcping, tun2proxy-bin, udpgw-server; antifilter/sing-box/xray
+  статически слинкованы, у них вообще нет NEEDED). Явно в deps_altlinux
+  остался только `libssl3` — Qt подключает свой TLS-бэкенд через `dlopen`,
+  а не обычной линковкой, поэтому эта зависимость не попадает ни в один
+  `DT_NEEDED`, хотя без неё отваливается HTTPS/прокси-функциональность.
+  Раньше это было причиной полного отказа от auto_req для happ — оказалось,
+  что достаточно оставить explicit одну эту строку, а не весь список.
+- `vesktop`: та же схема. auto_req покрывает реальный Chromium-стек
+  (gtk3/nss/at-spi2/gbm/xcb/glibc и т.д.), explicit остаётся то, что
+  `readelf -d` не находит ни в одном бинарнике: `xdg-utils` (subprocess,
+  не библиoteka) и `libnotify`/`libXScrnSaver`/`libXtst`/`libuuid`/
+  `libsecret` — Chromium подключает их через `dlopen`, чтобы не падать на
+  системах без них, но Nivora нужна настоящая функциональность
+  (уведомления, keyring, глобальные шорткаты), а не тихий fallback.
+
+Оба варианта проверены реальной установкой в контейнерах
+`registry.altlinux.org/p11` и `.../sisyphus`.
+
 ## 2026-08-15 — distroshelf переведён на auto_req/auto_prov
 
 ### Изменено

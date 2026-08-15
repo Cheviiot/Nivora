@@ -1,6 +1,6 @@
 name='vesktop'
 version=1.6.5
-release=3
+release=4
 summary='Unofficial Discord desktop client with better Linux support'
 summary_ru='Неофициальный десктопный клиент Discord с улучшенной поддержкой Linux'
 group='Networking/Instant messaging'
@@ -18,20 +18,31 @@ replaces=('vesktop')
 conflicts=()
 
 auto_reqprov_method="dirty"
-auto_req=0
-auto_prov=0
+auto_req=1
+auto_prov=1
 
 # Upstream .deb's own Depends: doesn't list libgbm/libasound at all, but
 # they're real DT_NEEDED entries of the vesktop binary (confirmed with ldd
 # against a real install) — without them the dynamic linker refuses to
-# start the process at all, it's not a soft/optional degradation.
+# start the process at all, it's not a soft/optional degradation. Now
+# auto_req-covered directly instead.
+#
+# The rest of this list stays explicit because none of it is a real
+# DT_NEEDED of any binary in the payload (confirmed with readelf -d against
+# a real install, not just by reading Chromium's source): xdg-utils is a
+# subprocess tool, not a library; libnotify/libXScrnSaver/libXtst/libuuid/
+# libsecret are all loaded by Chromium's Linux integration layer via
+# dlopen() rather than linked, specifically so the browser degrades
+# gracefully instead of hard-failing when one is missing - but Nivora wants
+# the real functionality (notifications, screensaver inhibition, global
+# shortcuts, keyring), not the degraded fallback, so they stay hard deps.
 deps=()
 deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'libxss1' 'libxtst6' 'xdg-utils' 'libatspi2.0-0' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2')
 deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('gtk3' 'libnotify' 'nss' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'at-spi2-core' 'libuuid' 'libsecret' 'mesa-libgbm' 'alsa-lib')
 deps_arch=('gtk3' 'libnotify' 'nss' 'libxss' 'libxtst' 'xdg-utils' 'at-spi2-core' 'util-linux-libs' 'libsecret' 'libgbm' 'alsa-lib')
 deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'libXss1' 'libXtst6' 'xdg-utils' 'at-spi2-core' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2')
-deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libat-spi2-core' 'libuuid' 'libsecret' 'libgbm' 'libalsa')
+deps_altlinux=('libnotify' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libuuid' 'libsecret')
 
 opt_deps=()
 opt_deps_debian=('libayatana-appindicator3-1 | libappindicator3-1' 'gnome-keyring | kwalletd6 | kwalletd5')

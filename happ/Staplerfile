@@ -1,6 +1,6 @@
 name='happ'
 version=3.3.6
-release=4
+release=5
 summary='User-friendly GUI proxy client for xray-core'
 summary_ru='Удобный GUI-прокси-клиент для xray-core'
 group='Networking/Other'
@@ -20,10 +20,19 @@ provides=()
 replaces=('happ')
 conflicts=()
 
-# Qt itself ships bundled here, so auto_req would just be noise.
+# auto_req covers the bundled Qt6/GL stack (readelf-confirmed real
+# DT_NEEDED across every binary in the payload: Happ, happd,
+# happ-tcping, tun2/tun2proxy-bin, tun2/udpgw-server — antifilter,
+# tun/sing-box and core/xray are statically linked, no NEEDED at all).
+# libssl3 stays explicit: Qt loads its TLS backend via dlopen, not a
+# normal link, so it never shows up in any binary's DT_NEEDED despite
+# being required for the app's actual proxy/HTTPS functionality — the
+# same class of gap that made happ a bad pure-auto_req candidate
+# earlier, fixed by keeping just this one entry instead of reverting
+# the whole package to explicit deps.
 auto_reqprov_method="dirty"
-auto_req=0
-auto_prov=0
+auto_req=1
+auto_prov=1
 
 deps=()
 deps_debian=('libc6' 'libssl3 | libssl3t64')
@@ -31,7 +40,7 @@ deps_ubuntu=('libc6' 'libssl3 | libssl3t64')
 deps_fedora=('glibc' 'openssl-libs')
 deps_arch=('glibc' 'openssl')
 deps_opensuse=('glibc' 'libopenssl1_1')
-deps_altlinux=('glibc' 'libssl3')
+deps_altlinux=('libssl3')
 
 build_deps=('binutils')
 build_deps_debian=('binutils' 'python3')

@@ -17,8 +17,8 @@ provides=()
 replaces=('ventoy')
 conflicts=()
 
-# В официальном архиве находятся готовые нативные программы и низкоуровневые
-# инструменты для работы с дисками.
+# Official archive ships prebuilt native binaries and low-level disk tools —
+# nothing here to link against locally.
 auto_reqprov_method="dirty"
 auto_req=0
 auto_prov=0

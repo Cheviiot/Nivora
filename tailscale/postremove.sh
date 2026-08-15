@@ -4,8 +4,8 @@ set -euo pipefail
 
 unit=/usr/lib/systemd/system/tailscaled.service
 
-# В postremove unit отсутствует только после полного удаления. При обновлении
-# новая версия уже вернула его на место, независимо от формата пакета.
+# In postremove, the unit is missing only after a full removal. On an
+# upgrade the new version has already put it back, regardless of package format.
 if [[ ! -e "$unit" ]] && command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
     if systemctl is-active --quiet tailscaled.service; then
         systemctl stop tailscaled.service

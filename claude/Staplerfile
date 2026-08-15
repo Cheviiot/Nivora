@@ -93,7 +93,7 @@ package() {
 		"${pkgdir}/usr/lib/claude-desktop/resources/cowork-linux-helper" \
 		"${pkgdir}/usr/lib/claude-desktop/resources/virtiofsd"
 
-	# Сохраняем штатный tray-глиф Claude, меняя только его цвет.
+	# Keeps Claude's own tray glyph shape, only recolors it.
 	for icon_name in TrayIconLinux.png TrayIconLinux-Dark.png; do
 		install -Dm644 "${srcdir}/claude-tray-orange.png" \
 			"${pkgdir}/usr/lib/claude-desktop/resources/${icon_name}"

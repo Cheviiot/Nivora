@@ -84,43 +84,38 @@ scripts=(
 appstream_app_id='io.github.vual'
 
 package() {
-	# GitHub создаёт архив с именем Vual-<version>
+	# GitHub's release tarball extracts to Vual-<version> (capitalized, matches
+	# the repo name), not the lowercase "vual" used everywhere else below.
 	src="${srcdir}/Vual-${version}"
 
-	# Python модуль
 	install -dm755 "${pkgdir}/usr/lib/vual"
 	cp -r "${src}/src/vual" "${pkgdir}/usr/lib/vual/"
 	find "${pkgdir}/usr/lib/vual" -depth -path '*/__pycache__*' -delete
 
-	# Переводы
 	if [[ -d "${src}/po" ]]; then
 		cp -r "${src}/po" "${pkgdir}/usr/lib/vual/"
 	fi
 
-	# Лаунчер
 	install -Dm755 "${src}/vual" "${pkgdir}/usr/bin/vual"
 
-	# Обновляем путь в лаунчере: указываем на установленное расположение
+	# vual computes this path relative to its own script location in the
+	# source tree; pin it to the fixed installed location instead.
 	sed -i 's|sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))|sys.path.insert(0, "/usr/lib/vual")|' \
 		"${pkgdir}/usr/bin/vual"
 	sed -i '/pycache_prefix/d' "${pkgdir}/usr/bin/vual"
 
-	# Desktop файл
 	install-desktop "${src}/data/io.github.vual.desktop"
 	sed -i 's/^Categories=.*/Categories=Game;/' \
 		"${pkgdir}/usr/share/applications/io.github.vual.desktop"
 
-	# Иконки всех размеров
 	for size in 16 24 32 48 64 128 256 512; do
 		install -Dm644 "${src}/data/icons/hicolor/${size}x${size}/apps/io.github.vual.png" \
 			"${pkgdir}/usr/share/icons/hicolor/${size}x${size}/apps/io.github.vual.png"
 	done
 
-	# AppStream metainfo
 	install -Dm644 "${src}/data/io.github.vual.metainfo.xml" \
 		"${pkgdir}/usr/share/metainfo/io.github.vual.metainfo.xml"
 
-	# Лицензия
 	install-license "${src}/LICENSE" "vual/LICENSE.upstream"
 	install-license "${srcdir}/LICENSE" "vual/LICENSE.nivora"
 }

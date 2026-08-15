@@ -17,7 +17,7 @@ provides=()
 replaces=('balena-etcher')
 conflicts=()
 
-# Electron и нативный helper поставляются в официальном DEB.
+# Electron and the native helper ship prebuilt in the official DEB.
 auto_reqprov_method="dirty"
 auto_req=0
 auto_prov=0
@@ -111,8 +111,9 @@ package() {
 		"${pkgdir}/usr/lib/balena-etcher/balena-etcher" \
 		"${pkgdir}/usr/lib/balena-etcher/resources/etcher-util"
 
-	# Upstream DEB содержит balenaEtcher-ссылку на каталог GitHub Actions.
-	# Сохраняем совместимое имя, но направляем его на локальный executable.
+	# Upstream's own "balenaEtcher" symlink points at a GitHub Actions build
+	# path that doesn't exist on the installed system; keep the name other
+	# tooling might expect, but retarget it to the local binary.
 	ln -sfn balena-etcher "${pkgdir}/usr/lib/balena-etcher/balenaEtcher"
 	install -dm755 "${pkgdir}/usr/bin"
 	ln -sfn ../lib/balena-etcher/balena-etcher \

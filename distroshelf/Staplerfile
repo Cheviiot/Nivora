@@ -17,12 +17,11 @@ provides=()
 replaces=('distroshelf')
 conflicts=()
 
-# The bundled libvte-2.91-gtk4.so.0 (see maintenance.md — built by Nivora
-# CI against ALT p11) itself needs libicuuc.so.74/libicudata.so.74 at
-# runtime; the LD_LIBRARY_PATH wrapper only makes VTE itself discoverable,
-# it doesn't help VTE's own transitive deps, which still resolve through
-# the normal system search path. Confirmed missing with ldd against a real
-# install, and confirmed as `libicu74` on both ALT p11 and Sisyphus.
+# The bundled libvte-2.91-gtk4.so.0 (built by Nivora CI against ALT p11,
+# see maintenance.md) itself needs libicuuc.so.74/libicudata.so.74 at
+# runtime — the LD_LIBRARY_PATH wrapper only makes VTE discoverable, not
+# VTE's own transitive deps, which still resolve through the normal system
+# path. `libicu74` on both ALT p11 and Sisyphus.
 deps=()
 deps_debian=('libgtk-4-1' 'libadwaita-1-0' 'libglib2.0-0' 'liblz4-1')
 deps_ubuntu=("${deps_debian[@]}")

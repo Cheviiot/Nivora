@@ -79,18 +79,11 @@ def rebuild(node: dict, prefix: str = "") -> dict:
             counts["socket"] += socket_count
             changed = True
 
-        # The exact minified statement that used to anchor this patch
-        # (a literal `P.app.setName("Claude");RRn();` snippet) stopped
-        # matching the moment Anthropic re-minified the bundle: the
-        # single-letter identifiers Vite/esbuild hand out are reassigned
-        # on every build and aren't stable across versions. The MSIX
-        # feature-detection line that conditionally appends to
-        # `app.userAgentFallback` is a much better anchor because it's
-        # tied to a real, semantically-required Electron API call rather
-        # than an arbitrary internal function name — so instead of a
-        # literal string, capture whatever the minifier currently calls
-        # the Electron `app` object and reuse that name in the injected
-        # statement.
+        # Minified identifiers (single-letter, Vite/esbuild output) aren't
+        # stable across builds, so anchor on the MSIX feature-detection line
+        # instead — it's tied to a real Electron API call rather than an
+        # arbitrary internal name. Capture whatever the minifier currently
+        # calls the `app` object and reuse that name in the injected statement.
         user_agent_pattern = re.compile(
             rb'(\w+)\.app\.userAgentFallback=`\$\{\1\.app\.userAgentFallback\} MSIX`'
         )

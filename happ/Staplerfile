@@ -20,7 +20,7 @@ provides=()
 replaces=('happ')
 conflicts=()
 
-# auto_req отключен — Qt-приложение поставляется с bundled библиотеками
+# Qt itself ships bundled here, so auto_req would just be noise.
 auto_reqprov_method="dirty"
 auto_req=0
 auto_prov=0

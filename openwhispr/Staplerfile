@@ -17,30 +17,22 @@ provides=()
 replaces=('openwhispr')
 conflicts=()
 
-# Electron-приложение с полностью bundled whisper.cpp/llama.cpp/onnxruntime
-# стеком (opt/OpenWhispr/resources/bin) — auto_req на такое дерево выдаёт
-# только шум.
+# Bundled whisper.cpp/llama.cpp/onnxruntime stack (resources/bin/) makes
+# auto_req noise, not signal.
 auto_reqprov_method="dirty"
 auto_req=0
 auto_prov=0
 
-# libpipewire — жёсткий Depends в самом upstream DEB (control-файл), нужен
-# resources/bin/linux-system-audio-helper для захвата системного звука.
+# libpipewire: hard Depends upstream, used by
+# resources/bin/linux-system-audio-helper for system-audio capture.
 #
-# ydotool тоже жёсткий Depends у upstream, но это не универсальное
-# требование, а нужен только для *нативной* Wayland-вставки текста — сам
-# apt.asar называет его так прямо в экране настройки ("Auto-paste on
-# Wayland requires ydotool") с собственным гайдом по установке на каждый
-# дистрибутив. Собственный launcher upstream уже форсирует
-# --ozone-platform=x11 под Wayland-сессией, то есть рендерится всегда через
-# X11/XWayland, где вставка текста работает через bundled XTest-биндинг
-# (resources/bin/linux-fast-paste, зависит только от libX11/libXtst/libXi —
-# уже жёсткие deps), без ydotool вообще. На ALT p11 пакета `ydotool` в
-# репозитории нет вообще (есть только в Sisyphus) — жёсткая зависимость от
-# него делает пакет НЕустанавливаемым целиком, а не просто не даёт одну
-# опциональную фичу. Поэтому здесь (и только здесь, для остальных
-# дистрибутивов, где ydotool реально есть, оставлено как у upstream)
-# ydotool — опциональная зависимость.
+# ydotool is only for *native* Wayland paste — the launcher forces
+# --ozone-platform=x11, so paste actually goes through the bundled XTest
+# binary (resources/bin/linux-fast-paste, needs only libX11/libXtst/libXi,
+# already hard deps below). ALT p11 doesn't package ydotool at all (only
+# Sisyphus does), so making it hard here would block the whole install over
+# one optional feature — kept optional on ALT only; other distros match
+# upstream's hard Depends.
 deps=()
 deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'libxss1' 'libxtst6' 'libxi6' 'xdg-utils' 'libatspi2.0-0' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2' 'ydotool' 'libpipewire-0.3-0')
 deps_ubuntu=("${deps_debian[@]}")
@@ -49,10 +41,8 @@ deps_arch=('gtk3' 'libnotify' 'nss' 'libxss' 'libxtst' 'libxi' 'xdg-utils' 'at-s
 deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'libXss1' 'libXtst6' 'libXi6' 'xdg-utils' 'at-spi2-core' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2' 'ydotool' 'libpipewire-0_3-0')
 deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'libXScrnSaver' 'libXtst' 'libXi' 'xdg-utils' 'libat-spi2-core' 'libuuid' 'libsecret' 'libgbm' 'libalsa' 'pipewire-libs')
 
-# ydotool на ALT доступен только из Sisyphus (не из p11, см. выше), но раз
-# уж он не входит в стандартные репозитории целевой платформы — опциональная
-# рекомендация, а не hard dep. Пакет несёт собственные udev-правило и
-# systemd user unit (см. README), отдельная настройка Nivora не нужна.
+# ydotool ships its own udev rule + systemd user unit (README) — no extra
+# setup needed beyond enabling the service.
 opt_deps=()
 opt_deps_debian=('libayatana-appindicator3-1 | libappindicator3-1' 'wl-clipboard' 'xclip' 'xdotool' 'wtype')
 opt_deps_ubuntu=("${opt_deps_debian[@]}")

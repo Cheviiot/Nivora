@@ -20,7 +20,7 @@ provides=()
 replaces=('yandex-browser-stable')
 conflicts=()
 
-# Chromium и вспомогательные компоненты поставляются в официальном DEB.
+# Chromium and its helper components ship prebuilt in the official DEB.
 auto_reqprov_method="dirty"
 auto_req=0
 auto_prov=0

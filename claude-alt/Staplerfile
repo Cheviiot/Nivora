@@ -28,12 +28,11 @@ deps_arch=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'libgbm'
 deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'xdg-utils' 'at-spi2-core' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'glibc' 'libXtst6' 'libuuid1' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
 deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'xdg-utils' 'libat-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
 
-# Тот же upstream-бинарник, что и у claude (идентичные checksums ниже), поэтому
-# набор опциональных рантайм-зависимостей зеркалит claude/Staplerfile: без него
-# в ClaudeAlt молча отваливаются звук, системный keyring, appindicator-трей и,
-# главное, Cowork VM sandbox — patch-asar.py отдельно переименовывает её сокет
-# в claude-alt-cowork-vm.sock именно для того, чтобы эта песочница у ClaudeAlt
-# работала независимо от claude, а не была недоступна.
+# Same upstream binary as claude (identical checksums below), so this
+# mirrors claude/Staplerfile's opt_deps: without them, audio, the system
+# keyring, the appindicator tray, and the Cowork VM sandbox silently drop
+# out. patch-asar.py renames its socket to claude-alt-cowork-vm.sock
+# specifically so that sandbox keeps working independently of claude.
 opt_deps=()
 opt_deps_debian=('libasound2t64 | libasound2 | pulseaudio' 'libayatana-appindicator3-1 | libappindicator3-1' 'ca-certificates' 'gnome-keyring | kwalletd6 | kwalletd5' 'qemu-system-x86' 'ovmf' 'virtiofsd')
 opt_deps_ubuntu=("${opt_deps_debian[@]}")
@@ -69,14 +68,14 @@ checksums=(
 	'sha256:b5264918d7cc3436bde057057e5790f617e42ccfcd1237d9170d26aea12799b8'
 	'sha256:f23de36a74c3f6ddae92511fc0dc659816853bf1d28520a6e0232fe2606fd0b4'
 	'sha256:21d1db80c30921346252ed405fa36cb5c48c287afdd8ebe474073389fd88e85e'
-	'sha256:22a2fc5d78d1702cfc81b2dd142b6e5cc88716c649a2b8f1117a1d7206d0b08c'
+	'sha256:f92752b7c4f4b6024905ffd8f6385d51dfb4c34dde62212098ee5587dd7fce64'
 )
 checksums_arm64=(
 	'sha256:16949f5c06387806bd01eb1b2b402af8ed515d37e4ffc6f2d6aae5808af873c8'
 	'sha256:b5264918d7cc3436bde057057e5790f617e42ccfcd1237d9170d26aea12799b8'
 	'sha256:f23de36a74c3f6ddae92511fc0dc659816853bf1d28520a6e0232fe2606fd0b4'
 	'sha256:21d1db80c30921346252ed405fa36cb5c48c287afdd8ebe474073389fd88e85e'
-	'sha256:22a2fc5d78d1702cfc81b2dd142b6e5cc88716c649a2b8f1117a1d7206d0b08c'
+	'sha256:f92752b7c4f4b6024905ffd8f6385d51dfb4c34dde62212098ee5587dd7fce64'
 )
 
 scripts=(

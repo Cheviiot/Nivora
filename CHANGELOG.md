@@ -2,6 +2,28 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-08-15 — pineconemc переведён на auto_req, найден несоответствующий explicit-список
+
+### Изменено
+
+- `pineconemc`: auto_req + explicit-остаток (`ca-certificates`, `xdg-utils`).
+  Реальный бинарник (`opt/pineconemc/shared/bin/elyprismlauncher` —
+  `opt/pineconemc/bin/elyprismlauncher` лишь statically-linked
+  "sharun"-загрузчик без своих зависимостей) — Qt6-приложение, а старый
+  явный список (`libgtk+3`/`libICE`/`libnss`/`libSM`/`libdbus`/`libdrm` и
+  т.д.) не пересекается почти ни с чем в его реальном `DT_NEEDED` —
+  похоже, список был скопирован из шаблона другого (GTK3/Electron) пакета
+  каталога, а не исследован для этого конкретно. Пакет — полностью
+  самодостаточная "portable"-сборка: bundled `libc.so.6`, `ld-linux`,
+  `libstdc++`, `libGL`, `libX11`, `libz` и весь Qt6/X11-стек, единственная
+  настоящая внешняя зависимость — `libtiff.so.5`.
+
+Проверено не только `apt-get install` на `registry.altlinux.org/p11` и
+`.../sisyphus`, но и реальным запуском бинарника
+(`QT_QPA_PLATFORM=offscreen pineconemc --help`) внутри контейнера — вся
+цепочка динамической линковки резолвится корректно, не просто
+устанавливается.
+
 ## 2026-08-15 — balena-etcher переведён на гибридный auto_req
 
 ### Изменено

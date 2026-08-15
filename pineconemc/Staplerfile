@@ -1,6 +1,6 @@
 name='pineconemc'
 version='11.0.3'
-release=3
+release=4
 summary='Prism Launcher fork with Ely.by and offline account support'
 summary_ru='Форк Prism Launcher с поддержкой Ely.by и offline-аккаунтов'
 group='Games/Other'
@@ -17,9 +17,21 @@ provides=()
 replaces=('pineconemc')
 conflicts=()
 
+# PineconeMC's own binary (opt/pineconemc/shared/bin/elyprismlauncher — the
+# statically-linked file at opt/pineconemc/bin/elyprismlauncher is just a
+# "sharun"-style bootstrap loader with no dynamic deps of its own, see
+# maintenance.md) is Qt6, not GTK3: readelf -d confirmed it and its bundled
+# Qt XCB platform plugin need Qt6/X11/GL/zlib, none of which overlap with
+# most of the old explicit list. libgtk+3/libICE/libnss/libSM/libdbus/
+# libdrm never show up anywhere in the payload's DT_NEEDED — this recipe's
+# deps_* arrays look like they were copied from one of the catalog's GTK3
+# Electron packages rather than researched for this Qt6 app. auto_req
+# replaces the whole guess with what's actually linked; ca-certificates
+# (data) and xdg-utils (subprocess) are the only genuinely non-ELF items
+# left to keep explicit.
 auto_reqprov_method="dirty"
-auto_req=0
-auto_prov=0
+auto_req=1
+auto_prov=1
 
 deps=()
 deps_debian=('ca-certificates' 'libc6' 'libdbus-1-3' 'libdrm2' 'libegl1' 'libfontconfig1' 'libfreetype6' 'libgcc-s1' 'libgl1' 'libglib2.0-0' 'libgtk-3-0' 'libice6' 'libnss3' 'libsm6' 'libstdc++6' 'libudev1' 'libx11-6' 'libxcb1' 'libxcomposite1' 'libxcursor1' 'libxdamage1' 'libxext6' 'libxfixes3' 'libxi6' 'libxkbcommon0' 'libxrandr2' 'libxrender1' 'libxtst6' 'zlib1g' 'xdg-utils')
@@ -27,7 +39,7 @@ deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('ca-certificates' 'glibc' 'dbus-libs' 'libdrm' 'mesa-libEGL' 'fontconfig' 'freetype' 'libgcc' 'mesa-libGL' 'glib2' 'gtk3' 'libICE' 'nss' 'libSM' 'libstdc++' 'systemd-libs' 'libX11' 'libxcb' 'libXcomposite' 'libXcursor' 'libXdamage' 'libXext' 'libXfixes' 'libXi' 'libxkbcommon' 'libXrandr' 'libXrender' 'libXtst' 'zlib' 'xdg-utils')
 deps_arch=('ca-certificates' 'glibc' 'dbus' 'libdrm' 'libglvnd' 'fontconfig' 'freetype2' 'gcc-libs' 'glib2' 'gtk3' 'libice' 'nss' 'libsm' 'systemd-libs' 'libx11' 'libxcb' 'libxcomposite' 'libxcursor' 'libxdamage' 'libxext' 'libxfixes' 'libxi' 'libxkbcommon' 'libxrandr' 'libxrender' 'libxtst' 'zlib' 'xdg-utils')
 deps_opensuse=('ca-certificates' 'glibc' 'libdbus-1-3' 'libdrm2' 'Mesa-libEGL1' 'fontconfig' 'libfreetype6' 'libgcc_s1' 'Mesa-libGL1' 'glib2' 'gtk3' 'libICE6' 'mozilla-nss' 'libSM6' 'libstdc++6' 'libudev1' 'libX11-6' 'libxcb1' 'libXcomposite1' 'libXcursor1' 'libXdamage1' 'libXext6' 'libXfixes3' 'libXi6' 'libxkbcommon0' 'libXrandr2' 'libXrender1' 'libXtst6' 'zlib' 'xdg-utils')
-deps_altlinux=('ca-certificates' 'glibc' 'libdbus' 'libdrm' 'libEGL' 'fontconfig' 'libfreetype' 'libgcc1' 'libGL' 'glib2' 'libgtk+3' 'libICE' 'libnss' 'libSM' 'libstdc++6' 'libudev0' 'libX11' 'libxcb' 'libXcomposite' 'libXcursor' 'libXdamage' 'libXext' 'libXfixes' 'libXi' 'libxkbcommon' 'libXrandr' 'libXrender' 'libXtst' 'zlib' 'xdg-utils')
+deps_altlinux=('ca-certificates' 'xdg-utils')
 
 sources=(
 	"https://github.com/ElyPrismLauncher/Launcher/releases/download/${version}/PineconeMC-Linux-Qt6-Portable-${version}.tar.gz?~archive=false&~name=pineconemc.tar.gz"

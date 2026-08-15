@@ -1,6 +1,6 @@
 name='github-desktop'
 version=3.6.4
-release=1
+release=2
 summary='GitHub Desktop built from the official source'
 summary_ru='GitHub Desktop, собранный из официальных исходников'
 group='Development/Tools'
@@ -18,23 +18,31 @@ replaces=('github-desktop')
 conflicts=()
 
 auto_reqprov_method="dirty"
-auto_req=0
-auto_prov=0
+auto_req=1
+auto_prov=1
 
-# The bundled portable git under resources/app/git/libexec/git-core/ (used
-# for the http/https smart transport: git-remote-http, git-http-fetch, ...)
-# is linked against the GnuTLS build of libcurl, not the regular one — a
-# real DT_NEEDED entry (confirmed with ldd against a real install), not
-# something covered by the plain libcurl already pulled in transitively.
-# Fedora/Arch/openSUSE don't ship a separate GnuTLS-flavored curl package
-# at all, so this is left unverified there.
+# auto_req covers the real DT_NEEDED across the whole payload (readelf -d
+# confirmed: the main desktop binary's Chromium stack, plus the bundled
+# portable git under resources/app/git/libexec/git-core/ — git itself
+# needs zlib, which the old explicit list never named directly, and
+# git-remote-http/git-http-fetch/git-http-push/git-imap-send need libcurl.
+# This resolves itself automatically now instead of needing a hardcoded
+# package name: upstream switched their bundled git's curl from a GnuTLS
+# build back to a regular one between 3.6.3 and 3.6.4, so the previous
+# hand-pinned libcurl4-gnutls dependency (and its documented ABI/symbol
+# mismatch on ALT) is moot, not fixed by anything here. The rest stays
+# explicit: ca-certificates is data, git is the *system* git invoked as a
+# subprocess by the app itself (a separate thing from the bundled portable
+# git above, not detectable by ELF scanning either way), xdg-utils is a
+# subprocess tool, and libsecret/libXScrnSaver/libXtst are dlopen'd by
+# Chromium like in the rest of the catalog's Electron packages.
 deps=()
 deps_debian=('ca-certificates' 'git' 'libasound2' 'libatk-bridge2.0-0' 'libatk1.0-0' 'libatspi2.0-0' 'libcairo2' 'libcups2' 'libcurl3-gnutls' 'libdbus-1-3' 'libexpat1' 'libgbm1' 'libglib2.0-0' 'libgtk-3-0' 'libnspr4' 'libnss3' 'libpango-1.0-0' 'libsecret-1-0' 'libudev1' 'libx11-6' 'libxcb1' 'libxcomposite1' 'libxdamage1' 'libxext6' 'libxfixes3' 'libxkbcommon0' 'libxrandr2' 'libxss1' 'libxtst6' 'xdg-utils')
 deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('ca-certificates' 'git' 'alsa-lib' 'atk' 'at-spi2-atk' 'at-spi2-core' 'cairo' 'cups-libs' 'dbus-libs' 'expat' 'mesa-libgbm' 'glib2' 'gtk3' 'nspr' 'nss' 'pango' 'libsecret' 'systemd-libs' 'libX11' 'libxcb' 'libXcomposite' 'libXdamage' 'libXext' 'libXfixes' 'libxkbcommon' 'libXrandr' 'libXScrnSaver' 'libXtst' 'xdg-utils')
 deps_arch=('ca-certificates' 'git' 'alsa-lib' 'atk' 'at-spi2-atk' 'at-spi2-core' 'cairo' 'cups' 'dbus' 'expat' 'libgbm' 'glib2' 'gtk3' 'nspr' 'nss' 'pango' 'libsecret' 'systemd-libs' 'libx11' 'libxcb' 'libxcomposite' 'libxdamage' 'libxext' 'libxfixes' 'libxkbcommon' 'libxrandr' 'libxss' 'libxtst' 'xdg-utils')
 deps_opensuse=('ca-certificates' 'git' 'alsa' 'libatk-1_0-0' 'libatk-bridge-2_0-0' 'libatspi0' 'libcairo2' 'cups-libs' 'libdbus-1-3' 'libexpat1' 'libgbm1' 'glib2' 'gtk3' 'mozilla-nspr' 'mozilla-nss' 'pango' 'libsecret-1-0' 'libudev1' 'libX11-6' 'libxcb1' 'libXcomposite1' 'libXdamage1' 'libXext6' 'libXfixes3' 'libxkbcommon0' 'libXrandr2' 'libXss1' 'libXtst6' 'xdg-utils')
-deps_altlinux=('ca-certificates' 'git' 'libalsa' 'at-spi2-atk' 'libat-spi2-core' 'libatk' 'libcairo' 'libcups' 'libcurl4-gnutls' 'libdbus' 'libexpat' 'libgbm' 'glib2' 'libgtk+3' 'libnspr' 'libnss' 'libpango' 'libsecret' 'libudev0' 'libX11' 'libxcb' 'libXcomposite' 'libXdamage' 'libXext' 'libXfixes' 'libxkbcommon' 'libXrandr' 'libXScrnSaver' 'libXtst' 'xdg-utils')
+deps_altlinux=('ca-certificates' 'git' 'libsecret' 'libXScrnSaver' 'libXtst' 'xdg-utils')
 
 build_deps=('binutils')
 

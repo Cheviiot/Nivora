@@ -2,6 +2,30 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-08-15 — github-desktop переведён на гибридный auto_req
+
+### Изменено
+
+- `github-desktop`: auto_req + explicit-остаток. auto_req находит
+  зависимости, которых раньше в явном списке не было вовсе — `zlib` для
+  bundled portable git (`git`, `git-http-fetch` и др. в
+  `resources/app/git/libexec/git-core/`). `ca-certificates` (данные),
+  `git` (системный git, вызывается как подпроцесс самим приложением — это
+  отдельная вещь от bundled portable git выше, ELF-сканирование её тоже не
+  видит), `xdg-utils` (subprocess) и `libsecret`/`libXScrnSaver`/`libXtst`
+  (dlopen у Chromium, как и у остальных Electron-пакетов) остались
+  explicit.
+
+Заодно выяснилось: задокументированная в памяти проблема с несовпадением
+символьной версии GnuTLS-сборки libcurl у bundled git сама исчезла между
+3.6.3 и 3.6.4 — апстрим сменил линковку bundled git обратно на обычный
+(не-GnuTLS) libcurl. Не пофикшено этой сессией, само собой перестало быть
+актуальным при обновлении версии; старая явная зависимость
+`libcurl4-gnutls` больше не нужна и не пишется вручную.
+
+Проверено реальной установкой в контейнерах `registry.altlinux.org/p11`
+и `.../sisyphus`.
+
 ## 2026-08-15 — opencode переведён на гибридный auto_req, найден и исправлен musl-мусор
 
 ### Изменено

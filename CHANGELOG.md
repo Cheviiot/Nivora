@@ -2,6 +2,31 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-08-15 — telegram переведён на гибридный auto_req
+
+### Изменено
+
+- `telegram`: auto_req + explicit-остаток. Реальный `DT_NEEDED` бинарника
+  Telegram куда короче старого явного списка — только glibc, glib2, gio,
+  fontconfig, freetype. `libharfbuzz`/`libpng16`/`libpcre2`/`libbrotli*`/
+  `bzlib`/`libblkid`/`libmount`/`libselinux`/`libffi8`/`libexpat`/
+  `libgraphite2`/`zlib`/`libX11` нигде не встретились напрямую (вероятно,
+  транзитивны через fontconfig/freetype/glib2, либо dlopen для
+  опционального Wayland/X11-бэкенда), прямых доказательств нет — оставлены
+  explicit из осторожности. `icon-theme-hicolor` — данные, тоже explicit.
+
+При проверке реальным запуском (не только `apt-get install`) нашлись два
+не связанных с auto_req существующих пробела в рецепте: Telegram
+подгружает `libwayland-client.so.0` через dlopen и падает по assertion,
+если её нет, вместо отката на X11; отдельно Qt 6.5+ требует
+`libxcb-cursor` для XCB-плагина. Оба пакета отсутствовали в explicit-списке
+и до этой сессии — не регрессия auto_req, а старая недостача. Заведена
+отдельная задача на исправление, чинить внутри этой сессии не стал, чтобы
+не смешивать несвязанные изменения.
+
+Проверено реальной установкой и запуском бинарника в контейнерах
+`registry.altlinux.org/p11` и `.../sisyphus`.
+
 ## 2026-08-15 — pineconemc переведён на auto_req, найден несоответствующий explicit-список
 
 ### Изменено

@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://stplr.dev/docs/intro/"><img src="https://img.shields.io/badge/Stapler-Community%20Repo-6366F1?style=for-the-badge" alt="Stapler Community Repo"></a>
-  <img src="https://img.shields.io/badge/пакетов-21-2ea043?style=for-the-badge" alt="21 пакет">
+  <img src="https://img.shields.io/badge/пакетов-22-2ea043?style=for-the-badge" alt="22 пакета">
   <a href="https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/quality.yml?branch=main&style=for-the-badge&label=CI" alt="CI"></a>
 </p>
 
@@ -28,7 +28,7 @@
 </p>
 
 <!-- package-count -->
-**21 пакет** · **6 категорий** · `amd64`, `arm64` и `all`
+**22 пакета** · **6 категорий** · `amd64`, `arm64` и `all`
 
 ## Подключение
 
@@ -65,6 +65,7 @@ stplr info nivora/codex
 | <img src="telegram/telegram-desktop.png" width="32" height="32" alt="Telegram"> | [Telegram](https://desktop.telegram.org/) | `7.0.9` | `amd64` | `stplr install nivora/telegram` |
 | <img src="https://raw.githubusercontent.com/Vencord/Vesktop/main/build/icon.svg" width="32" height="32" alt="Vesktop"> | [Vesktop](vesktop/README.md) | `1.6.5` | `amd64`, `arm64` | `stplr install nivora/vesktop` |
 | <img src="https://browser.yandex.ru/apple-touch-icon.png" width="32" height="32" alt="Яндекс Браузер"> | [Яндекс Браузер](https://browser.yandex.ru/) | `26.6.1.1083` | `amd64` | `stplr install nivora/yandex-browser-stable` |
+| <img src="yandex-music/yandex-music.png" width="32" height="32" alt="Yandex Music"> | [Yandex Music](yandex-music/README.md) | `5.115.3` | `amd64` | `stplr install nivora/yandex-music` |
 
 ### Удалённый доступ
 

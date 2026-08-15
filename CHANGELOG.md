@@ -2,6 +2,46 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-08-15 — Добавлен Yandex Music
+
+### Добавлено
+
+- Пакет `yandex-music` — официальный десктопный клиент Яндекс Музыки
+  (Custom/nonfree, официальный `.deb`, `amd64`).
+
+Рецепт портирован из стороннего каталога [Aides](https://aides.space)
+([aides-pkgs/yandex-music](https://altlinux.space/aides-pkgs/yandex-music))
+по образцу, но переписан под конвенции Nivora, а не скопирован как есть.
+У Aides пакет ещё и запускается в песочнице Firejail (`firejailed=1` с
+собственным профилем) — по решению мейнтейнера в Nivora без неё, как и у
+остальных 21 пакета каталога.
+
+С `auto_req`/`auto_prov`, наоборот, решили не следовать общей для каталога
+практике «explicit deps_altlinux везде»: у `yandex-music`, в отличие от
+`vesktop`/`claude`/`openwhispr` и прочих, `auto_req=1`/`auto_prov=1`
+(как у Aides), без ручных `deps_*`. Проверено, что для этого конкретного
+пакета это безопасно: `rpm -qp --requires` собранного RPM показывает только
+настоящие системные soname (включая `libgbm.so.1`/`libasound.so.2` — тот же
+пробел, что уже чинили для `vesktop`, upstream DEB их не объявляет, но
+`DT_NEEDED` бинарника они есть), никаких записей для bundled-либов Chromium
+(`libffmpeg.so`, `libvulkan.so.1`, `libvk_swiftshader.so`) не появилось,
+подтверждено install-тестом в контейнерах ALT p11 и Sisyphus. Такой подход
+устойчивее к разнице конкретных версий библиотек между ветками ALT — то,
+из-за чего вчера ломался `parsec` (`libavcodec61` vs `62`) — потому что
+soname резолвится тем, что реально слинковано в бинарнике на момент сборки,
+а не зафиксированным вручную именем пакета.
+
+Для `package_updates.sh` использован собственный update-feed
+electron-builder приложения
+(`https://desktop.app.music.yandex.net/stable/latest-linux.yml`,
+адрес взят из `resources/app-update.yml` самого пакета) — чистое поле
+`version:`, надёжнее, чем парсинг HTML/Packages-индекса.
+
+Проверено реальной сборкой и установкой в одноразовых контейнерах
+`registry.altlinux.org/p11/base` и `registry.altlinux.org/sisyphus/base`
+(после истории с `openwhispr`/`ydotool` в этой сессии — теперь обе ветки
+ALT проверяются с самого начала, а не только Sisyphus).
+
 ## 2026-08-14 — deps_altlinux не поддерживает альтернативы через `|` или `(a or b)`
 
 Реальная установка `nivora/openwhispr` на живой машине на ALT p11 упала:

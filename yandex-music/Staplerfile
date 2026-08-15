@@ -1,0 +1,103 @@
+name='yandex-music'
+version=5.115.3
+release=1
+summary='Official Yandex Music desktop client'
+summary_ru='Официальный десктопный клиент Яндекс Музыки'
+group='Sound'
+desc='Yandex Music is the official desktop client for the Yandex Music streaming service: personalized recommendations, curated playlists, podcasts, audiobooks and the "My Wave" endless radio.'
+desc_ru='Яндекс Музыка — официальный десктопный клиент стримингового сервиса Яндекс Музыки: персональные рекомендации, подборки, подкасты, аудиокниги и бесконечное радио «Моя волна».'
+homepage='https://music.yandex.ru/download/'
+maintainer='Яндекс Музыка <music@support.yandex.ru>'
+
+architectures=('amd64')
+
+license=('Custom')
+nonfree=1
+nonfree_msg='Yandex Music является проприетарным приложением ООО «Яндекс». Использование клиента, учётной записи, подписки и сетевых функций регулируется условиями Яндекс Музыки.'
+nonfree_url='https://yandex.ru/legal/music_mobile_agreement/'
+
+provides=()
+replaces=('yandex-music')
+conflicts=()
+
+# Unlike the rest of this catalog: auto_req/auto_prov instead of
+# hand-maintained deps_*. Confirmed the generated Requires:
+# (rpm -qp --requires) lists only real system soname deps, not Chromium's
+# own bundled libs (libffmpeg.so, libvk_swiftshader.so, libEGL.so,
+# libGLESv2.so, libvulkan.so.1) — auto_prov self-satisfies those. Also
+# avoids hardcoding a soname number that differs between ALT branches
+# (see parsec's libavcodec61/62 history).
+auto_reqprov_method="dirty"
+auto_req=1
+auto_prov=1
+
+opt_deps=()
+opt_deps_debian=('libayatana-appindicator3-1 | libappindicator3-1')
+opt_deps_ubuntu=("${opt_deps_debian[@]}")
+opt_deps_fedora=('libappindicator-gtk3')
+opt_deps_arch=('libappindicator-gtk3')
+opt_deps_opensuse=('libappindicator3-1')
+opt_deps_altlinux=('libappindicator-gtk3')
+
+build_deps=('binutils')
+build_deps_debian=('binutils')
+build_deps_ubuntu=("${build_deps_debian[@]}")
+build_deps_fedora=('binutils')
+build_deps_arch=('binutils')
+build_deps_opensuse=('binutils')
+build_deps_altlinux=('binutils')
+
+sources=(
+	"https://music-desktop-application.s3.yandex.net/stable/Yandex_Music_amd64_${version}.deb?~archive=false&~name=yandex-music.deb"
+	'local:///LICENSE'
+)
+
+checksums=(
+	'sha256:c5cf98fdb2f00db1f4b9d4c9acbfa33590d7d9221f89c27d3b654a0e33a90884'
+	'sha256:52a11692975a1dfe999f8cf953522d2ddfc2bd594a3a23c2e52035eb53d2fa2d'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x yandex-music.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install -dm755 "${pkgdir}/opt"
+	cp -a "${srcdir}/extracted/opt/Яндекс Музыка" "${pkgdir}/opt/YandexMusic"
+	chmod 0755 "${pkgdir}/opt/YandexMusic/chrome-sandbox"
+	chmod 755 "${pkgdir}/opt/YandexMusic/yandexmusic"
+
+	# Electron's own auto-updater has nothing to manage under Stapler.
+	rm -f "${pkgdir}/opt/YandexMusic/resources/app-update.yml"
+
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -sfn "/opt/YandexMusic/yandexmusic" "${pkgdir}/usr/bin/yandex-music"
+
+	install -dm755 "${pkgdir}/usr/share"
+	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"
+	cp -a "${srcdir}/extracted/usr/share/icons" "${pkgdir}/usr/share/"
+	sed -i 's|Exec="/opt/Яндекс Музыка/yandexmusic" %U|Exec=/usr/bin/yandex-music %U|' \
+		"${pkgdir}/usr/share/applications/yandexmusic.desktop"
+
+	install-license LICENSE "yandex-music/LICENSE.nivora"
+	install -Dm644 "${srcdir}/extracted/opt/Яндекс Музыка/LICENSES.chromium.html" \
+		"${pkgdir}/usr/share/licenses/yandex-music/LICENSES.chromium.html"
+	install -Dm644 "${srcdir}/extracted/opt/Яндекс Музыка/LICENSE.electron.txt" \
+		"${pkgdir}/usr/share/licenses/yandex-music/LICENSE.electron.txt"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/opt/YandexMusic/**/*" \
+		"/usr/share/icons/hicolor/*/apps/yandexmusic.png"
+}

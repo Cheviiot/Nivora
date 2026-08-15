@@ -33,6 +33,7 @@ EXPECTED_PACKAGES = (
     "vintner",
     "vual",
     "yandex-browser-stable",
+    "yandex-music",
 )
 
 REQUIRED_ROOT_FILES = {

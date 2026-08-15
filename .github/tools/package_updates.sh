@@ -23,6 +23,7 @@ readonly -a PACKAGES=(
     vintner
     vual
     yandex-browser-stable
+    yandex-music
 )
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -124,13 +125,12 @@ latest_anidesk() {
 
 latest_openwhispr() {
     local version
-    # OpenWhispr's repo interleaves the app's own vX.Y.Z tags with several
-    # unrelated helper-tool release trains (windows-fast-paste-vN,
-    # linux-text-monitor-vN, meeting-aec-helper-vN, ...). github_latest_release
-    # just takes the first non-prerelease release off a date-sorted list, which
-    # would eventually pick up one of those instead of the app itself — the
-    # same class of bug already hit once with vintner's wine-v1 tag. Anchor to
-    # tags that start with "v" instead, like latest_anidesk does.
+    # OpenWhispr's repo interleaves the app's own vX.Y.Z tags with unrelated
+    # helper-tool release trains (windows-fast-paste-vN, linux-text-monitor-vN,
+    # meeting-aec-helper-vN, ...); github_latest_release's date-sorted pick
+    # would eventually grab one of those instead — the same class of bug
+    # already hit vintner's wine-v1 tag. Anchor on "v"-prefixed tags instead,
+    # like latest_anidesk.
     version="$(
         GIT_TERMINAL_PROMPT=0 timeout 60s \
             git ls-remote --tags --refs https://github.com/OpenWhispr/openwhispr.git 'refs/tags/v*' |
@@ -215,6 +215,21 @@ latest_yandex_browser() {
     printf '%s\n' "$version"
 }
 
+latest_yandex_music() {
+    local version
+    # resources/app-update.yml in the packaged app points electron-builder's
+    # own updater at this feed; same generic-provider latest-*.yml format
+    # used by codex/opencode/openwhispr upstream, just not on GitHub here.
+    version="$(
+        curl --retry 3 --retry-delay 2 --retry-all-errors \
+            --connect-timeout 30 --max-time 120 -fsSL \
+            'https://desktop.app.music.yandex.net/stable/latest-linux.yml' |
+            awk -F': ' '$1 == "version" { print $2; exit }'
+    )"
+    [[ -n "$version" ]] || die 'cannot determine latest Yandex Music version'
+    printf '%s\n' "$version"
+}
+
 latest_version() {
     case "$1" in
     anidesk) latest_anidesk ;;
@@ -239,6 +254,7 @@ latest_version() {
     vintner) github_latest_release Cheviiot/vintner ;;
     vual) github_latest_release Cheviiot/Vual ;;
     yandex-browser-stable) latest_yandex_browser ;;
+    yandex-music) latest_yandex_music ;;
     *) die "unknown package: $1" ;;
     esac
 }

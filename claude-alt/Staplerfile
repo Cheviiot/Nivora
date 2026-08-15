@@ -1,6 +1,6 @@
 name='claude-alt'
 version=1.30096.1
-release=1
+release=2
 summary='Independent secondary Claude desktop application'
 summary_ru='Независимое второе приложение Claude'
 group='Development/Tools'
@@ -17,16 +17,21 @@ provides=()
 replaces=('claude-alt')
 conflicts=()
 auto_reqprov_method="dirty"
-auto_req=0
-auto_prov=0
+auto_req=1
+auto_prov=1
 
+# Same upstream binary as claude, same auto_req split - see claude's
+# Staplerfile for the readelf-verified rationale (real DT_NEEDED goes
+# through auto_req; xdg-utils/xdg-desktop-portal(-gtk) are non-ELF,
+# libnotify/libsecret/libXtst/libuuid are dlopen'd by Chromium and kept
+# explicit for real functionality instead of a silent degraded fallback).
 deps=()
 deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'libc6' 'libxtst6' 'libuuid1' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk | xdg-desktop-portal-gnome | xdg-desktop-portal-kde')
 deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa-libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
 deps_arch=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libxtst' 'libutil-linux' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
 deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'xdg-utils' 'at-spi2-core' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'glibc' 'libXtst6' 'libuuid1' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
-deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'xdg-utils' 'libat-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+deps_altlinux=('libnotify' 'xdg-utils' 'libsecret' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
 
 # Same upstream binary as claude (identical checksums below), so this
 # mirrors claude/Staplerfile's opt_deps: without them, audio, the system

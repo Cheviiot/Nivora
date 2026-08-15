@@ -1,7 +1,7 @@
 name='anidesk'
 version='0.0.1-beta.7'
 debian_version='0.0.1.beta.7'
-release=5
+release=6
 summary='Unofficial Anixart desktop client'
 summary_ru='Неофициальный desktop-клиент Anixart'
 group='Video/Players'
@@ -19,16 +19,26 @@ replaces=('anidesk')
 conflicts=()
 
 auto_reqprov_method="dirty"
-auto_req=0
-auto_prov=0
+auto_req=1
+auto_prov=1
 
+# auto_req covers the real DT_NEEDED of the anidesk binary (readelf -d
+# confirmed: gtk3, nss, at-spi2, gbm, xcb, alsa, glibc, ...). The rest
+# stays explicit: xdg-utils is a subprocess tool, mesa-dri-drivers is
+# never linked directly (it's found by the Vulkan ICD loader at runtime,
+# not the dynamic linker), libvulkan1 also never shows up as a direct
+# NEEDED of the main binary (Chromium's ANGLE/swiftshader GPU backend
+# loads it separately) even though the app bundles its own copy too, and
+# libnotify is dlopen'd by Chromium's Linux integration layer like in
+# claude/vesktop - same pattern, same reasoning, kept explicit for real
+# functionality instead of a silent fallback.
 deps=()
 deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2' 'libvulkan1' 'mesa-vulkan-drivers')
 deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa-libgbm' 'libxcb' 'alsa-lib' 'vulkan-loader' 'mesa-vulkan-drivers')
 deps_arch=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa' 'libxcb' 'alsa-lib' 'vulkan-icd-loader' 'vulkan-radeon')
 deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'xdg-utils' 'at-spi2-core' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2' 'libvulkan1' 'Mesa-vulkan-device-select')
-deps_altlinux=('libgtk+3' 'libnotify' 'libnss' 'xdg-utils' 'libat-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libalsa' 'libvulkan1' 'mesa-dri-drivers')
+deps_altlinux=('libnotify' 'xdg-utils' 'libvulkan1' 'mesa-dri-drivers')
 
 build_deps=('binutils')
 build_deps_debian=('binutils' 'python3')

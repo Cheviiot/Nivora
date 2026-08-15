@@ -2,6 +2,27 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-08-15 — claude, claude-alt и anidesk переведены на гибридный auto_req
+
+### Изменено
+
+- `claude`/`claude-alt`/`anidesk` (все три — Electron/Chromium): та же
+  схема, что у happ/vesktop. auto_req покрывает реальный Chromium-стек и
+  заодно находит то, чего в старом explicit-списке не было вовсе —
+  `libcap-ng`/`libseccomp` у claude и claude-alt (`readelf -d` подтвердил
+  прямой `DT_NEEDED`, раньше это работало только транзитивно).
+  `xdg-utils`/`xdg-desktop-portal(-gtk)` остаются explicit (subprocess и
+  D-Bus портал, не библиотеки), как и `libnotify`/`libsecret`/`libXtst`/
+  `libuuid` — Chromium подключает их через `dlopen`, чтобы не падать без
+  них, но Nivora нужна настоящая функциональность, а не тихий fallback.
+  У anidesk отдельно: `libvulkan1` и `mesa-dri-drivers` тоже explicit — ни
+  тот, ни другой не является прямым `DT_NEEDED` главного бинарника
+  (Vulkan ICD грузится не динамическим линкером, а отдельным загрузчиком
+  во время выполнения).
+
+Проверено реальной установкой в контейнерах `registry.altlinux.org/p11`
+и `.../sisyphus` для всех трёх.
+
 ## 2026-08-15 — happ и vesktop переведены на гибридный auto_req
 
 ### Изменено

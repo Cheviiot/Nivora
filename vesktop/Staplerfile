@@ -1,6 +1,6 @@
 name='vesktop'
-version=1.6.5
-release=4
+version=1.6.7
+release=1
 summary='Unofficial Discord desktop client with better Linux support'
 summary_ru='Неофициальный десктопный клиент Discord с улучшенной поддержкой Linux'
 group='Networking/Instant messaging'
@@ -73,13 +73,13 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:2d4c97abe4810703561d59c63cb12b1926f591fe1fe2bf9e914db66c6cc31cf5'
+	'sha256:0204a3fcf8861d11debf72a9be70423d2dca6d4698766b6fda7cfe39beea6a61'
 	'sha256:7a51bc8517e4dc70bd8e1eaa101d3939034a71bd4b37705461124837e3b3d0d0'
 	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
 )
 
 checksums_arm64=(
-	'sha256:3ba8e5b14d4eafa641f407c8720fb0ec489a9ee6276423f98e967218b5d6cd38'
+	'sha256:2ea11d882ae60c5c7cda8ba9057f36d66e490d32276ad3f7a99d3de8345e26cc'
 	'sha256:7a51bc8517e4dc70bd8e1eaa101d3939034a71bd4b37705461124837e3b3d0d0'
 	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
 )

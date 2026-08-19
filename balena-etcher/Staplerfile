@@ -1,6 +1,6 @@
 name='balena-etcher'
 version='2.1.6'
-release=2
+release=3
 summary='Safe SD card and USB drive image flasher'
 summary_ru='Безопасная запись образов на SD-карты и USB-накопители'
 group='System/Configuration/Hardware'
@@ -126,6 +126,14 @@ package() {
 	ln -sfn ../lib/balena-etcher/balena-etcher \
 		"${pkgdir}/usr/bin/balena-etcher"
 
+	# Upstream's .desktop ships no StartupWMClass at all, but the real
+	# window's WM_CLASS (confirmed with xprop against a real running
+	# instance) is "balenaEtcher" (camelCase), not "balena-etcher" like
+	# Icon= - without this line the desktop shell can't match the running
+	# window back to this .desktop entry, so the taskbar/dock shows no
+	# icon even though the launcher icon works fine.
+	sed -i '/^\[Desktop Entry\]$/a StartupWMClass=balenaEtcher' \
+		"${srcdir}/extracted/usr/share/applications/balena-etcher.desktop"
 	install -Dm644 \
 		"${srcdir}/extracted/usr/share/applications/balena-etcher.desktop" \
 		"${pkgdir}/usr/share/applications/balena-etcher.desktop"

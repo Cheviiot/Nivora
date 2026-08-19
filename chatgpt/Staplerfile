@@ -1,6 +1,6 @@
 name='chatgpt'
 version=26.814.41957
-release=1
+release=2
 summary='Official ChatGPT desktop app with integrated Codex'
 summary_ru='Официальное десктопное приложение ChatGPT со встроенным Codex'
 group='Development/Tools'
@@ -113,10 +113,17 @@ package() {
 	install -dm755 "${pkgdir}/usr/bin"
 	ln -sfn /opt/chatgpt/ChatGPT "${pkgdir}/usr/bin/chatgpt"
 
+	# Upstream's .desktop ships no StartupWMClass at all, but the real
+	# window's WM_CLASS (confirmed with xprop against a real running
+	# instance) is "Chatgpt", not "chatgpt" like Icon= - without this line
+	# the desktop shell can't match the running window back to this
+	# .desktop entry, so the taskbar/dock shows no icon even though the
+	# launcher icon works fine.
+	sed -i '/^\[Desktop Entry\]$/a StartupWMClass=Chatgpt' \
+		"${srcdir}/extracted/usr/share/applications/chatgpt.desktop"
 	install-desktop "${srcdir}/extracted/usr/share/applications/chatgpt.desktop"
 
-	install -Dm644 chatgpt.png \
-		"${pkgdir}/usr/share/icons/hicolor/1024x1024/apps/chatgpt.png"
+	install -Dm644 chatgpt.png "${pkgdir}/usr/share/pixmaps/chatgpt.png"
 
 	# Ships its own AppArmor profile granting unprivileged userns instead of
 	# a setuid chrome-sandbox helper (there isn't one in this build) - needed
@@ -135,6 +142,6 @@ files() {
 	files-find-desktop
 	files-find-license
 	files-find \
-		"/usr/share/icons/hicolor/1024x1024/apps/chatgpt.png" \
+		"/usr/share/pixmaps/chatgpt.png" \
 		"/etc/apparmor.d/chatgpt"
 }

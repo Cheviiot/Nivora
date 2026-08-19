@@ -158,7 +158,7 @@ for package in "${packages[@]}"; do
             /opt/chatgpt/codex-launcher \
             /opt/chatgpt/resources/app.asar \
             /usr/share/applications/chatgpt.desktop \
-            /usr/share/icons/hicolor/1024x1024/apps/chatgpt.png \
+            /usr/share/pixmaps/chatgpt.png \
             /etc/apparmor.d/chatgpt; do
             contains_path "$required_path" || {
                 echo "${package}: отсутствует upstream-компонент ChatGPT: ${required_path}" >&2

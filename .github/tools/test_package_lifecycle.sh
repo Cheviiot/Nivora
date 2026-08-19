@@ -25,7 +25,7 @@ esac
 
 # package | command | persistent state marker | desktop/unit | icon
 readonly -a lifecycle_packages=(
-    'chatgpt|/usr/bin/chatgpt|/home/nivora-test/.config/ChatGPT/nivora-lifecycle-state|/usr/share/applications/chatgpt.desktop|/usr/share/icons/hicolor/1024x1024/apps/chatgpt.png'
+    'chatgpt|/usr/bin/chatgpt|/home/nivora-test/.config/ChatGPT/nivora-lifecycle-state|/usr/share/applications/chatgpt.desktop|/usr/share/pixmaps/chatgpt.png'
     'claude|/usr/bin/claude-desktop|/home/nivora-test/.config/Claude/nivora-lifecycle-state|/usr/share/applications/com.anthropic.Claude.desktop|/usr/share/icons/hicolor/128x128/apps/claude-desktop.png'
     'nivora-cli|/usr/bin/nv|/home/nivora-test/.config/nivora-cli/nivora-lifecycle-state|-|-'
     'opencode|/usr/bin/opencode-desktop|/home/nivora-test/.config/opencode/nivora-lifecycle-state|/usr/share/applications/opencode-desktop.desktop|/usr/share/icons/hicolor/128x128/apps/ai.opencode.desktop.png'

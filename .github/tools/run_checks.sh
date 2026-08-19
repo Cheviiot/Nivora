@@ -34,7 +34,6 @@ fi
 python3 -m unittest discover -s .github/tests -p 'test_*.py' -v
 bash .github/tests/test_nivora_cli.sh
 bash .github/tests/test_claude_alt.sh
-bash .github/tests/test_codex_computer_use.sh
 bash .github/tests/test_happ_theme.sh
 bash .github/tests/test_ventoy.sh
 bash .github/tests/test_yandex_browser.sh

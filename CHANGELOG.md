@@ -2,6 +2,38 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-08-20 — codex заменён на официальный пакет chatgpt
+
+### Добавлено
+
+- Пакет `chatgpt` — официальное десктопное приложение ChatGPT от OpenAI
+  (Custom/nonfree, официальный `.deb` с `persistent.oaistatic.com`, `amd64`
+  и `arm64`). Апстрим объединил прежнее отдельное приложение Codex с
+  ChatGPT: панель Codex, `codex-launcher` и обработка ссылок `codex://`
+  встроены в этот же .deb, включая нативную поддержку Computer Use
+  (`resources/cua_node`) без каких-либо сторонних патчей.
+
+### Удалено
+
+- Пакет `codex` (неофициальный Linux-порт из
+  [Boria138/codex-app-linux](https://github.com/Boria138/codex-app-linux) +
+  патчи Computer Use из
+  [ilysenko/codex-desktop-linux](https://github.com/ilysenko/codex-desktop-linux)
+  и [agent-sh/computer-use-linux](https://github.com/agent-sh/computer-use-linux))
+  полностью заменён официальным `chatgpt`. Как и у `telegram`/
+  `telegram-desktop`, `replaces` нового пакета не включает старое имя
+  `codex` (это разрешено только для `claude` в `validate_repo.py`) — у
+  кого установлен `codex`, нужно вручную `stplr install nivora/chatgpt` и
+  `stplr remove codex`. Удалён и специфичный для старого пакета тест
+  `.github/tests/test_codex_computer_use.sh`.
+
+Новый пакет собран с `auto_req=1`/`auto_prov=1` (тот же гибридный подход,
+что и у остальных Electron-пакетов каталога в этой сессии) и без
+setuid-бинарника `chrome-sandbox` — вместо него собственный профиль
+AppArmor (`/etc/apparmor.d/chatgpt`) разрешает непривилегированные user
+namespaces. Bundled musl-варианты нативных Node-аддонов (`node-hid`,
+`serialport`) удаляются при сборке — та же находка, что и у `opencode`.
+
 ## 2026-08-15 — telegram переведён на гибридный auto_req
 
 ### Изменено

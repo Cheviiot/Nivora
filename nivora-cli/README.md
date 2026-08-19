@@ -69,9 +69,9 @@ Nivora CLI упрощает установку, удаление, обновле
 Основная команда принимает и полные названия операций:
 
 ```bash
-nv install codex
+nv install chatgpt
 nv search editor
-nv info codex
+nv info chatgpt
 nv repo list
 ```
 
@@ -80,7 +80,7 @@ nv repo list
 Короткое имя автоматически получает префикс `nivora`:
 
 ```bash
-nvi codex                  # stplr install nivora/codex
+nvi chatgpt                  # stplr install nivora/chatgpt
 nvi other/package          # stplr install other/package
 ```
 

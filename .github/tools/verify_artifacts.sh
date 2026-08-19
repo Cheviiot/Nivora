@@ -151,41 +151,31 @@ for package in "${packages[@]}"; do
         }
     fi
 
-    if [[ "$package" == 'codex' ]]; then
+    if [[ "$package" == 'chatgpt' ]]; then
         for required_path in \
-            /usr/bin/codex-app \
-            /usr/bin/codex-computer-use-linux \
-            /opt/codex-app/resources/app.asar \
-            /opt/codex-app/resources/codex.asar \
-            /opt/codex-app/resources/plugins/openai-bundled/.agents/plugins/marketplace.json \
-            /opt/codex-app/resources/plugins/openai-bundled/plugins/computer-use/.codex-plugin/plugin.json \
-            /opt/codex-app/resources/plugins/openai-bundled/plugins/computer-use/.mcp.json \
-            /opt/codex-app/resources/plugins/openai-bundled/plugins/computer-use/assets/app-icon.png \
-            /opt/codex-app/resources/plugins/openai-bundled/plugins/computer-use/bin/codex-computer-use-linux \
-            /opt/codex-app/resources/plugins/openai-bundled/plugins/computer-use/bin/codex-computer-use-cosmic \
-            /opt/codex-app/resources/plugins/openai-bundled/plugins/computer-use/bin/computer-use-linux-cosmic \
-            /usr/share/applications/codex-app.desktop \
-            /usr/share/icons/hicolor/512x512/apps/codex-app.png; do
+            /usr/bin/chatgpt \
+            /opt/chatgpt/ChatGPT \
+            /opt/chatgpt/codex-launcher \
+            /opt/chatgpt/resources/app.asar \
+            /usr/share/applications/chatgpt.desktop \
+            /usr/share/icons/hicolor/1024x1024/apps/chatgpt.png \
+            /etc/apparmor.d/chatgpt; do
             contains_path "$required_path" || {
-                echo "${package}: отсутствует upstream-компонент Codex: ${required_path}" >&2
+                echo "${package}: отсутствует upstream-компонент ChatGPT: ${required_path}" >&2
                 exit 1
             }
         done
 
-        codex_command_target="$(
+        chatgpt_command_target="$(
             rpm -qp --dump "$artifact" |
-                awk '$1 == "/usr/bin/codex-app" {print $11}'
+                awk '$1 == "/usr/bin/chatgpt" {print $11}'
         )"
-        [[ "$codex_command_target" == '/opt/codex-app/codex-app' ]] || {
-            echo "${package}: команда Codex запускается не напрямую: ${codex_command_target}" >&2
+        [[ "$chatgpt_command_target" == '/opt/chatgpt/ChatGPT' ]] || {
+            echo "${package}: команда ChatGPT запускается не напрямую: ${chatgpt_command_target}" >&2
             exit 1
         }
-        codex_computer_use_target="$(
-            rpm -qp --dump "$artifact" |
-                awk '$1 == "/usr/bin/codex-computer-use-linux" {print $11}'
-        )"
-        [[ "$codex_computer_use_target" == '/opt/codex-app/resources/plugins/openai-bundled/plugins/computer-use/bin/codex-computer-use-linux' ]] || {
-            echo "${package}: неверная ссылка Computer Use: ${codex_computer_use_target}" >&2
+        contains_path '*.musl.node' && {
+            echo "${package}: обнаружены musl-варианты native-аддонов" >&2
             exit 1
         }
     fi

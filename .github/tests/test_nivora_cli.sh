@@ -38,11 +38,11 @@ export NIVORA_SUDO='test-sudo'
 export NIVORA_QUIET=1
 export PATH="${temp_dir}/bin:${PATH}"
 
-nvi codex --clean
+nvi chatgpt --clean
 nve other/package
 nvu
 nvs editor
-nvqi --json codex
+nvqi --json chatgpt
 nvqa --installed
 nvr
 nvrl
@@ -51,14 +51,14 @@ nvc
 nv --repo none install local-name
 
 cat >"${temp_dir}/expected" <<'EOF'
-sudo stplr install nivora/codex --clean
-stplr install nivora/codex --clean
+sudo stplr install nivora/chatgpt --clean
+stplr install nivora/chatgpt --clean
 sudo stplr remove other/package
 stplr remove other/package
 sudo stplr up
 stplr up
 stplr search editor
-stplr info --json nivora/codex
+stplr info --json nivora/chatgpt
 stplr list --installed
 sudo stplr refresh
 stplr refresh
@@ -76,7 +76,7 @@ nv --lang en --help >"${temp_dir}/help-en"
 nv --lang ru --help >"${temp_dir}/help-ru"
 nv --lang ru completion fish >"${temp_dir}/completion"
 nvd --lang en >"${temp_dir}/doctor"
-NIVORA_QUIET=0 nv --lang en --dry-run install codex \
+NIVORA_QUIET=0 nv --lang en --dry-run install chatgpt \
     >"${temp_dir}/preview-stdout" 2>"${temp_dir}/preview"
 
 grep -q 'Simple Stapler package management' "${temp_dir}/help-en"
@@ -84,7 +84,7 @@ grep -q 'Простое управление пакетами Stapler' "${temp_d
 grep -q 'nvi.*установить' "${temp_dir}/help-ru"
 grep -q '__fish_use_subcommand' "${temp_dir}/completion"
 grep -q 'The system is ready' "${temp_dir}/doctor"
-grep -q 'Preview.*test-sudo stplr install nivora/codex' "${temp_dir}/preview"
+grep -q 'Preview.*test-sudo stplr install nivora/chatgpt' "${temp_dir}/preview"
 [[ ! -s "${temp_dir}/preview-stdout" ]]
 
 if nv --lang de help >"${temp_dir}/invalid-out" 2>"${temp_dir}/invalid"; then

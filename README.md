@@ -42,13 +42,13 @@ sudo stplr refresh
 Установка пакета:
 
 ```bash
-sudo stplr install nivora/codex
+sudo stplr install nivora/chatgpt
 ```
 
 Проверить описание до установки:
 
 ```bash
-stplr info nivora/codex
+stplr info nivora/chatgpt
 ```
 
 ## Каталог
@@ -77,9 +77,9 @@ stplr info nivora/codex
 
 | | Приложение | Версия | Архитектуры | Установка |
 |:---:|---|:--:|:--:|---|
+| <img src="chatgpt/chatgpt.png" width="32" height="32" alt="ChatGPT"> | [ChatGPT](chatgpt/README.md) | `26.814.41957` | `amd64`, `arm64` | `stplr install nivora/chatgpt` |
 | <img src="claude/claude-tray-orange.png" width="32" height="32" alt="Claude"> | [Claude](claude/README.md) | `1.32352.1` | `amd64`, `arm64` | `stplr install nivora/claude` |
 | <img src="claude/claude-alt.png" width="32" height="32" alt="ClaudeAlt"> | [ClaudeAlt](claude-alt/README.md) | `1.32352.1` | `amd64`, `arm64` | `stplr install nivora/claude-alt` |
-| <img src="codex/codex-app.png" width="32" height="32" alt="Codex"> | [Codex](codex/README.md) | `26.721.81911` | `amd64` | `stplr install nivora/codex` |
 | <img src="https://github.githubassets.com/favicons/favicon.png" width="32" height="32" alt="GitHub Desktop"> | [GitHub Desktop](github-desktop/README.md) | `3.6.4` | `amd64`, `arm64` | `stplr install nivora/github-desktop` |
 | <img src="https://opencode.ai/apple-touch-icon.png" width="32" height="32" alt="OpenCode"> | [OpenCode](https://opencode.ai/) | `1.18.18` | `amd64`, `arm64` | `stplr install nivora/opencode` |
 | <img src="openwhispr/openwhispr.png" width="32" height="32" alt="OpenWhispr"> | [OpenWhispr](openwhispr/README.md) | `1.8.3` | `amd64` | `stplr install nivora/openwhispr` |

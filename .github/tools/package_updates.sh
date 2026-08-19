@@ -4,9 +4,9 @@ set -euo pipefail
 readonly -a PACKAGES=(
     anidesk
     balena-etcher
+    chatgpt
     claude-alt
     claude
-    codex
     distroshelf
     fisher
     github-desktop
@@ -219,7 +219,7 @@ latest_yandex_music() {
     local version
     # resources/app-update.yml in the packaged app points electron-builder's
     # own updater at this feed; same generic-provider latest-*.yml format
-    # used by codex/opencode/openwhispr upstream, just not on GitHub here.
+    # used by opencode/openwhispr upstream, just not on GitHub here.
     version="$(
         curl --retry 3 --retry-delay 2 --retry-all-errors \
             --connect-timeout 30 --max-time 120 -fsSL \
@@ -230,12 +230,32 @@ latest_yandex_music() {
     printf '%s\n' "$version"
 }
 
+latest_chatgpt() {
+    local temp_dir version
+    temp_dir="$(mktemp -d)"
+    # The .deb is 300+ MB; a small Range request is enough to capture
+    # debian-binary + control.tar.xz, which `ar` extracts fine even though
+    # the overall archive is truncated (there's no manifest/latest.yml
+    # published alongside it to check instead).
+    curl --retry 3 --retry-delay 2 --retry-all-errors \
+        --connect-timeout 30 --max-time 60 -fsSL \
+        -r 0-2097151 \
+        -o "${temp_dir}/chatgpt.deb" \
+        'https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_amd64.deb'
+    (cd "$temp_dir" && ar x chatgpt.deb debian-binary control.tar.xz)
+    version="$(tar -xOf "${temp_dir}/control.tar.xz" ./control | awk '$1 == "Version:" {print $2; exit}')"
+    [[ -n "$version" ]] || die 'cannot determine latest ChatGPT version'
+    printf '%s\n' "$version"
+    find "$temp_dir" -mindepth 1 -delete
+    rmdir "$temp_dir"
+}
+
 latest_version() {
     case "$1" in
     anidesk) latest_anidesk ;;
     balena-etcher) github_latest_release balena-io/etcher ;;
+    chatgpt) latest_chatgpt ;;
     claude | claude-alt) latest_claude_desktop ;;
-    codex) github_latest_release Boria138/codex-app-linux ;;
     distroshelf) github_latest_release ranfdev/DistroShelf ;;
     fisher) github_latest_release jorgebucaran/fisher ;;
     github-desktop)

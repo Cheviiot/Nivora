@@ -14,9 +14,9 @@ ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_PACKAGES = (
     "anidesk",
     "balena-etcher",
+    "chatgpt",
     "claude",
     "claude-alt",
-    "codex",
     "distroshelf",
     "fisher",
     "github-desktop",

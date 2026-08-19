@@ -19,8 +19,8 @@ Stapler сам добавляет текущее `name` в generated `Provides` 
 
 | Package ID | Основание |
 |:--|:--|
+| `chatgpt` | Официальный upstream `Package: chatgpt`; заменил собой прежний пакет `codex` (неофициальный Linux-порт), апстрим объединил приложения. Как и в случае `telegram`/`telegram-desktop`, `replaces` не включает старое имя `codex` (это разрешено только для `claude` в `validate_repo.py`) — у кого установлен `codex`, нужно вручную `stplr install nivora/chatgpt` и `stplr remove codex` |
 | `claude` | Upstream DEB: `Package: claude-desktop`; desktop-id `com.anthropic.Claude` сохранён; старое имя пакета `claude-desktop` заменяется |
-| `codex` | Отображаемое имя `Codex`; команда и desktop-id `codex-app` сохранены |
 | `distroshelf` | Upstream не публикует готовый Linux-релиз — Nivora CI собирает пакет из исходников и публикует результат в собственном GitHub Release, как и для `github-desktop`. См. раздел «Сборка в CI» ниже |
 | `github-desktop` | Официальный upstream `desktop/desktop`; Linux-сборка без стороннего форка |
 | `nivora-cli` | Многоязычная оболочка Nivora для Stapler |

@@ -1,0 +1,22 @@
+Сведения о лицензии пакета chatgpt
+
+Лицензия: Custom.
+Источник: официальный .deb OpenAI, https://chatgpt.com/download/
+Домашняя страница приложения: https://developers.openai.com/codex/app
+
+Нюансы пакета:
+- Приложение ChatGPT for Desktop включает интегрированный Codex (панель
+  Codex, `codex-launcher`, обработчик схемы `codex://`) — это официальная
+  замена прежнего стороннего пакета `codex`, собиравшегося из
+  неофициального Linux-порта.
+- Внутри архива присутствуют отдельные лицензии Electron, Chromium и
+  других компонентов; при сборке они устанавливаются в каталог лицензий
+  пакета.
+- Использование приложения, учётной записи, Codex и сетевых функций
+  регулируется условиями OpenAI.
+- Пакет помечен как несвободный через `nonfree=1`.
+
+Справочные ссылки:
+- https://chatgpt.com/download/
+- https://developers.openai.com/codex/app
+- https://openai.com/policies/terms-of-use/

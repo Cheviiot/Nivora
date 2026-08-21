@@ -1,5 +1,5 @@
 name='chatgpt'
-version=26.818.22352
+version=26.818.31338
 release=1
 summary='Official ChatGPT desktop app with integrated Codex'
 summary_ru='Официальное десктопное приложение ChatGPT со встроенным Codex'
@@ -64,12 +64,12 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:248163d6833a14ceb85a9cc3dd09ca6dcaf59e6df476c53ea7b3f19a41d54433'
+	'sha256:43827848a74724b572be7f8dc954698ab2cc0916f7f9d5991a0ee8289944f95b'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
 	'sha256:ae0362ccf70609d206eeb12e0497cb8fbb6ce6a5b5ea15efbb634d276ad4e32b'
 )
 checksums_arm64=(
-	'sha256:1f3620d6cfd4bfb89a99f8a1e26a5cccd53e6ae3742cfce3c371e45ea42e394a'
+	'sha256:e81a7184d5f71d590d1afd2d3f3785033c471911ec2dda53366e89deed55a8f6'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
 	'sha256:ae0362ccf70609d206eeb12e0497cb8fbb6ce6a5b5ea15efbb634d276ad4e32b'
 )

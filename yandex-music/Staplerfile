@@ -1,5 +1,5 @@
 name='yandex-music'
-version=5.115.3
+version=5.116.3
 release=1
 summary='Official Yandex Music desktop client'
 summary_ru='Официальный десктопный клиент Яндекс Музыки'
@@ -53,7 +53,7 @@ sources=(
 )
 
 checksums=(
-	'sha256:c5cf98fdb2f00db1f4b9d4c9acbfa33590d7d9221f89c27d3b654a0e33a90884'
+	'sha256:1af8d08b03cdd15ac3f8eb386fc54d3314f98b81c6e22cd38599a20a98daf418'
 	'sha256:52a11692975a1dfe999f8cf953522d2ddfc2bd594a3a23c2e52035eb53d2fa2d'
 )
 

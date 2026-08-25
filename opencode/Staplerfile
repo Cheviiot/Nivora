@@ -1,5 +1,5 @@
 name='opencode'
-version=1.18.22
+version=1.18.23
 release=1
 summary='Open source AI coding agent desktop app'
 summary_ru='Десктопное приложение AI-агента OpenCode'
@@ -55,12 +55,12 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:9daab671ba2cd4e361be4b9b2c835e9e4d219e37fbbccaa45569a402a831c0a3'
+	'sha256:4fb07956d46b11b0280803efae69e050fe9bc33d72541c30cf1a1a3fdaabcc46'
 	'sha256:5c888de95824a9a5752d1ee3de95e80200eb057eec4078df892a95ac34333888'
 )
 
 checksums_arm64=(
-	'sha256:cc1b4dd958c8d731817d32624765c95123ff82f4aa457f9b17c9f4361fadfb69'
+	'sha256:77301db41d5068e011e95f0e0169d35f653f537f7eca81e64229ed3694b4fb17'
 	'sha256:5c888de95824a9a5752d1ee3de95e80200eb057eec4078df892a95ac34333888'
 )
 

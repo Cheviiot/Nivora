@@ -62,10 +62,10 @@ stplr info nivora/chatgpt
 |:---:|---|:--:|:--:|---|
 | <img src="https://happ.su/imgs/apple-touch-icon.png" width="32" height="32" alt="Happ"> | [Happ](https://happ.su/) | `4.1.1` | `amd64`, `arm64` | `stplr install nivora/happ` |
 | <img src="https://tailscale.com/favicon.png" width="32" height="32" alt="Tailscale"> | [Tailscale](https://tailscale.com/) | `1.102.3` | `amd64`, `arm64` | `stplr install nivora/tailscale` |
-| <img src="telegram/telegram-desktop.png" width="32" height="32" alt="Telegram"> | [Telegram](https://desktop.telegram.org/) | `7.1.2` | `amd64` | `stplr install nivora/telegram` |
+| <img src="telegram/telegram-desktop.png" width="32" height="32" alt="Telegram"> | [Telegram](https://desktop.telegram.org/) | `7.1.3` | `amd64` | `stplr install nivora/telegram` |
 | <img src="https://raw.githubusercontent.com/Vencord/Vesktop/main/build/icon.svg" width="32" height="32" alt="Vesktop"> | [Vesktop](vesktop/README.md) | `1.6.7` | `amd64`, `arm64` | `stplr install nivora/vesktop` |
 | <img src="https://browser.yandex.ru/apple-touch-icon.png" width="32" height="32" alt="Яндекс Браузер"> | [Яндекс Браузер](https://browser.yandex.ru/) | `26.6.1.1083` | `amd64` | `stplr install nivora/yandex-browser-stable` |
-| <img src="yandex-music/yandex-music.png" width="32" height="32" alt="Yandex Music"> | [Yandex Music](yandex-music/README.md) | `5.116.3` | `amd64` | `stplr install nivora/yandex-music` |
+| <img src="yandex-music/yandex-music.png" width="32" height="32" alt="Yandex Music"> | [Yandex Music](yandex-music/README.md) | `5.117.1` | `amd64` | `stplr install nivora/yandex-music` |
 
 ### Удалённый доступ
 
@@ -77,8 +77,8 @@ stplr info nivora/chatgpt
 
 | | Приложение | Версия | Архитектуры | Установка |
 |:---:|---|:--:|:--:|---|
-| <img src="chatgpt/chatgpt.png" width="32" height="32" alt="ChatGPT"> | [ChatGPT](chatgpt/README.md) | `26.820.60940` | `amd64`, `arm64` | `stplr install nivora/chatgpt` |
-| <img src="claude/claude-tray-orange.png" width="32" height="32" alt="Claude"> | [Claude](claude/README.md) | `1.37937.1` | `amd64`, `arm64` | `stplr install nivora/claude` |
+| <img src="chatgpt/chatgpt.png" width="32" height="32" alt="ChatGPT"> | [ChatGPT](chatgpt/README.md) | `26.820.80927` | `amd64`, `arm64` | `stplr install nivora/chatgpt` |
+| <img src="claude/claude-tray-orange.png" width="32" height="32" alt="Claude"> | [Claude](claude/README.md) | `1.37937.3` | `amd64`, `arm64` | `stplr install nivora/claude` |
 | <img src="claude/claude-alt.png" width="32" height="32" alt="ClaudeAlt"> | [ClaudeAlt](claude-alt/README.md) | `1.32885.1` | `amd64`, `arm64` | `stplr install nivora/claude-alt` |
 | <img src="https://github.githubassets.com/favicons/favicon.png" width="32" height="32" alt="GitHub Desktop"> | [GitHub Desktop](github-desktop/README.md) | `3.6.4` | `amd64`, `arm64` | `stplr install nivora/github-desktop` |
 | <img src="https://opencode.ai/apple-touch-icon.png" width="32" height="32" alt="OpenCode"> | [OpenCode](https://opencode.ai/) | `1.18.23` | `amd64`, `arm64` | `stplr install nivora/opencode` |

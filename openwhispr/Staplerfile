@@ -1,5 +1,5 @@
 name='openwhispr'
-version=1.9.0
+version=1.9.1
 release=1
 summary='Open-source, privacy-first voice dictation app'
 summary_ru='Приложение для голосового ввода с открытым исходным кодом'
@@ -65,7 +65,7 @@ sources=(
 )
 
 checksums=(
-	'sha256:c48134c9b08c62be8b575bcf50adf9985184f3de27058d2a0addb5a75f983209'
+	'sha256:85671ca189925e8a19da2ce47982ad607a556759229dbe766c6264ad28124db6'
 	'sha256:ecf1a12d3dc51085d2f3a720dc177c7da3cd075ea3fadcc6a1b719fb44ed30e0'
 )
 

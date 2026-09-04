@@ -39,6 +39,7 @@ REQUIRED_ROOT_FILES = {
     Path("SECURITY.md"),
     Path("LICENSE"),
     Path("stapler-repo.toml"),
+    Path(".github/assets/readme-hero.png"),
     Path(".github/support-matrix.toml"),
     Path(".github/docs/maintenance.md"),
     Path(".github/docs/security-model.md"),
@@ -73,6 +74,14 @@ EXPECTED_TARGETS = {
     "opensuse-leap-16.0",
     "alpine-3.23",
 }
+EXPECTED_README_CATEGORIES = (
+    "Интернет, сеть и VPN",
+    "Удалённый доступ",
+    "AI и разработка",
+    "Рабочий стол",
+    "Игры",
+    "Системные инструменты",
+)
 
 
 def scalar(text: str, field: str) -> str | None:
@@ -602,25 +611,105 @@ def validate_unique_local_source_urls(
                 )
 
 
-def validate_readme(metadata: dict[str, dict[str, object]], errors: list[str]) -> None:
-    path = ROOT / "README.md"
-    text = path.read_text(encoding="utf-8")
-    count_match = re.search(r"<!--\s*package-count\s*-->\s*\*\*(\d+) пакет", text)
-    if not count_match or int(count_match.group(1)) != len(EXPECTED_PACKAGES):
+def validate_readme_text(
+    text: str, metadata: dict[str, dict[str, object]], errors: list[str]
+) -> None:
+    count_match = re.search(
+        r"<!--\s*package-count\s*-->\s*"
+        r"<p[^>]*>\s*<strong>(\d+)\s+пакет",
+        text,
+    )
+    if not count_match or int(count_match.group(1)) != len(metadata):
         errors.append("README.md: package counter is stale")
-    if text.count("### ") != 6:
-        errors.append("README.md: catalog must contain exactly six categories")
+
+    start_marker = "<!-- catalog:start -->"
+    end_marker = "<!-- catalog:end -->"
+    if text.count(start_marker) != 1 or text.count(end_marker) != 1:
+        errors.append("README.md: catalog boundary markers must occur exactly once")
+        return
+    start = text.index(start_marker) + len(start_marker)
+    end = text.index(end_marker)
+    if start >= end:
+        errors.append("README.md: catalog boundary markers are out of order")
+        return
+    catalog = text[start:end]
+
+    categories = tuple(re.findall(r"^### ([^\n]+)$", catalog, re.MULTILINE))
+    if categories != EXPECTED_README_CATEGORIES:
+        errors.append(
+            "README.md: catalog categories must be exactly: "
+            + ", ".join(EXPECTED_README_CATEGORIES)
+        )
+
+    markers = list(
+        re.finditer(
+            r"<!--\s*package-card:([a-z0-9][a-z0-9-]*)\s*-->", catalog
+        )
+    )
+    marker_ids = [match.group(1) for match in markers]
+    expected_ids = set(metadata)
+    unknown_ids = sorted(set(marker_ids) - expected_ids)
+    if unknown_ids:
+        errors.append(
+            "README.md: unknown package cards: " + ", ".join(unknown_ids)
+        )
 
     for package, values in metadata.items():
-        command = f"`stplr install nivora/{package}`"
-        catalog_rows = [
-            line for line in text.splitlines() if line.startswith("|") and command in line
+        occurrences = [
+            index for index, marker in enumerate(markers) if marker.group(1) == package
         ]
-        if len(catalog_rows) != 1:
-            errors.append(f"README.md: expected one catalog command for {package}")
+        if len(occurrences) != 1:
+            errors.append(f"README.md: expected one package card for {package}")
+            continue
+        marker_index = occurrences[0]
+        block_start = markers[marker_index].end()
+        block_end = (
+            markers[marker_index + 1].start()
+            if marker_index + 1 < len(markers)
+            else len(catalog)
+        )
+        card = catalog[block_start:block_end]
+
+        command = f"<code>stplr install nivora/{package}</code>"
+        if card.count(command) != 1:
+            errors.append(f"README.md: expected one install command for {package}")
         version = str(values["version"])
-        if f"`{version}`" not in text:
-            errors.append(f"README.md: version {version} is missing for {package}")
+        if card.count(f"<code>{version}</code>") != 1:
+            errors.append(f"README.md: version {version} is missing from {package} card")
+        architectures = values.get("architectures", [])
+        if isinstance(architectures, list):
+            for architecture in architectures:
+                if f"<code>{architecture}</code>" not in card:
+                    errors.append(
+                        f"README.md: architecture {architecture} is missing "
+                        f"from {package} card"
+                    )
+
+
+def validate_readme(metadata: dict[str, dict[str, object]], errors: list[str]) -> None:
+    path = ROOT / "README.md"
+    validate_readme_text(path.read_text(encoding="utf-8"), metadata, errors)
+
+
+def validate_readme_hero(errors: list[str]) -> None:
+    path = ROOT / ".github/assets/readme-hero.png"
+    if not path.is_file():
+        return
+    try:
+        header = path.read_bytes()[:24]
+    except OSError as error:
+        errors.append(f"README hero: cannot read PNG: {error}")
+        return
+    png_signature = b"\x89PNG\r\n\x1a\n"
+    if len(header) != 24 or header[:8] != png_signature or header[12:16] != b"IHDR":
+        errors.append("README hero: asset must be a valid PNG")
+        return
+    width = int.from_bytes(header[16:20], "big")
+    height = int.from_bytes(header[20:24], "big")
+    if (width, height) != (2400, 800):
+        errors.append("README hero: PNG dimensions must be exactly 2400x800")
+    if path.stat().st_size > 1024 * 1024:
+        errors.append("README hero: PNG must not exceed 1 MiB")
 
 
 def validate_github_desktop_workflow(
@@ -713,6 +802,7 @@ def main() -> int:
 
     validate_unique_local_source_urls(metadata, errors)
     validate_readme(metadata, errors)
+    validate_readme_hero(errors)
     validate_github_desktop_workflow(metadata, errors)
     for path in sorted([
         *ROOT.glob("*.md"),

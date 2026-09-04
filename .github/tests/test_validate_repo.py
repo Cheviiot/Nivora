@@ -72,6 +72,95 @@ class LinkTests(unittest.TestCase):
                 VALIDATOR.ROOT = old_root
 
 
+class ReadmeTests(unittest.TestCase):
+    @staticmethod
+    def fixture() -> tuple[str, dict[str, dict[str, object]]]:
+        metadata = {
+            "alpha": {"version": "1.2.3", "architectures": ["amd64"]},
+            "beta": {"version": "4.5.6", "architectures": ["all"]},
+        }
+        categories = "\n".join(
+            f"### {category}" for category in VALIDATOR.EXPECTED_README_CATEGORIES
+        )
+        cards = """<!-- package-card:alpha -->
+<code>1.2.3</code> <code>amd64</code>
+<code>stplr install nivora/alpha</code>
+<!-- package-card:beta -->
+<code>4.5.6</code> <code>all</code>
+<code>stplr install nivora/beta</code>
+"""
+        text = f"""<!-- package-count -->
+<p><strong>2 пакета</strong></p>
+<!-- catalog:start -->
+{categories}
+{cards}<!-- catalog:end -->
+"""
+        return text, metadata
+
+    def test_html_package_cards_are_valid(self):
+        text, metadata = self.fixture()
+        errors = []
+        VALIDATOR.validate_readme_text(text, metadata, errors)
+        self.assertEqual(errors, [])
+
+    def test_readme_regressions_are_rejected(self):
+        text, metadata = self.fixture()
+        cases = {
+            "wrong counter": (text.replace("2 пакета", "3 пакета"), "counter"),
+            "missing card": (
+                text.replace("<!-- package-card:beta -->", ""),
+                "one package card for beta",
+            ),
+            "duplicate card": (
+                text.replace(
+                    "<!-- catalog:end -->",
+                    "<!-- package-card:alpha -->\n<!-- catalog:end -->",
+                ),
+                "one package card for alpha",
+            ),
+            "stale version": (
+                text.replace("<code>4.5.6</code>", "<code>4.5.5</code>"),
+                "version 4.5.6",
+            ),
+            "missing category": (
+                text.replace("### Игры\n", ""),
+                "catalog categories",
+            ),
+        }
+        for name, (candidate, expected) in cases.items():
+            with self.subTest(name=name):
+                errors = []
+                VALIDATOR.validate_readme_text(candidate, metadata, errors)
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+
+class HeroTests(unittest.TestCase):
+    def test_hero_requires_optimized_2x_png(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            asset = root / ".github/assets/readme-hero.png"
+            asset.parent.mkdir(parents=True)
+            asset.write_bytes(
+                b"\x89PNG\r\n\x1a\n"
+                + b"\x00\x00\x00\x0dIHDR"
+                + (2400).to_bytes(4, "big")
+                + (800).to_bytes(4, "big")
+            )
+            old_root = VALIDATOR.ROOT
+            VALIDATOR.ROOT = root
+            try:
+                errors = []
+                VALIDATOR.validate_readme_hero(errors)
+                self.assertEqual(errors, [])
+
+                asset.write_bytes(b"not a PNG")
+                errors = []
+                VALIDATOR.validate_readme_hero(errors)
+                self.assertEqual(len(errors), 1)
+            finally:
+                VALIDATOR.ROOT = old_root
+
+
 class WorkflowTests(unittest.TestCase):
     def test_github_desktop_dispatch_and_fallback_match_recipe(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -46,6 +46,10 @@ grep -Fxq 'Exec=ventoy' "$desktop"
 grep -Fxq 'Icon=ventoy' "$desktop"
 grep -Fq "architectures=('amd64' 'arm64')" "$recipe"
 grep -Fq "VentoyGUI.\${candidate}" "$recipe"
-grep -Fq "case \"\$(uname -m)\" in" "$recipe"
+grep -Fq "case \"\${ARCH:?Stapler did not set ARCH}\" in" "$recipe"
+if grep -Fq 'uname -m' "$recipe"; then
+    echo 'Ventoy package selection must use Stapler ARCH, not the build host architecture' >&2
+    exit 1
+fi
 
 echo 'OK: Ventoy launcher'

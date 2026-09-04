@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.ranfdev.DistroShelf</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>DistroShelf</name>
+  <summary>Manage Distrobox containers from a graphical interface</summary>
+  <summary xml:lang="ru">Управление контейнерами Distrobox из графического интерфейса</summary>
+  <description>
+    <p>DistroShelf creates, manages, enters and exports applications from Distrobox containers.</p>
+    <p xml:lang="ru">DistroShelf создаёт контейнеры Distrobox, управляет ими и экспортирует приложения на хост.</p>
+  </description>
+  <launchable type="desktop-id">com.ranfdev.DistroShelf.desktop</launchable>
+  <url type="homepage">https://github.com/ranfdev/DistroShelf</url>
+</component>

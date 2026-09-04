@@ -1,6 +1,6 @@
 name='balena-etcher'
 version='2.1.6'
-release=3
+release=5
 summary='Safe SD card and USB drive image flasher'
 summary_ru='Безопасная запись образов на SD-карты и USB-накопители'
 group='System/Configuration/Hardware'
@@ -10,6 +10,7 @@ homepage='https://etcher.balena.io/'
 maintainer='Balena Ltd. <hello@balena.io>'
 
 architectures=('amd64')
+incompatible_with=('alpine')
 
 license=('Apache-2.0')
 
@@ -17,7 +18,7 @@ provides=()
 replaces=('balena-etcher')
 conflicts=()
 
-# auto_req covers the real DT_NEEDED (readelf -d confirmed across the main
+# On RPM targets, auto_req covers the real DT_NEEDED (readelf -d confirmed across the main
 # binary, resources/etcher-util, and the bundled libEGL/libGLESv2/
 # libvk_swiftshader/native-module files: gtk3, nss, at-spi2, gbm, xcb,
 # alsa, atk, cairo, cups, dbus, expat, glib2, nspr, pango, X11 stack,
@@ -29,13 +30,17 @@ conflicts=()
 # libraries there's no direct evidence for *why*, so they stay explicit
 # out of caution instead of being dropped on an assumption.
 auto_reqprov_method="dirty"
-auto_req=1
-auto_prov=1
+auto_req=0
+auto_req_altlinux=1
+auto_req_fedora=1
+auto_req_opensuse=1
+auto_prov=0
+disable_network=1
 
 deps=()
 deps_debian=(
 	'libgtk-3-0' 'libnotify4' 'libnss3' 'libxtst6' 'xdg-utils'
-	'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2'
+	'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2t64 | libasound2'
 	'libatk1.0-0' 'libc6' 'libcairo2' 'libcups2' 'libdbus-1-3' 'libexpat1'
 	'libfontconfig1' 'libfreetype6' 'libgcc1' 'libgdk-pixbuf2.0-0 | libgdk-pixbuf-2.0-0'
 	'libglib2.0-0' 'liblzma5' 'libnspr4' 'libpango1.0-0 | libpango-1.0-0'
@@ -113,7 +118,7 @@ package() {
 
 	install -dm755 "${pkgdir}/usr/lib"
 	cp -a "${srcdir}/extracted/usr/lib/balena-etcher" "${pkgdir}/usr/lib/"
-	chmod 0755 "${pkgdir}/usr/lib/balena-etcher/chrome-sandbox"
+	chmod 4755 "${pkgdir}/usr/lib/balena-etcher/chrome-sandbox"
 	chmod 0755 \
 		"${pkgdir}/usr/lib/balena-etcher/balena-etcher" \
 		"${pkgdir}/usr/lib/balena-etcher/resources/etcher-util"

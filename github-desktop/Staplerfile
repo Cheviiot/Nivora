@@ -1,15 +1,19 @@
 name='github-desktop'
-version=3.6.4
-release=2
+version=3.6.5
+release=1
+# Exact commit behind the upstream release-${version} tag. Keeping it
+# separate makes a stale pin visible when version is updated.
+upstream_commit='13b57bd28dcaa94ec55374f814dab7a1645ae3b0'
 summary='GitHub Desktop built from the official source'
 summary_ru='GitHub Desktop, собранный из официальных исходников'
 group='Development/Tools'
 desc='The original GitHub Desktop application, built for Linux by Nivora CI directly from the official desktop/desktop source tree without third-party forks.'
 desc_ru='Оригинальное приложение GitHub Desktop, собранное для Linux в CI Nivora напрямую из официального дерева desktop/desktop без сторонних форков.'
 homepage='https://github.com/desktop/desktop'
-maintainer='GitHub <https://github.com/desktop>'
+maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64' 'arm64')
+incompatible_with=('alpine')
 
 license=('MIT')
 
@@ -18,56 +22,63 @@ replaces=('github-desktop')
 conflicts=()
 
 auto_reqprov_method="dirty"
-auto_req=1
-auto_prov=1
+auto_req=0
+auto_req_altlinux=1
+auto_req_fedora=1
+auto_req_opensuse=1
+auto_prov=0
+disable_network=1
 
-# auto_req covers the real DT_NEEDED across the whole payload (readelf -d
+# On RPM targets, auto_req covers the real DT_NEEDED across the whole payload (readelf -d
 # confirmed: the main desktop binary's Chromium stack, plus the bundled
 # portable git under resources/app/git/libexec/git-core/ — git itself
 # needs zlib, which the old explicit list never named directly, and
 # git-remote-http/git-http-fetch/git-http-push/git-imap-send need libcurl.
-# This resolves itself automatically now instead of needing a hardcoded
-# package name: upstream switched their bundled git's curl from a GnuTLS
-# build back to a regular one between 3.6.3 and 3.6.4, so the previous
-# hand-pinned libcurl4-gnutls dependency (and its documented ABI/symbol
-# mismatch on ALT) is moot, not fixed by anything here. The rest stays
-# explicit: ca-certificates is data, git is the *system* git invoked as a
+# On ALT, the bundled helper requires CURL_OPENSSL_4 while the default
+# libcurl exports CURL_GNUTLS_4. The explicit libcurl4-openssl dependency
+# and the packaged helper wrapper select the compatible library directory;
+# RPM SONAME auto_req alone cannot distinguish those symbol-version ABIs.
+# The rest stays explicit: ca-certificates is data, git is the *system* git invoked as a
 # subprocess by the app itself (a separate thing from the bundled portable
 # git above, not detectable by ELF scanning either way), xdg-utils is a
 # subprocess tool, and libsecret/libXScrnSaver/libXtst are dlopen'd by
 # Chromium like in the rest of the catalog's Electron packages.
 deps=()
-deps_debian=('ca-certificates' 'git' 'libasound2' 'libatk-bridge2.0-0' 'libatk1.0-0' 'libatspi2.0-0' 'libcairo2' 'libcups2' 'libcurl3-gnutls' 'libdbus-1-3' 'libexpat1' 'libgbm1' 'libglib2.0-0' 'libgtk-3-0' 'libnspr4' 'libnss3' 'libpango-1.0-0' 'libsecret-1-0' 'libudev1' 'libx11-6' 'libxcb1' 'libxcomposite1' 'libxdamage1' 'libxext6' 'libxfixes3' 'libxkbcommon0' 'libxrandr2' 'libxss1' 'libxtst6' 'xdg-utils')
+deps_debian=('ca-certificates' 'git' 'libasound2t64 | libasound2' 'libatk-bridge2.0-0' 'libatk1.0-0' 'libatspi2.0-0' 'libcairo2' 'libcups2' 'libcurl4t64 | libcurl4' 'libdbus-1-3' 'libexpat1' 'libgbm1' 'libglib2.0-0' 'libgtk-3-0' 'libnspr4' 'libnss3' 'libpango-1.0-0' 'libsecret-1-0' 'libudev1' 'libx11-6' 'libxcb1' 'libxcomposite1' 'libxdamage1' 'libxext6' 'libxfixes3' 'libxkbcommon0' 'libxrandr2' 'libxss1' 'libxtst6' 'xdg-utils')
 deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('ca-certificates' 'git' 'alsa-lib' 'atk' 'at-spi2-atk' 'at-spi2-core' 'cairo' 'cups-libs' 'dbus-libs' 'expat' 'mesa-libgbm' 'glib2' 'gtk3' 'nspr' 'nss' 'pango' 'libsecret' 'systemd-libs' 'libX11' 'libxcb' 'libXcomposite' 'libXdamage' 'libXext' 'libXfixes' 'libxkbcommon' 'libXrandr' 'libXScrnSaver' 'libXtst' 'xdg-utils')
 deps_arch=('ca-certificates' 'git' 'alsa-lib' 'atk' 'at-spi2-atk' 'at-spi2-core' 'cairo' 'cups' 'dbus' 'expat' 'libgbm' 'glib2' 'gtk3' 'nspr' 'nss' 'pango' 'libsecret' 'systemd-libs' 'libx11' 'libxcb' 'libxcomposite' 'libxdamage' 'libxext' 'libxfixes' 'libxkbcommon' 'libxrandr' 'libxss' 'libxtst' 'xdg-utils')
 deps_opensuse=('ca-certificates' 'git' 'alsa' 'libatk-1_0-0' 'libatk-bridge-2_0-0' 'libatspi0' 'libcairo2' 'cups-libs' 'libdbus-1-3' 'libexpat1' 'libgbm1' 'glib2' 'gtk3' 'mozilla-nspr' 'mozilla-nss' 'pango' 'libsecret-1-0' 'libudev1' 'libX11-6' 'libxcb1' 'libXcomposite1' 'libXdamage1' 'libXext6' 'libXfixes3' 'libxkbcommon0' 'libXrandr2' 'libXss1' 'libXtst6' 'xdg-utils')
-deps_altlinux=('ca-certificates' 'git' 'libsecret' 'libXScrnSaver' 'libXtst' 'xdg-utils')
+deps_altlinux=('ca-certificates' 'git' 'libcurl4-openssl' 'libsecret' 'libXScrnSaver' 'libXtst' 'xdg-utils')
 
 build_deps=('binutils')
 
 sources=(
 	"https://github.com/Cheviiot/Nivora/releases/download/github-desktop-${version}-linux/github-desktop-${version}-linux-x64.tar.gz?~archive=false&~name=github-desktop.tar.gz"
-	"https://raw.githubusercontent.com/desktop/desktop/release-${version}/LICENSE?~archive=false&~name=LICENSE"
-	"https://raw.githubusercontent.com/desktop/desktop/release-${version}/app/static/logos/prod/icon-logo.icon/Assets/1%20%E2%80%93%20Layer%203.svg?~archive=false&~name=github-desktop.svg"
+	"https://raw.githubusercontent.com/desktop/desktop/${upstream_commit}/LICENSE?~archive=false&~name=LICENSE"
+	"https://raw.githubusercontent.com/desktop/desktop/${upstream_commit}/app/static/logos/prod/icon-logo.icon/Assets/1%20%E2%80%93%20Layer%203.svg?~archive=false&~name=github-desktop.svg"
+	'local:///github-desktop-git-wrapper'
 )
 
 sources_arm64=(
 	"https://github.com/Cheviiot/Nivora/releases/download/github-desktop-${version}-linux/github-desktop-${version}-linux-arm64.tar.gz?~archive=false&~name=github-desktop.tar.gz"
-	"https://raw.githubusercontent.com/desktop/desktop/release-${version}/LICENSE?~archive=false&~name=LICENSE"
-	"https://raw.githubusercontent.com/desktop/desktop/release-${version}/app/static/logos/prod/icon-logo.icon/Assets/1%20%E2%80%93%20Layer%203.svg?~archive=false&~name=github-desktop.svg"
+	"https://raw.githubusercontent.com/desktop/desktop/${upstream_commit}/LICENSE?~archive=false&~name=LICENSE"
+	"https://raw.githubusercontent.com/desktop/desktop/${upstream_commit}/app/static/logos/prod/icon-logo.icon/Assets/1%20%E2%80%93%20Layer%203.svg?~archive=false&~name=github-desktop.svg"
+	'local:///github-desktop-git-wrapper'
 )
 
 checksums=(
-	'sha256:3f46256f3acaf21bd711d0dbaef8471f6d11bf003e94ff7b293c5453bc5009e9'
+	'sha256:fa328e3c3a503796a952b82ba190cf1208c79eefc86b2acdd504b0b9a523be70'
 	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
 	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
+	'sha256:1a44cab3dcf04dcc7e80e3c40e2e17188636e6e6f7e0af23b56168006cd586a1'
 )
 
 checksums_arm64=(
-	'sha256:09a7733b5e443eefdaef7a74dc39455072f35fd7d3f7669136d19dd709dba487'
+	'sha256:1642501e8e262929810610f31c612001dd955e473e6a42e6bbe7f91019148bb5'
 	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
 	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
+	'sha256:1a44cab3dcf04dcc7e80e3c40e2e17188636e6e6f7e0af23b56168006cd586a1'
 )
 
 scripts=(
@@ -80,12 +91,22 @@ package() {
 
 	tar -xzf github-desktop.tar.gz
 	[[ -x "${srcdir}/github-desktop/desktop" ]]
+	actual_upstream_commit="$(cat "${srcdir}/github-desktop/UPSTREAM_COMMIT")"
+	[[ "$actual_upstream_commit" == "$upstream_commit" ]]
 
 	install -dm755 "${pkgdir}/opt/github-desktop"
 	cp -a "${srcdir}/github-desktop/." "${pkgdir}/opt/github-desktop/"
 	chmod 0755 "${pkgdir}/opt/github-desktop/desktop"
+	git_core="${pkgdir}/opt/github-desktop/resources/app/git/libexec/git-core"
+	for helper in \
+		git-http-fetch git-http-push git-imap-send \
+		git-remote-http; do
+		test -x "${git_core}/${helper}"
+		mv "${git_core}/${helper}" "${git_core}/${helper}.bin"
+		install -m755 github-desktop-git-wrapper "${git_core}/${helper}"
+	done
 	if [[ -f "${pkgdir}/opt/github-desktop/chrome-sandbox" ]]; then
-		chmod 0755 "${pkgdir}/opt/github-desktop/chrome-sandbox"
+		chmod 4755 "${pkgdir}/opt/github-desktop/chrome-sandbox"
 	fi
 
 	install -dm755 "${pkgdir}/usr/bin"

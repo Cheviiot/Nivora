@@ -15,8 +15,10 @@ import_stplr_source_cache() {
         return 0
     fi
 
-    local cache_manifest="${cache_work_dir}/source-cache.tsv"
-    local cache_db="${cache_work_dir}/source-cache.db"
+    local cache_stage
+    cache_stage="$(mktemp -d "${cache_work_dir%/}/source-cache.XXXXXX")"
+    local cache_manifest="${cache_stage}/manifest.tsv"
+    local cache_db="${cache_stage}/cache.db"
     local package package_name package_version index source expected
     local url_hash restore_name candidate actual
     local -a package_sources package_checksums
@@ -107,5 +109,13 @@ import_stplr_source_cache() {
             done </manifest
             chown -R --reference=/var/cache/stplr /var/cache/stplr/dl
             printf "Imported sources: %d (%d bytes)\n" "$imported" "$bytes"
-        '
+        ' || {
+        local cache_status=$?
+        find "$cache_stage" -mindepth 1 -delete
+        rmdir "$cache_stage"
+        return "$cache_status"
+    }
+
+    find "$cache_stage" -mindepth 1 -delete
+    rmdir "$cache_stage"
 }

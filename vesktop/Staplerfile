@@ -1,15 +1,16 @@
 name='vesktop'
 version=1.6.7
-release=1
+release=3
 summary='Unofficial Discord desktop client with better Linux support'
 summary_ru='Неофициальный десктопный клиент Discord с улучшенной поддержкой Linux'
 group='Networking/Instant messaging'
 desc='Vesktop is an unofficial Discord desktop app built by the Vencord team, aiming to give better performance and improved Linux support than the official Electron client.'
 desc_ru='Vesktop — неофициальное десктопное приложение Discord от команды Vencord, нацеленное на лучшую производительность и полноценную поддержку Linux по сравнению с официальным Electron-клиентом.'
 homepage='https://vencord.dev/'
-maintainer='Vendicated and Vencord contributors <https://github.com/Vencord/Vesktop>'
+maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64' 'arm64')
+incompatible_with=('alpine')
 
 license=('GPL-3.0-or-later')
 
@@ -18,14 +19,18 @@ replaces=('vesktop')
 conflicts=()
 
 auto_reqprov_method="dirty"
-auto_req=1
-auto_prov=1
+auto_req=0
+auto_req_altlinux=1
+auto_req_fedora=1
+auto_req_opensuse=1
+auto_prov=0
+disable_network=1
 
 # Upstream .deb's own Depends: doesn't list libgbm/libasound at all, but
 # they're real DT_NEEDED entries of the vesktop binary (confirmed with ldd
 # against a real install) — without them the dynamic linker refuses to
-# start the process at all, it's not a soft/optional degradation. Now
-# auto_req-covered directly instead.
+# start the process at all, it's not a soft/optional degradation. RPM builds
+# discover them through auto_req; non-RPM maps keep them explicit below.
 #
 # The rest of this list stays explicit because none of it is a real
 # DT_NEEDED of any binary in the payload (confirmed with readelf -d against
@@ -37,7 +42,7 @@ auto_prov=1
 # the real functionality (notifications, screensaver inhibition, global
 # shortcuts, keyring), not the degraded fallback, so they stay hard deps.
 deps=()
-deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'libxss1' 'libxtst6' 'xdg-utils' 'libatspi2.0-0' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2')
+deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'libxss1' 'libxtst6' 'xdg-utils' 'libatspi2.0-0' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2t64 | libasound2')
 deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('gtk3' 'libnotify' 'nss' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'at-spi2-core' 'libuuid' 'libsecret' 'mesa-libgbm' 'alsa-lib')
 deps_arch=('gtk3' 'libnotify' 'nss' 'libxss' 'libxtst' 'xdg-utils' 'at-spi2-core' 'util-linux-libs' 'libsecret' 'libgbm' 'alsa-lib')
@@ -63,13 +68,13 @@ build_deps_altlinux=('binutils')
 sources=(
 	"https://github.com/Vencord/Vesktop/releases/download/v${version}/vesktop_${version}_amd64.deb?~archive=false&~name=vesktop.deb"
 	'local:///vesktop-launcher'
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=vesktop'
 )
 
 sources_arm64=(
 	"https://github.com/Vencord/Vesktop/releases/download/v${version}/vesktop_${version}_arm64.deb?~archive=false&~name=vesktop.deb"
 	'local:///vesktop-launcher'
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=vesktop'
 )
 
 checksums=(
@@ -98,7 +103,7 @@ package() {
 
 	install -dm755 "${pkgdir}/opt"
 	cp -a "${srcdir}/extracted/opt/Vesktop" "${pkgdir}/opt/"
-	chmod 0755 "${pkgdir}/opt/Vesktop/chrome-sandbox"
+	chmod 4755 "${pkgdir}/opt/Vesktop/chrome-sandbox"
 	chmod 755 "${pkgdir}/opt/Vesktop/vesktop"
 
 	install -dm755 "${pkgdir}/usr/bin"

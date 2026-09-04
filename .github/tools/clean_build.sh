@@ -7,6 +7,11 @@ repo_root="$(cd "${script_dir}/../.." && pwd)"
 source "${script_dir}/lib/source_cache.sh"
 cd "$repo_root"
 
+command -v stplr-spec >/dev/null 2>&1 || {
+    echo 'clean-build requires stplr-spec' >&2
+    exit 2
+}
+
 mapfile -t all_packages < <(
     for staplerfile in */Staplerfile; do
         dirname "$staplerfile"
@@ -51,7 +56,11 @@ else
     exit 2
 fi
 
-readonly image='registry.altlinux.org/sisyphus/base:latest'
+readonly image="${NIVORA_ALT_BUILDER_IMAGE:-registry.altlinux.org/sisyphus/base@sha256:1a6ab67cc12cfbe2419ed8b805ae6fd75ed036f9da7211b78876d1cd0083b7ba}"
+if [[ "$image" != *@sha256:* && "${NIVORA_ALLOW_UNPINNED_IMAGE:-0}" != 1 ]]; then
+    echo 'NIVORA_ALT_BUILDER_IMAGE must use an immutable sha256 digest' >&2
+    exit 2
+fi
 readonly cache_volume="nivora-clean-build-cache-$$"
 readonly builder_image="nivora-clean-build:$$"
 builder_dir="$(mktemp -d)"
@@ -76,16 +85,28 @@ if [[ "$engine" == docker ]]; then
     export DOCKER_CONFIG="$docker_config"
 fi
 
+for command in curl python3 sha256sum tar; do
+    command -v "$command" >/dev/null 2>&1 || {
+        echo "clean-build requires ${command}" >&2
+        exit 2
+    }
+done
+"${script_dir}/prepare_stplr.sh" "${builder_dir}/stplr"
+
 cat >"${builder_dir}/Containerfile" <<EOF
 FROM ${image}
-RUN for attempt in 1 2 3; do \
+RUN success=0; \
+    for attempt in 1 2 3; do \
         apt-get update \
         && apt-get dist-upgrade -y \
         && apt-get install -y ca-certificates stplr binutils python3 \
-        && exit 0; \
+        && success=1 \
+        && break; \
         sleep 5; \
     done; \
-    exit 1
+    test "\$success" -eq 1
+COPY stplr /usr/local/bin/stplr
+RUN chmod 0755 /usr/local/bin/stplr && /usr/local/bin/stplr version
 EOF
 
 pulled=0

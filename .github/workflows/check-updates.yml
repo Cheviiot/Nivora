@@ -5,10 +5,17 @@ on:
     # 03:00 Asia/Vladivostok (UTC+10)
     - cron: "0 17 * * *"
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Запустить даже если updater приостановлен"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
   issues: write
+  actions: write
 
 concurrency:
   group: nivora-autonomous-updates
@@ -21,7 +28,10 @@ defaults:
 jobs:
   detect:
     name: Найти обновления
+    if: ${{ vars.NIVORA_UPDATER_PAUSED != 'true' || inputs.force == true }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     timeout-minutes: 30
     outputs:
       packages: ${{ steps.updates.outputs.packages }}
@@ -30,6 +40,10 @@ jobs:
       github_desktop_version: ${{ steps.updates.outputs.github_desktop_version }}
       distroshelf_update: ${{ steps.updates.outputs.distroshelf_update }}
       distroshelf_version: ${{ steps.updates.outputs.distroshelf_version }}
+      current_packages: ${{ steps.updates.outputs.current_packages }}
+      detection_failures: ${{ steps.updates.outputs.detection_failures }}
+      checked_packages: ${{ steps.updates.outputs.checked_packages }}
+      expected_updates: ${{ steps.updates.outputs.expected_updates }}
     steps:
       - name: Получить репозиторий
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -44,26 +58,44 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
+          export PACKAGE_UPDATE_CURRENT_FILE="$RUNNER_TEMP/current-packages"
+          export PACKAGE_UPDATE_FAILURES_FILE="$RUNNER_TEMP/detection-failures"
+          export PACKAGE_UPDATE_PLAN_FILE="$RUNNER_TEMP/update-plan"
+          : >"$PACKAGE_UPDATE_CURRENT_FILE"
+          : >"$PACKAGE_UPDATE_FAILURES_FILE"
+          : >"$PACKAGE_UPDATE_PLAN_FILE"
           packages_output="$(.github/tools/package_updates.sh outdated)"
           mapfile -t packages <<<"$packages_output"
           if [[ -z "$packages_output" ]]; then
             packages=()
           fi
-          if [[ "${#packages[@]}" -eq 0 ]]; then
-            {
-              echo 'packages=[]'
-              echo 'has_updates=false'
-              echo 'github_desktop_update=false'
-              echo 'github_desktop_version='
-              echo 'distroshelf_update=false'
-              echo 'distroshelf_version='
-            } >>"$GITHUB_OUTPUT"
-            exit 0
-          fi
 
           packages_json="$(
             printf '%s\n' "${packages[@]}" |
               jq -Rsc 'split("\n") | map(select(length > 0))'
+          )"
+          current_packages_json="$(
+            jq -Rsc 'split("\n") | map(select(length > 0))' \
+              <"$PACKAGE_UPDATE_CURRENT_FILE"
+          )"
+          detection_failures_json="$(
+            jq -Rsc 'split("\n") | map(select(length > 0))' \
+              <"$PACKAGE_UPDATE_FAILURES_FILE"
+          )"
+          checked_packages_json="$(
+            jq -cn \
+              --argjson packages "$packages_json" \
+              --argjson failures "$detection_failures_json" \
+              '$packages + $failures | unique'
+          )"
+          expected_updates_json="$(
+            jq -cRn '
+              [inputs | select(length > 0) | split("\t") |
+                {key: .[0], value: {
+                  current: .[1], latest: .[2], fingerprints: (.[3] | fromjson)
+                }}]
+              | from_entries
+            ' <"$PACKAGE_UPDATE_PLAN_FILE"
           )"
           github_desktop_update=false
           github_desktop_version=''
@@ -72,24 +104,34 @@ jobs:
           for package in "${packages[@]}"; do
             if [[ "$package" == github-desktop ]]; then
               github_desktop_update=true
-              read -r _ github_desktop_version < <(
-                .github/tools/package_updates.sh check github-desktop
-              )
+              github_desktop_version="$(
+                jq -r '.["github-desktop"].latest' \
+                  <<<"$expected_updates_json"
+              )"
             fi
             if [[ "$package" == distroshelf ]]; then
               distroshelf_update=true
-              read -r _ distroshelf_version < <(
-                .github/tools/package_updates.sh check distroshelf
-              )
+              distroshelf_version="$(
+                jq -r '.["distroshelf"].latest' \
+                  <<<"$expected_updates_json"
+              )"
             fi
           done
           {
             echo "packages=${packages_json}"
-            echo 'has_updates=true'
+            if [[ "${#packages[@]}" -gt 0 ]]; then
+              echo 'has_updates=true'
+            else
+              echo 'has_updates=false'
+            fi
             echo "github_desktop_update=${github_desktop_update}"
             echo "github_desktop_version=${github_desktop_version}"
             echo "distroshelf_update=${distroshelf_update}"
             echo "distroshelf_version=${distroshelf_version}"
+            echo "current_packages=${current_packages_json}"
+            echo "detection_failures=${detection_failures_json}"
+            echo "checked_packages=${checked_packages_json}"
+            echo "expected_updates=${expected_updates_json}"
           } >>"$GITHUB_OUTPUT"
 
   github-desktop:
@@ -115,7 +157,7 @@ jobs:
       contents: write
 
   update:
-    name: Изолированно обновить и опубликовать
+    name: Изолированно обновить и проверить
     needs:
       - detect
       - github-desktop
@@ -123,32 +165,58 @@ jobs:
     if: >-
       ${{
         always() &&
-        needs.detect.result == 'success' &&
-        needs.detect.outputs.has_updates == 'true'
+        needs.detect.result == 'success'
       }}
     runs-on: ubuntu-24.04
     timeout-minutes: 360
+    permissions:
+      contents: read
+    outputs:
+      successful: ${{ steps.isolated.outputs.successful }}
+      failed: ${{ steps.isolated.outputs.failed }}
     steps:
       - name: Получить репозиторий
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: main
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: jq rpm shellcheck
+          system-packages: jq rpm cpio shellcheck
 
       - name: Изолированно обновить и проверить каждый пакет
         id: isolated
         env:
-          GITHUB_TOKEN: ${{ github.token }}
           PACKAGES_JSON: ${{ needs.detect.outputs.packages }}
+          DETECTION_FAILURES_JSON: ${{ needs.detect.outputs.detection_failures }}
+          GITHUB_DESKTOP_UPSTREAM_COMMIT: ${{ needs.github-desktop.outputs.upstream_commit }}
+          UPDATE_PLAN_JSON: ${{ needs.detect.outputs.expected_updates }}
           AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
         run: |
           mapfile -t packages < <(jq -r '.[]' <<<"$PACKAGES_JSON")
           .github/tools/autonomous_package_updates.sh "${packages[@]}"
+
+          while IFS= read -r package; do
+            [[ -n "$package" ]] || continue
+            package_result="$AUTONOMOUS_UPDATE_RESULTS_DIR/$package"
+            mkdir -p "$package_result"
+            {
+              printf 'package=%s\n' "$package"
+              printf 'phase=detect-version\n'
+              printf 'exit_status=1\n'
+            } >"$package_result/FAILED"
+            printf 'Version detection failed before the update phase.\n' \
+              >"$package_result/update.log"
+            printf '%s\t%s\n' "$package" detect-version \
+              >>"$AUTONOMOUS_UPDATE_RESULTS_DIR/failed-packages"
+            printf '%s\n' "$package" \
+              >>"$AUTONOMOUS_UPDATE_RESULTS_DIR/checked-packages"
+            printf 'detect-version\n' >"$package_result/phase"
+            printf 'failure\n' >"$package_result/result"
+          done < <(jq -r '.[]' <<<"$DETECTION_FAILURES_JSON")
 
           successful_json="$(
             jq -Rsc 'split("\n") | map(select(length > 0))' \
@@ -170,6 +238,49 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  publish:
+    name: Опубликовать проверенные обновления
+    needs: [detect, github-desktop, update]
+    if: ${{ always() && needs.update.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: write
+      issues: write
+      actions: write
+    steps:
+      - name: Получить актуальный main
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Подготовить инструменты публикации
+        uses: ./.github/actions/setup-stplr-spec
+        with:
+          system-packages: jq shellcheck
+
+      - name: Синхронизировать доверенный base с main
+        run: |
+          git fetch --no-tags origin main
+          git merge --ff-only origin/main
+
+      - name: Получить проверенные diff и диагностику
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: autonomous-update-diagnostics-${{ github.run_id }}
+          path: ${{ runner.temp }}/update-results
+
+      - name: Проверить границу доверия update artifact
+        id: artifact_gate
+        env:
+          AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
+          DETECTED_PACKAGES_JSON: ${{ needs.detect.outputs.checked_packages }}
+          EXPECTED_UPDATES_JSON: ${{ needs.detect.outputs.expected_updates }}
+          EXPECTED_GITHUB_DESKTOP_COMMIT: ${{ needs.github-desktop.outputs.upstream_commit }}
+        run: .github/tools/validate_update_artifact.sh
+
       - name: Применить только успешные обновления
         env:
           AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
@@ -185,10 +296,20 @@ jobs:
       - name: Отправить обновления прямо в main
         id: publish
         env:
-          SUCCESSFUL_PACKAGES: ${{ steps.isolated.outputs.successful }}
+          SUCCESSFUL_PACKAGES: ${{ needs.update.outputs.successful }}
+          CURRENT_PACKAGES: ${{ needs.detect.outputs.current_packages }}
+          AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
+          GH_TOKEN: ${{ github.token }}
         run: |
+          {
+            jq -r '.[]' <<<"$CURRENT_PACKAGES"
+            cat "$AUTONOMOUS_UPDATE_RESULTS_DIR/successful-packages"
+          } | sed '/^$/d' | sort -u \
+            >"$AUTONOMOUS_UPDATE_RESULTS_DIR/resolved-packages"
           if git diff --quiet; then
             echo 'Изменений после обновления нет'
+            echo 'pushed=false' >>"$GITHUB_OUTPUT"
+            echo "sha=$(git rev-parse HEAD)" >>"$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -197,20 +318,65 @@ jobs:
           git add README.md ./*/Staplerfile
           packages="$(jq -r 'join(", ")' <<<"$SUCCESSFUL_PACKAGES")"
           git commit -m "chore: autonomously update ${packages}"
-          git pull --rebase origin main
-          git push origin HEAD:main
+          auth_header="$(
+            printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0
+          )"
+          git -c \
+            "http.https://github.com/.extraheader=AUTHORIZATION: basic ${auth_header}" \
+            push origin HEAD:main
+          git rev-parse HEAD >"$AUTONOMOUS_UPDATE_RESULTS_DIR/pushed-sha"
+          echo 'pushed=true' >>"$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >>"$GITHUB_OUTPUT"
+
+      - name: Запустить проверку точного опубликованного commit
+        id: post_push
+        if: ${{ steps.publish.outputs.pushed == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUSHED_SHA: ${{ steps.publish.outputs.sha }}
+        run: |
+          gh workflow run post-push-verify.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main \
+            -f sha="$PUSHED_SHA" \
+            -f updater_run_id="$GITHUB_RUN_ID"
+
+      - name: Приостановить updater при сбое запуска post-push проверки
+        if: >-
+          ${{
+            always() &&
+            steps.publish.outputs.pushed == 'true' &&
+            steps.post_push.outcome == 'failure'
+          }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUSHED_SHA: ${{ steps.publish.outputs.sha }}
+        run: >-
+          .github/tools/set_updater_pause.sh true "$PUSHED_SHA"
+          'не удалось запустить post-push workflow'
 
       - name: Синхронизировать постоянные отчёты о сбоях
-        if: ${{ always() && steps.isolated.outcome == 'success' }}
+        if: >-
+          ${{
+            always() &&
+            steps.artifact_gate.outcome == 'success' &&
+            steps.publish.outcome == 'success'
+          }}
         env:
           AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
+          AUTONOMOUS_UPDATE_RESOLVED_FILE: ${{ runner.temp }}/update-results/resolved-packages
           GH_TOKEN: ${{ github.token }}
         run: .github/tools/report_update_failures.sh
 
       - name: Сообщить о несовместимых пакетах
-        if: ${{ always() && steps.isolated.outputs.failed != '[]' }}
+        if: >-
+          ${{
+            always() &&
+            steps.artifact_gate.outcome == 'success' &&
+            needs.update.outputs.failed != '[]'
+          }}
         env:
-          FAILED_PACKAGES: ${{ steps.isolated.outputs.failed }}
+          FAILED_PACKAGES: ${{ needs.update.outputs.failed }}
           AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
         run: |
           {

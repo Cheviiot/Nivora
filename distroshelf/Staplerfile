@@ -1,15 +1,18 @@
 name='distroshelf'
 version=1.5.2
-release=4
+release=6
 summary='GTK4 client for managing Distrobox containers'
 summary_ru='GTK4-клиент для управления контейнерами Distrobox'
 group='System/Configuration/Other'
 desc='DistroShelf is a GTK4/libadwaita graphical interface for creating, managing and entering Distrobox containers, with support for exporting apps and binaries to the host.'
 desc_ru='DistroShelf — графический интерфейс на GTK4/libadwaita для создания, управления и входа в контейнеры Distrobox, с поддержкой экспорта приложений и бинарников на хост.'
 homepage='https://github.com/ranfdev/DistroShelf'
-maintainer='ranfdev <https://github.com/ranfdev>'
+maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64')
+compatible_with=('altlinux')
+incompatible_with=('alpine')
+disable_network=1
 
 license=('GPL-3.0-or-later')
 
@@ -17,7 +20,9 @@ provides=()
 replaces=('distroshelf')
 conflicts=()
 
-# auto_req/auto_prov cover deps_altlinux instead of a hand-maintained list:
+# The dirty finder covers binary requirements on RPM targets instead of a
+# hand-maintained list. FindProvides is intentionally disabled because it is
+# a no-op in Stapler v0.1.1 and cannot advertise bundled libraries safely.
 # the bundled libvte-2.91-gtk4.so.0 (built by Nivora CI against ALT p11, see
 # maintenance.md) has real DT_NEEDED entries (libgnutls, libfribidi,
 # libpcre2, libsystemd, libgraphene, libicuuc.so.74/libicudata.so.74, ...)
@@ -26,30 +31,21 @@ conflicts=()
 # makes them direct Requires instead, and sidesteps hardcoding an ALT-only
 # soname version (libicu74) that could drift the way parsec's libavcodec61
 # did.
-auto_reqprov_method="dirty"
-auto_req=1
-auto_prov=1
+auto_reqprov_method='dirty'
+auto_req=0
+auto_req_altlinux=1
+auto_prov=0
 
 deps=()
-deps_debian=('libgtk-4-1' 'libadwaita-1-0' 'libglib2.0-0' 'liblz4-1')
-deps_ubuntu=("${deps_debian[@]}")
-deps_fedora=('gtk4' 'libadwaita' 'glib2' 'lz4-libs')
-deps_arch=('gtk4' 'libadwaita' 'glib2' 'lz4')
-deps_opensuse=('gtk4' 'libadwaita' 'glib2' 'liblz4-1')
+deps_altlinux=('distrobox')
 
 opt_deps=()
-opt_deps_debian=('distrobox')
-opt_deps_ubuntu=("${opt_deps_debian[@]}")
-opt_deps_fedora=('distrobox')
-opt_deps_arch=('distrobox')
-opt_deps_opensuse=('distrobox')
-opt_deps_altlinux=('distrobox')
 
 build_deps=('binutils')
 
 sources=(
 	"https://github.com/Cheviiot/Nivora/releases/download/distroshelf-${version}-linux/distroshelf-${version}-linux-x64.tar.gz?~archive=false&~name=distroshelf.tar.gz"
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=distroshelf'
 )
 
 checksums=(
@@ -62,9 +58,13 @@ scripts=(
 	['postremove']='postremove.sh'
 )
 
+appstream_app_id='com.ranfdev.DistroShelf'
+
 package() {
 	cd "${srcdir}"
 	tar --no-same-owner --no-same-permissions -xzf distroshelf.tar.gz
+	test -f "${srcdir}/usr/share/applications/com.ranfdev.DistroShelf.desktop"
+	test -f "${srcdir}/usr/share/metainfo/com.ranfdev.DistroShelf.metainfo.xml"
 
 	cp -a usr "${pkgdir}/usr"
 

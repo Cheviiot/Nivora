@@ -21,9 +21,9 @@
 sudo stplr install nivora/distroshelf
 ```
 
-Для реальной работы нужен установленный [Distrobox](https://distrobox.it/)
-(и Podman или Docker под ним) — сам DistroShelf лишь графическая оболочка
-поверх него.
+[Distrobox](https://distrobox.it/) является обязательной зависимостью пакета;
+он использует Podman или Docker, а DistroShelf предоставляет графическую
+оболочку поверх него.
 
 ## Возможности
 
@@ -31,6 +31,11 @@ sudo stplr install nivora/distroshelf
 интерфейс на GTK4/libadwaita для создания, входа и удаления контейнеров
 Distrobox, экспорта приложений и бинарников из контейнера на хост, а также
 просмотра логов и состояния каждого контейнера без обращения к терминалу.
+
+Текущий Nivora payload собирается в ALT p11 и динамически связан с его ABI
+(включая ICU 74), поэтому рецепт намеренно ограничен ALT Linux. Для Debian,
+Ubuntu, Fedora, Arch, openSUSE и Alpine он не объявляет совместимость, пока не
+появятся отдельные target-native сборки или полностью переносимый runtime closure.
 
 ## Технические детали
 

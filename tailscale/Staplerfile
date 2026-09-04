@@ -1,6 +1,6 @@
 name='tailscale'
 version=1.102.3
-release=1
+release=2
 summary='Mesh VPN built on WireGuard'
 summary_ru='Mesh VPN на базе WireGuard'
 group='Networking/Other'
@@ -10,6 +10,9 @@ homepage='https://tailscale.com'
 maintainer='Tailscale Inc <info@tailscale.com>'
 
 architectures=('amd64' 'arm64')
+compatible_with=('altlinux' 'debian' 'ubuntu' 'fedora' 'arch' 'opensuse' 'opensuse-leap' 'suse')
+incompatible_with=('alpine')
+disable_network=1
 
 license=('BSD-3-Clause')
 
@@ -34,13 +37,13 @@ deps_altlinux=('iptables' 'iproute2' 'ca-certificates')
 sources=(
 	"https://pkgs.tailscale.com/stable/tailscale_${version}_amd64.tgz?~archive=false&~name=tailscale.tgz"
 	"local:///tailscale-purge-data"
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=tailscale'
 )
 
 sources_arm64=(
 	"https://pkgs.tailscale.com/stable/tailscale_${version}_arm64.tgz?~archive=false&~name=tailscale.tgz"
 	"local:///tailscale-purge-data"
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=tailscale'
 )
 
 checksums=(

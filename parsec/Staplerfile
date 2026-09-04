@@ -1,15 +1,20 @@
 name='parsec'
 version='150-104a'
-release=5
+release=7
+# SHA-256 of the final HTTP ETag for the mutable versionless upstream DEB.
+source_fingerprint='1bdf98c2922f6cb3fbab46afd9a5609f6fae2b2136d3b573c6589b83b364ce37'
 summary='Low-latency remote desktop and game streaming client'
 summary_ru='Клиент удаленного рабочего стола и игрового стриминга с низкой задержкой'
 group='Networking/Remote access'
 desc='Parsec is a proprietary low-latency remote desktop and game streaming client distributed as an official Linux deb package for Ubuntu 22.04 LTS Desktop.'
 desc_ru='Parsec — проприетарный клиент удаленного рабочего стола и игрового стриминга с низкой задержкой, распространяемый официальным deb-пакетом для Ubuntu 22.04 LTS Desktop.'
 homepage='https://parsec.app/downloads'
-maintainer='Unity Technologies SF <https://parsec.app/>'
+maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64')
+compatible_with=('altlinux' 'debian' 'ubuntu' 'fedora' 'arch' 'opensuse' 'opensuse-leap' 'suse')
+incompatible_with=('alpine')
+disable_network=1
 
 license=('Custom')
 nonfree=1
@@ -25,25 +30,24 @@ auto_req=0
 auto_prov=0
 
 deps=()
-deps_debian=('libc6' 'libgcc-s1 | libgcc1' 'libstdc++6' 'libudev1' 'libssl3 | libssl1.1' 'libx11-6' 'libxcursor1' 'libxi6' 'libsm6' 'libgl1' 'libasound2' 'libjpeg8 | libjpeg-turbo8' 'libpng16-16' 'libcurl4' 'libavcodec61 | libavcodec60 | libavcodec59 | libavcodec58 | libavcodec57' 'libxrandr2' 'libvulkan1')
+deps_debian=('libc6' 'libgcc-s1 | libgcc1' 'libstdc++6' 'libudev1' 'libssl3 | libssl1.1' 'libx11-6' 'libxcursor1' 'libxi6' 'libsm6' 'libgl1' 'libasound2t64 | libasound2' 'libjpeg8 | libjpeg-turbo8' 'libpng16-16' 'libcurl4' 'libavcodec61 | libavcodec60 | libavcodec59 | libavcodec58 | libavcodec57' 'libxrandr2' 'libvulkan1')
 deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('glibc' 'libgcc' 'libstdc++' 'systemd-libs' 'openssl-libs' 'libX11' 'libXcursor' 'libXi' 'libSM' 'mesa-libGL' 'alsa-lib' 'libjpeg-turbo' 'libpng' 'libcurl' 'ffmpeg-libs' 'libXrandr' 'vulkan-loader')
 deps_arch=('glibc' 'gcc-libs' 'systemd-libs' 'openssl' 'libx11' 'libxcursor' 'libxi' 'libsm' 'libglvnd' 'alsa-lib' 'libjpeg-turbo' 'libpng' 'curl' 'ffmpeg' 'libxrandr' 'vulkan-icd-loader')
 deps_opensuse=('glibc' 'libgcc_s1' 'libstdc++6' 'libudev1' 'libopenssl3' 'libX11-6' 'libXcursor1' 'libXi6' 'libSM6' 'Mesa-libGL1' 'libasound2' 'libjpeg8' 'libpng16-16' 'libcurl4' 'libavcodec61' 'libXrandr2' 'libvulkan1')
-# ALT's apt-rpm won't resolve alternatives in a local RPM's Requires —
-# neither debian-style 'a | b' nor real RPM rich-dependency '(a or b)'
-# (verified by actual install, not just build). One concrete name is the
-# only option: libavcodec61 matches ALT p11; Sisyphus is already on
-# libavcodec62 and won't install this package — known limitation, Stapler
-# can't branch deps_altlinux by ALT version, only by distro.
-deps_altlinux=('glibc' 'libgcc1' 'libstdc++6' 'libudev0' 'libssl3' 'libX11' 'libXcursor' 'libXi' 'libSM' 'libGL' 'libalsa' 'libjpeg8' 'libpng16' 'libcurl' 'libavcodec61' 'libXrandr' 'libvulkan1')
+# ALT's apt-rpm requires one concrete package name. Stapler resolves
+# release-specific overrides from ALT_BRANCH_ID, so p11 and Sisyphus must
+# not share the libavcodec dependency.
+deps_altlinux=('glibc' 'libgcc1' 'libstdc++6' 'libudev0' 'libssl3' 'libX11' 'libXcursor' 'libXi' 'libSM' 'libGL' 'libalsa' 'libjpeg8' 'libpng16' 'libcurl' 'libXrandr' 'libvulkan1')
+deps_altlinux_p11=("${deps_altlinux[@]}" 'libavcodec61')
+deps_altlinux_sisyphus=("${deps_altlinux[@]}" 'libavcodec62')
 
 build_deps=('binutils')
 
 sources=(
 	"https://builds.parsec.app/package/parsec-linux.deb?~archive=false&~name=parsec.deb"
 	"local:///parsecd-wrapper"
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=parsec'
 )
 
 checksums=(

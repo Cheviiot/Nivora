@@ -31,7 +31,15 @@ sudo stplr install nivora/parsec
 Пакет переупаковывает официальный DEB, который upstream распространяет для
 Ubuntu 22.04 LTS Desktop — отдельного нативного ALT-релиза Parsec не
 существует. Зависимости подобраны под ALT-эквиваленты Ubuntu-библиотек, на
-которые линкуется бинарник (`libavcodec61`, `libvulkan1` и т.д.).
+которые линкуется бинарник: p11 использует `libavcodec61`, а Sisyphus —
+`libavcodec62` через release-specific overrides Stapler.
+
+Upstream URL не содержит номер версии и может быть заменён. Пока Parsec не
+публикует неизменяемый официальный URL, Nivora помечает его сборку как
+`source-volatile`: checksum защищает текущую загрузку, но старый рецепт может
+перестать воспроизводиться после обновления upstream. Ежедневный updater поэтому
+сравнивает fingerprint HTTP ETag даже при неизменной версии; при замене payload
+он обновляет checksum и повышает `release`.
 
 ---
 

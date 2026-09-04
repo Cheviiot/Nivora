@@ -1,15 +1,18 @@
 name='pineconemc'
 version='11.0.3'
-release=4
+release=6
 summary='Prism Launcher fork with Ely.by and offline account support'
 summary_ru='Форк Prism Launcher с поддержкой Ely.by и offline-аккаунтов'
 group='Games/Other'
 desc='PineconeMC is a Prism Launcher fork with integrated Ely.by account support, offline accounts, modpack management and Minecraft instance management.'
 desc_ru='PineconeMC — форк Prism Launcher с интеграцией аккаунтов Ely.by, offline-аккаунтами, управлением модпаками и инстансами Minecraft.'
 homepage='https://pineconemc.com/'
-maintainer='PineconeMC contributors <https://github.com/ElyPrismLauncher/Launcher>'
+maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64' 'arm64')
+compatible_with=('altlinux' 'debian' 'ubuntu' 'fedora' 'arch' 'opensuse' 'opensuse-leap' 'suse')
+incompatible_with=('alpine')
+disable_network=1
 
 license=('GPL-3.0-only')
 
@@ -29,9 +32,12 @@ conflicts=()
 # replaces the whole guess with what's actually linked; ca-certificates
 # (data) and xdg-utils (subprocess) are the only genuinely non-ELF items
 # left to keep explicit.
-auto_reqprov_method="dirty"
-auto_req=1
-auto_prov=1
+auto_reqprov_method='dirty'
+auto_req=0
+auto_req_altlinux=1
+auto_req_fedora=1
+auto_req_opensuse=1
+auto_prov=0
 
 deps=()
 deps_debian=('ca-certificates' 'libc6' 'libdbus-1-3' 'libdrm2' 'libegl1' 'libfontconfig1' 'libfreetype6' 'libgcc-s1' 'libgl1' 'libglib2.0-0' 'libgtk-3-0' 'libice6' 'libnss3' 'libsm6' 'libstdc++6' 'libudev1' 'libx11-6' 'libxcb1' 'libxcomposite1' 'libxcursor1' 'libxdamage1' 'libxext6' 'libxfixes3' 'libxi6' 'libxkbcommon0' 'libxrandr2' 'libxrender1' 'libxtst6' 'zlib1g' 'xdg-utils')
@@ -44,31 +50,33 @@ deps_altlinux=('ca-certificates' 'xdg-utils')
 sources=(
 	"https://github.com/ElyPrismLauncher/Launcher/releases/download/${version}/PineconeMC-Linux-Qt6-Portable-${version}.tar.gz?~archive=false&~name=pineconemc.tar.gz"
 	"local:///pineconemc.svg"
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=pineconemc'
 )
 
 sources_arm64=(
 	"https://github.com/ElyPrismLauncher/Launcher/releases/download/${version}/PineconeMC-Linux-aarch64-Qt6-Portable-${version}.tar.gz?~archive=false&~name=pineconemc.tar.gz"
 	"local:///pineconemc.svg"
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=pineconemc'
 )
 
 checksums=(
-	'c1693e32668a8897529f3215aa8369e2562efde84adb999a210cc613c58ee916'
-	'256d854b05112270847c29f31990329e880c39dba8ab06a574db9f09749e758a'
-	'794a4007ac816a1425a98fdddf0716728fe1e2d899c4b9c1d505c1405e111ec9'
+	'sha256:c1693e32668a8897529f3215aa8369e2562efde84adb999a210cc613c58ee916'
+	'sha256:256d854b05112270847c29f31990329e880c39dba8ab06a574db9f09749e758a'
+	'sha256:794a4007ac816a1425a98fdddf0716728fe1e2d899c4b9c1d505c1405e111ec9'
 )
 
 checksums_arm64=(
-	'0e8d02d91efd7f6f107611163ebf2801e9411c1cbda8c83fd3f6458e24130f02'
-	'256d854b05112270847c29f31990329e880c39dba8ab06a574db9f09749e758a'
-	'794a4007ac816a1425a98fdddf0716728fe1e2d899c4b9c1d505c1405e111ec9'
+	'sha256:0e8d02d91efd7f6f107611163ebf2801e9411c1cbda8c83fd3f6458e24130f02'
+	'sha256:256d854b05112270847c29f31990329e880c39dba8ab06a574db9f09749e758a'
+	'sha256:794a4007ac816a1425a98fdddf0716728fe1e2d899c4b9c1d505c1405e111ec9'
 )
 
 scripts=(
 	['postinstall']='postinstall.sh'
 	['postremove']='postremove.sh'
 )
+
+appstream_app_id='io.github.elyprismlauncher.ElyPrismLauncher'
 
 package() {
 	cd "${srcdir}"
@@ -78,7 +86,10 @@ package() {
 	rm -f "${pkgdir}/opt/pineconemc/portable.txt"
 
 	chmod 755 "${pkgdir}/opt/pineconemc/bin/elyprismlauncher"
-	chmod 755 "${pkgdir}/opt/pineconemc/bin/elyprismlauncher_updater"
+	# Upstream enables its updater solely when this helper exists. A failing
+	# replacement still triggers background checks and user-visible errors, so
+	# packaged installs remove the helper altogether and upgrades stay with Stapler.
+	rm -f "${pkgdir}/opt/pineconemc/bin/elyprismlauncher_updater"
 
 	mkdir -p "${pkgdir}/usr/bin"
 	ln -sf /opt/pineconemc/bin/elyprismlauncher "${pkgdir}/usr/bin/elyprismlauncher"

@@ -1,16 +1,17 @@
 name='anidesk'
 version='0.0.1-beta.7'
 debian_version='0.0.1.beta.7'
-release=6
+release=8
 summary='Unofficial Anixart desktop client'
 summary_ru='Неофициальный desktop-клиент Anixart'
 group='Video/Players'
 desc='AniDesk is an unofficial Electron desktop client for Anixart with account support, a built-in video player and Anime4K WebGPU upscaling.'
 desc_ru='AniDesk — неофициальный Electron desktop-клиент Anixart с поддержкой аккаунта, встроенным видеоплеером и Anime4K-апскейлом через WebGPU.'
 homepage='https://github.com/theDesConnet/AniDesk'
-maintainer='DesConnet, hack1exe <https://github.com/theDesConnet/AniDesk>'
+maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64')
+incompatible_with=('alpine')
 
 license=('GPL-2.0-only')
 
@@ -19,10 +20,14 @@ replaces=('anidesk')
 conflicts=()
 
 auto_reqprov_method="dirty"
-auto_req=1
-auto_prov=1
+auto_req=0
+auto_req_altlinux=1
+auto_req_fedora=1
+auto_req_opensuse=1
+auto_prov=0
+disable_network=1
 
-# auto_req covers the real DT_NEEDED of the anidesk binary (readelf -d
+# On RPM targets, auto_req covers the real DT_NEEDED of the anidesk binary (readelf -d
 # confirmed: gtk3, nss, at-spi2, gbm, xcb, alsa, glibc, ...). The rest
 # stays explicit: xdg-utils is a subprocess tool, mesa-dri-drivers is
 # never linked directly (it's found by the Vulkan ICD loader at runtime,
@@ -33,7 +38,7 @@ auto_prov=1
 # claude/vesktop - same pattern, same reasoning, kept explicit for real
 # functionality instead of a silent fallback.
 deps=()
-deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2' 'libvulkan1' 'mesa-vulkan-drivers')
+deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2t64 | libasound2' 'libvulkan1' 'mesa-vulkan-drivers')
 deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa-libgbm' 'libxcb' 'alsa-lib' 'vulkan-loader' 'mesa-vulkan-drivers')
 deps_arch=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa' 'libxcb' 'alsa-lib' 'vulkan-icd-loader' 'vulkan-radeon')
@@ -60,7 +65,7 @@ sources=(
 	"https://github.com/theDesConnet/AniDesk/releases/download/v${version}/anidesk_${debian_version}_amd64.deb?~archive=false&~name=anidesk.deb"
 	"local:///anidesk.png"
 	"local:///anidesk-wrapper"
-	"local:///LICENSE"
+	"local:///LICENSE?nivora=anidesk"
 )
 
 checksums=(
@@ -84,7 +89,7 @@ package() {
 
 	install -dm755 "${pkgdir}/usr/lib"
 	cp -a "${srcdir}/extracted/usr/lib/anidesk" "${pkgdir}/usr/lib/"
-	chmod 0755 "${pkgdir}/usr/lib/anidesk/chrome-sandbox"
+	chmod 4755 "${pkgdir}/usr/lib/anidesk/chrome-sandbox"
 	chmod 755 "${pkgdir}/usr/lib/anidesk/anidesk"
 
 	python3 - "${pkgdir}/usr/lib/anidesk/resources/app.asar" <<'PY'

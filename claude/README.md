@@ -31,27 +31,12 @@ Chat, контекст проекта, встроенный терминал, р
 diff — переупаковка официального DEB из APT-источника Anthropic с сохранением
 upstream desktop-id `com.anthropic.Claude`.
 
-## Два независимых пакета
-
-[ClaudeAlt](../claude-alt/README.md) — отдельный пакет для второй,
-полностью независимой установки: свой executable/resources tree, Electron
-`productName`, Wayland `app_id`, X11 `WM_CLASS`, desktop-файл, Chromium-профиль
-и Cowman VM socket. В системном лотке используется штатный глиф Claude:
-оранжевый у основного приложения, бирюзовый — у ClaudeAlt. Большие app-иконки
-окон при этом остаются отдельными, поэтому окружение рабочего стола
-группирует Claude и ClaudeAlt как разные приложения, а
-`requestSingleInstanceLock()` и Cowork runtime каждого приложения работают
-независимо.
-
 ## Сетевая изоляция
 
-Claude и ClaudeAlt имеют разные Chromium-профили, single-instance sockets,
-cookies, browser storage, Crashpad-каталоги и Cowork VM sockets. Временные
-OAuth callback-серверы по умолчанию получают свободный loopback-порт от ОС.
-
-Это не сетевые песочницы: оба приложения выходят в Интернет с одного хоста и
-публичного IP-адреса. Общий `claude://` URL handler намеренно остаётся за
-основным Claude.
+Claude хранит Chromium-профиль, cookies, browser storage, Crashpad-каталоги и
+Cowork VM sockets в пользовательском профиле. Это не сетевая песочница:
+приложение обращается к сервисам Anthropic через Интернет, а временный OAuth
+callback-сервер использует loopback-порт локальной системы.
 
 ---
 

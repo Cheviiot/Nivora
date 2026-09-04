@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+case "$0" in
+/*) helper="$0" ;;
+*) helper="$(command -v -- "$0")" ;;
+esac
+case "${helper##*/}" in
+git-remote-https | git-remote-ftp | git-remote-ftps)
+    helper="${helper%/*}/git-remote-http"
+    ;;
+esac
+
+# ALT intentionally keeps the OpenSSL and GnuTLS libcurl ABIs in parallel.
+# GitHub Desktop's bundled portable Git is linked to CURL_OPENSSL_4, while the
+# system libcurl.so.4 resolves to the GnuTLS flavour. Limit the alternate loader
+# path to these helpers instead of changing the Electron process globally.
+if [ -d /usr/lib64/libcurl4-openssl ]; then
+    LD_LIBRARY_PATH="/usr/lib64/libcurl4-openssl${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    export LD_LIBRARY_PATH
+fi
+
+exec "${helper}.bin" "$@"

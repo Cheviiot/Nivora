@@ -1,5 +1,5 @@
 name='claude'
-version=1.40609.0
+version=1.40609.1
 release=1
 summary='Claude desktop application'
 summary_ru='Десктопное приложение Claude'
@@ -10,6 +10,7 @@ homepage='https://code.claude.com/docs/en/desktop-quickstart'
 maintainer='Anthropic PBC <support@anthropic.com>'
 
 architectures=('amd64' 'arm64')
+incompatible_with=('alpine')
 
 license=('Custom')
 nonfree=1
@@ -21,10 +22,14 @@ replaces=('claude' 'claude-desktop')
 conflicts=()
 
 auto_reqprov_method="dirty"
-auto_req=1
-auto_prov=1
+auto_req=0
+auto_req_altlinux=1
+auto_req_fedora=1
+auto_req_opensuse=1
+auto_prov=0
+disable_network=1
 
-# auto_req covers everything readelf -d confirms as real DT_NEEDED of the
+# On RPM targets, auto_req covers everything readelf -d confirms as real DT_NEEDED of the
 # installed claude-desktop binary (gtk3, nss, at-spi2, gbm, xcb, glibc, ...).
 # The rest stays explicit because it never shows up in that scan: xdg-utils
 # and xdg-desktop-portal(-gtk) are a subprocess tool and a D-Bus portal
@@ -60,25 +65,25 @@ build_deps_altlinux=('binutils' 'python3')
 sources=(
 	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_amd64.deb?~archive=false&~name=claude-desktop.deb"
 	"local:///claude-tray-orange.png"
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=claude'
 )
 
 sources_arm64=(
 	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_arm64.deb?~archive=false&~name=claude-desktop.deb"
 	"local:///claude-tray-orange.png"
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=claude'
 )
 
 checksums=(
-	'sha256:a96e96ff8eb4d4d7ffa785aba7fc23f8684b12ac83ed2ef4060f0f09f4177a98'
+	'sha256:80182e8511c6bbee6de26c7ee225fbd2a9aba2274ef1405a1d89cd8fe7a380dc'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
-	'sha256:40efe7a2755d02c9fe13f98cae18705e2d31e5bbb24816ebbd4951c5e3a56b3f'
+	'sha256:6f00d3f569c70728e382a749ee0242c86823d08f8c6f9dfcff178311831e5ccf'
 )
 
 checksums_arm64=(
-	'sha256:c97e1aa0cd49437054b161bced1fea2ebfae60453e616d5b73524a9146421773'
+	'sha256:493ccc06030c5dbb225add135823385d8cfb400a5922704de377ea8f55b39c40'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
-	'sha256:40efe7a2755d02c9fe13f98cae18705e2d31e5bbb24816ebbd4951c5e3a56b3f'
+	'sha256:6f00d3f569c70728e382a749ee0242c86823d08f8c6f9dfcff178311831e5ccf'
 )
 
 scripts=(
@@ -95,7 +100,7 @@ package() {
 
 	install -dm755 "${pkgdir}/usr/lib"
 	cp -a "${srcdir}/extracted/usr/lib/claude-desktop" "${pkgdir}/usr/lib/"
-	chmod 0755 "${pkgdir}/usr/lib/claude-desktop/chrome-sandbox"
+	chmod 4755 "${pkgdir}/usr/lib/claude-desktop/chrome-sandbox"
 	chmod 755 \
 		"${pkgdir}/usr/lib/claude-desktop/claude-desktop" \
 		"${pkgdir}/usr/lib/claude-desktop/resources/chrome-native-host" \

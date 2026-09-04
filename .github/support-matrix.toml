@@ -1,0 +1,282 @@
+schema_version = 1
+
+[stapler]
+stable_version = "0.1.1"
+stable_commit = "b5e293f6442f3cba1eeeea4b53c3c0e0bc2ae3e1"
+stable_linux_x86_64_url = "https://altlinux.space/stapler/stplr/releases/download/v0.1.1/stplr-0.1.1-linux-x86_64.tar.gz"
+stable_linux_x86_64_sha256 = "b1ec1e98c04ab928377d0cef1706e3dc62171b9e256f4bf36a219addc53117b8"
+main_commit = "9df2b9284d3a37cdc418cef2e77781bac3b8dc3e"
+main_repository = "https://altlinux.space/stapler/stplr.git"
+
+[images]
+ubuntu_24_04 = "ubuntu:24.04@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517"
+alt_sisyphus = "registry.altlinux.org/sisyphus/base@sha256:1a6ab67cc12cfbe2419ed8b805ae6fd75ed036f9da7211b78876d1cd0083b7ba"
+
+[expectations]
+package_count = 16
+target_count = 10
+logical_runtime_cells = 260
+declared_supported_runtime_cells = 229
+declared_unique_build_cells = 219
+blocking_ci_build_cells_full_common_change = 16
+blocking_ci_runtime_cells = 2
+advisory_main_build_cells_full_common_change = 16
+
+[tiers]
+verified = "target-specific native build, package metadata, install, safe smoke and remove are required gates"
+partial = "declared support with explicit caveats; complete target lifecycle is not a required gate"
+experimental = "best-effort declaration; failures do not block and runtime support is unproven"
+unsupported = "excluded from build and runtime scheduling"
+
+[ci_coverage]
+blocking_builder = "alt-sisyphus-x86_64"
+blocking_architectures = ["amd64", "noarch"]
+runtime = "nivora-cli on native ubuntu-24.04 amd64 and arm64"
+main_canary = "advisory-alt-sisyphus-x86_64"
+pruning = "changed package only; every package for .github or stapler-repo.toml changes"
+
+[[targets]]
+id = "debian-13"
+distro = "debian"
+release = "13"
+format = "deb"
+manager = "apt"
+libc = "glibc"
+review_cadence = "weekly"
+ci_mode = "declared-only"
+
+[[targets]]
+id = "ubuntu-24.04"
+distro = "ubuntu"
+release = "24.04"
+format = "deb"
+manager = "apt"
+libc = "glibc"
+review_cadence = "weekly"
+ci_mode = "blocking-runtime"
+native_runners = { amd64 = "ubuntu-24.04", arm64 = "ubuntu-24.04-arm" }
+
+[[targets]]
+id = "ubuntu-26.04"
+distro = "ubuntu"
+release = "26.04"
+format = "deb"
+manager = "apt"
+libc = "glibc"
+review_cadence = "weekly"
+ci_mode = "declared-only"
+
+[[targets]]
+id = "fedora-43"
+distro = "fedora"
+release = "43"
+format = "rpm"
+manager = "dnf"
+libc = "glibc"
+review_cadence = "weekly"
+ci_mode = "declared-only"
+
+[[targets]]
+id = "fedora-44"
+distro = "fedora"
+release = "44"
+format = "rpm"
+manager = "dnf"
+libc = "glibc"
+review_cadence = "weekly"
+ci_mode = "declared-only"
+
+[[targets]]
+id = "alt-p11"
+distro = "altlinux"
+release = "p11"
+format = "rpm"
+manager = "apt-rpm"
+libc = "glibc"
+review_cadence = "weekly"
+ci_mode = "declared-only"
+
+[[targets]]
+id = "alt-sisyphus"
+distro = "altlinux"
+release = "sisyphus"
+format = "rpm"
+manager = "apt-rpm"
+libc = "glibc"
+review_cadence = "nightly"
+ci_mode = "blocking-build-x86_64"
+
+[[targets]]
+id = "arch-snapshot"
+distro = "arch"
+release = "snapshot"
+format = "archlinux"
+manager = "pacman"
+libc = "glibc"
+review_cadence = "nightly"
+ci_mode = "declared-only"
+
+[[targets]]
+id = "opensuse-leap-16.0"
+distro = "opensuse"
+release = "16.0"
+format = "rpm"
+manager = "zypper"
+libc = "glibc"
+review_cadence = "weekly"
+ci_mode = "declared-only"
+
+[[targets]]
+id = "alpine-3.23"
+distro = "alpine"
+release = "3.23"
+format = "apk"
+manager = "apk"
+libc = "musl"
+review_cadence = "nightly"
+ci_mode = "declared-only"
+
+[[packages]]
+id = "anidesk"
+architectures = ["amd64"]
+smoke_path = "/usr/bin/anidesk"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["external-service"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload"] },
+]
+
+[[packages]]
+id = "balena-etcher"
+architectures = ["amd64"]
+smoke_path = "/usr/bin/balena-etcher"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["destructive-storage"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload", "destructive-storage"] },
+]
+
+[[packages]]
+id = "chatgpt"
+architectures = ["amd64", "arm64"]
+smoke_path = "/usr/bin/chatgpt"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["login-required", "external-service"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload"] },
+]
+
+[[packages]]
+id = "claude"
+architectures = ["amd64", "arm64"]
+smoke_path = "/usr/bin/claude-desktop"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["login-required", "external-service", "vm-feature-out-of-scope"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload"] },
+]
+
+[[packages]]
+id = "distroshelf"
+architectures = ["amd64"]
+smoke_path = "/usr/bin/distroshelf"
+support = [
+  { targets = ["alt-p11", "alt-sisyphus"], tier = "partial", caveats = ["nested-container-runtime", "alt-p11-built-payload", "target-lifecycle-not-gated"] },
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "arch-snapshot", "opensuse-leap-16.0", "alpine-3.23"], tier = "unsupported", caveats = ["alt-p11-linked-payload"] },
+]
+
+[[packages]]
+id = "github-desktop"
+architectures = ["amd64", "arm64"]
+smoke_path = "/usr/bin/github-desktop"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["authenticated-github-flow-out-of-scope", "target-lifecycle-not-gated"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload"] },
+]
+
+[[packages]]
+id = "happ"
+architectures = ["amd64", "arm64"]
+smoke_path = "/usr/bin/happ"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["external-network-tunnel"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload"] },
+]
+
+[[packages]]
+id = "nivora-cli"
+architectures = ["all"]
+smoke_path = "/usr/bin/nv"
+support = [
+  { targets = ["ubuntu-24.04"], tier = "verified", caveats = [] },
+  { targets = ["debian-13", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["target-lifecycle-not-gated"] },
+  { targets = ["alpine-3.23"], tier = "experimental", caveats = ["container-only-runtime-check"] },
+]
+
+[[packages]]
+id = "parsec"
+architectures = ["amd64"]
+smoke_path = "/usr/bin/parsecd"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["login-required", "remote-host-out-of-scope", "gpu-path-out-of-scope"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload"] },
+]
+
+[[packages]]
+id = "pineconemc"
+architectures = ["amd64", "arm64"]
+smoke_path = "/usr/bin/pineconemc"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["game-runtime-out-of-scope"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload"] },
+]
+
+[[packages]]
+id = "tailscale"
+architectures = ["amd64", "arm64"]
+smoke_path = "/usr/bin/tailscale"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["login-required", "network-control-plane-out-of-scope"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["alpine-init-integration-unverified"] },
+]
+
+[[packages]]
+id = "telegram"
+architectures = ["amd64"]
+smoke_path = "/usr/bin/telegram-desktop"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["login-required", "external-service"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload"] },
+]
+
+[[packages]]
+id = "ventoy"
+architectures = ["amd64", "arm64"]
+smoke_path = "/usr/bin/ventoy"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["destructive-storage"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload", "destructive-storage"] },
+]
+
+[[packages]]
+id = "vesktop"
+architectures = ["amd64", "arm64"]
+smoke_path = "/usr/bin/vesktop"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["login-required", "external-service"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload"] },
+]
+
+[[packages]]
+id = "vintner"
+architectures = ["amd64", "arm64"]
+smoke_path = "/usr/bin/vintner"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["large-toolchain-out-of-scope", "wine-runtime"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["alpine-wine-integration-unverified"] },
+]
+
+[[packages]]
+id = "yandex-music"
+architectures = ["amd64"]
+smoke_path = "/usr/bin/yandex-music"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["login-required", "external-service"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload"] },
+]

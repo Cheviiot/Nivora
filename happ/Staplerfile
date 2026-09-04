@@ -1,5 +1,5 @@
 name='happ'
-version=4.1.2
+version=4.1.3
 release=1
 summary='User-friendly GUI proxy client for xray-core'
 summary_ru='Удобный GUI-прокси-клиент для xray-core'
@@ -10,6 +10,9 @@ homepage='https://happ.su/'
 maintainer='FlyFrog LLC <support@happ.su>'
 
 architectures=('amd64' 'arm64')
+compatible_with=('altlinux' 'debian' 'ubuntu' 'fedora' 'arch' 'opensuse' 'opensuse-leap' 'suse')
+incompatible_with=('alpine')
+disable_network=1
 
 license=('Custom')
 nonfree=1
@@ -30,16 +33,19 @@ conflicts=()
 # same class of gap that made happ a bad pure-auto_req candidate
 # earlier, fixed by keeping just this one entry instead of reverting
 # the whole package to explicit deps.
-auto_reqprov_method="dirty"
-auto_req=1
-auto_prov=1
+auto_reqprov_method='dirty'
+auto_req=0
+auto_req_altlinux=1
+auto_req_fedora=1
+auto_req_opensuse=1
+auto_prov=0
 
 deps=()
 deps_debian=('libc6' 'libssl3 | libssl3t64')
 deps_ubuntu=('libc6' 'libssl3 | libssl3t64')
 deps_fedora=('glibc' 'openssl-libs')
 deps_arch=('glibc' 'openssl')
-deps_opensuse=('glibc' 'libopenssl1_1')
+deps_opensuse=('glibc' 'libopenssl3')
 deps_altlinux=('libssl3')
 
 build_deps=('binutils')
@@ -56,7 +62,7 @@ sources=(
 	'local:///happ-launcher'
 	'local:///tray-idle.svg'
 	'local:///tray-connected.svg'
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=happ'
 )
 
 sources_arm64=(
@@ -65,11 +71,11 @@ sources_arm64=(
 	'local:///happ-launcher'
 	'local:///tray-idle.svg'
 	'local:///tray-connected.svg'
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=happ'
 )
 
 checksums=(
-	'sha256:1a4eba924883c6a484c50c61097c3cb33f46ca8ab6a9774ffd619813b99d4562'
+	'sha256:32e543ec794bc365e609b4d4f758cf52bb313f063b97babb82899c209e9af022'
 	'sha256:5b0106dda286b039d6bdce45208f44ea3eb7a2deb4e00455190ce7a07177dde0'
 	'sha256:fa4d741a4e2df82b0a19291e2c7bad4a8753a1e59237b2bfe5fef7de8c22efd2'
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'
@@ -78,7 +84,7 @@ checksums=(
 )
 
 checksums_arm64=(
-	'sha256:816e199aa5d6cc63dbcb6a5c6b9ef4d4387c4aa1ba2d33c0f489de51c1ddc6ab'
+	'sha256:31d7e50326218522771bd672bb384cb12764338c0247c776b13277a1fabce69c'
 	'sha256:5b0106dda286b039d6bdce45208f44ea3eb7a2deb4e00455190ce7a07177dde0'
 	'sha256:fa4d741a4e2df82b0a19291e2c7bad4a8753a1e59237b2bfe5fef7de8c22efd2'
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'

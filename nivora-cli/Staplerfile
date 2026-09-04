@@ -1,5 +1,5 @@
 name='nivora-cli'
-version='1.0.0'
+version='1.1.0'
 release=1
 summary='Friendly multilingual command shell for Stapler'
 summary_ru='Удобная многоязычная оболочка для Stapler'
@@ -7,7 +7,7 @@ desc='Nivora CLI is a compact bilingual command shell for everyday Stapler packa
 desc_ru='Nivora CLI — компактная двуязычная оболочка для управления пакетами и репозиториями Stapler, диагностики, интерактивной навигации и автодополнения.'
 group='System/Configuration/Packaging'
 homepage='https://github.com/Cheviiot/Nivora'
-maintainer='Cheviiot <https://github.com/Cheviiot>'
+maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('all')
 license=('MIT')
@@ -19,6 +19,7 @@ conflicts=()
 auto_reqprov_method='dirty'
 auto_req=0
 auto_prov=0
+disable_network=1
 
 deps=()
 deps_debian=('bash' 'sudo')
@@ -27,14 +28,15 @@ deps_fedora=('bash' 'sudo')
 deps_arch=('bash' 'sudo')
 deps_altlinux=('bash' 'sudo')
 deps_opensuse=('bash' 'sudo')
+deps_alpine=('bash' 'sudo')
 
 sources=(
 	'local:///nivora'
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=nivora-cli'
 )
 
 checksums=(
-	'sha256:438a5b3b73cd8f69108174b25e647b0f8013b3c16f4fcd5ca9e9769fd19f98b7'
+	'sha256:ea621461aed4c7bfe35597ea20348fc847021b86edce13747b48c8c1d0a54c6f'
 	'sha256:16f1438f500706ac85b363c2549b392daef3a920b24139fca6b30f5648a7801a'
 )
 

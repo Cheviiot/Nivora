@@ -1,15 +1,18 @@
 name='vintner'
 version=0.5.0
-release=1
+release=2
 summary='Cross compile with MSVC on Linux via Wine'
 summary_ru='Кросс-компиляция с MSVC на Linux через Wine'
 group='Development/Tools'
 desc='vintner is a single-binary tool for cross compiling with the real MSVC toolchain on Linux via Wine. Once you run its download/install subcommands, cl, link, lib, rc, midl, mc, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd and findstr all work as drop-in commands, exactly like on Windows, or can be invoked directly as "vintner cl", "vintner msbuild", etc. without touching PATH. Supports building real KMDF/UMDF drivers via the Windows Driver Kit (--with-wdk), legacy D3DX9 code via the DirectX SDK (--with-dxsdk), old PlatformToolset-pinned .vcxproj files against the one installed compiler, resumes interrupted downloads, and "vintner doctor" diagnoses a broken wine/toolchain setup. Its own CLI is available in English and Russian.'
 desc_ru='vintner — однобинарный инструмент для кросс-компиляции с реальным MSVC на Linux через Wine. После выполнения его подкоманд download/install команды cl, link, lib, rc, midl, mc, mt, dumpbin, msbuild, nmake, ml, ml64, armasm, armasm64, cmd и findstr работают как обычные команды, точно как в Windows, либо вызываются напрямую как «vintner cl», «vintner msbuild» и т.д., не трогая PATH. Поддерживает сборку настоящих KMDF/UMDF-драйверов через Windows Driver Kit (--with-wdk), устаревший код D3DX9 через DirectX SDK (--with-dxsdk), старые .vcxproj с закреплённым PlatformToolset против единственного установленного компилятора, докачивает прерванные загрузки, а «vintner doctor» диагностирует неисправную настройку wine/toolchain. Сам CLI доступен на английском и русском.'
 homepage='https://github.com/Cheviiot/vintner'
-maintainer='Cheviiot <https://github.com/Cheviiot>'
+maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64' 'arm64')
+compatible_with=('altlinux' 'debian' 'ubuntu' 'fedora' 'arch' 'opensuse' 'opensuse-leap' 'suse')
+incompatible_with=('alpine')
+disable_network=1
 
 license=('MIT')
 
@@ -41,12 +44,12 @@ build_deps=('binutils')
 # package() doesn't need to branch on architecture.
 sources=(
 	"https://github.com/Cheviiot/vintner/releases/download/v${version}/vintner-linux-amd64?~archive=false&~name=vintner"
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=vintner'
 )
 
 sources_arm64=(
 	"https://github.com/Cheviiot/vintner/releases/download/v${version}/vintner-linux-arm64?~archive=false&~name=vintner"
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=vintner'
 )
 
 checksums=(

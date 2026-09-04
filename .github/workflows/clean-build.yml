@@ -31,6 +31,8 @@ jobs:
 
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
+        with:
+          system-packages: rpm cpio
 
       - name: Собрать пакеты
         env:

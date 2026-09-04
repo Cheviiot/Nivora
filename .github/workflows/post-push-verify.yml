@@ -1,0 +1,192 @@
+name: CI · Проверка точного post-push SHA
+run-name: post-push ${{ inputs.sha }} · updater ${{ inputs.updater_run_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Полный 40-символьный commit SHA"
+        required: true
+        type: string
+      updater_run_id:
+        description: "ID исходного запуска updater"
+        required: false
+        type: string
+      resume_on_success:
+        description: "Снять паузу updater после успешной проверки"
+        required: false
+        default: false
+        type: boolean
+
+permissions: {}
+
+concurrency:
+  group: nivora-post-push-${{ inputs.sha }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  plan:
+    name: Проверить точный SHA и G0–G2
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    outputs:
+      packages: ${{ steps.plan.outputs.packages }}
+      has_packages: ${{ steps.plan.outputs.has_packages }}
+    steps:
+      - name: Проверить формат SHA
+        env:
+          REQUESTED_SHA: ${{ inputs.sha }}
+        run: |
+          [[ "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+
+      - name: Получить точный опубликованный commit
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ inputs.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Убедиться, что checkout точный
+        env:
+          REQUESTED_SHA: ${{ inputs.sha }}
+        run: |
+          [[ "$(git rev-parse HEAD)" == "$REQUESTED_SHA" ]]
+
+      - name: Подготовить инструменты
+        uses: ./.github/actions/setup-stplr-spec
+        with:
+          system-packages: jq rpm shellcheck
+
+      - name: Проверить обязательные G0–G2
+        run: .github/tools/run_checks.sh
+
+      - name: Выбрать изменённые пакеты
+        id: plan
+        env:
+          RESUME_ON_SUCCESS: ${{ inputs.resume_on_success }}
+        run: |
+          if [[ "$RESUME_ON_SUCCESS" == true ]]; then
+            .github/tools/ci_plan.py --packages all \
+              --github-output "$GITHUB_OUTPUT"
+          else
+            .github/tools/ci_plan.py --base HEAD^ --head HEAD \
+              --github-output "$GITHUB_OUTPUT"
+          fi
+
+  stable:
+    name: post-push stable · ${{ matrix.package }}
+    needs: plan
+    if: ${{ needs.plan.outputs.has_packages == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.plan.outputs.packages) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - name: Получить точный commit
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+
+      - name: Подготовить инструменты
+        uses: ./.github/actions/setup-stplr-spec
+        with:
+          system-packages: rpm cpio
+
+      - name: Собрать и проверить stable v0.1.1
+        env:
+          NIVORA_STPLR_CHANNEL: stable
+        run: |
+          .github/tools/clean_build.sh "${{ matrix.package }}"
+          .github/tools/verify_artifacts.sh "${{ matrix.package }}"
+
+  reconcile:
+    name: Управление паузой updater
+    if: ${{ always() }}
+    needs: [plan, stable]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+      actions: write
+    steps:
+      - name: Получить скрипт управления
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Приостановить updater после сбоя
+        if: >-
+          ${{
+            needs.plan.result != 'success' ||
+            needs.stable.result == 'failure' ||
+            needs.stable.result == 'cancelled'
+          }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_SHA: ${{ inputs.sha }}
+        run: |
+          [[ "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 0
+          git fetch --no-tags origin main
+          current_main="$(git rev-parse origin/main)"
+          if git merge-base --is-ancestor "$REQUESTED_SHA" "$current_main"; then
+            .github/tools/set_updater_pause.sh true "$current_main" \
+              "post-push validation failed for ancestor ${REQUESTED_SHA}"
+          else
+            echo 'Failed SHA is not an ancestor of main; pause state was not overwritten.'
+          fi
+
+      - name: Убедиться, что успешный SHA остаётся текущим main
+        if: >-
+          ${{
+            needs.plan.result == 'success' &&
+            (needs.stable.result == 'success' || needs.stable.result == 'skipped') &&
+            inputs.resume_on_success == true
+          }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_SHA: ${{ inputs.sha }}
+        run: |
+          [[ "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          git fetch --no-tags origin main
+          [[ "$(git rev-parse origin/main)" == "$REQUESTED_SHA" ]]
+          paused_sha="$(
+            gh variable get NIVORA_UPDATER_PAUSED_SHA \
+              --repo "$GITHUB_REPOSITORY" --json value --jq .value
+          )"
+          [[ "$paused_sha" =~ ^[0-9a-f]{40}$ ]]
+          git merge-base --is-ancestor "$paused_sha" "$REQUESTED_SHA"
+
+      - name: Снять паузу только по явному запросу
+        if: >-
+          ${{
+            needs.plan.result == 'success' &&
+            (needs.stable.result == 'success' || needs.stable.result == 'skipped') &&
+            inputs.resume_on_success == true
+          }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_SHA: ${{ inputs.sha }}
+        run: .github/tools/set_updater_pause.sh false "$REQUESTED_SHA"
+
+      - name: Завершить workflow ошибкой при сбое gate
+        if: >-
+          ${{
+            needs.plan.result != 'success' ||
+            needs.stable.result == 'failure' ||
+            needs.stable.result == 'cancelled'
+          }}
+        run: exit 1

@@ -1,5 +1,5 @@
 name='telegram'
-version=7.1.3
+version=7.1.5
 release=1
 summary='Official Telegram messaging client'
 summary_ru='Официальный клиент мессенджера Telegram'
@@ -7,15 +7,18 @@ group='Networking/Instant messaging'
 desc='Telegram Desktop is the official Telegram messaging client with cloud-synced chats, voice and video calls, and no limits on file size or media history.'
 desc_ru='Telegram Desktop — официальный клиент мессенджера Telegram с облачной синхронизацией чатов, голосовыми и видеозвонками и без ограничений на размер файлов и историю медиа.'
 homepage='https://desktop.telegram.org/'
-maintainer='Telegram Messenger LLP <https://github.com/telegramdesktop/tdesktop>'
+maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64')
+compatible_with=('altlinux' 'debian' 'ubuntu' 'fedora' 'arch' 'opensuse' 'opensuse-leap' 'suse')
+incompatible_with=('alpine')
+disable_network=1
 
 license=('GPL-3.0-only')
 
-provides=()
-replaces=('telegram')
-conflicts=()
+provides=('telegram-desktop')
+replaces=('telegram' 'telegram-desktop')
+conflicts=('telegram-desktop')
 
 # auto_req covers the real DT_NEEDED of the Telegram binary (readelf -d
 # confirmed: glibc, glib2/gobject/gio, libfontconfig1, libfreetype - a much
@@ -26,9 +29,12 @@ conflicts=()
 # backend selection in X11's case. No direct evidence either way for any
 # of them, so they stay explicit out of caution. icon-theme-hicolor is
 # pure data, not a library, and stays explicit too.
-auto_reqprov_method="dirty"
-auto_req=1
-auto_prov=1
+auto_reqprov_method='dirty'
+auto_req=0
+auto_req_altlinux=1
+auto_req_fedora=1
+auto_req_opensuse=1
+auto_prov=0
 
 deps=()
 deps_debian=('libc6' 'libglib2.0-0t64 | libglib2.0-0' 'libfontconfig1' 'libfreetype6' 'libharfbuzz0b' 'libpng16-16' 'libpcre2-8-0' 'libbrotli1' 'libbz2-1.0' 'libblkid1' 'libmount1' 'libselinux1' 'libffi8' 'libexpat1' 'libgraphite2-3' 'zlib1g' 'libx11-6' 'hicolor-icon-theme')
@@ -50,11 +56,11 @@ sources=(
 	"https://td.telegram.org/tlinux/tsetup.${version}.tar.xz?~archive=false&~name=tsetup.tar.xz"
 	'local:///org.telegram.desktop.desktop'
 	'local:///telegram-desktop.png'
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=telegram'
 )
 
 checksums=(
-	'sha256:bb6c3819148f03b79883c8b97b83399ce88e0a1b5cb3c6c05ac32b76ab3326df'
+	'sha256:86158c9cda5e42310f8a65869a9329dabd60168e74be8a32d5972101ec345b2b'
 	'sha256:8ceb3f6aea1003f84f1b5757cd857f8237b294bb18456e5e0e54d96e6fff04ba'
 	'sha256:3fb1400c7dc9bbc3b5cb3ffedcbf4a9b09c53e28b57a7ff33a8a6b9048864090'
 	'sha256:f3ad1b5ecdc1c9e5ab3719a0b084a3e0b4fc87ad424fbf81043df9637be3d1f5'

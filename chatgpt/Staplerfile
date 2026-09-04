@@ -1,6 +1,10 @@
 name='chatgpt'
-version=26.825.32147
+version=26.901.31953
 release=1
+# SHA-256 of the final HTTP ETag for each mutable /latest/ source. The
+# autonomous detector compares these even when upstream keeps the version.
+source_fingerprint_amd64='e8e2dac48854d2782b91a5a7a77bdb645c507485cc9b863076345c4c36f1c064'
+source_fingerprint_arm64='aff36f08d2c5c1ea6585d4a9929c17ba034c8c9ff2ec3b6d0e24ad74ec29624d'
 summary='Official ChatGPT desktop app with integrated Codex'
 summary_ru='Официальное десктопное приложение ChatGPT со встроенным Codex'
 group='Development/Tools'
@@ -10,21 +14,26 @@ homepage='https://developers.openai.com/codex/app'
 maintainer='OpenAI <support@openai.com>'
 
 architectures=('amd64' 'arm64')
+incompatible_with=('alpine')
 
 license=('Custom')
 nonfree=1
 nonfree_msg='ChatGPT является проприетарным приложением OpenAI. Использование ChatGPT, Codex, учётной записи, подписки и сетевых функций регулируется условиями OpenAI.'
 nonfree_url='https://openai.com/policies/terms-of-use/'
 
-provides=()
-replaces=('chatgpt')
-conflicts=()
+provides=('codex')
+replaces=('chatgpt' 'codex')
+conflicts=('codex')
 
 auto_reqprov_method="dirty"
-auto_req=1
-auto_prov=1
+auto_req=0
+auto_req_altlinux=1
+auto_req_fedora=1
+auto_req_opensuse=1
+auto_prov=0
+disable_network=1
 
-# auto_req covers the real DT_NEEDED (readelf -d confirmed against the
+# On RPM targets, auto_req covers the real DT_NEEDED (readelf -d confirmed against the
 # installed ChatGPT binary). The rest stays explicit: xz-utils and the
 # trash-integration alternative are subprocess tools, xdg-utils likewise,
 # and libnotify/libsecret-equivalent/libXtst/libXScrnSaver are dlopen'd by
@@ -35,7 +44,7 @@ auto_prov=1
 # link it directly, since USB device access is easy to silently break and
 # not worth the risk of relying purely on auto_req's soname resolution.
 deps=()
-deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libglib2.0-bin | kde-cli-tools | kde-runtime | trash-cli | gvfs-bin' 'libasound2' 'libatk-bridge2.0-0' 'libatk1.0-0' 'libc6' 'libcairo2' 'libcups2' 'libdbus-1-3' 'libexpat1' 'libgcc-s1' 'libgdk-pixbuf-2.0-0' 'libgl1' 'libglib2.0-0' 'libnspr4' 'libpango-1.0-0' 'libstdc++6' 'libudev1' 'libusb-1.0-0' 'libx11-6' 'libx11-xcb1' 'libxcb1' 'libxcomposite1' 'libxdamage1' 'libxext6' 'libxfixes3' 'libxkbcommon0' 'libxrandr2' 'mesa-vulkan-drivers | vulkan-icd' 'xz-utils')
+deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libglib2.0-bin | kde-cli-tools | kde-runtime | trash-cli | gvfs-bin' 'libasound2t64 | libasound2' 'libatk-bridge2.0-0' 'libatk1.0-0' 'libc6' 'libcairo2' 'libcups2' 'libdbus-1-3' 'libexpat1' 'libgcc-s1' 'libgdk-pixbuf-2.0-0' 'libgl1' 'libglib2.0-0' 'libnspr4' 'libpango-1.0-0' 'libstdc++6' 'libudev1' 'libusb-1.0-0' 'libx11-6' 'libx11-xcb1' 'libxcb1' 'libxcomposite1' 'libxdamage1' 'libxext6' 'libxfixes3' 'libxkbcommon0' 'libxrandr2' 'mesa-vulkan-drivers | vulkan-icd' 'xz-utils')
 deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa-libgbm' 'libxcb' 'gvfs' 'alsa-lib' 'at-spi2-atk' 'atk' 'glibc' 'cairo' 'cups-libs' 'dbus-libs' 'expat' 'libgcc' 'gdk-pixbuf2' 'mesa-libGL' 'glib2' 'nspr' 'pango' 'libstdc++' 'systemd-libs' 'libusbx' 'libX11' 'libxcb' 'libXcomposite' 'libXdamage' 'libXext' 'libXfixes' 'libxkbcommon' 'libXrandr' 'mesa-vulkan-drivers' 'xz')
 deps_arch=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa' 'libxcb' 'gvfs' 'alsa-lib' 'atk' 'glibc' 'cairo' 'cups' 'dbus' 'expat' 'gdk-pixbuf2' 'glib2' 'nspr' 'pango' 'libusb' 'libx11' 'libxcomposite' 'libxdamage' 'libxext' 'libxfixes' 'libxkbcommon' 'libxrandr' 'vulkan-icd-loader' 'xz')
@@ -55,27 +64,29 @@ build_deps=('binutils')
 sources=(
 	"https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_amd64.deb?~archive=false&~name=chatgpt.deb"
 	'local:///chatgpt.png'
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=chatgpt'
 )
 sources_arm64=(
 	"https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_arm64.deb?~archive=false&~name=chatgpt.deb"
 	'local:///chatgpt.png'
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=chatgpt'
 )
 
 checksums=(
-	'sha256:986d38b690dd0310933ce61175b09c27434001f4e114332bb0f7b6ffdc3ca406'
+	'sha256:2bb4522be877de6c17e5f4c071b06ec64882b1dd09a8f0bd204af023ab756d9c'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
 	'sha256:ae0362ccf70609d206eeb12e0497cb8fbb6ce6a5b5ea15efbb634d276ad4e32b'
 )
 checksums_arm64=(
-	'sha256:1775f7b19b768664d0697c544ebddb7514f74cf559df9146e498ac023f254925'
+	'sha256:0cdc246ee77896068f053754c295ca13825d0210068f746afd965c2f84c74974'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
 	'sha256:ae0362ccf70609d206eeb12e0497cb8fbb6ce6a5b5ea15efbb634d276ad4e32b'
 )
 
 scripts=(
 	['postinstall']='postinstall.sh'
+	['postupgrade']='postinstall.sh'
+	['preremove']='preremove.sh'
 	['postremove']='postremove.sh'
 )
 
@@ -86,19 +97,21 @@ package() {
 	ar x chatgpt.deb
 	tar -xf data.tar.* -C "${srcdir}/extracted"
 
-	install -dm755 "${pkgdir}/opt"
-	cp -a "${srcdir}/extracted/usr/lib/chatgpt" "${pkgdir}/opt/chatgpt"
+	# Keep the upstream executable path: the shipped AppArmor profile grants
+	# user namespaces specifically to /usr/lib/chatgpt/ChatGPT.
+	install -dm755 "${pkgdir}/usr/lib"
+	cp -a "${srcdir}/extracted/usr/lib/chatgpt" "${pkgdir}/usr/lib/chatgpt"
 	chmod 755 \
-		"${pkgdir}/opt/chatgpt/ChatGPT" \
-		"${pkgdir}/opt/chatgpt/codex-launcher" \
-		"${pkgdir}/opt/chatgpt/browser_crashpad_handler"
+		"${pkgdir}/usr/lib/chatgpt/ChatGPT" \
+		"${pkgdir}/usr/lib/chatgpt/codex-launcher" \
+		"${pkgdir}/usr/lib/chatgpt/browser_crashpad_handler"
 
 	# musl-linked native addon variants (node-hid, serialport) are dead
 	# weight on ALT's glibc - Node's own platform detection picks the
 	# glibc build at runtime, but rpm's dependency scanner would otherwise
 	# read their musl-style unversioned libc.so NEEDED entry and turn it
-	# into an unsatisfiable Requires (same issue hit and fixed for opencode).
-	find "${pkgdir}/opt/chatgpt" -type f \
+	# into an unsatisfiable Requires during RPM dependency scanning.
+	find "${pkgdir}/usr/lib/chatgpt" -type f \
 		\( -name '*.musl.node' -o -path '*-musl/*.node' \) -delete
 
 	# libqt5_shim.so/libqt6_shim.so are bundled but referenced nowhere in
@@ -108,10 +121,12 @@ package() {
 	# into a hard Requires forcing every user, including plain GTK/GNOME
 	# desktops, to install two entire parallel Qt toolkits for a feature
 	# nothing in this build actually exercises.
-	rm -f "${pkgdir}/opt/chatgpt/libqt5_shim.so" "${pkgdir}/opt/chatgpt/libqt6_shim.so"
+	rm -f \
+		"${pkgdir}/usr/lib/chatgpt/libqt5_shim.so" \
+		"${pkgdir}/usr/lib/chatgpt/libqt6_shim.so"
 
 	install -dm755 "${pkgdir}/usr/bin"
-	ln -sfn /opt/chatgpt/ChatGPT "${pkgdir}/usr/bin/chatgpt"
+	ln -sfn /usr/lib/chatgpt/ChatGPT "${pkgdir}/usr/bin/chatgpt"
 
 	# Upstream's .desktop ships no StartupWMClass at all, but the real
 	# window's WM_CLASS (confirmed with xprop against a real running
@@ -119,15 +134,19 @@ package() {
 	# the desktop shell can't match the running window back to this
 	# .desktop entry, so the taskbar/dock shows no icon even though the
 	# launcher icon works fine.
-	sed -i '/^\[Desktop Entry\]$/a StartupWMClass=Chatgpt' \
+	sed -i \
+		-e '/^\[Desktop Entry\]$/a StartupWMClass=Chatgpt' \
+		-e '0,/^Exec=/{s|^Exec=.*|Exec=/usr/bin/chatgpt %U|}' \
 		"${srcdir}/extracted/usr/share/applications/chatgpt.desktop"
 	install-desktop "${srcdir}/extracted/usr/share/applications/chatgpt.desktop"
 
 	install -Dm644 chatgpt.png "${pkgdir}/usr/share/pixmaps/chatgpt.png"
 
 	# Ships its own AppArmor profile granting unprivileged userns instead of
-	# a setuid chrome-sandbox helper (there isn't one in this build) - needed
-	# on systems with kernel.apparmor_restrict_unprivileged_userns enabled.
+	# a setuid chrome-sandbox helper (there isn't one in this build). Fail the
+	# build if upstream changes the profile path without the recipe following it.
+	grep -Fq '"/usr/lib/chatgpt/ChatGPT"' \
+		"${srcdir}/extracted/etc/apparmor.d/chatgpt"
 	install -Dm644 "${srcdir}/extracted/etc/apparmor.d/chatgpt" \
 		"${pkgdir}/etc/apparmor.d/chatgpt"
 
@@ -137,7 +156,7 @@ package() {
 }
 
 files() {
-	files-find "/opt/chatgpt/**/*"
+	files-find "/usr/lib/chatgpt/**/*"
 	files-find-binary
 	files-find-desktop
 	files-find-license

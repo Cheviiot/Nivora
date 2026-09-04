@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://stplr.dev/docs/intro/"><img src="https://img.shields.io/badge/Stapler-Community%20Repo-6366F1?style=for-the-badge" alt="Stapler Community Repo"></a>
-  <img src="https://img.shields.io/badge/пакетов-22-2ea043?style=for-the-badge" alt="22 пакета">
+  <img src="https://img.shields.io/badge/пакетов-16-2ea043?style=for-the-badge" alt="16 пакетов">
   <a href="https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/quality.yml?branch=main&style=for-the-badge&label=CI" alt="CI"></a>
 </p>
 
@@ -28,7 +28,7 @@
 </p>
 
 <!-- package-count -->
-**22 пакета** · **6 категорий** · `amd64`, `arm64` и `all`
+**16 пакетов** · **6 категорий** · `amd64`, `arm64` и `all`
 
 ## Подключение
 
@@ -51,6 +51,29 @@ sudo stplr install nivora/chatgpt
 stplr info nivora/chatgpt
 ```
 
+Индекс меняется только явной командой `sudo stplr refresh`: документация и
+Nivora CLI не полагаются на `autoPull`. Старое имя пакета `codex` заменено на
+`chatgpt`; Nivora CLI принимает его как устаревший ввод и предупреждает о замене.
+
+## Совместимость со Stapler
+
+| Уровень | Версия | Назначение |
+|:--|:--|:--|
+| Stable, обязательный | `v0.1.1` | минимальная поддерживаемая версия и блокирующий пользовательский контракт |
+| Main canary | `9df2b9284d3a37cdc418cef2e77781bac3b8dc3e` | раннее обнаружение несовместимости; не заменяет stable и не считается релизом |
+
+Изменение проходит только когда обязательная stable-проверка успешна. Canary
+закрепляется по commit, обновляется отдельно и не даёт права использовать ещё
+не выпущенные функции в рецептах. Политика обходов upstream и условия их удаления
+описаны в [руководстве сопровождающего](.github/docs/maintenance.md).
+Целевая совместимость и ограничения каждого пакета зафиксированы в
+[машиночитаемой матрице](.github/support-matrix.toml); `unsupported` означает,
+что Stapler должен отклонить такую цель до сборки. На текущем этапе только
+`nivora-cli` на Ubuntu 24.04 (`amd64` и native `arm64`) имеет уровень `verified`:
+обе ячейки блокирующе собирают DEB, проверяют его metadata, устанавливают,
+запускают безопасный smoke и удаляют пакет. Остальные разрешённые цели честно
+помечены `partial` или `experimental`, пока для них не появится такой же gate.
+
 ## Каталог
 
 Название ведёт на источник приложения. `all` означает, что сам пакет не
@@ -60,12 +83,11 @@ stplr info nivora/chatgpt
 
 | | Приложение | Версия | Архитектуры | Установка |
 |:---:|---|:--:|:--:|---|
-| <img src="https://happ.su/imgs/apple-touch-icon.png" width="32" height="32" alt="Happ"> | [Happ](https://happ.su/) | `4.1.2` | `amd64`, `arm64` | `stplr install nivora/happ` |
+| <img src="https://happ.su/imgs/apple-touch-icon.png" width="32" height="32" alt="Happ"> | [Happ](https://happ.su/) | `4.1.3` | `amd64`, `arm64` | `stplr install nivora/happ` |
 | <img src="https://tailscale.com/favicon.png" width="32" height="32" alt="Tailscale"> | [Tailscale](https://tailscale.com/) | `1.102.3` | `amd64`, `arm64` | `stplr install nivora/tailscale` |
-| <img src="telegram/telegram-desktop.png" width="32" height="32" alt="Telegram"> | [Telegram](https://desktop.telegram.org/) | `7.1.3` | `amd64` | `stplr install nivora/telegram` |
+| <img src="telegram/telegram-desktop.png" width="32" height="32" alt="Telegram"> | [Telegram](https://desktop.telegram.org/) | `7.1.5` | `amd64` | `stplr install nivora/telegram` |
 | <img src="https://raw.githubusercontent.com/Vencord/Vesktop/main/build/icon.svg" width="32" height="32" alt="Vesktop"> | [Vesktop](vesktop/README.md) | `1.6.7` | `amd64`, `arm64` | `stplr install nivora/vesktop` |
-| <img src="https://browser.yandex.ru/apple-touch-icon.png" width="32" height="32" alt="Яндекс Браузер"> | [Яндекс Браузер](https://browser.yandex.ru/) | `26.6.1.1083` | `amd64` | `stplr install nivora/yandex-browser-stable` |
-| <img src="yandex-music/yandex-music.png" width="32" height="32" alt="Yandex Music"> | [Yandex Music](yandex-music/README.md) | `5.117.1` | `amd64` | `stplr install nivora/yandex-music` |
+| <img src="yandex-music/yandex-music.png" width="32" height="32" alt="Yandex Music"> | [Yandex Music](yandex-music/README.md) | `5.118.1` | `amd64` | `stplr install nivora/yandex-music` |
 
 ### Удалённый доступ
 
@@ -77,12 +99,9 @@ stplr info nivora/chatgpt
 
 | | Приложение | Версия | Архитектуры | Установка |
 |:---:|---|:--:|:--:|---|
-| <img src="chatgpt/chatgpt.png" width="32" height="32" alt="ChatGPT"> | [ChatGPT](chatgpt/README.md) | `26.825.32147` | `amd64`, `arm64` | `stplr install nivora/chatgpt` |
-| <img src="claude/claude-tray-orange.png" width="32" height="32" alt="Claude"> | [Claude](claude/README.md) | `1.40609.0` | `amd64`, `arm64` | `stplr install nivora/claude` |
-| <img src="claude/claude-alt.png" width="32" height="32" alt="ClaudeAlt"> | [ClaudeAlt](claude-alt/README.md) | `1.32885.1` | `amd64`, `arm64` | `stplr install nivora/claude-alt` |
-| <img src="https://github.githubassets.com/favicons/favicon.png" width="32" height="32" alt="GitHub Desktop"> | [GitHub Desktop](github-desktop/README.md) | `3.6.4` | `amd64`, `arm64` | `stplr install nivora/github-desktop` |
-| <img src="https://opencode.ai/apple-touch-icon.png" width="32" height="32" alt="OpenCode"> | [OpenCode](https://opencode.ai/) | `1.18.25` | `amd64`, `arm64` | `stplr install nivora/opencode` |
-| <img src="openwhispr/openwhispr.png" width="32" height="32" alt="OpenWhispr"> | [OpenWhispr](openwhispr/README.md) | `1.9.1` | `amd64` | `stplr install nivora/openwhispr` |
+| <img src="chatgpt/chatgpt.png" width="32" height="32" alt="ChatGPT"> | [ChatGPT](chatgpt/README.md) | `26.901.31953` | `amd64`, `arm64` | `stplr install nivora/chatgpt` |
+| <img src="claude/claude-tray-orange.png" width="32" height="32" alt="Claude"> | [Claude](claude/README.md) | `1.40609.1` | `amd64`, `arm64` | `stplr install nivora/claude` |
+| <img src="https://github.githubassets.com/favicons/favicon.png" width="32" height="32" alt="GitHub Desktop"> | [GitHub Desktop](github-desktop/README.md) | `3.6.5` | `amd64`, `arm64` | `stplr install nivora/github-desktop` |
 | | [Vintner](https://github.com/Cheviiot/vintner) | `0.5.0` | `amd64`, `arm64` | `stplr install nivora/vintner` |
 
 ### Рабочий стол
@@ -96,7 +115,6 @@ stplr info nivora/chatgpt
 | | Приложение | Версия | Архитектуры | Установка |
 |:---:|---|:--:|:--:|---|
 | <img src="pineconemc/pineconemc.svg" width="32" height="32" alt="PineconeMC"> | [PineconeMC](https://pineconemc.com/) | `11.0.3` | `amd64`, `arm64` | `stplr install nivora/pineconemc` |
-| <img src="https://raw.githubusercontent.com/Cheviiot/Vual/main/data/Vual.png" width="32" height="32" alt="Vual"> | [Vual](https://github.com/Cheviiot/Vual) | `0.3.1` | `all` | `stplr install nivora/vual` |
 
 ### Системные инструменты
 
@@ -104,8 +122,7 @@ stplr info nivora/chatgpt
 |:---:|---|:--:|:--:|---|
 | <img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="32" height="32" alt="balenaEtcher"> | [balenaEtcher](https://etcher.balena.io/) | `2.1.6` | `amd64` | `stplr install nivora/balena-etcher` |
 | <img src="https://raw.githubusercontent.com/ranfdev/DistroShelf/main/data/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg" width="32" height="32" alt="DistroShelf"> | [DistroShelf](distroshelf/README.md) | `1.5.2` | `amd64` | `stplr install nivora/distroshelf` |
-| | [Fisher](https://github.com/jorgebucaran/fisher) | `4.4.8` | `all` | `stplr install nivora/fisher` |
-| <img src=".github/assets/nivora.png" width="32" height="32" alt="Nivora CLI"> | [Nivora CLI](nivora-cli/README.md) | `1.0.0` | `all` | `stplr install nivora/nivora-cli` |
+| <img src=".github/assets/nivora.png" width="32" height="32" alt="Nivora CLI"> | [Nivora CLI](nivora-cli/README.md) | `1.1.0` | `all` | `stplr install nivora/nivora-cli` |
 | <img src="https://raw.githubusercontent.com/ventoy/Ventoy/master/ICON/logo_128.png" width="32" height="32" alt="Ventoy"> | [Ventoy](ventoy/README.md) | `1.1.17` | `amd64`, `arm64` | `stplr install nivora/ventoy` |
 
 ## Обновление
@@ -124,6 +141,7 @@ sudo stplr upgrade
 - Файлы загружаются из указанных upstream-источников.
 - SHA-256 проверяет целостность загрузки, но не делает upstream автоматически безопасным.
 - Условия проприетарных приложений определяются их разработчиками.
+- Проприетарные артефакты не зеркалируются в релизы или постоянные кэши Nivora.
 - Наличие CI не обещает абсолютную безопасность или совместимость с любой системой.
 
 Подробнее: [модель доверия](.github/docs/security-model.md) и [политика безопасности](SECURITY.md).

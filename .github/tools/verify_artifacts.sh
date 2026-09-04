@@ -57,9 +57,40 @@ for package in "${packages[@]}"; do
 
     artifact="${artifacts[0]}"
     package_name="$(stplr-spec get-field --path "${package}/Staplerfile" name)"
-    rpm_name="$(rpm -qp --queryformat '%{NAME}' "$artifact")"
-    [[ "$rpm_name" == "${package_name}+stplr-"* ]] || {
-        echo "${package}: неверное имя RPM: ${rpm_name}" >&2
+    recipe_version="$(stplr-spec get-field --path "${package}/Staplerfile" version)"
+    recipe_release="$(stplr-spec get-field --path "${package}/Staplerfile" release)"
+    recipe_architectures="$(
+        stplr-spec get-field --path "${package}/Staplerfile" architectures
+    )"
+    repository="${NIVORA_EXPECTED_REPOSITORY:-default}"
+    release_prefix="${NIVORA_RPM_RELEASE_PREFIX:-alt}"
+    expected_name="${package_name}+stplr-${repository}"
+    expected_epoch="${NIVORA_EXPECTED_EPOCH:-0}"
+    expected_release="${release_prefix}${recipe_release}"
+
+    case "${NIVORA_EXPECTED_ARCH:-$(uname -m)}" in
+    amd64 | x86_64) expected_arch=x86_64; recipe_arch=amd64 ;;
+    arm64 | aarch64) expected_arch=aarch64; recipe_arch=arm64 ;;
+    *)
+        echo "${package}: неизвестная ожидаемая архитектура" >&2
+        exit 2
+        ;;
+    esac
+    if [[ " $recipe_architectures " == *' all '* ]]; then
+        expected_arch=noarch
+    elif [[ " $recipe_architectures " != *" ${recipe_arch} "* ]]; then
+        echo "${package}: рецепт не поддерживает ${recipe_arch}" >&2
+        exit 1
+    fi
+
+    IFS='|' read -r rpm_name rpm_epoch rpm_version rpm_release rpm_arch < <(
+        rpm -qp --queryformat '%{NAME}|%{EPOCHNUM}|%{VERSION}|%{RELEASE}|%{ARCH}\n' \
+            "$artifact"
+    )
+    expected_nevra="${expected_name}-${expected_epoch}:${recipe_version}-${expected_release}.${expected_arch}"
+    actual_nevra="${rpm_name}-${rpm_epoch}:${rpm_version}-${rpm_release}.${rpm_arch}"
+    [[ "$actual_nevra" == "$expected_nevra" ]] || {
+        echo "${package}: неверный NEVRA: ${actual_nevra}; ожидался ${expected_nevra}" >&2
         exit 1
     }
 
@@ -91,32 +122,6 @@ for package in "${packages[@]}"; do
             echo "${package}: files-find-systemd не добавил unit-файл" >&2
             exit 1
         }
-    fi
-
-    if [[ "$package" == 'claude' ]]; then
-        for forbidden_path in \
-            /usr/bin/claude-alt \
-            /usr/lib/claude-alt/claude-alt-bin \
-            /usr/share/applications/com.anthropic.ClaudeAlt.desktop; do
-            contains_path "$forbidden_path" && {
-                echo "${package}: обнаружен компонент отдельного пакета ClaudeAlt: ${forbidden_path}" >&2
-                exit 1
-            }
-        done
-    fi
-
-    if [[ "$package" == 'claude-alt' ]]; then
-        for required_path in \
-            /usr/bin/claude-alt \
-            /usr/lib/claude-alt/claude-alt-bin \
-            /usr/lib/claude-alt/resources/app.asar \
-            /usr/share/applications/com.anthropic.ClaudeAlt.desktop \
-            /usr/share/icons/hicolor/512x512/apps/claude-alt.png; do
-            contains_path "$required_path" || {
-                echo "${package}: отсутствует компонент ClaudeAlt: ${required_path}" >&2
-                exit 1
-            }
-        done
     fi
 
     if [[ "$package" == 'balena-etcher' ]]; then
@@ -152,11 +157,17 @@ for package in "${packages[@]}"; do
     fi
 
     if [[ "$package" == 'chatgpt' ]]; then
+        for command in cpio rpm2cpio; do
+            command -v "$command" >/dev/null 2>&1 || {
+                echo "${package}: для проверки AppArmor требуется ${command}" >&2
+                exit 2
+            }
+        done
         for required_path in \
             /usr/bin/chatgpt \
-            /opt/chatgpt/ChatGPT \
-            /opt/chatgpt/codex-launcher \
-            /opt/chatgpt/resources/app.asar \
+            /usr/lib/chatgpt/ChatGPT \
+            /usr/lib/chatgpt/codex-launcher \
+            /usr/lib/chatgpt/resources/app.asar \
             /usr/share/applications/chatgpt.desktop \
             /usr/share/pixmaps/chatgpt.png \
             /etc/apparmor.d/chatgpt; do
@@ -170,8 +181,18 @@ for package in "${packages[@]}"; do
             rpm -qp --dump "$artifact" |
                 awk '$1 == "/usr/bin/chatgpt" {print $11}'
         )"
-        [[ "$chatgpt_command_target" == '/opt/chatgpt/ChatGPT' ]] || {
+        [[ "$chatgpt_command_target" == '/usr/lib/chatgpt/ChatGPT' ]] || {
             echo "${package}: команда ChatGPT запускается не напрямую: ${chatgpt_command_target}" >&2
+            exit 1
+        }
+        apparmor_profile="$(
+            set +o pipefail
+            rpm2cpio "$artifact" |
+                cpio -i --quiet --to-stdout /etc/apparmor.d/chatgpt
+        )"
+        grep -Fq 'profile chatgpt "/usr/lib/chatgpt/ChatGPT"' \
+            <<<"$apparmor_profile" || {
+            echo "${package}: AppArmor profile не прикреплён к packaged binary" >&2
             exit 1
         }
         contains_path '*.musl.node' && {
@@ -203,33 +224,6 @@ for package in "${packages[@]}"; do
         }
     fi
 
-    if [[ "$package" == 'opencode' ]]; then
-        for required_path in \
-            /usr/bin/opencode-desktop \
-            /opt/OpenCode/ai.opencode.desktop \
-            /opt/OpenCode/resources/app.asar \
-            /usr/share/applications/opencode-desktop.desktop \
-            /usr/share/icons/hicolor/128x128/apps/ai.opencode.desktop.png; do
-            contains_path "$required_path" || {
-                echo "${package}: отсутствует upstream-компонент OpenCode: ${required_path}" >&2
-                exit 1
-            }
-        done
-
-        opencode_command_target="$(
-            rpm -qp --dump "$artifact" |
-                awk '$1 == "/usr/bin/opencode-desktop" {print $11}'
-        )"
-        [[ "$opencode_command_target" == '/opt/OpenCode/ai.opencode.desktop' ]] || {
-            echo "${package}: команда OpenCode запускается не напрямую: ${opencode_command_target}" >&2
-            exit 1
-        }
-        contains_path '/usr/lib/opencode-desktop/*' && {
-            echo "${package}: обнаружен удалённый wrapper OpenCode" >&2
-            exit 1
-        }
-    fi
-
     if [[ "$package" == 'ventoy' ]]; then
         for required_path in \
             /usr/bin/ventoy \
@@ -246,69 +240,11 @@ for package in "${packages[@]}"; do
         done
     fi
 
-    if [[ "$package" == 'yandex-browser-stable' ]]; then
-        for command in cpio rpm2cpio; do
-            command -v "$command" >/dev/null 2>&1 || {
-                echo "${package}: для проверки desktop-файлов требуется ${command}" >&2
-                exit 2
-            }
-        done
-        for required_path in \
-            /usr/bin/yandex-browser \
-            /usr/bin/yandex-browser-stable \
-            /opt/yandex/browser/yandex-browser \
-            /opt/yandex/browser/yandex_browser \
-            /opt/yandex/browser/yandex_browser-sandbox \
-            /usr/share/appdata/yandex-browser.appdata.xml \
-            /usr/share/applications/ru.yandex.desktop.browser.desktop \
-            /usr/share/applications/yandex-browser.desktop \
-            /usr/share/icons/hicolor/256x256/apps/yandex-browser.png \
-            /usr/share/mime/packages/yandex-browser-yprotect.xml; do
-            contains_path "$required_path" || {
-                echo "${package}: отсутствует компонент Яндекс Браузера: ${required_path}" >&2
-                exit 1
-            }
-        done
-        contains_path '/etc/cron.daily/yandex-browser' && {
-            echo "${package}: обнаружена upstream cron-задача обновления" >&2
+    while read -r path _ _ _ mode owner group _; do
+        [[ "$owner" == root && "$group" == root ]] || {
+            echo "${package}: неверный владелец ${owner}:${group} у ${path}" >&2
             exit 1
         }
-        contains_path '/etc/xdg/autostart/yandex-browser_user_setup.desktop' && {
-            echo "${package}: обнаружен нежелательный upstream autostart" >&2
-            exit 1
-        }
-
-        compatibility_desktop="$(
-            set +o pipefail
-            rpm2cpio "$artifact" |
-                cpio -i --quiet --to-stdout \
-                    /usr/share/applications/yandex-browser.desktop
-        )"
-        canonical_desktop="$(
-            set +o pipefail
-            rpm2cpio "$artifact" |
-                cpio -i --quiet --to-stdout \
-                    /usr/share/applications/ru.yandex.desktop.browser.desktop
-        )"
-        desktop_entry_hidden() {
-            awk '
-                $0 == "[Desktop Entry]" { in_entry = 1; next }
-                /^\[/ { in_entry = 0 }
-                in_entry && $0 == "NoDisplay=true" { found = 1 }
-                END { exit !found }
-            '
-        }
-        desktop_entry_hidden <<<"$compatibility_desktop" || {
-            echo "${package}: совместимый desktop-id виден в меню приложений" >&2
-            exit 1
-        }
-        if desktop_entry_hidden <<<"$canonical_desktop"; then
-            echo "${package}: canonical desktop-id ошибочно скрыт" >&2
-            exit 1
-        fi
-    fi
-
-    while read -r path _ _ _ mode _; do
         [[ "$path" == /usr/bin/* || "$path" == /usr/sbin/* ]] || continue
         [[ "$mode" == 0100755 || "$mode" == 0120000 ]] || {
             echo "${package}: неверные права ${mode} у ${path}" >&2

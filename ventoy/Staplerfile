@@ -1,6 +1,6 @@
 name='ventoy'
 version=1.1.17
-release=1
+release=2
 summary='Create and manage multiboot USB drives'
 summary_ru='Создание и управление мультизагрузочными USB-накопителями'
 group='System/Configuration/Hardware'
@@ -10,6 +10,9 @@ homepage='https://www.ventoy.net/'
 maintainer='Ventoy Project <admin@ventoy.net>'
 
 architectures=('amd64' 'arm64')
+compatible_with=('altlinux' 'debian' 'ubuntu' 'fedora' 'arch' 'opensuse' 'opensuse-leap' 'suse')
+incompatible_with=('alpine')
+disable_network=1
 
 license=('GPL-3.0-only')
 
@@ -93,15 +96,15 @@ package() {
 	tar -xzf ventoy.tar.gz
 	source_root="${srcdir}/ventoy-${version}"
 
-	case "$(uname -m)" in
-	x86_64 | amd64)
+	case "${ARCH:?Stapler did not set ARCH}" in
+	amd64)
 		upstream_arch='x86_64'
 		;;
-	aarch64 | arm64)
+	arm64)
 		upstream_arch='aarch64'
 		;;
 	*)
-		echo "Неподдерживаемая архитектура сборки: $(uname -m)" >&2
+		echo "Неподдерживаемая архитектура сборки: ${ARCH}" >&2
 		return 1
 		;;
 	esac

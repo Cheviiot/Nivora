@@ -39,6 +39,8 @@ defaults:
 jobs:
   build:
     name: Linux x64 (ALT p11)
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -126,7 +128,7 @@ jobs:
           docker run --rm \
             -v "${PWD}:/workspace" -w /workspace \
             -e VERSION="${VERSION}" \
-            registry.altlinux.org/p11/base:latest \
+            registry.altlinux.org/p11/base@sha256:8024e8175572804b1b6bcfde76d464d7e12bbd09583af067e8b1386ff6b123e9 \
             bash /workspace/build-in-container.sh
 
       - name: Упаковать Linux-сборку
@@ -160,6 +162,8 @@ jobs:
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    permissions:
+      contents: write
     steps:
       - name: Скачать артефакт
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
@@ -182,7 +186,30 @@ jobs:
               --title "DistroShelf ${VERSION} for Linux (ALT-compatible build)" \
               --notes "x86_64-артефакт, собранный Nivora CI из официального исходного tar.xz ranfdev/DistroShelf v${VERSION} под стек glibc/gtk4/libadwaita ALT p11, со встроенным VTE-GTK4 0.82.1 (ALT ещё не публикует GTK4-флейвор VTE)."
           fi
-          gh release upload "$tag" \
-            distroshelf-*.tar.gz \
-            SHA256SUMS \
-            --clobber
+          expected_assets=("distroshelf-${VERSION}-linux-x64.tar.gz" SHA256SUMS)
+          mapfile -t remote_assets < <(
+            gh release view "$tag" --json assets --jq '.assets[].name'
+          )
+          complete=true
+          for asset in "${expected_assets[@]}"; do
+            printf '%s\n' "${remote_assets[@]}" | grep -Fxq "$asset" || complete=false
+          done
+          valid_remote=false
+          if [[ "$complete" == true ]]; then
+            existing_dir="$(mktemp -d)"
+            trap 'find "$existing_dir" -mindepth 1 -delete; rmdir "$existing_dir"' EXIT
+            for asset in "${expected_assets[@]}"; do
+              gh release download "$tag" --pattern "$asset" --dir "$existing_dir" || {
+                complete=false
+                break
+              }
+            done
+            if [[ "$complete" == true ]] &&
+              (cd "$existing_dir" && sha256sum -c SHA256SUMS); then
+              valid_remote=true
+            fi
+          fi
+          if [[ "$valid_remote" == false ]]; then
+            # Recover a partial or internally mixed prior upload as one set.
+            gh release upload "$tag" --clobber "${expected_assets[@]}"
+          fi

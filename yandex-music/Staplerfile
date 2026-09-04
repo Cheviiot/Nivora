@@ -1,5 +1,5 @@
 name='yandex-music'
-version=5.117.1
+version=5.118.1
 release=1
 summary='Official Yandex Music desktop client'
 summary_ru='Официальный десктопный клиент Яндекс Музыки'
@@ -10,6 +10,7 @@ homepage='https://music.yandex.ru/download/'
 maintainer='Яндекс Музыка <music@support.yandex.ru>'
 
 architectures=('amd64')
+incompatible_with=('alpine')
 
 license=('Custom')
 nonfree=1
@@ -20,16 +21,57 @@ provides=()
 replaces=('yandex-music')
 conflicts=()
 
-# Unlike the rest of this catalog: auto_req/auto_prov instead of
-# hand-maintained deps_*. Confirmed the generated Requires:
-# (rpm -qp --requires) lists only real system soname deps, not Chromium's
-# own bundled libs (libffmpeg.so, libvk_swiftshader.so, libEGL.so,
-# libGLESv2.so, libvulkan.so.1) — auto_prov self-satisfies those. Also
-# avoids hardcoding a soname number that differs between ALT branches
-# (see parsec's libavcodec61/62 history).
+# Dirty SONAME discovery is enabled only on RPM targets. DEB/Ubuntu/Arch use
+# the explicit package-name maps below instead of receiving RPM-style
+# libfoo.so()(64bit) capabilities. AutoProv stays disabled: dirty computes a
+# private SONAME set for requires filtering but does not emit package provides.
 auto_reqprov_method="dirty"
-auto_req=1
-auto_prov=1
+auto_req=0
+auto_req_altlinux=1
+auto_req_fedora=1
+auto_req_opensuse=1
+auto_prov=0
+disable_network=1
+
+# Starts with upstream's DEB Depends and includes every direct DT_NEEDED
+# observed in the packaged Electron binary. The extra desktop-integration
+# libraries are loaded dynamically and therefore cannot be inferred from ELF.
+deps=()
+deps_debian=(
+	'libgtk-3-0' 'libnotify4' 'libnss3' 'libxss1' 'libxtst6' 'xdg-utils'
+	'libatspi2.0-0' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2t64 | libasound2'
+	'libatk-bridge2.0-0' 'libatk1.0-0' 'libc6' 'libcairo2' 'libcups2'
+	'libdbus-1-3' 'libexpat1' 'libgcc-s1' 'libglib2.0-0' 'libnspr4'
+	'libpango-1.0-0' 'libudev1' 'libx11-6' 'libxcb1' 'libxcomposite1'
+	'libxdamage1' 'libxext6' 'libxfixes3' 'libxkbcommon0' 'libxrandr2'
+)
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=(
+	'gtk3' 'libnotify' 'nss' 'libXScrnSaver' 'libXtst' 'xdg-utils'
+	'at-spi2-core' 'libuuid' 'libsecret' 'mesa-libgbm' 'alsa-lib' 'atk'
+	'glibc' 'cairo' 'cups-libs' 'dbus-libs' 'expat' 'libgcc' 'glib2'
+	'nspr' 'pango' 'systemd-libs' 'libX11' 'libxcb' 'libXcomposite'
+	'libXdamage' 'libXext' 'libXfixes' 'libxkbcommon' 'libXrandr'
+)
+deps_arch=(
+	'gtk3' 'libnotify' 'nss' 'libxss' 'libxtst' 'xdg-utils'
+	'at-spi2-core' 'util-linux-libs' 'libsecret' 'libgbm' 'alsa-lib' 'atk'
+	'glibc' 'cairo' 'cups' 'dbus' 'expat' 'gcc-libs' 'glib2' 'nspr'
+	'pango' 'systemd-libs' 'libx11' 'libxcb' 'libxcomposite'
+	'libxdamage' 'libxext' 'libxfixes' 'libxkbcommon' 'libxrandr'
+)
+deps_opensuse=(
+	'gtk3' 'libnotify4' 'mozilla-nss' 'libXss1' 'libXtst6' 'xdg-utils'
+	'at-spi2-core' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2'
+	'libatk-1_0-0' 'libatk-bridge-2_0-0' 'glibc' 'libcairo2' 'libcups2'
+	'libdbus-1-3' 'libexpat1' 'libgcc_s1' 'glib2' 'mozilla-nspr'
+	'libpango-1_0-0' 'libudev1' 'libX11-6' 'libxcb1' 'libXcomposite1'
+	'libXdamage1' 'libXext6' 'libXfixes3' 'libxkbcommon0' 'libXrandr2'
+)
+deps_altlinux=(
+	'libnotify' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libuuid'
+	'libsecret'
+)
 
 opt_deps=()
 opt_deps_debian=('libayatana-appindicator3-1 | libappindicator3-1')
@@ -49,11 +91,11 @@ build_deps_altlinux=('binutils')
 
 sources=(
 	"https://music-desktop-application.s3.yandex.net/stable/Yandex_Music_amd64_${version}.deb?~archive=false&~name=yandex-music.deb"
-	'local:///LICENSE'
+	'local:///LICENSE?nivora=yandex-music'
 )
 
 checksums=(
-	'sha256:85391bdafc9ccaa54367e1dfad863348b09b4ec17bc9a98d3d304c2a4a137e4f'
+	'sha256:91a7e90b6c36300ee240b0a444ce2af36dfb77440e0627eef58ab3d192763f33'
 	'sha256:52a11692975a1dfe999f8cf953522d2ddfc2bd594a3a23c2e52035eb53d2fa2d'
 )
 
@@ -71,7 +113,7 @@ package() {
 
 	install -dm755 "${pkgdir}/opt"
 	cp -a "${srcdir}/extracted/opt/Яндекс Музыка" "${pkgdir}/opt/YandexMusic"
-	chmod 0755 "${pkgdir}/opt/YandexMusic/chrome-sandbox"
+	chmod 4755 "${pkgdir}/opt/YandexMusic/chrome-sandbox"
 	chmod 755 "${pkgdir}/opt/YandexMusic/yandexmusic"
 
 	# Electron's own auto-updater has nothing to manage under Stapler.

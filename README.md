@@ -90,7 +90,7 @@ nv
     <td width="50%" valign="top">
       <!-- package-card:telegram -->
       <img src="telegram/telegram-desktop.png" width="42" height="42" align="left" alt="Telegram">&nbsp; <strong><a href="https://desktop.telegram.org/">Telegram</a></strong><br>&nbsp; <sub>Официальный десктопный мессенджер</sub><br><br>
-      <code>7.1.5</code> · <code>amd64</code><br>
+      <code>7.2.5</code> · <code>amd64</code><br>
       <code>stplr install nivora/telegram</code>
     </td>
     <td width="50%" valign="top">
@@ -138,7 +138,7 @@ nv
     <td width="50%" valign="top">
       <!-- package-card:claude -->
       <img src="claude/claude-tray-orange.png" width="42" height="42" align="left" alt="Claude">&nbsp; <strong><a href="claude/README.md">Claude</a></strong><br>&nbsp; <sub>Десктопный клиент Anthropic</sub><br><br>
-      <code>1.40609.1</code> · <code>amd64</code> <code>arm64</code><br>
+      <code>1.46388.2</code> · <code>amd64</code> <code>arm64</code><br>
       <code>stplr install nivora/claude</code>
     </td>
   </tr>
@@ -179,7 +179,7 @@ nv
     <td width="50%" valign="top">
       <!-- package-card:pineconemc -->
       <img src="pineconemc/pineconemc.svg" width="42" height="42" align="left" alt="PineconeMC">&nbsp; <strong><a href="https://pineconemc.com/">PineconeMC</a></strong><br>&nbsp; <sub>Minecraft launcher с Ely.by и offline-аккаунтами</sub><br><br>
-      <code>11.0.3</code> · <code>amd64</code> <code>arm64</code><br>
+      <code>11.1.0</code> · <code>amd64</code> <code>arm64</code><br>
       <code>stplr install nivora/pineconemc</code>
     </td>
     <td width="50%" valign="middle"><em>Игровые инструменты с воспроизводимой пакетной установкой.</em></td>

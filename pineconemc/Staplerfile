@@ -1,6 +1,6 @@
 name='pineconemc'
-version='11.0.3'
-release=6
+version=11.1.0
+release=1
 summary='Prism Launcher fork with Ely.by and offline account support'
 summary_ru='Форк Prism Launcher с поддержкой Ely.by и offline-аккаунтов'
 group='Games/Other'
@@ -60,13 +60,13 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:c1693e32668a8897529f3215aa8369e2562efde84adb999a210cc613c58ee916'
+	'sha256:a6a242042f7fd34226f20a1067f93423db7079aaad809bd9ccf02d41e2094e37'
 	'sha256:256d854b05112270847c29f31990329e880c39dba8ab06a574db9f09749e758a'
 	'sha256:794a4007ac816a1425a98fdddf0716728fe1e2d899c4b9c1d505c1405e111ec9'
 )
 
 checksums_arm64=(
-	'sha256:0e8d02d91efd7f6f107611163ebf2801e9411c1cbda8c83fd3f6458e24130f02'
+	'sha256:c61a6e830b1f0960e927c38f85ea4fa29230f391799dfe548f5b337bef36fb93'
 	'sha256:256d854b05112270847c29f31990329e880c39dba8ab06a574db9f09749e758a'
 	'sha256:794a4007ac816a1425a98fdddf0716728fe1e2d899c4b9c1d505c1405e111ec9'
 )

@@ -206,6 +206,11 @@ for package in "${packages[@]}"; do
             /usr/bin/github-desktop \
             /opt/github-desktop/desktop \
             /opt/github-desktop/resources/app \
+            /opt/github-desktop/resources/app/git/libexec/git-core/git-http-fetch \
+            /opt/github-desktop/resources/app/git/libexec/git-core/git-http-push \
+            /opt/github-desktop/resources/app/git/libexec/git-core/git-imap-send \
+            /opt/github-desktop/resources/app/git/libexec/git-core/git-remote-http \
+            /opt/github-desktop/resources/app/git/libexec/git-core/git-remote-https \
             /usr/share/applications/github-desktop.desktop \
             /usr/share/icons/hicolor/scalable/apps/github-desktop.svg; do
             contains_path "$required_path" || {
@@ -220,6 +225,25 @@ for package in "${packages[@]}"; do
         )"
         [[ "$github_desktop_target" == '/opt/github-desktop/desktop' ]] || {
             echo "${package}: команда GitHub Desktop запускается не напрямую" >&2
+            exit 1
+        }
+        contains_path \
+            '/opt/github-desktop/resources/app/git/libexec/git-core/*.bin' && {
+            echo "${package}: Ubuntu-built network helper сохранён в payload" >&2
+            exit 1
+        }
+        if rpm -qp --requires "$artifact" | grep -Fxq 'libcurl4-openssl'; then
+            echo "${package}: RPM требует отсутствующий ALT-пакет libcurl4-openssl" >&2
+            exit 1
+        fi
+        github_git_wrapper="$(
+            set +o pipefail
+            rpm2cpio "$artifact" |
+                cpio -i --quiet --to-stdout \
+                    /opt/github-desktop/resources/app/git/libexec/git-core/git-remote-http
+        )"
+        grep -Fq '/usr/bin/git --exec-path' <<<"$github_git_wrapper" || {
+            echo "${package}: network helper не делегирует системному Git" >&2
             exit 1
         }
     fi

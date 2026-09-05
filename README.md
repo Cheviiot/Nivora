@@ -132,7 +132,7 @@ nv
     <td width="50%" valign="top">
       <!-- package-card:chatgpt -->
       <img src="chatgpt/chatgpt.png" width="42" height="42" align="left" alt="ChatGPT">&nbsp; <strong><a href="chatgpt/README.md">ChatGPT</a></strong><br>&nbsp; <sub>Десктопный клиент OpenAI</sub><br><br>
-      <code>26.901.31953</code> · <code>amd64</code> <code>arm64</code><br>
+      <code>26.901.41600</code> · <code>amd64</code> <code>arm64</code><br>
       <code>stplr install nivora/chatgpt</code>
     </td>
     <td width="50%" valign="top">

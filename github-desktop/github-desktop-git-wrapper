@@ -5,19 +5,24 @@ case "$0" in
 /*) helper="$0" ;;
 *) helper="$(command -v -- "$0")" ;;
 esac
-case "${helper##*/}" in
+helper_name="${helper##*/}"
+case "$helper_name" in
 git-remote-https | git-remote-ftp | git-remote-ftps)
-    helper="${helper%/*}/git-remote-http"
+    helper_name='git-remote-http'
     ;;
 esac
 
-# ALT intentionally keeps the OpenSSL and GnuTLS libcurl ABIs in parallel.
-# GitHub Desktop's bundled portable Git is linked to CURL_OPENSSL_4, while the
-# system libcurl.so.4 resolves to the GnuTLS flavour. Limit the alternate loader
-# path to these helpers instead of changing the Electron process globally.
-if [ -d /usr/lib64/libcurl4-openssl ]; then
-    LD_LIBRARY_PATH="/usr/lib64/libcurl4-openssl${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-    export LD_LIBRARY_PATH
-fi
+# The portable Git helpers are built on Ubuntu and require its libcurl symbol
+# ABI. Delegate only the network helpers to the system Git installation so each
+# supported distribution uses helpers built for its own libcurl. The bundled
+# Git binary and all non-network helpers remain untouched.
+unset GIT_EXEC_PATH
+system_exec_path="$(/usr/bin/git --exec-path)"
+system_helper="${system_exec_path}/${helper_name}"
+[ -x "$system_helper" ] || {
+    printf 'github-desktop: system Git helper is missing: %s\n' \
+        "$system_helper" >&2
+    exit 127
+}
 
-exec "${helper}.bin" "$@"
+exec "$system_helper" "$@"

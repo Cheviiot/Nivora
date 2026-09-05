@@ -1,6 +1,6 @@
 name='github-desktop'
 version=3.6.5
-release=1
+release=2
 # Exact commit behind the upstream release-${version} tag. Keeping it
 # separate makes a stale pin visible when version is updated.
 upstream_commit='13b57bd28dcaa94ec55374f814dab7a1645ae3b0'
@@ -34,10 +34,10 @@ disable_network=1
 # portable git under resources/app/git/libexec/git-core/ — git itself
 # needs zlib, which the old explicit list never named directly, and
 # git-remote-http/git-http-fetch/git-http-push/git-imap-send need libcurl.
-# On ALT, the bundled helper requires CURL_OPENSSL_4 while the default
-# libcurl exports CURL_GNUTLS_4. The explicit libcurl4-openssl dependency
-# and the packaged helper wrapper select the compatible library directory;
-# RPM SONAME auto_req alone cannot distinguish those symbol-version ABIs.
+# The Ubuntu-built network helpers require CURL_OPENSSL_4, which is not a
+# portable libcurl symbol ABI (ALT exports CURL_GNUTLS_4 instead). The packaged
+# wrapper delegates those four helpers to the system Git installation, while
+# the rest of the bundled portable Git remains unchanged.
 # The rest stays explicit: ca-certificates is data, git is the *system* git invoked as a
 # subprocess by the app itself (a separate thing from the bundled portable
 # git above, not detectable by ELF scanning either way), xdg-utils is a
@@ -49,7 +49,7 @@ deps_ubuntu=("${deps_debian[@]}")
 deps_fedora=('ca-certificates' 'git' 'alsa-lib' 'atk' 'at-spi2-atk' 'at-spi2-core' 'cairo' 'cups-libs' 'dbus-libs' 'expat' 'mesa-libgbm' 'glib2' 'gtk3' 'nspr' 'nss' 'pango' 'libsecret' 'systemd-libs' 'libX11' 'libxcb' 'libXcomposite' 'libXdamage' 'libXext' 'libXfixes' 'libxkbcommon' 'libXrandr' 'libXScrnSaver' 'libXtst' 'xdg-utils')
 deps_arch=('ca-certificates' 'git' 'alsa-lib' 'atk' 'at-spi2-atk' 'at-spi2-core' 'cairo' 'cups' 'dbus' 'expat' 'libgbm' 'glib2' 'gtk3' 'nspr' 'nss' 'pango' 'libsecret' 'systemd-libs' 'libx11' 'libxcb' 'libxcomposite' 'libxdamage' 'libxext' 'libxfixes' 'libxkbcommon' 'libxrandr' 'libxss' 'libxtst' 'xdg-utils')
 deps_opensuse=('ca-certificates' 'git' 'alsa' 'libatk-1_0-0' 'libatk-bridge-2_0-0' 'libatspi0' 'libcairo2' 'cups-libs' 'libdbus-1-3' 'libexpat1' 'libgbm1' 'glib2' 'gtk3' 'mozilla-nspr' 'mozilla-nss' 'pango' 'libsecret-1-0' 'libudev1' 'libX11-6' 'libxcb1' 'libXcomposite1' 'libXdamage1' 'libXext6' 'libXfixes3' 'libxkbcommon0' 'libXrandr2' 'libXss1' 'libXtst6' 'xdg-utils')
-deps_altlinux=('ca-certificates' 'git' 'libcurl4-openssl' 'libsecret' 'libXScrnSaver' 'libXtst' 'xdg-utils')
+deps_altlinux=('ca-certificates' 'git' 'libsecret' 'libXScrnSaver' 'libXtst' 'xdg-utils')
 
 build_deps=('binutils')
 
@@ -71,14 +71,14 @@ checksums=(
 	'sha256:fa328e3c3a503796a952b82ba190cf1208c79eefc86b2acdd504b0b9a523be70'
 	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
 	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
-	'sha256:1a44cab3dcf04dcc7e80e3c40e2e17188636e6e6f7e0af23b56168006cd586a1'
+	'sha256:9267f4511eeaaec82066f2aa128b6cb7320dc46951657033c05ce7c802cf8a60'
 )
 
 checksums_arm64=(
 	'sha256:1642501e8e262929810610f31c612001dd955e473e6a42e6bbe7f91019148bb5'
 	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
 	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
-	'sha256:1a44cab3dcf04dcc7e80e3c40e2e17188636e6e6f7e0af23b56168006cd586a1'
+	'sha256:9267f4511eeaaec82066f2aa128b6cb7320dc46951657033c05ce7c802cf8a60'
 )
 
 scripts=(
@@ -102,7 +102,7 @@ package() {
 		git-http-fetch git-http-push git-imap-send \
 		git-remote-http; do
 		test -x "${git_core}/${helper}"
-		mv "${git_core}/${helper}" "${git_core}/${helper}.bin"
+		rm -f "${git_core}/${helper}"
 		install -m755 github-desktop-git-wrapper "${git_core}/${helper}"
 	done
 	if [[ -f "${pkgdir}/opt/github-desktop/chrome-sandbox" ]]; then

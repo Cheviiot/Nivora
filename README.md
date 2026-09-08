@@ -76,7 +76,7 @@ nv
     <td width="50%" valign="top">
       <!-- package-card:happ -->
       <img src="https://happ.su/imgs/apple-touch-icon.png" width="42" height="42" align="left" alt="Happ">&nbsp; <strong><a href="https://happ.su/">Happ</a></strong><br>&nbsp; <sub>GUI-клиент xray-core и TUN/VPN</sub><br><br>
-      <code>4.1.3</code> · <code>amd64</code> <code>arm64</code><br>
+      <code>4.2.1</code> · <code>amd64</code> <code>arm64</code><br>
       <code>stplr install nivora/happ</code>
     </td>
     <td width="50%" valign="top">

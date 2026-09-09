@@ -38,7 +38,7 @@ Linux-порта.
 встроены в апстрим напрямую.
 
 Официальный URL содержит `/latest/` и изменяется на месте. Nivora хранит не
-только checksum самого DEB, но и fingerprint его HTTP ETag; ежедневный updater
+только checksum самого DEB, но и fingerprint его HTTP ETag; почасовой updater
 проверяет его даже при неизменной версии и при замене payload повышает `release`.
 
 На RPM-целях (`ALT`, Fedora, openSUSE) `auto_req=1` включается отдельными

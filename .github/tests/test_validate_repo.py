@@ -162,6 +162,32 @@ class HeroTests(unittest.TestCase):
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_mutable_sources_are_checked_hourly(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workflow = root / ".github/workflows/check-updates.yml"
+            workflow.parent.mkdir(parents=True)
+            workflow.write_text(
+                'on:\n  schedule:\n    - cron: "17 * * * *"\n',
+                encoding="utf-8",
+            )
+            old_root = VALIDATOR.ROOT
+            VALIDATOR.ROOT = root
+            try:
+                errors = []
+                VALIDATOR.validate_autonomous_update_workflow(errors)
+                self.assertEqual(errors, [])
+
+                workflow.write_text(
+                    'on:\n  schedule:\n    - cron: "0 17 * * *"\n',
+                    encoding="utf-8",
+                )
+                errors = []
+                VALIDATOR.validate_autonomous_update_workflow(errors)
+                self.assertEqual(len(errors), 1)
+            finally:
+                VALIDATOR.ROOT = old_root
+
     def test_github_desktop_dispatch_and_fallback_match_recipe(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

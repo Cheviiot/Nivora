@@ -738,6 +738,17 @@ def validate_github_desktop_workflow(
         )
 
 
+def validate_autonomous_update_workflow(errors: list[str]) -> None:
+    path = ROOT / ".github/workflows/check-updates.yml"
+    if not path.is_file():
+        return
+    text = path.read_text(encoding="utf-8")
+    if not re.search(r'(?m)^    - cron: ["\']17 \* \* \* \*["\']$', text):
+        errors.append(
+            "autonomous update workflow: mutable sources must be checked hourly"
+        )
+
+
 def validate_repository_text(errors: list[str]) -> None:
     for path in ROOT.rglob("*"):
         if not path.is_file() or ".git" in path.parts:
@@ -804,6 +815,7 @@ def main() -> int:
     validate_readme(metadata, errors)
     validate_readme_hero(errors)
     validate_github_desktop_workflow(metadata, errors)
+    validate_autonomous_update_workflow(errors)
     for path in sorted([
         *ROOT.glob("*.md"),
         *ROOT.glob(".github/docs/**/*.md"),

@@ -2,8 +2,9 @@ name: CI · Автономное обновление пакетов
 
 on:
   schedule:
-    # 03:00 Asia/Vladivostok (UTC+10)
-    - cron: "0 17 * * *"
+    # Every hour at minute 17. Mutable /latest/ sources can change at any time,
+    # so a daily poll leaves users with an obsolete checksum for too long.
+    - cron: "17 * * * *"
   workflow_dispatch:
     inputs:
       force:

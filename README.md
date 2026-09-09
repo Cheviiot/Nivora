@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://stplr.dev/docs/intro/"><img src="https://img.shields.io/badge/Stapler-v0.1.1-8b5cf6?style=flat-square" alt="Stapler v0.1.1"></a>
-  <img src="https://img.shields.io/badge/packages-16-19bfc8?style=flat-square" alt="16 пакетов">
+  <img src="https://img.shields.io/badge/packages-17-19bfc8?style=flat-square" alt="17 пакетов">
   <img src="https://img.shields.io/badge/arch-amd64%20%7C%20arm64-52d99b?style=flat-square" alt="amd64 и arm64">
   <a href="https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/quality.yml?branch=main&amp;style=flat-square&amp;label=quality" alt="Статус CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-7188f5?style=flat-square" alt="MIT License"></a>
@@ -24,7 +24,7 @@
 </p>
 
 <!-- package-count -->
-<p align="center"><strong>16 пакетов</strong> · <strong>6 категорий</strong> · <code>amd64</code>, <code>arm64</code> и <code>all</code></p>
+<p align="center"><strong>17 пакетов</strong> · <strong>6 категорий</strong> · <code>amd64</code>, <code>arm64</code> и <code>all</code></p>
 
 > [!NOTE]
 > Nivora — независимый community-репозиторий. Он не является официальным
@@ -191,31 +191,40 @@ nv
 <table>
   <tr>
     <td width="50%" valign="top">
+      <!-- package-card:armbian-imager -->
+      <img src="https://raw.githubusercontent.com/armbian/imager/main/public/armbian-icon.png" width="42" height="42" align="left" alt="Armbian Imager">&nbsp; <strong><a href="armbian-imager/README.md">Armbian Imager</a></strong><br>&nbsp; <sub>Официальная запись образов Armbian</sub><br><br>
+      <code>2.0.4</code> · <code>amd64</code> <code>arm64</code><br>
+      <code>stplr install nivora/armbian-imager</code>
+    </td>
+    <td width="50%" valign="top">
       <!-- package-card:balena-etcher -->
       <img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="42" height="42" align="left" alt="balenaEtcher">&nbsp; <strong><a href="https://etcher.balena.io/">balenaEtcher</a></strong><br>&nbsp; <sub>Запись образов на SD-карты и USB</sub><br><br>
       <code>2.1.6</code> · <code>amd64</code><br>
       <code>stplr install nivora/balena-etcher</code>
     </td>
+  </tr>
+  <tr>
     <td width="50%" valign="top">
       <!-- package-card:distroshelf -->
       <img src="https://raw.githubusercontent.com/ranfdev/DistroShelf/main/data/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg" width="42" height="42" align="left" alt="DistroShelf">&nbsp; <strong><a href="distroshelf/README.md">DistroShelf</a></strong><br>&nbsp; <sub>Графическое управление Distrobox-контейнерами</sub><br><br>
       <code>1.5.2</code> · <code>amd64</code><br>
       <code>stplr install nivora/distroshelf</code>
     </td>
-  </tr>
-  <tr>
     <td width="50%" valign="top">
       <!-- package-card:nivora-cli -->
       <img src=".github/assets/nivora.png" width="42" height="42" align="left" alt="Nivora CLI">&nbsp; <strong><a href="nivora-cli/README.md">Nivora CLI</a></strong><br>&nbsp; <sub>Компактная оболочка и меню для Stapler</sub><br><br>
       <code>1.1.0</code> · <code>all</code><br>
       <code>stplr install nivora/nivora-cli</code>
     </td>
+  </tr>
+  <tr>
     <td width="50%" valign="top">
       <!-- package-card:ventoy -->
       <img src="https://raw.githubusercontent.com/ventoy/Ventoy/master/ICON/logo_128.png" width="42" height="42" align="left" alt="Ventoy">&nbsp; <strong><a href="ventoy/README.md">Ventoy</a></strong><br>&nbsp; <sub>Мультизагрузочные USB-накопители</sub><br><br>
       <code>1.1.17</code> · <code>amd64</code> <code>arm64</code><br>
       <code>stplr install nivora/ventoy</code>
     </td>
+    <td width="50%" valign="middle"><em>Инструменты для носителей, контейнеров и управления пакетами.</em></td>
   </tr>
 </table>
 <!-- catalog:end -->
@@ -234,7 +243,7 @@ Nivora тестирует релизный Stapler `v0.1.1` как обязат�
 | ⚫ `unsupported` | Цель исключается до сборки. |
 
 Сейчас `verified` присвоен только `nivora-cli` на Ubuntu 24.04 для нативных
-`amd64` и `arm64`. Все 16 пакетов блокирующе собираются в ALT Sisyphus на
+`amd64` и `arm64`. Все 17 пакетов блокирующе собираются в ALT Sisyphus на
 `x86_64`, но это не выдаётся за полный runtime-тест остальных систем.
 
 Точные цели и ограничения каждого пакета находятся в

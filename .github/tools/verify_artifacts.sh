@@ -156,6 +156,52 @@ for package in "${packages[@]}"; do
         }
     fi
 
+    if [[ "$package" == 'armbian-imager' ]]; then
+        for command in cpio rpm2cpio; do
+            command -v "$command" >/dev/null 2>&1 || {
+                echo "${package}: для проверки desktop-файла требуется ${command}" >&2
+                exit 2
+            }
+        done
+        for required_path in \
+            /usr/bin/armbian-imager \
+            /usr/share/applications/armbian-imager.desktop \
+            /usr/share/icons/hicolor/32x32/apps/armbian-imager.png \
+            /usr/share/icons/hicolor/128x128/apps/armbian-imager.png \
+            /usr/share/icons/hicolor/256x256@2/apps/armbian-imager.png \
+            /usr/share/icons/hicolor/512x512/apps/armbian-imager.png \
+            /usr/share/licenses/armbian-imager/LICENSE \
+            /usr/share/licenses/armbian-imager/copyright; do
+            contains_path "$required_path" || {
+                echo "${package}: отсутствует upstream-компонент: ${required_path}" >&2
+                exit 1
+            }
+        done
+
+        for required_dependency in udisks2 util-linux xdg-utils; do
+            rpm -qp --requires "$artifact" | grep -Fxq "$required_dependency" || {
+                echo "${package}: отсутствует зависимость ${required_dependency}" >&2
+                exit 1
+            }
+        done
+
+        armbian_desktop="$({
+            set +o pipefail
+            rpm2cpio "$artifact" |
+                cpio -i --quiet --to-stdout \
+                    /usr/share/applications/armbian-imager.desktop
+        })"
+        for desktop_line in \
+            'Exec=armbian-imager' \
+            'Icon=armbian-imager' \
+            'StartupWMClass=armbian-imager'; do
+            grep -Fxq "$desktop_line" <<<"$armbian_desktop" || {
+                echo "${package}: desktop-файл не содержит ${desktop_line}" >&2
+                exit 1
+            }
+        done
+    fi
+
     if [[ "$package" == 'chatgpt' ]]; then
         for command in cpio rpm2cpio; do
             command -v "$command" >/dev/null 2>&1 || {

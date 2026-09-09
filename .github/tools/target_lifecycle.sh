@@ -15,6 +15,7 @@ readonly stplr_cache_path="${NIVORA_STPLR_CACHE_PATH:-/var/cache/stplr}"
 
 declare -Ar smoke_paths=(
     [anidesk]='/usr/bin/anidesk'
+    [armbian-imager]='/usr/bin/armbian-imager'
     [balena-etcher]='/usr/bin/balena-etcher'
     [chatgpt]='/usr/bin/chatgpt'
     [claude]='/usr/bin/claude-desktop'

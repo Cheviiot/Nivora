@@ -4,7 +4,7 @@ set -euo pipefail
 readonly NIVORA_VERSION='1.1.0'
 readonly DEFAULT_REPOSITORY='nivora'
 readonly MIN_STAPLER_VERSION='0.1.1'
-readonly PACKAGE_COMPLETIONS='anidesk balena-etcher chatgpt claude distroshelf github-desktop happ nivora-cli parsec pineconemc tailscale telegram ventoy vesktop vintner yandex-music'
+readonly PACKAGE_COMPLETIONS='anidesk armbian-imager balena-etcher chatgpt claude distroshelf github-desktop happ nivora-cli parsec pineconemc tailscale telegram ventoy vesktop vintner yandex-music'
 
 language="${NIVORA_LANG:-}"
 repository="${NIVORA_REPO:-${DEFAULT_REPOSITORY}}"

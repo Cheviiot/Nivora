@@ -3,6 +3,7 @@ set -euo pipefail
 
 readonly -a PACKAGES=(
     anidesk
+    armbian-imager
     balena-etcher
     chatgpt
     claude
@@ -330,6 +331,7 @@ latest_chatgpt() {
 latest_version() {
     case "$1" in
     anidesk) latest_anidesk ;;
+    armbian-imager) github_latest_release armbian/imager ;;
     balena-etcher) github_latest_release balena-io/etcher ;;
     chatgpt) latest_chatgpt ;;
     claude) latest_claude_desktop ;;

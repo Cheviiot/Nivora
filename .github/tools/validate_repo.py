@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 EXPECTED_PACKAGES = (
     "anidesk",
+    "armbian-imager",
     "balena-etcher",
     "chatgpt",
     "claude",

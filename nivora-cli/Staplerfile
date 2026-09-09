@@ -1,6 +1,6 @@
 name='nivora-cli'
 version='1.1.0'
-release=1
+release=2
 summary='Friendly multilingual command shell for Stapler'
 summary_ru='Удобная многоязычная оболочка для Stapler'
 desc='Nivora CLI is a compact bilingual command shell for everyday Stapler package management, repository administration, diagnostics, interactive navigation and shell completion.'
@@ -36,7 +36,7 @@ sources=(
 )
 
 checksums=(
-	'sha256:ea621461aed4c7bfe35597ea20348fc847021b86edce13747b48c8c1d0a54c6f'
+	'sha256:5aa8060002d00e6e821187bbdc70c091aeabc6dc9a9af5993021d11350f62ee1'
 	'sha256:16f1438f500706ac85b363c2549b392daef3a920b24139fca6b30f5648a7801a'
 )
 

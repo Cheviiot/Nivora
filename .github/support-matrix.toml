@@ -13,14 +13,14 @@ ubuntu_24_04 = "ubuntu:24.04@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3
 alt_sisyphus = "registry.altlinux.org/sisyphus/base@sha256:1a6ab67cc12cfbe2419ed8b805ae6fd75ed036f9da7211b78876d1cd0083b7ba"
 
 [expectations]
-package_count = 16
+package_count = 17
 target_count = 10
-logical_runtime_cells = 260
-declared_supported_runtime_cells = 229
-declared_unique_build_cells = 219
-blocking_ci_build_cells_full_common_change = 16
+logical_runtime_cells = 280
+declared_supported_runtime_cells = 247
+declared_unique_build_cells = 237
+blocking_ci_build_cells_full_common_change = 17
 blocking_ci_runtime_cells = 2
-advisory_main_build_cells_full_common_change = 16
+advisory_main_build_cells_full_common_change = 17
 
 [tiers]
 verified = "target-specific native build, package metadata, install, safe smoke and remove are required gates"
@@ -143,6 +143,15 @@ smoke_path = "/usr/bin/anidesk"
 support = [
   { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["external-service"] },
   { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload"] },
+]
+
+[[packages]]
+id = "armbian-imager"
+architectures = ["amd64", "arm64"]
+smoke_path = "/usr/bin/armbian-imager"
+support = [
+  { targets = ["debian-13", "ubuntu-24.04", "ubuntu-26.04", "fedora-43", "fedora-44", "alt-p11", "alt-sisyphus", "arch-snapshot", "opensuse-leap-16.0"], tier = "partial", caveats = ["destructive-storage", "target-lifecycle-not-gated"] },
+  { targets = ["alpine-3.23"], tier = "unsupported", caveats = ["glibc-payload", "destructive-storage"] },
 ]
 
 [[packages]]

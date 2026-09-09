@@ -1,0 +1,119 @@
+name='armbian-imager'
+version='2.0.4'
+release=1
+summary='Official Armbian image writer for removable media'
+summary_ru='Официальная запись образов Armbian на съёмные носители'
+group='System/Configuration/Hardware'
+desc='Armbian Imager is the official graphical utility for downloading and safely writing Armbian operating-system images to SD cards and USB drives.'
+desc_ru='Armbian Imager — официальная графическая утилита для загрузки и безопасной записи образов Armbian на SD-карты и USB-накопители.'
+homepage='https://github.com/armbian/imager'
+maintainer='Armbian, Daniele Briguglio <superkali@armbian.com>'
+
+architectures=('amd64' 'arm64')
+compatible_with=('altlinux' 'debian' 'ubuntu' 'fedora' 'arch' 'opensuse' 'opensuse-leap' 'suse')
+incompatible_with=('alpine')
+
+license=('GPL-2.0-or-later' 'MIT' 'CC-BY-4.0')
+
+provides=()
+replaces=('armbian-imager')
+conflicts=()
+
+# auto_req covers the direct ELF dependencies on RPM targets: GTK 3,
+# WebKitGTK 4.1, JavaScriptCoreGTK 4.1, libsoup 3, GLib/GIO, D-Bus,
+# cairo, liblzma and the C/C++ runtimes. UDisks2, lsblk/findmnt and
+# xdg-open are subprocess or D-Bus integrations, so they remain explicit.
+auto_reqprov_method='dirty'
+auto_req=0
+auto_req_altlinux=1
+auto_req_fedora=1
+auto_req_opensuse=1
+auto_prov=0
+disable_network=1
+
+deps=()
+deps_debian=(
+	'libwebkit2gtk-4.1-0' 'libgtk-3-0' 'udisks2' 'util-linux' 'xdg-utils'
+)
+deps_ubuntu=("${deps_debian[@]}")
+deps_fedora=('webkit2gtk4.1' 'gtk3' 'udisks2' 'util-linux' 'xdg-utils')
+deps_arch=('webkit2gtk-4.1' 'gtk3' 'udisks2' 'util-linux' 'xdg-utils')
+deps_opensuse=(
+	'libwebkit2gtk-4_1-0' 'libgtk-3-0' 'udisks2' 'util-linux' 'xdg-utils'
+)
+deps_altlinux=('udisks2' 'util-linux' 'xdg-utils')
+
+opt_deps=()
+opt_deps_debian=()
+opt_deps_ubuntu=()
+opt_deps_fedora=()
+opt_deps_arch=()
+opt_deps_opensuse=()
+opt_deps_altlinux=()
+
+build_deps=('binutils')
+
+sources=(
+	"https://github.com/armbian/imager/releases/download/v${version}/Armbian.Imager_${version}_amd64.deb?~archive=false&~name=armbian-imager.deb"
+	"https://raw.githubusercontent.com/armbian/imager/v${version}/LICENSE?~archive=false&~name=LICENSE"
+)
+
+sources_arm64=(
+	"https://github.com/armbian/imager/releases/download/v${version}/Armbian.Imager_${version}_arm64.deb?~archive=false&~name=armbian-imager.deb"
+	"https://raw.githubusercontent.com/armbian/imager/v${version}/LICENSE?~archive=false&~name=LICENSE"
+)
+
+checksums=(
+	'sha256:2b96b9360da5b64f555638b6893b22c13d761d5d015633c6429792501fb4d6f6'
+	'sha256:a01259a1b522cf0de95824f9860613b453153eebac468e96196d5d7dba84786c'
+)
+
+checksums_arm64=(
+	'sha256:ca37850e01eea9da1d514b754768cda029549d3e3311dd433cad1f5a3eb38107'
+	'sha256:a01259a1b522cf0de95824f9860613b453153eebac468e96196d5d7dba84786c'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x armbian-imager.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install -Dm755 \
+		"${srcdir}/extracted/usr/bin/armbian-imager" \
+		"${pkgdir}/usr/bin/armbian-imager"
+	install -Dm644 \
+		"${srcdir}/extracted/usr/share/applications/Armbian Imager.desktop" \
+		"${pkgdir}/usr/share/applications/armbian-imager.desktop"
+
+	install -Dm644 \
+		"${srcdir}/extracted/usr/share/icons/hicolor/32x32/apps/armbian-imager.png" \
+		"${pkgdir}/usr/share/icons/hicolor/32x32/apps/armbian-imager.png"
+	install -Dm644 \
+		"${srcdir}/extracted/usr/share/icons/hicolor/128x128/apps/armbian-imager.png" \
+		"${pkgdir}/usr/share/icons/hicolor/128x128/apps/armbian-imager.png"
+	install -Dm644 \
+		"${srcdir}/extracted/usr/share/icons/hicolor/256x256@2/apps/armbian-imager.png" \
+		"${pkgdir}/usr/share/icons/hicolor/256x256@2/apps/armbian-imager.png"
+	install -Dm644 \
+		"${srcdir}/extracted/usr/share/icons/hicolor/512x512/apps/armbian-imager.png" \
+		"${pkgdir}/usr/share/icons/hicolor/512x512/apps/armbian-imager.png"
+
+	install-license LICENSE 'armbian-imager/LICENSE'
+	install-license \
+		"${srcdir}/extracted/usr/share/doc/armbian-imager/copyright" \
+		'armbian-imager/copyright'
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find '/usr/share/icons/hicolor/*/apps/armbian-imager.png'
+}

@@ -54,7 +54,7 @@ if [[ "$state" == true ]]; then
 - Причина: ${reason}
 - Запуск: ${run_url}
 
-После исправления запустите post-push проверку вручную для текущего SHA main с параметром resume_on_success. Recovery проверит все 16 пакетов и разрешит снятие паузы только для потомка этого commit."
+После исправления запустите post-push проверку вручную для текущего SHA main с параметром resume_on_success. Recovery проверит все 17 пакетов и разрешит снятие паузы только для потомка этого commit."
     if [[ -n "$issue_number" ]]; then
         gh api --method PATCH "repos/${repository}/issues/${issue_number}" \
             -f state=open -f body="$body" >/dev/null

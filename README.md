@@ -82,7 +82,7 @@ nv
     <td width="50%" valign="top">
       <!-- package-card:tailscale -->
       <img src="https://tailscale.com/favicon.png" width="42" height="42" align="left" alt="Tailscale">&nbsp; <strong><a href="https://tailscale.com/">Tailscale</a></strong><br>&nbsp; <sub>Mesh VPN на базе WireGuard</sub><br><br>
-      <code>1.102.3</code> · <code>amd64</code> <code>arm64</code><br>
+      <code>1.102.4</code> · <code>amd64</code> <code>arm64</code><br>
       <code>stplr install nivora/tailscale</code>
     </td>
   </tr>

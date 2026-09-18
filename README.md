@@ -138,7 +138,7 @@ nv
     <td width="50%" valign="top">
       <!-- package-card:claude -->
       <img src="claude/claude-tray-orange.png" width="42" height="42" align="left" alt="Claude">&nbsp; <strong><a href="claude/README.md">Claude</a></strong><br>&nbsp; <sub>Десктопный клиент Anthropic</sub><br><br>
-      <code>2.110.1</code> · <code>amd64</code> <code>arm64</code><br>
+      <code>2.2553.0</code> · <code>amd64</code> <code>arm64</code><br>
       <code>stplr install nivora/claude</code>
     </td>
   </tr>

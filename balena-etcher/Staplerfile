@@ -1,6 +1,6 @@
 name='balena-etcher'
-version='2.1.6'
-release=5
+version=2.1.7
+release=1
 summary='Safe SD card and USB drive image flasher'
 summary_ru='Безопасная запись образов на SD-карты и USB-накопители'
 group='System/Configuration/Hardware'
@@ -100,7 +100,7 @@ sources=(
 )
 
 checksums=(
-	'sha256:2bdebb46c9f750a9abf11c188ff69a405b4a4fed114333d634c3b3fe59a64057'
+	'sha256:9dbea6165ddee1ec1f1b7a38fe92f0d2c54c6217710438a7af6752c267d19395'
 	'sha256:39445b459f86621683f9731fb6a7d070819dc379840e8ef52f62bb1c68942291'
 )
 

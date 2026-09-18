@@ -199,7 +199,7 @@ nv
     <td width="50%" valign="top">
       <!-- package-card:balena-etcher -->
       <img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="42" height="42" align="left" alt="balenaEtcher">&nbsp; <strong><a href="https://etcher.balena.io/">balenaEtcher</a></strong><br>&nbsp; <sub>Запись образов на SD-карты и USB</sub><br><br>
-      <code>2.1.6</code> · <code>amd64</code><br>
+      <code>2.1.7</code> · <code>amd64</code><br>
       <code>stplr install nivora/balena-etcher</code>
     </td>
   </tr>

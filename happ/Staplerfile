@@ -1,5 +1,5 @@
 name='happ'
-version=4.2.1
+version=4.3.0
 release=1
 summary='User-friendly GUI proxy client for xray-core'
 summary_ru='Удобный GUI-прокси-клиент для xray-core'
@@ -75,7 +75,7 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:bc8bc0bd61f8fd96e5c58117ced85cdb0adc3c28a703e7965ecdff108954ae75'
+	'sha256:41c86c0caf18190bce58a7f603fd466c9e3fbfef2b85f837635a0453401affba'
 	'sha256:5b0106dda286b039d6bdce45208f44ea3eb7a2deb4e00455190ce7a07177dde0'
 	'sha256:fa4d741a4e2df82b0a19291e2c7bad4a8753a1e59237b2bfe5fef7de8c22efd2'
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'
@@ -84,7 +84,7 @@ checksums=(
 )
 
 checksums_arm64=(
-	'sha256:83a5ab4a5c244e12c2abe81c5030919008cc0395ee0dcbf31e0b42c3bf4e0a18'
+	'sha256:953b6d3fe9ba878cf97d95a610b2dcdd0cd56bf7ee7a69a770118eff34418405'
 	'sha256:5b0106dda286b039d6bdce45208f44ea3eb7a2deb4e00455190ce7a07177dde0'
 	'sha256:fa4d741a4e2df82b0a19291e2c7bad4a8753a1e59237b2bfe5fef7de8c22efd2'
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'

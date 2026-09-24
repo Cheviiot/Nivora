@@ -1,9 +1,9 @@
 name='github-desktop'
-version='3.6.5'
-release=2
+version='3.6.6'
+release=1
 # Exact commit behind the upstream release-${version} tag. Keeping it
 # separate makes a stale pin visible when version is updated.
-upstream_commit='13b57bd28dcaa94ec55374f814dab7a1645ae3b0'
+upstream_commit='8b85519e733fd98a04c178249d2d10fd8f3db19e'
 summary='GitHub Desktop built from the official source'
 summary_ru='GitHub Desktop, собранный из официальных исходников'
 group='Development/Tools'
@@ -59,14 +59,14 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:fa328e3c3a503796a952b82ba190cf1208c79eefc86b2acdd504b0b9a523be70'
+	'sha256:35682d862ddc602f5ef438896458852fa1412aa0e50987bebd995387a1806c1c'
 	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
 	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
 	'sha256:9267f4511eeaaec82066f2aa128b6cb7320dc46951657033c05ce7c802cf8a60'
 )
 
 checksums_arm64=(
-	'sha256:1642501e8e262929810610f31c612001dd955e473e6a42e6bbe7f91019148bb5'
+	'sha256:7faabf5a7433a6d7fd5dfc9af48d93a629a6916a45d387aeb6cea2afb24a63e0'
 	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
 	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
 	'sha256:9267f4511eeaaec82066f2aa128b6cb7320dc46951657033c05ce7c802cf8a60'

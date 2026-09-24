@@ -143,7 +143,7 @@ sudo stplr install nivora/chatgpt
     <td width="50%" valign="top">
       <!-- package-card:github-desktop -->
       <img src="https://github.githubassets.com/favicons/favicon.png" width="42" height="42" align="left" alt="GitHub Desktop">&nbsp; <strong><a href="github-desktop/README.md">GitHub Desktop</a></strong><br>&nbsp; <sub>Официальный код GitHub Desktop, собранный для Linux</sub><br><br>
-      <code>3.6.5</code> · <code>amd64</code> <code>arm64</code><br>
+      <code>3.6.6</code> · <code>amd64</code> <code>arm64</code><br>
       <code>stplr install nivora/github-desktop</code>
     </td>
     <td width="50%" valign="top">

@@ -1,5 +1,5 @@
 name='distroshelf'
-version=1.5.2
+version='1.5.2'
 release=6
 summary='GTK4 client for managing Distrobox containers'
 summary_ru='GTK4-клиент для управления контейнерами Distrobox'
@@ -11,7 +11,6 @@ maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64')
 compatible_with=('altlinux')
-incompatible_with=('alpine')
 disable_network=1
 
 license=('GPL-3.0-or-later')
@@ -20,9 +19,9 @@ provides=()
 replaces=('distroshelf')
 conflicts=()
 
-# The dirty finder covers binary requirements on RPM targets instead of a
-# hand-maintained list. FindProvides is intentionally disabled because it is
-# a no-op in Stapler v0.1.1 and cannot advertise bundled libraries safely.
+# The dirty finder covers binary requirements instead of a hand-maintained
+# list. FindProvides is intentionally disabled because it is a no-op in
+# Stapler v0.1.1 and cannot advertise bundled libraries safely.
 # the bundled libvte-2.91-gtk4.so.0 (built by Nivora CI against ALT p11, see
 # maintenance.md) has real DT_NEEDED entries (libgnutls, libfribidi,
 # libpcre2, libsystemd, libgraphene, libicuuc.so.74/libicudata.so.74, ...)
@@ -32,12 +31,10 @@ conflicts=()
 # soname version (libicu74) that could drift the way parsec's libavcodec61
 # did.
 auto_reqprov_method='dirty'
-auto_req=0
-auto_req_altlinux=1
+auto_req=1
 auto_prov=0
 
-deps=()
-deps_altlinux=('distrobox')
+deps=('distrobox')
 
 opt_deps=()
 

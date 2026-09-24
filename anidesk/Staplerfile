@@ -11,7 +11,7 @@ homepage='https://github.com/theDesConnet/AniDesk'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64')
-incompatible_with=('alpine')
+compatible_with=('altlinux')
 
 license=('GPL-2.0-only')
 
@@ -20,14 +20,11 @@ replaces=('anidesk')
 conflicts=()
 
 auto_reqprov_method="dirty"
-auto_req=0
-auto_req_altlinux=1
-auto_req_fedora=1
-auto_req_opensuse=1
+auto_req=1
 auto_prov=0
 disable_network=1
 
-# On RPM targets, auto_req covers the real DT_NEEDED of the anidesk binary (readelf -d
+# auto_req covers the real DT_NEEDED of the anidesk binary (readelf -d
 # confirmed: gtk3, nss, at-spi2, gbm, xcb, alsa, glibc, ...). The rest
 # stays explicit: xdg-utils is a subprocess tool, mesa-dri-drivers is
 # never linked directly (it's found by the Vulkan ICD loader at runtime,
@@ -37,29 +34,11 @@ disable_network=1
 # libnotify is dlopen'd by Chromium's Linux integration layer like in
 # claude/vesktop - same pattern, same reasoning, kept explicit for real
 # functionality instead of a silent fallback.
-deps=()
-deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2t64 | libasound2' 'libvulkan1' 'mesa-vulkan-drivers')
-deps_ubuntu=("${deps_debian[@]}")
-deps_fedora=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa-libgbm' 'libxcb' 'alsa-lib' 'vulkan-loader' 'mesa-vulkan-drivers')
-deps_arch=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa' 'libxcb' 'alsa-lib' 'vulkan-icd-loader' 'vulkan-radeon')
-deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'xdg-utils' 'at-spi2-core' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2' 'libvulkan1' 'Mesa-vulkan-device-select')
-deps_altlinux=('libnotify' 'xdg-utils' 'libvulkan1' 'mesa-dri-drivers')
+deps=('libnotify' 'xdg-utils' 'libvulkan1' 'mesa-dri-drivers')
 
-build_deps=('binutils')
-build_deps_debian=('binutils' 'python3')
-build_deps_ubuntu=("${build_deps_debian[@]}")
-build_deps_fedora=('binutils' 'python3')
-build_deps_arch=('binutils' 'python')
-build_deps_opensuse=('binutils' 'python3')
-build_deps_altlinux=('binutils' 'python3')
+build_deps=('binutils' 'python3')
 
-opt_deps=()
-opt_deps_debian=('gnome-keyring' 'discord')
-opt_deps_ubuntu=("${opt_deps_debian[@]}")
-opt_deps_fedora=('gnome-keyring' 'discord')
-opt_deps_arch=('gnome-keyring' 'discord')
-opt_deps_opensuse=('gnome-keyring' 'discord')
-opt_deps_altlinux=('gnome-keyring')
+opt_deps=('gnome-keyring')
 
 sources=(
 	"https://github.com/theDesConnet/AniDesk/releases/download/v${version}/anidesk_${debian_version}_amd64.deb?~archive=false&~name=anidesk.deb"
@@ -106,7 +85,6 @@ _, _, _, header_size = struct.unpack("<IIII", data[:16])
 header = json.loads(data[16 : 16 + header_size])
 base_offset = 16 + ((header_size + 3) & ~3)
 
-
 def iter_files(node, prefix=""):
     for name, entry in node.get("files", {}).items():
         path_name = f"{prefix}{name}"
@@ -114,7 +92,6 @@ def iter_files(node, prefix=""):
             yield from iter_files(entry, f"{path_name}/")
         else:
             yield path_name, entry
-
 
 entries = []
 for path_name, entry in iter_files(header):
@@ -172,7 +149,6 @@ if not bundle_patch_applied:
 if not source_patch_applied:
     raise SystemExit("AniDesk ASAR patch failed: source view was not patched")
 
-
 def rebuild(node, prefix="", offset_state=None, payload=None):
     if offset_state is None:
         offset_state = {"offset": 0}
@@ -207,7 +183,6 @@ def rebuild(node, prefix="", offset_state=None, payload=None):
     if prefix == "":
         return new_node, payload
     return new_node
-
 
 new_header, payload = rebuild(header)
 header_json = json.dumps(new_header, separators=(",", ":")).encode()

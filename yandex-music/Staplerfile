@@ -1,5 +1,5 @@
 name='yandex-music'
-version=5.121.2
+version='5.121.2'
 release=1
 summary='Official Yandex Music desktop client'
 summary_ru='Официальный десктопный клиент Яндекс Музыки'
@@ -10,7 +10,7 @@ homepage='https://music.yandex.ru/download/'
 maintainer='Яндекс Музыка <music@support.yandex.ru>'
 
 architectures=('amd64')
-incompatible_with=('alpine')
+compatible_with=('altlinux')
 
 license=('Custom')
 nonfree=1
@@ -21,73 +21,27 @@ provides=()
 replaces=('yandex-music')
 conflicts=()
 
-# Dirty SONAME discovery is enabled only on RPM targets. DEB/Ubuntu/Arch use
-# the explicit package-name maps below instead of receiving RPM-style
-# libfoo.so()(64bit) capabilities. AutoProv stays disabled: dirty computes a
-# private SONAME set for requires filtering but does not emit package provides.
+# ALT's own /usr/lib/rpm/find-requires would also emit set-version requires
+# for the bundled Electron libraries, which only resolve if the package also
+# advertises them through find-provides. The dirty finder instead subtracts
+# every SONAME the payload ships itself, which is the one combination that
+# keeps auto_prov disabled and still yields correct requires.
 auto_reqprov_method="dirty"
-auto_req=0
-auto_req_altlinux=1
-auto_req_fedora=1
-auto_req_opensuse=1
+auto_req=1
 auto_prov=0
 disable_network=1
 
 # Starts with upstream's DEB Depends and includes every direct DT_NEEDED
 # observed in the packaged Electron binary. The extra desktop-integration
 # libraries are loaded dynamically and therefore cannot be inferred from ELF.
-deps=()
-deps_debian=(
-	'libgtk-3-0' 'libnotify4' 'libnss3' 'libxss1' 'libxtst6' 'xdg-utils'
-	'libatspi2.0-0' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2t64 | libasound2'
-	'libatk-bridge2.0-0' 'libatk1.0-0' 'libc6' 'libcairo2' 'libcups2'
-	'libdbus-1-3' 'libexpat1' 'libgcc-s1' 'libglib2.0-0' 'libnspr4'
-	'libpango-1.0-0' 'libudev1' 'libx11-6' 'libxcb1' 'libxcomposite1'
-	'libxdamage1' 'libxext6' 'libxfixes3' 'libxkbcommon0' 'libxrandr2'
-)
-deps_ubuntu=("${deps_debian[@]}")
-deps_fedora=(
-	'gtk3' 'libnotify' 'nss' 'libXScrnSaver' 'libXtst' 'xdg-utils'
-	'at-spi2-core' 'libuuid' 'libsecret' 'mesa-libgbm' 'alsa-lib' 'atk'
-	'glibc' 'cairo' 'cups-libs' 'dbus-libs' 'expat' 'libgcc' 'glib2'
-	'nspr' 'pango' 'systemd-libs' 'libX11' 'libxcb' 'libXcomposite'
-	'libXdamage' 'libXext' 'libXfixes' 'libxkbcommon' 'libXrandr'
-)
-deps_arch=(
-	'gtk3' 'libnotify' 'nss' 'libxss' 'libxtst' 'xdg-utils'
-	'at-spi2-core' 'util-linux-libs' 'libsecret' 'libgbm' 'alsa-lib' 'atk'
-	'glibc' 'cairo' 'cups' 'dbus' 'expat' 'gcc-libs' 'glib2' 'nspr'
-	'pango' 'systemd-libs' 'libx11' 'libxcb' 'libxcomposite'
-	'libxdamage' 'libxext' 'libxfixes' 'libxkbcommon' 'libxrandr'
-)
-deps_opensuse=(
-	'gtk3' 'libnotify4' 'mozilla-nss' 'libXss1' 'libXtst6' 'xdg-utils'
-	'at-spi2-core' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2'
-	'libatk-1_0-0' 'libatk-bridge-2_0-0' 'glibc' 'libcairo2' 'libcups2'
-	'libdbus-1-3' 'libexpat1' 'libgcc_s1' 'glib2' 'mozilla-nspr'
-	'libpango-1_0-0' 'libudev1' 'libX11-6' 'libxcb1' 'libXcomposite1'
-	'libXdamage1' 'libXext6' 'libXfixes3' 'libxkbcommon0' 'libXrandr2'
-)
-deps_altlinux=(
+deps=(
 	'libnotify' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libuuid'
 	'libsecret'
 )
 
-opt_deps=()
-opt_deps_debian=('libayatana-appindicator3-1 | libappindicator3-1')
-opt_deps_ubuntu=("${opt_deps_debian[@]}")
-opt_deps_fedora=('libappindicator-gtk3')
-opt_deps_arch=('libappindicator-gtk3')
-opt_deps_opensuse=('libappindicator3-1')
-opt_deps_altlinux=('libappindicator-gtk3')
+opt_deps=('libappindicator-gtk3')
 
 build_deps=('binutils')
-build_deps_debian=('binutils')
-build_deps_ubuntu=("${build_deps_debian[@]}")
-build_deps_fedora=('binutils')
-build_deps_arch=('binutils')
-build_deps_opensuse=('binutils')
-build_deps_altlinux=('binutils')
 
 sources=(
 	"https://music-desktop-application.s3.yandex.net/stable/Yandex_Music_amd64_${version}.deb?~archive=false&~name=yandex-music.deb"

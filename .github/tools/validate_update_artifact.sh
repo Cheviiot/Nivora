@@ -29,7 +29,8 @@ is_safe_package() {
 
 is_safe_phase() {
     case "$1" in
-    detect-version | prepare-worktree | update-recipe | pin-upstream-commit | \
+    detect-version | prepare-worktree | check-sources | update-recipe | \
+        pin-upstream-commit | \
         sync-catalog | static-checks | clean-build | verify-artifact | \
         no-update-diff | pin-source-fingerprint)
         return 0

@@ -10,7 +10,6 @@ readonly -a PACKAGES=(
     distroshelf
     github-desktop
     happ
-    nivora-cli
     parsec
     pineconemc
     tailscale
@@ -328,6 +327,36 @@ latest_chatgpt() {
     rmdir "$temp_dir"
 }
 
+upstream_source_published() {
+    local url="$1"
+    local headers status
+    headers="$(
+        curl --retry 3 --retry-delay 2 --retry-all-errors \
+            --connect-timeout 30 --max-time 120 -sSIL "$url" 2>/dev/null
+    )" || return 1
+    status="$(
+        awk 'toupper($1) ~ /^HTTP/ { code = $2 } END { print code }' <<<"$headers"
+    )"
+    [[ "$status" =~ ^2[0-9][0-9]$ ]]
+}
+
+latest_telegram() {
+    local version
+    # The GitHub tag is only the announcement. The recipe downloads from
+    # td.telegram.org, which publishes tsetup.<version>.tar.xz separately and
+    # sometimes later. Reporting a version whose tarball is still missing
+    # wedges the updater on a 404 forever, so the download host has the last
+    # word here.
+    version="$(github_latest_release telegramdesktop/tdesktop)" || return
+    if upstream_source_published \
+        "https://td.telegram.org/tlinux/tsetup.${version}.tar.xz"; then
+        printf '%s\n' "$version"
+        return 0
+    fi
+    echo "package_updates: telegram ${version} is tagged upstream but tsetup.${version}.tar.xz is not published yet" >&2
+    current_version telegram
+}
+
 latest_version() {
     case "$1" in
     anidesk) latest_anidesk ;;
@@ -340,11 +369,10 @@ latest_version() {
         github_latest_release desktop/desktop | sed 's/^release-//'
         ;;
     happ) github_latest_release Happ-proxy/happ-desktop ;;
-    nivora-cli) current_version nivora-cli ;;
     parsec) latest_parsec ;;
     pineconemc) github_latest_release ElyPrismLauncher/Launcher ;;
     tailscale) latest_tailscale ;;
-    telegram) github_latest_release telegramdesktop/tdesktop ;;
+    telegram) latest_telegram ;;
     ventoy) github_latest_release ventoy/Ventoy ;;
     vesktop) github_latest_release Vencord/Vesktop ;;
     vintner) github_latest_release Cheviiot/vintner ;;

@@ -1,5 +1,5 @@
 name='vintner'
-version=0.5.0
+version='0.5.0'
 release=2
 summary='Cross compile with MSVC on Linux via Wine'
 summary_ru='Кросс-компиляция с MSVC на Linux через Wine'
@@ -10,8 +10,7 @@ homepage='https://github.com/Cheviiot/vintner'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux' 'debian' 'ubuntu' 'fedora' 'arch' 'opensuse' 'opensuse-leap' 'suse')
-incompatible_with=('alpine')
+compatible_with=('altlinux')
 disable_network=1
 
 license=('MIT')
@@ -29,13 +28,7 @@ auto_prov=0
 # build time. cabextract is only exercised by --with-dxsdk, but kept a
 # hard dep for the same reason msitools is: small, no heavy transitive
 # deps, and simpler than making package deps conditional on a flag.
-deps=()
-deps_debian=('wine' 'msitools' 'git' 'cabextract')
-deps_ubuntu=("${deps_debian[@]}")
-deps_fedora=('wine' 'msitools' 'git' 'cabextract')
-deps_arch=('wine' 'msitools' 'git' 'cabextract')
-deps_opensuse=('wine' 'msitools' 'git' 'cabextract')
-deps_altlinux=('wine' 'msitools' 'git' 'cabextract')
+deps=('wine' 'msitools' 'git' 'cabextract')
 
 build_deps=('binutils')
 

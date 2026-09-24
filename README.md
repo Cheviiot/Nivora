@@ -1,18 +1,18 @@
 <p align="center">
-  <img src=".github/assets/readme-hero.png" width="100%" alt="Nivora — независимый каталог Linux-приложений для Stapler">
+  <img src=".github/assets/readme-hero.png" width="100%" alt="Nivora — независимый каталог приложений для ALT Linux и Stapler">
 </p>
 
 <p align="center">
   <a href="https://stplr.dev/docs/intro/"><img src="https://img.shields.io/badge/Stapler-v0.1.1-8b5cf6?style=flat-square" alt="Stapler v0.1.1"></a>
-  <img src="https://img.shields.io/badge/packages-17-19bfc8?style=flat-square" alt="17 пакетов">
-  <img src="https://img.shields.io/badge/arch-amd64%20%7C%20arm64-52d99b?style=flat-square" alt="amd64 и arm64">
+  <img src="https://img.shields.io/badge/packages-16-19bfc8?style=flat-square" alt="16 пакетов">
+  <img src="https://img.shields.io/badge/ALT-p11%20%7C%20sisyphus-52d99b?style=flat-square" alt="ALT p11 и Sisyphus">
   <a href="https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/quality.yml?branch=main&amp;style=flat-square&amp;label=quality" alt="Статус CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-7188f5?style=flat-square" alt="MIT License"></a>
 </p>
 
 <p align="center">
-  Готовые рецепты десктопных приложений и системных инструментов,<br>
-  которых может не быть в стандартном репозитории вашего дистрибутива.
+  Готовые рецепты десктопных приложений и системных инструментов<br>
+  для ALT Linux, которых нет в штатных репозиториях дистрибутива.
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@
 </p>
 
 <!-- package-count -->
-<p align="center"><strong>17 пакетов</strong> · <strong>6 категорий</strong> · <code>amd64</code>, <code>arm64</code> и <code>all</code></p>
+<p align="center"><strong>16 пакетов</strong> · <strong>6 категорий</strong> · <code>ALT p11</code> и <code>ALT Sisyphus</code> · <code>amd64</code>, <code>arm64</code></p>
 
 > [!NOTE]
 > Nivora — независимый community-репозиторий. Он не является официальным
@@ -34,7 +34,7 @@
 
 | Прозрачные рецепты | Проверяемые загрузки | Честная совместимость |
 |:--|:--|:--|
-| Каждый `Staplerfile` открыт для аудита: источники, зависимости, hooks и состав пакета видны до установки. | Загружаемые файлы закреплены SHA-256; изменяемые upstream-источники дополнительно контролируются fingerprint. | Матрица различает доказанную, частичную, экспериментальную и неподдерживаемую конфигурации без завышенных обещаний. |
+| Каждый `Staplerfile` открыт для аудита: источники, зависимости, hooks и состав пакета видны до установки. | Загружаемые файлы закреплены SHA-256, изменяемые upstream-источники дополнительно контролируются fingerprint, а доступность каждого источника подтверждается до фиксации контрольной суммы. | Матрица различает доказанную, частичную и неподдерживаемую конфигурации по каждой паре «ветка ALT + архитектура», без завышенных обещаний. |
 
 ## ⚡ Быстрый старт
 
@@ -52,21 +52,18 @@ stplr info nivora/chatgpt
 sudo stplr install nivora/chatgpt
 ```
 
-Для коротких команд и интерактивного меню можно установить
-[Nivora CLI](nivora-cli/README.md):
-
-```bash
-sudo stplr install nivora/nivora-cli
-nv
-```
-
 Индекс обновляется только явной командой `sudo stplr refresh`. Nivora не
 полагается на неработающий в Stapler v0.1.1 параметр `autoPull`.
 
+Пять пакетов каталога — проприетарные (`chatgpt`, `claude`, `happ`, `parsec`,
+`yandex-music`). Они объявлены как `nonfree`, поэтому при интерактивной
+установке Stapler сначала показывает условия разработчика со ссылкой на
+оригинальный документ и не продолжает без вашего согласия.
+
 ## ◈ Каталог
 
-Нажмите на название приложения, чтобы открыть подробности. `all` означает,
-что пакет не содержит архитектурно-зависимых бинарников.
+Нажмите на название приложения, чтобы открыть подробности. Рядом с версией
+указаны архитектуры, которые объявляет рецепт.
 
 <!-- catalog:start -->
 ### Интернет, сеть и VPN
@@ -210,12 +207,7 @@ nv
       <code>1.5.2</code> · <code>amd64</code><br>
       <code>stplr install nivora/distroshelf</code>
     </td>
-    <td width="50%" valign="top">
-      <!-- package-card:nivora-cli -->
-      <img src=".github/assets/nivora.png" width="42" height="42" align="left" alt="Nivora CLI">&nbsp; <strong><a href="nivora-cli/README.md">Nivora CLI</a></strong><br>&nbsp; <sub>Компактная оболочка и меню для Stapler</sub><br><br>
-      <code>1.1.0</code> · <code>all</code><br>
-      <code>stplr install nivora/nivora-cli</code>
-    </td>
+    <td width="50%" valign="middle"><em>Инструменты для носителей и контейнеров.</em></td>
   </tr>
   <tr>
     <td width="50%" valign="top">
@@ -231,20 +223,23 @@ nv
 
 ## ◎ Совместимость
 
-Nivora тестирует релизный Stapler `v0.1.1` как обязательный контракт, а
-закреплённый commit `main` — как advisory canary для раннего обнаружения
-несовместимости.
+Nivora — репозиторий **только для ALT Linux**. Поддерживаются две ветки:
+`p11` и `Sisyphus`. Рецепты не содержат зависимостей других дистрибутивов, и
+`compatible_with` каждого пакета ограничен `altlinux`.
+
+Обязательный контракт — релизный Stapler `v0.1.1`; закреплённый commit `main`
+проверяется как advisory canary для раннего обнаружения несовместимости.
 
 | Уровень | Что означает |
 |:--|:--|
-| 🟢 `verified` | Нативные сборка, metadata, установка, безопасный smoke и удаление являются блокирующими проверками. |
-| 🔵 `partial` | Поддержка объявлена с явными ограничениями, но полный target lifecycle пока не блокирует изменения. |
-| 🟣 `experimental` | Best-effort конфигурация без доказанной поддержки пользовательского runtime. |
+| 🟢 `verified` | Сборка, metadata, установка, безопасный smoke и удаление выполняются блокирующими проверками в одноразовом контейнере этой ветки ALT. |
+| 🔵 `partial` | Поддержка объявлена с явными ограничениями, ячейка не является блокирующей проверкой. |
 | ⚫ `unsupported` | Цель исключается до сборки. |
 
-Сейчас `verified` присвоен только `nivora-cli` на Ubuntu 24.04 для нативных
-`amd64` и `arm64`. Все 17 пакетов блокирующе собираются в ALT Sisyphus на
-`x86_64`, но это не выдаётся за полный runtime-тест остальных систем.
+У GitHub нет ALT-раннера, поэтому все проверки выполняются в официальных
+контейнерах ALT на runner-е `x86_64`. Отсюда честная граница: `amd64` на обеих
+ветках — `verified`, а `aarch64` объявлен, но **не проверяется в CI** и
+собирается Stapler-ом на машине пользователя.
 
 Точные цели и ограничения каждого пакета находятся в
 [машиночитаемой матрице](.github/support-matrix.toml).
@@ -257,13 +252,20 @@ sudo stplr upgrade
 ```
 
 Рецепты сохраняют пользовательские конфигурации. Обычное обновление или
-удаление пакета не должно сбрасывать настройки либо принудительно завершать
+удаление пакета не сбрасывает настройки и не завершает принудительно
 пользовательскую сессию.
+
+Для пакетов с системными службами (`tailscale`, `happ`) это уточнено явно:
+служба включается **один раз**, при первой установке. Обновление не включает
+её заново, если вы её отключили, но перезапускает уже работающую, чтобы вы не
+остались на старом бинарнике. Пользовательские настройки вроде Tailscale
+operator тоже назначаются только при первой установке.
 
 ## ◉ Безопасность и доверие
 
 - Исходники рецептов и package hooks доступны для проверки до установки.
 - SHA-256 подтверждает целостность выбранной загрузки, но сам по себе не делает upstream доверенным.
+- Контрольная сумма фиксируется только после подтверждения, что источник действительно опубликован: Stapler v0.1.1 не проверяет HTTP-статус и иначе закрепил бы страницу ошибки как payload.
 - Проприетарные приложения остаются под лицензиями и условиями их разработчиков.
 - Проприетарные payload не публикуются в постоянных кэшах Nivora.
 - Успешный CI не является обещанием абсолютной безопасности или совместимости с любой системой.
@@ -284,9 +286,10 @@ sudo stplr upgrade
 ```bash
 .github/tools/run_checks.sh
 .github/tools/package_updates.sh check-all
-.github/tools/clean_build.sh --all
+.github/tools/check_source_availability.sh <package>
+NIVORA_ALT_BRANCH=sisyphus .github/tools/clean_build.sh --all
 .github/tools/verify_artifacts.sh --all
-.github/tools/test_package_lifecycle.sh
+NIVORA_ALT_BRANCH=sisyphus .github/tools/test_package_lifecycle.sh
 ```
 
 </details>

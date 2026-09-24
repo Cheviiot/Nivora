@@ -10,8 +10,7 @@ homepage='https://github.com/armbian/imager'
 maintainer='Armbian, Daniele Briguglio <superkali@armbian.com>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux' 'debian' 'ubuntu' 'fedora' 'arch' 'opensuse' 'opensuse-leap' 'suse')
-incompatible_with=('alpine')
+compatible_with=('altlinux')
 
 license=('GPL-2.0-or-later' 'MIT' 'CC-BY-4.0')
 
@@ -19,37 +18,18 @@ provides=()
 replaces=('armbian-imager')
 conflicts=()
 
-# auto_req covers the direct ELF dependencies on RPM targets: GTK 3,
+# auto_req covers the direct ELF dependencies: GTK 3,
 # WebKitGTK 4.1, JavaScriptCoreGTK 4.1, libsoup 3, GLib/GIO, D-Bus,
 # cairo, liblzma and the C/C++ runtimes. UDisks2, lsblk/findmnt and
 # xdg-open are subprocess or D-Bus integrations, so they remain explicit.
 auto_reqprov_method='dirty'
-auto_req=0
-auto_req_altlinux=1
-auto_req_fedora=1
-auto_req_opensuse=1
+auto_req=1
 auto_prov=0
 disable_network=1
 
-deps=()
-deps_debian=(
-	'libwebkit2gtk-4.1-0' 'libgtk-3-0' 'udisks2' 'util-linux' 'xdg-utils'
-)
-deps_ubuntu=("${deps_debian[@]}")
-deps_fedora=('webkit2gtk4.1' 'gtk3' 'udisks2' 'util-linux' 'xdg-utils')
-deps_arch=('webkit2gtk-4.1' 'gtk3' 'udisks2' 'util-linux' 'xdg-utils')
-deps_opensuse=(
-	'libwebkit2gtk-4_1-0' 'libgtk-3-0' 'udisks2' 'util-linux' 'xdg-utils'
-)
-deps_altlinux=('udisks2' 'util-linux' 'xdg-utils')
+deps=('udisks2' 'util-linux' 'xdg-utils')
 
 opt_deps=()
-opt_deps_debian=()
-opt_deps_ubuntu=()
-opt_deps_fedora=()
-opt_deps_arch=()
-opt_deps_opensuse=()
-opt_deps_altlinux=()
 
 build_deps=('binutils')
 

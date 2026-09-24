@@ -1,6 +1,9 @@
 # Участие в Nivora
 
 Проект принимает исправления рецептов, автоматизации и документации.
+Nivora упаковывает **только для ALT Linux** (ветки `p11` и `Sisyphus`).
+Зависимости и поля других дистрибутивов в рецепты не добавляются — validator
+их отклоняет.
 
 ## Среда разработки
 
@@ -13,7 +16,7 @@ distrobox create --name nivora-dev \
   --image registry.altlinux.org/alt/alt:sisyphus
 distrobox enter nivora-dev
 sudo apt-get update
-sudo apt-get install git-core bash python3 shellcheck curl
+sudo apt-get install git-core bash python3 shellcheck curl sqlite3 rpm-build
 ```
 
 Название контейнера — `nivora-dev`. Языковые зависимости держите локально в
@@ -25,9 +28,13 @@ sudo apt-get install git-core bash python3 shellcheck curl
 1. Проверьте официальное название, package ID, desktop-id и AppStream component-id.
 2. Найдите официальный HTTPS-источник для каждой архитектуры.
 3. Уточните лицензию и возможность переупаковки.
-4. Сверьте зависимости на поддерживаемых дистрибутивах.
-5. Для проприетарного приложения подтвердите право пользователя скачать
-   официальный артефакт напрямую: Nivora не зеркалирует такой payload.
+4. Сверьте каждое имя зависимости в обеих ветках ALT
+   (`apt-cache policy <имя>` на p11 и в контейнере Sisyphus), а SONAME
+   payload — через `apt-cache showpkg 'libfoo.so.N()(64bit)'`.
+5. Убедитесь, что источник версии и источник загрузки — один и тот же хост.
+6. Для проприетарного приложения подтвердите право пользователя скачать
+   официальный артефакт напрямую: Nivora не зеркалирует такой payload, а сам
+   рецепт объявляет `nonfree=1` с `nonfree_url`.
 
 ## Требования к пакету
 
@@ -36,15 +43,25 @@ sudo apt-get install git-core bash python3 shellcheck curl
 - Скачиваемые sources привязаны к версии и защищены SHA-256.
 - `local:///`-файлы присутствуют в каталоге, а скрипты имеют executable bit.
 - `provides`, `replaces` и `conflicts` описывают package names, а не имена бинарников или desktop-id.
-- Lifecycle-скрипты идемпотентны и не удаляют пользовательские данные.
+- Зависимости лежат в базовых `deps`/`opt_deps`/`build_deps`; ветку уточняют
+  только `deps_altlinux_p11`/`deps_altlinux_sisyphus`, и каждый override
+  содержит полный список, потому что он заменяет базовый, а не дополняет его.
+- Альтернатив (`'a | b'`, `'(a or b)'`) нет ни в одном поле зависимостей:
+  ALT `apt-rpm` их не разбирает.
+- Lifecycle-скрипты идемпотентны и не удаляют пользовательские данные. Хуки
+  различают первую установку и обновление по `$1` в `%post`: сервис включается
+  один раз, при обновлении используется `try-restart`.
 - `files()` описывает весь payload и не захватывает чужие пути.
 
 ## Проверка
 
 ```bash
 .github/tools/run_checks.sh
+.github/tools/check_source_availability.sh package
 stplr-spec verify-checksums --path package/Staplerfile
-.github/tools/clean_build.sh package
+NIVORA_ALT_BRANCH=sisyphus .github/tools/clean_build.sh package
+NIVORA_ALT_BRANCH=p11 .github/tools/clean_build.sh package
+NIVORA_LIFECYCLE_PACKAGES=package .github/tools/test_package_lifecycle.sh
 ```
 
 Обязательный Stapler lane использует release `v0.1.1`. Отдельный canary
@@ -57,8 +74,8 @@ CI может исполнять только код из текущей раб�
 release tokens или другие секреты; такой код не запускается в привилегированном
 контексте с секретами. Загрузки, логи и diff считаются недоверенными данными.
 
-Для изменения package ID нужны отдельные DEB/RPM-тесты замены и проверка
-сохранности данных.
+Для изменения package ID нужны отдельные RPM-тесты замены в обеих ветках ALT
+и проверка сохранности данных.
 
 ## Временные обходы Stapler
 

@@ -80,12 +80,13 @@ jobs:
           fi
 
   stable:
-    name: post-push stable · ${{ matrix.package }}
+    name: post-push stable ALT ${{ matrix.branch }} · ${{ matrix.package }}
     needs: plan
     if: ${{ needs.plan.outputs.has_packages == 'true' }}
     strategy:
       fail-fast: false
       matrix:
+        branch: [p11, sisyphus]
         package: ${{ fromJSON(needs.plan.outputs.packages) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
@@ -101,14 +102,17 @@ jobs:
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: rpm cpio
+          system-packages: rpm cpio sqlite3
 
       - name: Собрать и проверить stable v0.1.1
         env:
           NIVORA_STPLR_CHANNEL: stable
+          NIVORA_ALT_BRANCH: ${{ matrix.branch }}
+          NIVORA_LIFECYCLE_PACKAGES: ${{ matrix.package }}
         run: |
           .github/tools/clean_build.sh "${{ matrix.package }}"
           .github/tools/verify_artifacts.sh "${{ matrix.package }}"
+          .github/tools/test_package_lifecycle.sh
 
   reconcile:
     name: Управление паузой updater

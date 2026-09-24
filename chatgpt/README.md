@@ -41,13 +41,11 @@ Linux-порта.
 только checksum самого DEB, но и fingerprint его HTTP ETag; почасовой updater
 проверяет его даже при неизменной версии и при замене payload повышает `release`.
 
-На RPM-целях (`ALT`, Fedora, openSUSE) `auto_req=1` включается отдельными
-distro-overrides и вычисляет зависимости по фактическому `DT_NEEDED`.
-Для DEB/Arch автоматический finder Stapler v0.1.1 не выдаёт переносимых
-имён пакетов, поэтому там используются явные `deps_*`. `auto_prov=0` на
-всех целях: dirty finder Stapler v0.1.1 не вычисляет provides. Библиотеки,
-которые Chromium загружает через `dlopen` (`libnotify`, `libsecret`,
-`libXtst`, `libXScrnSaver`), остаются явными зависимостями.
+`auto_req=1` вычисляет зависимости по фактическому `DT_NEEDED` payload.
+`auto_prov=0`: пакет несёт собственный Electron-рантайм, и объявлять его
+библиотеки на всю систему нельзя. Библиотеки, которые Chromium загружает
+через `dlopen` (`libnotify`, `libsecret`, `libXtst`, `libXScrnSaver`),
+DT_NEEDED не содержит, поэтому они остаются явными зависимостями.
 
 Приложение не содержит setuid-бинарника `chrome-sandbox` — вместо этого
 собственный профиль AppArmor (`/etc/apparmor.d/chatgpt`) разрешает

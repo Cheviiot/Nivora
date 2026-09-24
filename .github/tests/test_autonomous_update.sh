@@ -35,6 +35,14 @@ for tool in sync_readme_versions.py run_checks.sh clean_build.sh verify_artifact
         "$tool" "$fixture/later-phases" >"$fixture/repo/.github/tools/$tool"
     chmod 0755 "$fixture/repo/.github/tools/$tool"
 done
+# The source gate runs before anything touches the recipe. It is stubbed as a
+# switch so the test can drive both outcomes.
+cat >"$fixture/repo/.github/tools/check_source_availability.sh" <<EOF
+#!/bin/bash
+printf 'check-sources %s %s\n' "\$1" "\$2" >>'$fixture/source-gate'
+exit "\${SOURCE_GATE_EXIT:-0}"
+EOF
+chmod 0755 "$fixture/repo/.github/tools/check_source_availability.sh"
 cat >"$fixture/bin/stplr-spec" <<EOF
 #!/bin/bash
 printf 'stplr-spec failed\n' >>'$fixture/first-phase'
@@ -110,4 +118,17 @@ UPDATE_PLAN_JSON="{\"parsec\":{\"current\":\"1\",\"latest\":\"1\",\"fingerprints
 grep -Fxq $'parsec\tupdate-recipe' "$fixture/raced-results/failed-packages"
 test ! -s "$fixture/raced-results/parsec/failed.patch"
 
-echo 'OK: updater fail-fast и отклоняет mutable-source race'
+SOURCE_GATE_EXIT=1 \
+PATH="$fixture/bin:$PATH" \
+STPLR_SPEC_COMMAND="$fixture/bin/stplr-spec" \
+RUNNER_TEMP="$fixture/runner" \
+AUTONOMOUS_UPDATE_RESULTS_DIR="$fixture/unpublished-results" \
+UPDATE_PLAN_JSON='{"demo":{"current":"1","latest":"2","fingerprints":{}}}' \
+    "$fixture/repo/.github/tools/autonomous_package_updates.sh" demo
+
+grep -Fxq 'phase=check-sources' "$fixture/unpublished-results/demo/FAILED"
+grep -Fxq $'demo\tcheck-sources' "$fixture/unpublished-results/failed-packages"
+test ! -s "$fixture/unpublished-results/demo/failed.patch"
+grep -Fxq 'check-sources demo 2' "$fixture/source-gate"
+
+echo 'OK: updater fail-fast, отклоняет mutable-source race и неопубликованный источник'

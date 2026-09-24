@@ -1,5 +1,5 @@
 name='vesktop'
-version=1.6.7
+version='1.6.7'
 release=3
 summary='Unofficial Discord desktop client with better Linux support'
 summary_ru='Неофициальный десктопный клиент Discord с улучшенной поддержкой Linux'
@@ -10,7 +10,7 @@ homepage='https://vencord.dev/'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64' 'arm64')
-incompatible_with=('alpine')
+compatible_with=('altlinux')
 
 license=('GPL-3.0-or-later')
 
@@ -19,10 +19,7 @@ replaces=('vesktop')
 conflicts=()
 
 auto_reqprov_method="dirty"
-auto_req=0
-auto_req_altlinux=1
-auto_req_fedora=1
-auto_req_opensuse=1
+auto_req=1
 auto_prov=0
 disable_network=1
 
@@ -41,29 +38,11 @@ disable_network=1
 # gracefully instead of hard-failing when one is missing - but Nivora wants
 # the real functionality (notifications, screensaver inhibition, global
 # shortcuts, keyring), not the degraded fallback, so they stay hard deps.
-deps=()
-deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'libxss1' 'libxtst6' 'xdg-utils' 'libatspi2.0-0' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2t64 | libasound2')
-deps_ubuntu=("${deps_debian[@]}")
-deps_fedora=('gtk3' 'libnotify' 'nss' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'at-spi2-core' 'libuuid' 'libsecret' 'mesa-libgbm' 'alsa-lib')
-deps_arch=('gtk3' 'libnotify' 'nss' 'libxss' 'libxtst' 'xdg-utils' 'at-spi2-core' 'util-linux-libs' 'libsecret' 'libgbm' 'alsa-lib')
-deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'libXss1' 'libXtst6' 'xdg-utils' 'at-spi2-core' 'libuuid1' 'libsecret-1-0' 'libgbm1' 'libasound2')
-deps_altlinux=('libnotify' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libuuid' 'libsecret')
+deps=('libnotify' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libuuid' 'libsecret')
 
-opt_deps=()
-opt_deps_debian=('libayatana-appindicator3-1 | libappindicator3-1' 'gnome-keyring | kwalletd6 | kwalletd5')
-opt_deps_ubuntu=("${opt_deps_debian[@]}")
-opt_deps_fedora=('libappindicator-gtk3' 'gnome-keyring' 'kwallet')
-opt_deps_arch=('libappindicator-gtk3' 'gnome-keyring' 'kwallet')
-opt_deps_opensuse=('libappindicator3-1' 'gnome-keyring' 'kwallet6')
-opt_deps_altlinux=('libappindicator-gtk3' 'gnome-keyring')
+opt_deps=('libappindicator-gtk3' 'gnome-keyring')
 
 build_deps=('binutils')
-build_deps_debian=('binutils')
-build_deps_ubuntu=("${build_deps_debian[@]}")
-build_deps_fedora=('binutils')
-build_deps_arch=('binutils')
-build_deps_opensuse=('binutils')
-build_deps_altlinux=('binutils')
 
 sources=(
 	"https://github.com/Vencord/Vesktop/releases/download/v${version}/vesktop_${version}_amd64.deb?~archive=false&~name=vesktop.deb"

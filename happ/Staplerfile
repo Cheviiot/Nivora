@@ -1,5 +1,5 @@
 name='happ'
-version=4.3.0
+version='4.3.0'
 release=1
 summary='User-friendly GUI proxy client for xray-core'
 summary_ru='Удобный GUI-прокси-клиент для xray-core'
@@ -10,8 +10,7 @@ homepage='https://happ.su/'
 maintainer='FlyFrog LLC <support@happ.su>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux' 'debian' 'ubuntu' 'fedora' 'arch' 'opensuse' 'opensuse-leap' 'suse')
-incompatible_with=('alpine')
+compatible_with=('altlinux')
 disable_network=1
 
 license=('Custom')
@@ -34,27 +33,12 @@ conflicts=()
 # earlier, fixed by keeping just this one entry instead of reverting
 # the whole package to explicit deps.
 auto_reqprov_method='dirty'
-auto_req=0
-auto_req_altlinux=1
-auto_req_fedora=1
-auto_req_opensuse=1
+auto_req=1
 auto_prov=0
 
-deps=()
-deps_debian=('libc6' 'libssl3 | libssl3t64')
-deps_ubuntu=('libc6' 'libssl3 | libssl3t64')
-deps_fedora=('glibc' 'openssl-libs')
-deps_arch=('glibc' 'openssl')
-deps_opensuse=('glibc' 'libopenssl3')
-deps_altlinux=('libssl3')
+deps=('libssl3')
 
-build_deps=('binutils')
-build_deps_debian=('binutils' 'python3')
-build_deps_ubuntu=("${build_deps_debian[@]}")
-build_deps_fedora=('binutils' 'python3')
-build_deps_arch=('binutils' 'python')
-build_deps_opensuse=('binutils' 'python3')
-build_deps_altlinux=('binutils' 'python3')
+build_deps=('binutils' 'python3')
 
 sources=(
 	"https://github.com/Happ-proxy/happ-desktop/releases/download/${version}/Happ.linux.x64.deb?~archive=false&~name=happ.deb"
@@ -126,7 +110,6 @@ import zlib
 from pathlib import Path
 
 PNG_SIG = b"\x89PNG\r\n\x1a\n"
-
 
 def read_png(path):
     data = Path(path).read_bytes()
@@ -211,7 +194,6 @@ def read_png(path):
 
     return width, height, pixels
 
-
 def write_png(path, width, height, pixels):
     def chunk(chunk_type, payload):
         crc = zlib.crc32(chunk_type + payload) & 0xFFFFFFFF
@@ -229,7 +211,6 @@ def write_png(path, width, height, pixels):
         PNG_SIG + chunk(b"IHDR", ihdr) + chunk(b"IDAT", zlib.compress(bytes(raw), 9))
         + chunk(b"IEND", b"")
     )
-
 
 def rounded_rect_coverage(px, py, size, margin, radius, samples=4):
     covered = 0
@@ -249,7 +230,6 @@ def rounded_rect_coverage(px, py, size, margin, radius, samples=4):
 
     return covered / (samples * samples)
 
-
 def sample_alpha(alpha, x, y):
     height = len(alpha)
     width = len(alpha[0])
@@ -266,7 +246,6 @@ def sample_alpha(alpha, x, y):
     top = alpha[y0][x0] * (1 - dx) + alpha[y0][x1] * dx
     bottom = alpha[y1][x0] * (1 - dx) + alpha[y1][x1] * dx
     return top * (1 - dy) + bottom * dy
-
 
 src_path, dest_path = sys.argv[1], sys.argv[2]
 src_width, src_height, source = read_png(src_path)

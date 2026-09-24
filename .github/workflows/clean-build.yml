@@ -8,6 +8,12 @@ on:
         required: true
         default: all
         type: string
+      branch:
+        description: "Ветка ALT"
+        required: true
+        default: sisyphus
+        type: choice
+        options: [sisyphus, p11]
 
 permissions:
   contents: read
@@ -28,22 +34,27 @@ jobs:
     steps:
       - name: Получить репозиторий
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: rpm cpio
+          system-packages: rpm cpio sqlite3
 
       - name: Собрать пакеты
         env:
           REQUESTED_PACKAGES: ${{ inputs.packages }}
+          NIVORA_ALT_BRANCH: ${{ inputs.branch }}
         run: |
           if [[ "$REQUESTED_PACKAGES" == all ]]; then
             .github/tools/clean_build.sh --all
             .github/tools/verify_artifacts.sh --all
-            NIVORA_DEB_BUILD_MODE=host .github/tools/test_package_lifecycle.sh
+            .github/tools/test_package_lifecycle.sh
           else
             read -r -a packages <<<"$REQUESTED_PACKAGES"
             .github/tools/clean_build.sh "${packages[@]}"
             .github/tools/verify_artifacts.sh "${packages[@]}"
+            NIVORA_LIFECYCLE_PACKAGES="$(IFS=,; echo "${packages[*]}")" \
+              .github/tools/test_package_lifecycle.sh
           fi

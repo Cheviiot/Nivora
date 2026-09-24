@@ -32,7 +32,6 @@ jobs:
       packages: ${{ steps.plan.outputs.packages }}
       has_packages: ${{ steps.plan.outputs.has_packages }}
       full: ${{ steps.plan.outputs.full }}
-      verified_targets: ${{ steps.targets.outputs.targets }}
     steps:
       - name: Получить репозиторий
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -70,20 +69,18 @@ jobs:
               --github-output "$GITHUB_OUTPUT"
           fi
 
-      - name: Сформировать обязательный native lifecycle план
-        id: targets
-        run: .github/tools/target_plan.py --github-output "$GITHUB_OUTPUT"
-
-  stable:
-    name: stable v0.1.1 ALT x86_64/noarch · ${{ matrix.package }}
+  alt:
+    name: stable v0.1.1 ALT ${{ matrix.branch }} · ${{ matrix.package }}
     needs: plan
     if: ${{ needs.plan.outputs.has_packages == 'true' }}
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
+        branch: [p11, sisyphus]
         package: ${{ fromJSON(needs.plan.outputs.packages) }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - name: Получить репозиторий
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -93,17 +90,28 @@ jobs:
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: rpm cpio
+          system-packages: rpm cpio sqlite3
 
-      - name: Собрать и проверить stable
+      # Build, package metadata, install, safe smoke and remove all run against
+      # the same disposable container of the branch under test. GitHub has no
+      # ALT runner, so the container is the only honest place to gate this.
+      - name: Собрать и проверить артефакт
         env:
           NIVORA_STPLR_CHANNEL: stable
+          NIVORA_ALT_BRANCH: ${{ matrix.branch }}
         run: |
           .github/tools/clean_build.sh "${{ matrix.package }}"
           .github/tools/verify_artifacts.sh "${{ matrix.package }}"
 
+      - name: Проверить install/upgrade/remove
+        env:
+          NIVORA_STPLR_CHANNEL: stable
+          NIVORA_ALT_BRANCH: ${{ matrix.branch }}
+          NIVORA_LIFECYCLE_PACKAGES: ${{ matrix.package }}
+        run: .github/tools/test_package_lifecycle.sh
+
   main-canary:
-    name: advisory main ALT x86_64/noarch · ${{ matrix.package }}
+    name: advisory main ALT sisyphus · ${{ matrix.package }}
     needs: plan
     if: ${{ needs.plan.outputs.has_packages == 'true' }}
     continue-on-error: true
@@ -127,6 +135,7 @@ jobs:
       - name: Собрать и проверить pinned main
         env:
           NIVORA_STPLR_CHANNEL: main
+          NIVORA_ALT_BRANCH: sisyphus
         run: |
           .github/tools/clean_build.sh "${{ matrix.package }}"
           .github/tools/verify_artifacts.sh "${{ matrix.package }}"
@@ -136,39 +145,3 @@ jobs:
         run: >-
           echo 'Pinned Stapler main canary is advisory; stable v0.1.1 remains the gate.'
           >>"$GITHUB_STEP_SUMMARY"
-
-  target-lifecycle:
-    name: stable v0.1.1 ${{ matrix.target }}/${{ matrix.architecture }} · ${{ matrix.package }}
-    needs: plan
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      max-parallel: 2
-      matrix:
-        include: ${{ fromJSON(needs.plan.outputs.verified_targets) }}
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 120
-    steps:
-      - name: Получить репозиторий без сохранения credentials
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          persist-credentials: false
-
-      - name: Подготовить закреплённый toolchain
-        uses: ./.github/actions/setup-stplr-spec
-        with:
-          system-packages: binutils
-
-      - name: Подготовить stable Stapler
-        env:
-          NIVORA_STPLR_CHANNEL: stable
-        run: .github/tools/prepare_stplr.sh "$RUNNER_TEMP/bin/stplr"
-
-      - name: Собрать, установить, проверить и удалить пакет
-        env:
-          TARGET_ID: ${{ matrix.target }}
-          PACKAGE: ${{ matrix.package }}
-          EXPECTED_ARCH: ${{ matrix.architecture }}
-          STPLR_PATH: ${{ runner.temp }}/bin/stplr
-        run: .github/tools/target_lifecycle.sh

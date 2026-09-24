@@ -42,18 +42,234 @@ class ParserTests(unittest.TestCase):
             VALIDATOR.expanded_architectures(["all"]), ["amd64", "arm64"]
         )
 
-    def test_support_groups_expand_by_target(self):
-        package = {
-            "support": [
-                {
-                    "targets": ["one", "two"],
-                    "tier": "partial",
-                    "caveats": ["runtime"],
-                }
-            ]
-        }
+    def test_only_alt_targets_are_approved(self):
+        self.assertEqual(VALIDATOR.EXPECTED_TARGETS, {"alt-p11", "alt-sisyphus"})
+        self.assertNotIn("experimental", VALIDATOR.SUPPORTED_TIERS)
+
+
+class SupportMatrixTests(unittest.TestCase):
+    MATRIX = """schema_version = 2
+
+[stapler]
+stable_version = "0.1.1"
+stable_commit = "{sha}"
+main_commit = "{sha}"
+
+[images]
+alt_p11 = "registry.example/p11@sha256:{digest}"
+alt_sisyphus = "registry.example/sisyphus@sha256:{digest}"
+
+[expectations]
+package_count = 1
+target_count = 2
+logical_runtime_cells = {logical}
+declared_supported_runtime_cells = {supported}
+verified_runtime_cells = {verified}
+blocking_ci_build_cells_full_common_change = 2
+advisory_main_build_cells_full_common_change = 1
+
+[[targets]]
+id = "alt-p11"
+distro = "altlinux"
+ci_mode = "blocking-lifecycle"
+gated_architectures = ["amd64"]
+
+[[targets]]
+id = "alt-sisyphus"
+distro = "altlinux"
+ci_mode = "blocking-lifecycle"
+gated_architectures = ["amd64"]
+
+[[packages]]
+id = "demo"
+architectures = ["amd64", "arm64"]
+support = [
+{support}
+]
+"""
+
+    def render(self, support, logical=4, supported=4, verified=2):
+        return self.MATRIX.format(
+            sha="0" * 40,
+            digest="a" * 64,
+            support=support,
+            logical=logical,
+            supported=supported,
+            verified=verified,
+        )
+
+    def run_validator(self, body):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".github/workflows").mkdir(parents=True)
+            (root / ".github/support-matrix.toml").write_text(body, encoding="utf-8")
+            (root / ".github/workflows/package-ci.yml").write_text(
+                "\n".join(
+                    (
+                        ".github/tools/clean_build.sh",
+                        ".github/tools/verify_artifacts.sh",
+                        ".github/tools/test_package_lifecycle.sh",
+                    )
+                ),
+                encoding="utf-8",
+            )
+            old_root = VALIDATOR.ROOT
+            old_packages = VALIDATOR.EXPECTED_PACKAGES
+            VALIDATOR.ROOT = root
+            VALIDATOR.EXPECTED_PACKAGES = ("demo",)
+            try:
+                errors = []
+                VALIDATOR.load_support_matrix(errors)
+                return errors
+            finally:
+                VALIDATOR.ROOT = old_root
+                VALIDATOR.EXPECTED_PACKAGES = old_packages
+
+    def test_gated_amd64_and_ungated_arm64_are_accepted(self):
+        support = (
+            '  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], '
+            'tier = "verified", caveats = [] },\n'
+            '  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], '
+            'tier = "partial", caveats = ["arm64-not-gated"] },'
+        )
+        self.assertEqual(self.run_validator(self.render(support)), [])
+
+    def test_verified_is_rejected_for_an_ungated_architecture(self):
+        support = (
+            '  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64", "arm64"], '
+            'tier = "verified", caveats = [] },'
+        )
+        errors = self.run_validator(self.render(support, verified=4))
+        self.assertTrue(
+            any("is not gated" in error for error in errors), errors
+        )
+
+    def test_missing_cell_is_reported(self):
+        support = (
+            '  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], '
+            'tier = "verified", caveats = [] },'
+        )
+        errors = self.run_validator(self.render(support, logical=2, supported=2))
+        self.assertTrue(
+            any("must occur exactly once" in error for error in errors), errors
+        )
+
+
+class UpdaterListTests(unittest.TestCase):
+    def write_updater(self, root, packages):
+        tools = root / ".github/tools"
+        tools.mkdir(parents=True)
+        body = ["readonly -a PACKAGES=("]
+        body += [f"    {name}" for name in packages]
+        body.append(")")
+        body.append("latest_version() {")
+        body.append("    case \"$1\" in")
+        body += [f"    {name}) true ;;" for name in packages]
+        body.append("    esac")
+        body.append("}")
+        (tools / "package_updates.sh").write_text(
+            "\n".join(body) + "\n", encoding="utf-8"
+        )
+
+    def run_validator(self, packages, expected):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_updater(root, packages)
+            old_root = VALIDATOR.ROOT
+            old_packages = VALIDATOR.EXPECTED_PACKAGES
+            VALIDATOR.ROOT = root
+            VALIDATOR.EXPECTED_PACKAGES = expected
+            try:
+                errors = []
+                VALIDATOR.validate_updater_package_list(errors)
+                return errors
+            finally:
+                VALIDATOR.ROOT = old_root
+                VALIDATOR.EXPECTED_PACKAGES = old_packages
+
+    def test_matching_list_is_accepted(self):
         self.assertEqual(
-            set(VALIDATOR.support_by_target(package)), {"one", "two"}
+            self.run_validator(("alpha", "beta"), ("alpha", "beta")), []
+        )
+
+    def test_forgotten_package_is_reported(self):
+        errors = self.run_validator(("alpha",), ("alpha", "beta"))
+        self.assertTrue(
+            any("PACKAGES differs" in error for error in errors), errors
+        )
+
+    def test_missing_detection_branch_is_reported(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            tools = root / ".github/tools"
+            tools.mkdir(parents=True)
+            (tools / "package_updates.sh").write_text(
+                "readonly -a PACKAGES=(\n    alpha\n)\n", encoding="utf-8"
+            )
+            old_root = VALIDATOR.ROOT
+            old_packages = VALIDATOR.EXPECTED_PACKAGES
+            VALIDATOR.ROOT = root
+            VALIDATOR.EXPECTED_PACKAGES = ("alpha",)
+            try:
+                errors = []
+                VALIDATOR.validate_updater_package_list(errors)
+            finally:
+                VALIDATOR.ROOT = old_root
+                VALIDATOR.EXPECTED_PACKAGES = old_packages
+        self.assertTrue(
+            any("no branch for alpha" in error for error in errors), errors
+        )
+
+
+class RecipeStyleTests(unittest.TestCase):
+    RECIPE = """name='demo'
+version={version}
+release=1
+architectures=('amd64')
+compatible_with=('altlinux')
+maintainer='Demo <demo@example.invalid>'
+provides=()
+replaces=('demo')
+conflicts=()
+auto_reqprov_method='dirty'
+auto_req=0
+auto_prov=0
+disable_network=1
+deps=()
+sources=()
+checksums=()
+package() {{ :; }}
+files() {{ :; }}
+"""
+
+    def validate(self, version):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "demo").mkdir()
+            (root / "demo/Staplerfile").write_text(
+                self.RECIPE.format(version=version), encoding="utf-8"
+            )
+            old_root = VALIDATOR.ROOT
+            VALIDATOR.ROOT = root
+            try:
+                errors = []
+                VALIDATOR.validate_package(
+                    "demo", errors, {"architectures": ["amd64"]}
+                )
+                return errors
+            finally:
+                VALIDATOR.ROOT = old_root
+
+    def test_quoted_version_is_accepted(self):
+        errors = self.validate("'1.2.3'")
+        self.assertFalse(
+            any("single-quoted" in error for error in errors), errors
+        )
+
+    def test_unquoted_version_is_rejected(self):
+        errors = self.validate("1.2.3")
+        self.assertTrue(
+            any("single-quoted" in error for error in errors), errors
         )
 
 
@@ -188,7 +404,7 @@ class WorkflowTests(unittest.TestCase):
             finally:
                 VALIDATOR.ROOT = old_root
 
-    def test_github_desktop_dispatch_and_fallback_match_recipe(self):
+    def test_github_desktop_workflow_rejects_hardcoded_versions(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             workflow_dir = root / ".github/workflows"
@@ -199,8 +415,9 @@ class WorkflowTests(unittest.TestCase):
   workflow_dispatch:
     inputs:
       version:
-        default: \"3.6.5\"
-value: ${{ inputs.version || '3.6.5' }}
+        required: true
+        type: string
+value: ${{ inputs.version }}
 """,
                 encoding="utf-8",
             )
@@ -208,20 +425,41 @@ value: ${{ inputs.version || '3.6.5' }}
             VALIDATOR.ROOT = root
             try:
                 errors = []
-                VALIDATOR.validate_github_desktop_workflow(
-                    {"github-desktop": {"version": "3.6.5"}}, errors
-                )
+                VALIDATOR.validate_github_desktop_workflow(errors)
                 self.assertEqual(errors, [])
 
                 workflow.write_text(
-                    workflow.read_text(encoding="utf-8").replace("3.6.5", "3.6.3"),
+                    """on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        default: "3.6.5"
+        type: string
+value: ${{ inputs.version || '3.6.5' }}
+""",
                     encoding="utf-8",
                 )
                 errors = []
-                VALIDATOR.validate_github_desktop_workflow(
-                    {"github-desktop": {"version": "3.6.5"}}, errors
-                )
+                VALIDATOR.validate_github_desktop_workflow(errors)
                 self.assertEqual(len(errors), 2)
+
+                workflow.write_text(
+                    """on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        type: string
+env:
+  VERSION: 3.6.5
+""",
+                    encoding="utf-8",
+                )
+                errors = []
+                VALIDATOR.validate_github_desktop_workflow(errors)
+                self.assertEqual(len(errors), 1)
+                self.assertIn("3.6.5", errors[0])
             finally:
                 VALIDATOR.ROOT = old_root
 

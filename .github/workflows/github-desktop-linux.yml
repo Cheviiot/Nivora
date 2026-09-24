@@ -21,7 +21,6 @@ on:
       version:
         description: "Версия desktop/desktop без префикса release-"
         required: true
-        default: "3.6.5"
         type: string
       publish:
         description: "Опубликовать tar.gz в GitHub Release Nivora"
@@ -33,7 +32,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: nivora-github-desktop-linux-${{ inputs.version || '3.6.5' }}
+  group: nivora-github-desktop-linux-${{ inputs.version }}
   cancel-in-progress: false
 
 defaults:
@@ -53,7 +52,7 @@ jobs:
       - name: Разрешить release tag ровно один раз
         id: pin
         env:
-          VERSION: ${{ inputs.version || '3.6.5' }}
+          VERSION: ${{ inputs.version }}
         run: |
           commit="$({
             git ls-remote https://github.com/desktop/desktop.git \
@@ -131,7 +130,7 @@ jobs:
       - name: Упаковать Linux-сборку
         env:
           ARCH: ${{ matrix.arch }}
-          VERSION: ${{ inputs.version || '3.6.5' }}
+          VERSION: ${{ inputs.version }}
         run: |
           dist="github-desktop/dist/desktop-linux-${ARCH}"
           test -x "${dist}/desktop"
@@ -155,8 +154,8 @@ jobs:
       - name: Сохранить артефакт
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: github-desktop-${{ inputs.version || '3.6.5' }}-linux-${{ matrix.arch }}
-          path: github-desktop-${{ inputs.version || '3.6.5' }}-linux-${{ matrix.arch }}.tar.gz
+          name: github-desktop-${{ inputs.version }}-linux-${{ matrix.arch }}
+          path: github-desktop-${{ inputs.version }}-linux-${{ matrix.arch }}.tar.gz
           if-no-files-found: error
           retention-days: 14
 
@@ -172,13 +171,13 @@ jobs:
       - name: Скачать обе архитектуры
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          pattern: github-desktop-${{ inputs.version || '3.6.5' }}-linux-*
+          pattern: github-desktop-${{ inputs.version }}-linux-*
           merge-multiple: true
 
       - name: Создать контрольные суммы
         env:
           EXPECTED_COMMIT: ${{ needs.resolve.outputs.commit }}
-          VERSION: ${{ inputs.version || '3.6.5' }}
+          VERSION: ${{ inputs.version }}
         run: |
           artifacts=(github-desktop-*.tar.gz)
           [[ "${#artifacts[@]}" -eq 2 ]]
@@ -194,7 +193,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          VERSION: ${{ inputs.version || '3.6.5' }}
+          VERSION: ${{ inputs.version }}
         run: |
           tag="github-desktop-${VERSION}-linux"
           if ! gh release view "$tag" >/dev/null 2>&1; then

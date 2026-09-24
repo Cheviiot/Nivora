@@ -1,6 +1,6 @@
 name='parsec'
 version='150-104a'
-release=7
+release=8
 # SHA-256 of the final HTTP ETag for the mutable versionless upstream DEB.
 source_fingerprint='1bdf98c2922f6cb3fbab46afd9a5609f6fae2b2136d3b573c6589b83b364ce37'
 summary='Low-latency remote desktop and game streaming client'
@@ -12,8 +12,7 @@ homepage='https://parsec.app/downloads'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64')
-compatible_with=('altlinux' 'debian' 'ubuntu' 'fedora' 'arch' 'opensuse' 'opensuse-leap' 'suse')
-incompatible_with=('alpine')
+compatible_with=('altlinux')
 disable_network=1
 
 license=('Custom')
@@ -29,18 +28,12 @@ auto_reqprov_method="dirty"
 auto_req=0
 auto_prov=0
 
-deps=()
-deps_debian=('libc6' 'libgcc-s1 | libgcc1' 'libstdc++6' 'libudev1' 'libssl3 | libssl1.1' 'libx11-6' 'libxcursor1' 'libxi6' 'libsm6' 'libgl1' 'libasound2t64 | libasound2' 'libjpeg8 | libjpeg-turbo8' 'libpng16-16' 'libcurl4' 'libavcodec61 | libavcodec60 | libavcodec59 | libavcodec58 | libavcodec57' 'libxrandr2' 'libvulkan1')
-deps_ubuntu=("${deps_debian[@]}")
-deps_fedora=('glibc' 'libgcc' 'libstdc++' 'systemd-libs' 'openssl-libs' 'libX11' 'libXcursor' 'libXi' 'libSM' 'mesa-libGL' 'alsa-lib' 'libjpeg-turbo' 'libpng' 'libcurl' 'ffmpeg-libs' 'libXrandr' 'vulkan-loader')
-deps_arch=('glibc' 'gcc-libs' 'systemd-libs' 'openssl' 'libx11' 'libxcursor' 'libxi' 'libsm' 'libglvnd' 'alsa-lib' 'libjpeg-turbo' 'libpng' 'curl' 'ffmpeg' 'libxrandr' 'vulkan-icd-loader')
-deps_opensuse=('glibc' 'libgcc_s1' 'libstdc++6' 'libudev1' 'libopenssl3' 'libX11-6' 'libXcursor1' 'libXi6' 'libSM6' 'Mesa-libGL1' 'libasound2' 'libjpeg8' 'libpng16-16' 'libcurl4' 'libavcodec61' 'libXrandr2' 'libvulkan1')
+deps=('glibc' 'libgcc1' 'libstdc++6' 'libudev0' 'libssl3' 'libX11' 'libXcursor' 'libXi' 'libSM' 'libGL' 'libalsa' 'libjpeg8' 'libpng16' 'libcurl' 'libXrandr' 'libvulkan1')
 # ALT's apt-rpm requires one concrete package name. Stapler resolves
 # release-specific overrides from ALT_BRANCH_ID, so p11 and Sisyphus must
 # not share the libavcodec dependency.
-deps_altlinux=('glibc' 'libgcc1' 'libstdc++6' 'libudev0' 'libssl3' 'libX11' 'libXcursor' 'libXi' 'libSM' 'libGL' 'libalsa' 'libjpeg8' 'libpng16' 'libcurl' 'libXrandr' 'libvulkan1')
-deps_altlinux_p11=("${deps_altlinux[@]}" 'libavcodec61')
-deps_altlinux_sisyphus=("${deps_altlinux[@]}" 'libavcodec62')
+deps_altlinux_p11=("${deps[@]}" 'libavcodec61')
+deps_altlinux_sisyphus=("${deps[@]}" 'libavcodec62')
 
 build_deps=('binutils')
 
@@ -52,7 +45,7 @@ sources=(
 
 checksums=(
 	'sha256:c8a4407713d72dcb1c59f082977e81e1b9e8ffd679d0666882cde4c8a0821dd2'
-	'sha256:2830871d7499ac00b70197ea11f2c132382059b4ad8718eb73bdcb28ad13a113'
+	'sha256:1f61e7fd256f16ec6594cf0581fc630e745fd488c2e06710232bb62b03d44d23'
 	'sha256:d8df7db0c861a3308e59beaabe617703e0e24a92d569044432e8b2c539f1fb6c'
 )
 

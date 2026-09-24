@@ -1,5 +1,5 @@
 name='claude'
-version=2.7032.0
+version='2.7032.0'
 release=1
 summary='Claude desktop application'
 summary_ru='Десктопное приложение Claude'
@@ -10,7 +10,7 @@ homepage='https://code.claude.com/docs/en/desktop-quickstart'
 maintainer='Anthropic PBC <support@anthropic.com>'
 
 architectures=('amd64' 'arm64')
-incompatible_with=('alpine')
+compatible_with=('altlinux')
 
 license=('Custom')
 nonfree=1
@@ -22,14 +22,11 @@ replaces=('claude' 'claude-desktop')
 conflicts=()
 
 auto_reqprov_method="dirty"
-auto_req=0
-auto_req_altlinux=1
-auto_req_fedora=1
-auto_req_opensuse=1
+auto_req=1
 auto_prov=0
 disable_network=1
 
-# On RPM targets, auto_req covers everything readelf -d confirms as real DT_NEEDED of the
+# auto_req covers everything readelf -d confirms as real DT_NEEDED of the
 # installed claude-desktop binary (gtk3, nss, at-spi2, gbm, xcb, glibc, ...).
 # The rest stays explicit because it never shows up in that scan: xdg-utils
 # and xdg-desktop-portal(-gtk) are a subprocess tool and a D-Bus portal
@@ -38,29 +35,11 @@ disable_network=1
 # linked, so the app runs without them but loses notifications, keyring
 # integration and global input handling - keep them hard deps for the real
 # functionality, not the silently degraded fallback.
-deps=()
-deps_debian=('libgtk-3-0' 'libnotify4' 'libnss3' 'xdg-utils' 'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'libc6' 'libxtst6' 'libuuid1' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk | xdg-desktop-portal-gnome | xdg-desktop-portal-kde')
-deps_ubuntu=("${deps_debian[@]}")
-deps_fedora=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'mesa-libgbm' 'libxcb' 'libsecret' 'glibc' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
-deps_arch=('gtk3' 'libnotify' 'nss' 'xdg-utils' 'at-spi2-core' 'libdrm' 'libgbm' 'libxcb' 'libsecret' 'glibc' 'libxtst' 'libutil-linux' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
-deps_opensuse=('gtk3' 'libnotify4' 'mozilla-nss' 'xdg-utils' 'at-spi2-core' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libsecret-1-0' 'glibc' 'libXtst6' 'libuuid1' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
-deps_altlinux=('libnotify' 'xdg-utils' 'libsecret' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
+deps=('libnotify' 'xdg-utils' 'libsecret' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
 
-opt_deps=()
-opt_deps_debian=('libasound2t64 | libasound2 | pulseaudio' 'libayatana-appindicator3-1 | libappindicator3-1' 'ca-certificates' 'gnome-keyring | kwalletd6 | kwalletd5' 'qemu-system-x86' 'ovmf' 'virtiofsd')
-opt_deps_ubuntu=("${opt_deps_debian[@]}")
-opt_deps_fedora=('alsa-lib' 'pulseaudio-libs' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'kwallet' 'qemu-system-x86' 'edk2-ovmf' 'virtiofsd')
-opt_deps_arch=('alsa-lib' 'pulseaudio' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'kwallet' 'qemu-system-x86' 'edk2-ovmf' 'virtiofsd')
-opt_deps_opensuse=('libasound2' 'libpulse0' 'libappindicator3-1' 'ca-certificates' 'gnome-keyring' 'kwallet6' 'qemu-x86' 'ovmf' 'virtiofsd')
-opt_deps_altlinux=('libalsa' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'qemu-system-x86' 'virtiofsd')
+opt_deps=('libalsa' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'qemu-system-x86' 'virtiofsd')
 
-build_deps=('binutils')
-build_deps_debian=('binutils' 'python3')
-build_deps_ubuntu=("${build_deps_debian[@]}")
-build_deps_fedora=('binutils' 'python3')
-build_deps_arch=('binutils' 'python')
-build_deps_opensuse=('binutils' 'python3')
-build_deps_altlinux=('binutils' 'python3')
+build_deps=('binutils' 'python3')
 
 sources=(
 	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_amd64.deb?~archive=false&~name=claude-desktop.deb"

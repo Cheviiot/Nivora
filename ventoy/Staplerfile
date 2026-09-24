@@ -1,5 +1,5 @@
 name='ventoy'
-version=1.1.17
+version='1.1.17'
 release=2
 summary='Create and manage multiboot USB drives'
 summary_ru='Создание и управление мультизагрузочными USB-накопителями'
@@ -10,8 +10,7 @@ homepage='https://www.ventoy.net/'
 maintainer='Ventoy Project <admin@ventoy.net>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux' 'debian' 'ubuntu' 'fedora' 'arch' 'opensuse' 'opensuse-leap' 'suse')
-incompatible_with=('alpine')
+compatible_with=('altlinux')
 disable_network=1
 
 license=('GPL-3.0-only')
@@ -26,36 +25,12 @@ auto_reqprov_method="dirty"
 auto_req=0
 auto_prov=0
 
-deps=()
-deps_debian=(
-	'libgtk-3-0' 'policykit-1' 'parted' 'fdisk' 'dosfstools'
-	'dmsetup' 'udev' 'xz-utils'
-)
-deps_ubuntu=("${deps_debian[@]}")
-deps_fedora=(
-	'gtk3' 'polkit' 'parted' 'util-linux' 'dosfstools'
-	'device-mapper' 'systemd-udev' 'xz'
-)
-deps_arch=(
-	'gtk3' 'polkit' 'parted' 'util-linux' 'dosfstools'
-	'device-mapper' 'systemd' 'xz'
-)
-deps_opensuse=(
-	'gtk3' 'polkit' 'parted' 'util-linux' 'dosfstools'
-	'device-mapper' 'systemd-udev' 'xz'
-)
-deps_altlinux=(
+deps=(
 	'libgtk+3' 'polkit' 'parted' 'fdisk' 'dosfstools'
 	'dmsetup' 'udev' 'xz'
 )
 
-opt_deps=()
-opt_deps_debian=('libqt5widgets5')
-opt_deps_ubuntu=("${opt_deps_debian[@]}")
-opt_deps_fedora=('qt5-qtbase-gui')
-opt_deps_arch=('qt5-base')
-opt_deps_opensuse=('libQt5Widgets5')
-opt_deps_altlinux=('libqt5-widgets')
+opt_deps=('libqt5-widgets')
 
 sources=(
 	"https://github.com/ventoy/Ventoy/releases/download/v${version}/ventoy-${version}-linux.tar.gz?~archive=false&~name=ventoy.tar.gz"

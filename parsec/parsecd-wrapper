@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-real_binary='/usr/lib/parsec/parsecd'
+real_binary="${PARSEC_BINARY:-/usr/lib/parsec/parsecd}"
 parsec_home="${PARSEC_CONFIG_HOME:-${HOME}/.parsec}"
 config_txt="${parsec_home}/config.txt"
 config_json="${parsec_home}/config.json"
@@ -14,15 +14,27 @@ immersive_enabled() {
     esac
 }
 
+# Fallback for the legacy plain-text config. Like the JSON path, it seeds the
+# key once and leaves an existing user value untouched.
 set_config_txt_immersive() {
+    local existing
     mkdir -p "${parsec_home}"
     touch "${config_txt}"
 
-    if grep -Eq '^[[:space:]]*client_immersive[[:space:]]*=' "${config_txt}"; then
-        sed -i -E 's/^[[:space:]]*client_immersive[[:space:]]*=.*/client_immersive=2/' "${config_txt}"
-    else
-        printf '\nclient_immersive=2\n' >>"${config_txt}"
+    existing="$(
+        sed -n -E 's/^[[:space:]]*client_immersive[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' \
+            "${config_txt}" | tail -1
+    )"
+    if [[ -n "$existing" ]]; then
+        printf '%s\n' "$existing"
+        return 0
     fi
+    if grep -Eq '^[[:space:]]*client_immersive[[:space:]]*=' "${config_txt}"; then
+        # Present but not a number: it is still the user's choice.
+        return 3
+    fi
+    printf '\nclient_immersive=2\n' >>"${config_txt}"
+    printf '2\n'
 }
 
 set_config_json_immersive() {
@@ -33,6 +45,8 @@ set_config_json_immersive() {
 import json
 import sys
 from pathlib import Path
+
+MISSING = object()
 
 path = Path(sys.argv[1])
 notice = sys.argv[2]
@@ -59,35 +73,47 @@ else:
     data = [notice, {}]
     settings = data[1]
 
-current = settings.get("client_immersive")
-value = None
+# client_immersive is a user-visible setting. Seed it once, when Parsec has
+# no opinion of its own yet, and never overrule a value the user chose --
+# including values this wrapper does not use itself.
+current = settings.get("client_immersive", MISSING)
+value = current
 if isinstance(current, dict):
-    value = current.get("value")
+    value = current.get("value", MISSING)
 
-if value in (1, 2, "1", "2"):
-    immersive_value = int(value)
-else:
+if value is MISSING:
     immersive_value = 2
     settings["client_immersive"] = {"value": immersive_value}
+    # Only a real change justifies rewriting the user's file; otherwise the
+    # wrapper would reorder and reformat it on every single launch.
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8") as fh:
+        json.dump(data, fh, ensure_ascii=False, indent=2, sort_keys=True)
+        fh.write("\n")
+    tmp.replace(path)
+else:
+    try:
+        immersive_value = int(value)
+    except (TypeError, ValueError):
+        # Unparseable, but still the user's; leave the file alone and let
+        # Parsec read its own configuration without a command-line override.
+        raise SystemExit(3)
 
-tmp = path.with_suffix(path.suffix + ".tmp")
-with tmp.open("w", encoding="utf-8") as fh:
-    json.dump(data, fh, ensure_ascii=False, indent=2, sort_keys=True)
-    fh.write("\n")
-tmp.replace(path)
 print(immersive_value)
 PY
 }
 
-immersive_value=2
+immersive_enabled || exec "${real_binary}" "$@"
 
-if immersive_enabled; then
-    if ! immersive_value="$(set_config_json_immersive)"; then
-        set_config_txt_immersive
-        immersive_value=2
-    fi
-else
-    exec "${real_binary}" "$@"
+immersive_status=0
+immersive_value="$(set_config_json_immersive)" || immersive_status=$?
+if [[ "$immersive_status" -ne 0 ]]; then
+    # Exit 3 means the user already has a setting this wrapper will not touch,
+    # so Parsec is started without any command-line override at all.
+    [[ "$immersive_status" -eq 3 ]] && exec "${real_binary}" "$@"
+    immersive_status=0
+    immersive_value="$(set_config_txt_immersive)" || immersive_status=$?
+    [[ "$immersive_status" -eq 0 ]] || exec "${real_binary}" "$@"
 fi
 
 for arg in "$@"; do

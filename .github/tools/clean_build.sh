@@ -5,7 +5,11 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../.." && pwd)"
 # shellcheck source=.github/tools/lib/source_cache.sh
 source "${script_dir}/lib/source_cache.sh"
+# shellcheck source=.github/tools/lib/alt_branch.sh
+source "${script_dir}/lib/alt_branch.sh"
 cd "$repo_root"
+
+branch="$(nivora_alt_branch)"
 
 command -v stplr-spec >/dev/null 2>&1 || {
     echo 'clean-build requires stplr-spec' >&2
@@ -56,13 +60,14 @@ else
     exit 2
 fi
 
-readonly image="${NIVORA_ALT_BUILDER_IMAGE:-registry.altlinux.org/sisyphus/base@sha256:1a6ab67cc12cfbe2419ed8b805ae6fd75ed036f9da7211b78876d1cd0083b7ba}"
+image="$(nivora_alt_branch_image "$branch")"
+readonly image
 if [[ "$image" != *@sha256:* && "${NIVORA_ALLOW_UNPINNED_IMAGE:-0}" != 1 ]]; then
     echo 'NIVORA_ALT_BUILDER_IMAGE must use an immutable sha256 digest' >&2
     exit 2
 fi
-readonly cache_volume="nivora-clean-build-cache-$$"
-readonly builder_image="nivora-clean-build:$$"
+readonly cache_volume="nivora-clean-build-${branch}-cache-$$"
+readonly builder_image="nivora-clean-build-${branch}:$$"
 builder_dir="$(mktemp -d)"
 docker_config=''
 source_cache="${NIVORA_SOURCE_CACHE:-${XDG_CACHE_HOME:-${HOME}/.cache}/stplr/dl}"
@@ -126,7 +131,7 @@ import_stplr_source_cache \
     "${packages[@]}"
 
 for package in "${packages[@]}"; do
-    echo "==> clean-build ${package} (${engine})"
+    echo "==> clean-build ${package} (ALT ${branch}, ${engine})"
     find "$package" -maxdepth 1 -type f \
         \( -name '*.rpm' -o -name '*.deb' -o -name '*.apk' -o -name '*.pkg.tar.*' \) \
         -delete
@@ -148,4 +153,4 @@ for package in "${packages[@]}"; do
     [[ "$built" -eq 1 ]] || exit 1
 done
 
-echo "OK: clean-build завершён для ${#packages[@]} пакетов"
+echo "OK: clean-build ALT ${branch} завершён для ${#packages[@]} пакетов"

@@ -22,7 +22,6 @@ EXPECTED_PACKAGES = (
     "distroshelf",
     "github-desktop",
     "happ",
-    "nivora-cli",
     "parsec",
     "pineconemc",
     "tailscale",
@@ -62,19 +61,27 @@ APPROVED_TRANSITION_ALIASES = {
     "claude": ["claude-desktop"],
     "telegram": ["telegram-desktop"],
 }
-SUPPORTED_TIERS = {"verified", "partial", "experimental", "unsupported"}
+SUPPORTED_TIERS = {"verified", "partial", "unsupported"}
+# ALT is the only supported distribution. Every other target was dropped
+# together with its per-distro dependency fields.
 EXPECTED_TARGETS = {
-    "debian-13",
-    "ubuntu-24.04",
-    "ubuntu-26.04",
-    "fedora-43",
-    "fedora-44",
     "alt-p11",
     "alt-sisyphus",
-    "arch-snapshot",
-    "opensuse-leap-16.0",
-    "alpine-3.23",
 }
+SUPPORTED_ARCHITECTURES = {"amd64", "arm64"}
+# Fields that used to carry a foreign distribution's dependency list. Their
+# presence now means the recipe was written against the pre-ALT layout.
+FOREIGN_DISTRO_SUFFIXES = (
+    "debian",
+    "ubuntu",
+    "fedora",
+    "arch",
+    "opensuse",
+    "opensuse_leap",
+    "suse",
+    "alpine",
+)
+OVERRIDABLE_LIST_FIELDS = ("deps", "opt_deps", "build_deps")
 EXPECTED_README_CATEGORIES = (
     "Интернет, сеть и VPN",
     "Удалённый доступ",
@@ -199,17 +206,6 @@ def expanded_architectures(architectures: list[str]) -> list[str]:
     return architectures
 
 
-def support_by_target(package: dict[str, object]) -> dict[str, dict[str, object]]:
-    result: dict[str, dict[str, object]] = {}
-    for group in package.get("support", []):
-        if not isinstance(group, dict):
-            continue
-        for target in group.get("targets", []):
-            if isinstance(target, str):
-                result[target] = group
-    return result
-
-
 def load_support_matrix(errors: list[str]) -> dict[str, object]:
     path = ROOT / ".github/support-matrix.toml"
     try:
@@ -230,8 +226,22 @@ def load_support_matrix(errors: list[str]) -> dict[str, object]:
         errors.append("support matrix: duplicate target IDs")
     if set(target_ids) != EXPECTED_TARGETS:
         errors.append(
-            "support matrix: target IDs differ from the approved 10-target set"
+            "support matrix: target IDs differ from the approved ALT target set"
         )
+    for target in targets:
+        if not isinstance(target, dict):
+            continue
+        if target.get("distro") != "altlinux":
+            errors.append(
+                f"support matrix: {target.get('id')}: only ALT targets are supported"
+            )
+        gated = target.get("gated_architectures")
+        if not isinstance(gated, list) or any(
+            arch not in SUPPORTED_ARCHITECTURES for arch in gated
+        ):
+            errors.append(
+                f"support matrix: {target.get('id')}: invalid gated_architectures"
+            )
 
     packages = matrix.get("packages", [])
     package_ids = [item.get("id") for item in packages if isinstance(item, dict)]
@@ -242,7 +252,6 @@ def load_support_matrix(errors: list[str]) -> dict[str, object]:
 
     logical_cells = 0
     scheduled_cells = 0
-    unique_build_cells = 0
     verified_cells = 0
     for package in packages:
         if not isinstance(package, dict):
@@ -254,10 +263,12 @@ def load_support_matrix(errors: list[str]) -> dict[str, object]:
             errors.append(f"support matrix: {package_id}: architectures are missing")
             continue
         expanded = expanded_architectures(architectures)
-        if any(arch not in {"amd64", "arm64"} for arch in expanded):
+        if any(arch not in SUPPORTED_ARCHITECTURES for arch in expanded):
             errors.append(f"support matrix: {package_id}: invalid architectures")
 
-        coverage: dict[str, dict[str, object]] = {}
+        # Every (target, architecture) cell is declared exactly once, so a tier
+        # never has to stand for a mix of gated and ungated architectures.
+        coverage: dict[tuple[str, str], dict[str, object]] = {}
         for group in package.get("support", []):
             if not isinstance(group, dict):
                 errors.append(f"support matrix: {package_id}: invalid support group")
@@ -265,52 +276,70 @@ def load_support_matrix(errors: list[str]) -> dict[str, object]:
             tier = group.get("tier")
             caveats = group.get("caveats")
             group_targets = group.get("targets")
+            group_arches = group.get("architectures")
             if tier not in SUPPORTED_TIERS:
                 errors.append(f"support matrix: {package_id}: invalid tier {tier!r}")
             if not isinstance(caveats, list) or any(
                 not isinstance(item, str) or not item for item in caveats
             ):
                 errors.append(f"support matrix: {package_id}: invalid caveats")
-            if tier != "verified" and not caveats:
+            elif tier != "verified" and not caveats:
                 errors.append(
                     f"support matrix: {package_id}: {tier} needs a concrete caveat"
                 )
             if not isinstance(group_targets, list):
                 errors.append(f"support matrix: {package_id}: targets must be an array")
                 continue
+            if not isinstance(group_arches, list) or not group_arches:
+                errors.append(
+                    f"support matrix: {package_id}: support group needs architectures"
+                )
+                continue
+            if any(arch not in expanded for arch in group_arches):
+                errors.append(
+                    f"support matrix: {package_id}: support group declares an "
+                    "architecture the recipe does not build"
+                )
             for target in group_targets:
-                if target in coverage:
-                    errors.append(
-                        f"support matrix: {package_id}: duplicate target {target}"
-                    )
-                coverage[target] = group
-
-        if set(coverage) != EXPECTED_TARGETS:
-            errors.append(
-                f"support matrix: {package_id}: every target must occur exactly once"
-            )
-        for target, group in coverage.items():
-            logical_cells += len(expanded)
-            if group.get("tier") != "unsupported":
-                scheduled_cells += len(expanded)
-                unique_build_cells += 1 if architectures == ["all"] else len(expanded)
-            if group.get("tier") == "verified":
-                verified_cells += len(expanded)
-                target = targets_by_id.get(target)
-                if target is None:
-                    continue
-                if target.get("ci_mode") != "blocking-runtime":
-                    errors.append(
-                        f"support matrix: {package_id}: verified target "
-                        f"{target.get('id')} is not a blocking runtime target"
-                    )
-                runners = target.get("native_runners", {})
-                for architecture in expanded:
-                    if not isinstance(runners, dict) or not runners.get(architecture):
+                for architecture in group_arches:
+                    cell = (target, architecture)
+                    if cell in coverage:
                         errors.append(
-                            f"support matrix: {package_id}: verified target "
-                            f"{target.get('id')} lacks native {architecture} runner"
+                            f"support matrix: {package_id}: duplicate cell "
+                            f"{target}/{architecture}"
                         )
+                    coverage[cell] = group
+
+        expected_cells = {
+            (target, architecture)
+            for target in EXPECTED_TARGETS
+            for architecture in expanded
+        }
+        if set(coverage) != expected_cells:
+            errors.append(
+                f"support matrix: {package_id}: every target/architecture cell "
+                "must occur exactly once"
+            )
+        for (target_id, architecture), group in coverage.items():
+            logical_cells += 1
+            if group.get("tier") != "unsupported":
+                scheduled_cells += 1
+            if group.get("tier") != "verified":
+                continue
+            verified_cells += 1
+            target = targets_by_id.get(target_id)
+            if target is None:
+                continue
+            if target.get("ci_mode") != "blocking-lifecycle":
+                errors.append(
+                    f"support matrix: {package_id}: verified target {target_id} "
+                    "is not a blocking lifecycle target"
+                )
+            if architecture not in (target.get("gated_architectures") or []):
+                errors.append(
+                    f"support matrix: {package_id}: {target_id}/{architecture} "
+                    "claims verified but the architecture is not gated"
+                )
 
     expectations = matrix.get("expectations", {})
     actual = {
@@ -318,9 +347,8 @@ def load_support_matrix(errors: list[str]) -> dict[str, object]:
         "target_count": len(targets),
         "logical_runtime_cells": logical_cells,
         "declared_supported_runtime_cells": scheduled_cells,
-        "declared_unique_build_cells": unique_build_cells,
-        "blocking_ci_build_cells_full_common_change": len(packages),
-        "blocking_ci_runtime_cells": verified_cells,
+        "verified_runtime_cells": verified_cells,
+        "blocking_ci_build_cells_full_common_change": len(packages) * len(targets),
         "advisory_main_build_cells_full_common_change": len(packages),
     }
     for key, value in actual.items():
@@ -329,19 +357,28 @@ def load_support_matrix(errors: list[str]) -> dict[str, object]:
                 f"support matrix: expectations.{key}={expectations.get(key)!r}, "
                 f"calculated {value}"
             )
+    if set(expectations) != set(actual):
+        errors.append(
+            "support matrix: expectations keys differ from the calculated set"
+        )
     if verified_cells:
         workflow = ROOT / ".github/workflows/package-ci.yml"
-        workflow_text = workflow.read_text(encoding="utf-8") if workflow.is_file() else ""
+        workflow_text = (
+            workflow.read_text(encoding="utf-8") if workflow.is_file() else ""
+        )
         for required in (
-            ".github/tools/target_plan.py",
-            ".github/tools/target_lifecycle.sh",
-            "fromJSON(needs.plan.outputs.verified_targets)",
+            ".github/tools/clean_build.sh",
+            ".github/tools/verify_artifacts.sh",
+            ".github/tools/test_package_lifecycle.sh",
         ):
             if required not in workflow_text:
                 errors.append(
-                    f"support matrix: blocking target lifecycle workflow lacks {required}"
+                    f"support matrix: blocking lifecycle workflow lacks {required}"
                 )
-    for name, image in matrix.get("images", {}).items():
+    images = matrix.get("images", {})
+    if set(images) != {"alt_p11", "alt_sisyphus"}:
+        errors.append("support matrix: images must be exactly the two ALT branches")
+    for name, image in images.items():
         if "@sha256:" not in image:
             errors.append(f"support matrix: image {name} is not digest-pinned")
     stapler = matrix.get("stapler", {})
@@ -398,6 +435,10 @@ def validate_package(
         errors.append(f"{package}: directory and name differ: {name!r}")
     if not version:
         errors.append(f"{package}: version is missing")
+    elif not re.search(r"(?m)^version='[^']+'$", text):
+        # stplr-spec update-package writes it back unquoted; the updater
+        # restores the style before the static checks run.
+        errors.append(f"G0 {package}: version must be single-quoted")
     if not release or not release.isdigit() or int(release) < 1:
         errors.append(f"{package}: release must be a positive integer")
 
@@ -446,27 +487,72 @@ def validate_package(
 
     if flag(text, "disable_network") != 1:
         errors.append(f"G1 {package}: disable_network=1 is required")
-    if flag(text, "auto_req") != 0 or flag(text, "auto_prov") != 0:
-        errors.append(f"G2 {package}: base auto_req/auto_prov must both be 0")
+
+    # ALT is the only target, so the dependency lists live in the base fields.
+    compatible = array(text, "compatible_with")
+    if compatible != ["altlinux"]:
+        errors.append(
+            f"G0 {package}: compatible_with must be ['altlinux'], got {compatible}"
+        )
+    if array(text, "incompatible_with") is not None:
+        errors.append(
+            f"G0 {package}: incompatible_with is obsolete; compatible_with is the "
+            "whitelist"
+        )
+    for field in OVERRIDABLE_LIST_FIELDS:
+        for suffix in FOREIGN_DISTRO_SUFFIXES:
+            if array(text, f"{field}_{suffix}") is not None:
+                errors.append(
+                    f"G2 {package}: {field}_{suffix} belongs to a distribution "
+                    "Nivora does not support"
+                )
+        if array(text, f"{field}_altlinux") is not None:
+            errors.append(
+                f"G2 {package}: {field}_altlinux is redundant; {field} is the ALT "
+                "list. Only the branch overrides may specialise it"
+            )
+        for branch_field in re.findall(
+            rf"^({re.escape(field)}_altlinux_[a-z0-9_]+)=", text, re.MULTILINE
+        ):
+            branch = branch_field.rsplit("_", 1)[-1]
+            if branch not in {"p11", "sisyphus"}:
+                errors.append(
+                    f"G2 {package}: {branch_field} targets an unknown ALT branch"
+                )
+    if array(text, "deps") is None:
+        errors.append(f"G2 {package}: deps must be declared, even if empty")
+    # ALT's apt-rpm cannot parse an alternative in a dependency at all, neither
+    # the Debian 'a | b' form nor an RPM rich dependency.
+    for field_match in re.finditer(
+        r"^((?:deps|opt_deps|build_deps)(?:_[a-z0-9_]+)?)=\(", text, re.MULTILINE
+    ):
+        field = field_match.group(1)
+        for value in array(text, field) or []:
+            if "|" in value or value.startswith("("):
+                errors.append(
+                    f"G2 {package}: {field} entry {value!r} uses an alternative "
+                    "that ALT cannot resolve"
+                )
+
+    if flag(text, "auto_prov") != 0:
+        errors.append(
+            f"G2 {package}: auto_prov must stay 0 so a bundled runtime is never "
+            "advertised system-wide"
+        )
+    if flag(text, "auto_req") not in {0, 1}:
+        errors.append(f"G2 {package}: auto_req must be 0 or 1")
+    # The native ALT finder would need auto_prov to cancel out the sonames a
+    # self-contained payload ships itself. The dirty finder subtracts them on
+    # its own, which is the only combination that keeps auto_prov disabled.
     if scalar(text, "auto_reqprov_method") != "dirty":
         errors.append(f"G2 {package}: auto_reqprov_method must be dirty")
-    for distro in ("altlinux", "fedora", "opensuse"):
-        req = flag(text, f"auto_req_{distro}", default=0)
-        prov = flag(text, f"auto_prov_{distro}", default=0)
-        method = scalar(text, f"auto_reqprov_method_{distro}")
-        if req not in {0, 1}:
-            errors.append(f"G2 {package}: auto_req_{distro} must be 0 or 1")
-        if prov != 0:
-            errors.append(f"G2 {package}: auto_prov_{distro} must stay disabled")
-        if method not in {None, "dirty"}:
-            errors.append(
-                f"G2 {package}: {distro} must not switch away from dirty finder"
-            )
-    for distro in ("debian", "ubuntu", "arch", "alpine"):
-        if flag(text, f"auto_req_{distro}", default=0) != 0:
-            errors.append(f"G2 {package}: auto_req_{distro} must stay disabled")
-        if flag(text, f"auto_prov_{distro}", default=0) != 0:
-            errors.append(f"G2 {package}: auto_prov_{distro} must stay disabled")
+    for override in re.findall(
+        r"^(auto_(?:req|prov|reqprov_method)_[a-z0-9_]+)=", text, re.MULTILINE
+    ):
+        errors.append(
+            f"G2 {package}: {override} is a per-distribution override and ALT is "
+            "the only target"
+        )
 
     matrix_architectures = (
         matrix_package.get("architectures") if matrix_package is not None else None
@@ -476,35 +562,6 @@ def validate_package(
             f"G0 {package}: recipe/matrix architectures differ: "
             f"{architectures} != {matrix_architectures}"
         )
-    if matrix_package is not None:
-        support = support_by_target(matrix_package)
-        alpine_supported = (
-            support.get("alpine-3.23", {}).get("tier") != "unsupported"
-        )
-        incompatibilities = array(text, "incompatible_with") or []
-        if alpine_supported and "alpine" in incompatibilities:
-            errors.append(
-                f"G0 {package}: Alpine is supported by matrix but recipe rejects it"
-            )
-        if not alpine_supported and "alpine" not in incompatibilities:
-            errors.append(
-                f"G0 {package}: Alpine is unsupported but recipe does not reject it"
-            )
-        dependency_fields = {
-            "debian-13": "deps_debian",
-            "ubuntu-24.04": "deps_ubuntu",
-            "ubuntu-26.04": "deps_ubuntu",
-            "arch-snapshot": "deps_arch",
-            "alpine-3.23": "deps_alpine",
-        }
-        for target, dependency_field in dependency_fields.items():
-            if support.get(target, {}).get("tier") == "unsupported":
-                continue
-            dependencies = array(text, dependency_field)
-            if not dependencies:
-                errors.append(
-                    f"G2 {package}: {dependency_field} must explicitly map {target}"
-                )
 
     appstream_id = scalar(text, "appstream_app_id")
     has_appstream_payload = bool(
@@ -713,30 +770,65 @@ def validate_readme_hero(errors: list[str]) -> None:
         errors.append("README hero: PNG must not exceed 1 MiB")
 
 
-def validate_github_desktop_workflow(
-    metadata: dict[str, dict[str, object]], errors: list[str]
-) -> None:
+def validate_github_desktop_workflow(errors: list[str]) -> None:
+    """The build workflow must never hard-code a package version.
+
+    A literal version in this workflow used to be cross-checked against the
+    recipe. That made the package impossible to update autonomously: the
+    updater only ever patches its own package directory, and the publish gate
+    accepts a single changed path, so a recipe bump could never carry the
+    matching workflow edit and the static checks failed forever. The version
+    now arrives exclusively through the required `version` input.
+    """
     path = ROOT / ".github/workflows/github-desktop-linux.yml"
-    if not path.is_file() or "github-desktop" not in metadata:
+    if not path.is_file():
         return
     text = path.read_text(encoding="utf-8")
-    expected = str(metadata["github-desktop"]["version"])
-    dispatch_default = re.search(
-        r"(?m)^      version:\n"
-        r"(?:^        [^\n]*\n)*?^        default: [\"']([^\"']+)[\"']",
-        text,
-    )
-    if not dispatch_default or dispatch_default.group(1) != expected:
+    if re.search(r"inputs\.version\s*\|\|", text):
         errors.append(
-            "github-desktop workflow: dispatch version does not match recipe "
-            f"{expected}"
+            "github-desktop workflow: inputs.version must not have a hard-coded "
+            "fallback; it blocks autonomous updates"
         )
-    fallbacks = re.findall(r"inputs\.version\s*\|\|\s*'([^']+)'", text)
-    if not fallbacks or any(version != expected for version in fallbacks):
+    if re.search(
+        r"(?m)^      version:\n(?:^        [^\n]*\n)*?^        default:", text
+    ):
         errors.append(
-            "github-desktop workflow: every version fallback must match recipe "
-            f"{expected}"
+            "github-desktop workflow: the version input must not have a default; "
+            "it blocks autonomous updates"
         )
+    for match in re.finditer(r"(?m)^\s*(?:version|VERSION):\s*[\"']?(\d+\.\d+[^\s\"']*)", text):
+        errors.append(
+            "github-desktop workflow: hard-coded version literal "
+            f"{match.group(1)}"
+        )
+
+
+def validate_updater_package_list(errors: list[str]) -> None:
+    """The updater carries its own package list; it must not drift.
+
+    A package missing from this array is never checked for updates at all, and
+    nothing else in the repository would notice.
+    """
+    path = ROOT / ".github/tools/package_updates.sh"
+    if not path.is_file():
+        errors.append("package_updates.sh is missing")
+        return
+    text = path.read_text(encoding="utf-8")
+    match = re.search(r"(?ms)^readonly -a PACKAGES=\(\n(.*?)^\)$", text)
+    if not match:
+        errors.append("package_updates.sh: cannot read the PACKAGES array")
+        return
+    declared = tuple(match.group(1).split())
+    if declared != tuple(sorted(EXPECTED_PACKAGES)):
+        errors.append(
+            "package_updates.sh: PACKAGES differs from the repository packages: "
+            f"{', '.join(declared)}"
+        )
+    for package in EXPECTED_PACKAGES:
+        if not re.search(rf"(?m)^\s+{re.escape(package)}\)", text):
+            errors.append(
+                f"package_updates.sh: latest_version has no branch for {package}"
+            )
 
 
 def validate_autonomous_update_workflow(errors: list[str]) -> None:
@@ -815,7 +907,8 @@ def main() -> int:
     validate_unique_local_source_urls(metadata, errors)
     validate_readme(metadata, errors)
     validate_readme_hero(errors)
-    validate_github_desktop_workflow(metadata, errors)
+    validate_github_desktop_workflow(errors)
+    validate_updater_package_list(errors)
     validate_autonomous_update_workflow(errors)
     for path in sorted([
         *ROOT.glob("*.md"),

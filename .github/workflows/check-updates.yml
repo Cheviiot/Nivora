@@ -391,4 +391,4 @@ jobs:
             done <"$AUTONOMOUS_UPDATE_RESULTS_DIR/failed-packages"
           } >>"$GITHUB_STEP_SUMMARY"
 
-          echo "::warning::Требуется ручная диагностика: $(jq -r 'join(\", \")' <<<"$FAILED_PACKAGES")"
+          echo "::warning::Требуется ручная диагностика: $(jq -r 'join(", ")' <<<"$FAILED_PACKAGES")"

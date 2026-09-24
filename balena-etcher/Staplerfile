@@ -1,5 +1,5 @@
 name='balena-etcher'
-version=2.1.7
+version='2.1.7'
 release=1
 summary='Safe SD card and USB drive image flasher'
 summary_ru='Безопасная запись образов на SD-карты и USB-накопители'
@@ -10,7 +10,7 @@ homepage='https://etcher.balena.io/'
 maintainer='Balena Ltd. <hello@balena.io>'
 
 architectures=('amd64')
-incompatible_with=('alpine')
+compatible_with=('altlinux')
 
 license=('Apache-2.0')
 
@@ -18,7 +18,7 @@ provides=()
 replaces=('balena-etcher')
 conflicts=()
 
-# On RPM targets, auto_req covers the real DT_NEEDED (readelf -d confirmed across the main
+# auto_req covers the real DT_NEEDED (readelf -d confirmed across the main
 # binary, resources/etcher-util, and the bundled libEGL/libGLESv2/
 # libvk_swiftshader/native-module files: gtk3, nss, at-spi2, gbm, xcb,
 # alsa, atk, cairo, cups, dbus, expat, glib2, nspr, pango, X11 stack,
@@ -30,65 +30,24 @@ conflicts=()
 # libraries there's no direct evidence for *why*, so they stay explicit
 # out of caution instead of being dropped on an assumption.
 auto_reqprov_method="dirty"
-auto_req=0
-auto_req_altlinux=1
-auto_req_fedora=1
-auto_req_opensuse=1
+auto_req=1
 auto_prov=0
 disable_network=1
 
-deps=()
-deps_debian=(
-	'libgtk-3-0' 'libnotify4' 'libnss3' 'libxtst6' 'xdg-utils'
-	'libatspi2.0-0' 'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2t64 | libasound2'
-	'libatk1.0-0' 'libc6' 'libcairo2' 'libcups2' 'libdbus-1-3' 'libexpat1'
-	'libfontconfig1' 'libfreetype6' 'libgcc1' 'libgdk-pixbuf2.0-0 | libgdk-pixbuf-2.0-0'
-	'libglib2.0-0' 'liblzma5' 'libnspr4' 'libpango1.0-0 | libpango-1.0-0'
-	'libstdc++6' 'libx11-6' 'libxcomposite1' 'libxcursor1' 'libxdamage1'
-	'libxext6' 'libxfixes3' 'libxi6' 'libxrandr2' 'libxrender1' 'libxss1'
-	'kde-cli-tools | kde-runtime | trash-cli | libglib2.0-bin | gvfs-bin'
-	'polkit-1-auth-agent | policykit-1-gnome | polkit-kde-1'
-)
-deps_ubuntu=("${deps_debian[@]}")
-deps_fedora=(
-	'gtk3' 'libnotify' 'nss' 'libXtst' 'xdg-utils' 'at-spi2-core'
-	'libdrm' 'mesa-libgbm' 'libxcb' 'alsa-lib' 'atk' 'glibc' 'cairo'
-	'cups-libs' 'dbus-libs' 'expat' 'fontconfig' 'freetype' 'libgcc'
-	'gdk-pixbuf2' 'glib2' 'xz-libs' 'nspr' 'pango' 'libstdc++' 'libX11'
-	'libXcomposite' 'libXcursor' 'libXdamage' 'libXext' 'libXfixes' 'libXi'
-	'libXrandr' 'libXrender' 'libXScrnSaver' 'polkit'
-)
-deps_arch=(
-	'gtk3' 'libnotify' 'nss' 'libxtst' 'xdg-utils' 'at-spi2-core'
-	'libdrm' 'mesa' 'libxcb' 'alsa-lib' 'atk' 'glibc' 'cairo' 'cups'
-	'dbus' 'expat' 'fontconfig' 'freetype2' 'gcc-libs' 'gdk-pixbuf2'
-	'glib2' 'xz' 'nspr' 'pango' 'libx11' 'libxcomposite' 'libxcursor'
-	'libxdamage' 'libxext' 'libxfixes' 'libxi' 'libxrandr' 'libxrender'
-	'libxss' 'polkit'
-)
-deps_opensuse=(
-	'gtk3' 'libnotify4' 'mozilla-nss' 'libXtst6' 'xdg-utils' 'at-spi2-core'
-	'libdrm2' 'libgbm1' 'libxcb-dri3-0' 'libasound2' 'libatk-1_0-0'
-	'glibc' 'libcairo2' 'libcups2' 'libdbus-1-3' 'libexpat1'
-	'fontconfig' 'libfreetype6' 'libgcc_s1' 'gdk-pixbuf-loader-rsvg'
-	'glib2' 'liblzma5' 'mozilla-nspr' 'libpango-1_0-0' 'libstdc++6'
-	'libX11-6' 'libXcomposite1' 'libXcursor1' 'libXdamage1' 'libXext6'
-	'libXfixes3' 'libXi6' 'libXrandr2' 'libXrender1' 'libXss1' 'polkit'
-)
-deps_altlinux=(
+deps=(
 	'libnotify' 'libXtst' 'xdg-utils' 'fontconfig' 'libfreetype'
 	'libgdk-pixbuf' 'liblzma' 'libXcursor' 'libXi' 'libXrender'
 	'libXScrnSaver' 'polkit'
 )
 
-opt_deps=()
-opt_deps_debian=()
-opt_deps_ubuntu=("${opt_deps_debian[@]}")
-opt_deps_fedora=('polkit-gnome | polkit-kde' 'gvfs')
-opt_deps_arch=('polkit-gnome | polkit-kde-agent' 'gvfs')
-opt_deps_opensuse=('polkit-gnome | polkit-kde-agent-6' 'glib2-tools')
-opt_deps_altlinux=(
-	'polkit-gnome | polkit-kde-agent | lxqt-policykit | xfce-polkit'
+# ALT's apt-rpm cannot express an alternative in a dependency at all, and
+# opt_deps never reach the built RPM anyway, so each agent is listed on its
+# own line instead of a pseudo-alternative string that nothing can parse.
+opt_deps=(
+	'polkit-gnome'
+	'polkit-kde-agent'
+	'lxqt-policykit'
+	'xfce-polkit'
 	'gvfs'
 )
 

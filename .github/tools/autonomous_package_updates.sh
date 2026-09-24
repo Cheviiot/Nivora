@@ -59,6 +59,17 @@ planned_fingerprints() {
         <<<"$update_plan_json"
 }
 
+normalise_recipe_style() {
+    local staplerfile="$1"
+    # stplr-spec update-package rewrites version= without quotes, while every
+    # recipe in the repository quotes it. Restoring the style here, before the
+    # static checks run, keeps the validator rule enforceable: a common file
+    # can never need editing alongside a package bump, because the updater
+    # patch is scoped to the package directory.
+    sed -i -E "s/^version=([^'\"#]+)$/version='\\1'/" "$staplerfile" || return
+    grep -Eq "^version='[^']+'$" "$staplerfile"
+}
+
 bump_recipe_release() {
     local staplerfile="$1"
     local release
@@ -109,9 +120,15 @@ run_update_phases() {
     local planned_current planned_latest planned_source_fingerprints
 
     cd "$worktree" || return
-    echo update-recipe >"$phase_file" || return
     planned_current="$(planned_version "$package" current)" || return
     planned_latest="$(planned_version "$package" latest)" || return
+    # stplr-spec pins a checksum over whatever the server returns, including an
+    # error page, because Stapler v0.1.1 never checks the HTTP status. Confirm
+    # the payload is really published before letting it near the recipe.
+    echo check-sources >"$phase_file" || return
+    .github/tools/check_source_availability.sh "$package" "$planned_latest" ||
+        return
+    echo update-recipe >"$phase_file" || return
     if is_mutable_source_package "$package"; then
         planned_source_fingerprints="$(planned_fingerprints "$package")" || return
         verify_mutable_source_snapshot \
@@ -125,6 +142,7 @@ run_update_phases() {
     else
         "$stplr_spec_command" update-package "$package" || return
     fi
+    normalise_recipe_style "${worktree}/${package}/Staplerfile" || return
     if [[ "$package" == 'github-desktop' ]]; then
         echo pin-upstream-commit >"$phase_file" || return
         pin_github_desktop_source "$worktree" || return
@@ -140,10 +158,17 @@ run_update_phases() {
     .github/tools/sync_readme_versions.py || return
     echo static-checks >"$phase_file" || return
     .github/tools/run_checks.sh || return
-    echo clean-build >"$phase_file" || return
-    .github/tools/clean_build.sh "$package" || return
-    echo verify-artifact >"$phase_file" || return
-    .github/tools/verify_artifacts.sh "$package" || return
+    # Both supported ALT branches must accept the update before it can reach
+    # main; a p11-only regression used to be caught no earlier than the
+    # post-push gate, after users already had the commit.
+    local alt_branch
+    for alt_branch in p11 sisyphus; do
+        echo clean-build >"$phase_file" || return
+        NIVORA_ALT_BRANCH="$alt_branch" \
+            .github/tools/clean_build.sh "$package" || return
+        echo verify-artifact >"$phase_file" || return
+        .github/tools/verify_artifacts.sh "$package" || return
+    done
 }
 
 if [[ "$#" -eq 0 ]]; then

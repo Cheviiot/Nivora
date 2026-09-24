@@ -2,6 +2,8 @@
 
 ## Инварианты
 
+- Nivora — репозиторий **только для ALT Linux**. Поддерживаются ветки `p11` и
+  `Sisyphus`; `compatible_with` каждого рецепта равен `('altlinux')`.
 - В репозитории ровно 16 каталогов с `Staplerfile`.
 - Каталог совпадает с `name` и командой в README.
 - Общая инфраструктура (`tools/`, `docs/`, интеграционные `tests/`) живёт внутри
@@ -17,6 +19,95 @@ Stapler сам добавляет текущее `name` в generated `Provides` 
 зависят от других Stapler-каталогов. Разрешённые переходы фиксирует validator:
 `codex → chatgpt`, `claude-desktop → claude` и `telegram-desktop → telegram`.
 
+## Зависимости: одна цель, один список
+
+Поскольку ALT — единственная цель, зависимости живут в базовых полях
+`deps`, `opt_deps` и `build_deps`. Полей `deps_debian`, `deps_ubuntu`,
+`deps_fedora`, `deps_arch`, `deps_opensuse` и `deps_alpine` в репозитории
+больше нет, и validator их отвергает.
+
+Ветку уточняют только там, где имя пакета реально различается. Stapler
+резолвит overrides в порядке
+
+```
+deps_<arch>_altlinux_<branch> → deps_altlinux_<branch> →
+deps_<arch>_altlinux → deps_altlinux → deps_<arch> → deps
+```
+
+и берёт **первое** совпадение целиком — override не дополняет базовый список,
+а заменяет его. Поэтому `parsec` объявляет полный набор в обеих ветках:
+
+```bash
+deps=('glibc' 'libgcc1' ... 'libvulkan1')
+deps_altlinux_p11=("${deps[@]}" 'libavcodec61')
+deps_altlinux_sisyphus=("${deps[@]}" 'libavcodec62')
+```
+
+`ALT_BRANCH_ID` из `/etc/os-release` даёт `p11`/`sisyphus`, это и есть
+`ReleaseID` в терминах Stapler.
+
+`deps_altlinux` без ветки validator отклоняет: это ровно то же самое, что
+базовый `deps`, только менее очевидно.
+
+### Альтернативы запрещены
+
+ALT `apt-rpm` не разбирает альтернативы в зависимости ни в каком виде.
+Проверено установкой настоящего RPM, а не чтением рецепта:
+
+- debian-style `'a | b'` — apt видит буквальную строку с `|` как одно имя
+  пакета и валит установку;
+- RPM rich-dependency `'(a or b)'` — та же ошибка.
+
+Validator запрещает оба варианта во всех полях зависимостей, включая
+`opt_deps`, где раньше они «работали» просто потому, что `opt_deps` вообще не
+попадают в собранный RPM.
+
+### auto_req и auto_reqprov_method
+
+`auto_reqprov_method='dirty'` обязателен, `auto_prov=0` обязателен.
+
+Это не произвол. У Stapler есть родной ALT-финдер (`auto_reqprov_method='rpm'`
+→ `/usr/lib/rpm/find-requires`), который выдаёт честные ALT-зависимости с
+set-версиями символов. Но каталог состоит в основном из self-contained
+Electron- и Qt-пакетов, которые несут свои `libEGL.so.1`, `libGLESv2.so.1` и
+прочее. Родной финдер сгенерирует на них `Requires`, удовлетворить которые
+можно только включив `find-provides`, — а тогда пакет начнёт объявлять
+bundled-библиотеки на всю систему. `dirty` вместо этого вычитает из набора
+`DT_NEEDED` все `DT_SONAME`, которые пакет предоставляет сам
+(`pkg/reqprov/dirty/dirty.go`, `diffSets`), и это единственная комбинация,
+которая даёт корректные requires при выключенном `auto_prov`.
+
+Побочные детали `dirty`, о которых стоит помнить:
+
+- обрабатываются только исполняемые файлы и файлы вида `lib*.so*`
+  (`looksLikeLib`), поэтому, например, `shared/lib/gbm/dri_gbm.so` у
+  `pineconemc` в расчёт не попадает;
+- `auto_req_filter` у ALT-финдера игнорируется целиком, а `auto_req_skiplist`
+  работает; у `dirty` работают оба.
+
+`auto_req=0` оставлен там, где список зависимостей полностью явный:
+`parsec`, `tailscale`, `ventoy`, `vintner`.
+
+### Как перепроверить зависимости
+
+Имена пакетов сверяются с обеими ветками:
+
+```bash
+apt-cache policy <имя>                      # p11, если host — ALT p11
+podman run --rm registry.altlinux.org/sisyphus/base \
+  bash -c 'apt-get update -qq && apt-cache policy <имя>'
+```
+
+SONAME из payload сверяются через `Reverse Provides`:
+
+```bash
+apt-cache showpkg 'libgtk-3.so.0()(64bit)'
+```
+
+Последняя полная сверка: все объявленные имена зависимостей резолвятся в своей
+ветке, все SONAME, которые `dirty` реально превращает в `Requires`,
+предоставляются пакетами ALT в обеих ветках.
+
 ## Уровни поддержки Stapler
 
 | Lane | Pin | Роль | Результат |
@@ -29,19 +120,18 @@ Pin canary меняется отдельным reviewable diff после изу
 блокирует выпуск; падение canary создаёт задачу совместимости, но не заставляет
 переключать пользователей с release на development build.
 
-Для всех изменённых пакетов stable и canary собирают RPM в ALT Sisyphus на
-`x86_64`/`noarch`. Дополнительно `package-ci.yml` всегда получает blocking native
-lifecycle-план из `support-matrix.toml`. Сейчас он содержит две доказанные ячейки:
-`nivora-cli` на Ubuntu 24.04 `amd64` и `arm64`. ARM-бинарник Stapler собирается
-именно из commit релиза `v0.1.1`, потому что upstream не публикует ARM-архив.
-Уровень `verified` запрещён validator-ом без native runner и обязательной
-build/install/smoke/remove ячейки; остальные дистрибутивы остаются `partial` или
-`experimental`, а не выдаются за проверенные.
+Для каждого изменённого пакета `package-ci.yml` собирает RPM и прогоняет
+install/smoke/remove **в обеих ветках ALT** на `x86_64`. Canary собирает тот же
+пакет на pinned `main` только в Sisyphus и остаётся advisory.
+
+У GitHub нет ALT-раннера, поэтому «нативной» ячейки не существует в принципе:
+все проверки идут в официальных контейнерах ALT. `verified` означает именно
+это — блокирующие build/metadata/install/smoke/remove в одноразовом контейнере
+нужной ветки. `aarch64` объявлен в рецептах, но в CI не проверяется и помечен
+`partial` с caveat `arm64-not-gated`.
 
 Индекс репозиториев обновляется явным `stplr refresh`. Ни автоматизация, ни
-Nivora CLI не считают `autoPull` достаточным или гарантированным: после `repo add`,
-изменения ref и перед диагностикой воспроизводимости refresh вызывается отдельным
-видимым шагом.
+рецепты не считают `autoPull` достаточным или гарантированным.
 
 ## Названия
 
@@ -51,60 +141,64 @@ Nivora CLI не считают `autoPull` достаточным или гара
 | `claude` | Upstream DEB: `Package: claude-desktop`; desktop-id `com.anthropic.Claude` сохранён; старое имя пакета `claude-desktop` заменяется |
 | `distroshelf` | Upstream не публикует готовый Linux-релиз — Nivora CI собирает пакет из исходников и публикует результат в собственном GitHub Release, как и для `github-desktop`. См. раздел «Сборка в CI» ниже |
 | `github-desktop` | Официальный upstream `desktop/desktop`; Linux-сборка без стороннего форка |
-| `nivora-cli` | Многоязычная оболочка Nivora для Stapler |
 | `telegram` | Upstream-тарбол не даёт своего package ID; desktop-id `org.telegram.desktop` сохранён; переходные metadata заменяют прежний package ID `telegram-desktop` |
 | `vesktop` | Пакет намеренно не называется `discord`: официальный `.deb`/`.tar.gz` Discord — самообновляющийся bootstrap без пригодного для SHA-256-пиннинга payload (см. `vesktop/README.md`). `vesktop` — реальный upstream package ID стороннего клиента Vencord, ставится как есть |
 
-## Зависимости на ALT
+## Lifecycle-хуки
 
-`deps_altlinux`/`opt_deps_altlinux` не поддерживают запись альтернатив
-(«один из нескольких пакетов»), даже когда синтаксис для этого формально
-есть. Проверено установкой настоящего RPM (не просто чтением
-Staplerfile), оба варианта дают одинаковую ошибку:
+Stapler v0.1.1 прокидывает `preupgrade`/`postupgrade` **только** в
+`info.ArchLinux.Scripts` и `info.APK.Scripts`
+(`internal/scripter/utils.go`). Для RPM и DEB они молча игнорируются.
+Соответственно:
 
-- debian-style `'a | b'` — `apt-get install <local.rpm>` на ALT видит
-  буквальную строку с `|` как единое имя пакета и валит установку;
-- настоящий RPM rich-dependency `'(a or b)'` — та же ошибка, apt-rpm ALT
-  не разбирает альтернативы в `Requires` локального пакета вообще.
+- объявлять `postupgrade` бессмысленно — validator этого не требует, а тест
+  ChatGPT прямо запрещает;
+- `postinstall` отображается в RPM `%post`, который выполняется и при
+  установке, и при обновлении;
+- `$1` в `%post` — число установленных экземпляров: `1` при первой установке,
+  `2` и больше при обновлении. В `%preun` `0` — удаление, `1` — обновление.
 
-Единственный рабочий вариант в каждом поле ALT-зависимостей — конкретное имя
-пакета. Если оно отличается между ветками ALT, Stapler `v0.1.1` передаёт
-`ALT_BRANCH_ID` и применяет более точные поля `deps_altlinux_p11` и
-`deps_altlinux_sisyphus`. Так `parsec` выбирает `libavcodec61` для p11 и
-`libavcodec62` для Sisyphus без неработающих альтернатив в одном `Requires`.
+Отсюда правило для сервисных пакетов (`tailscale`, `happ`): `enable --now`
+только при первой установке, `try-restart` при обновлении. Иначе обновление
+заново включает юнит, который пользователь отключил, и при этом не
+перезапускает уже работающий демон — он продолжает крутить старый бинарник.
+Пользовательские настройки (например, Tailscale operator) назначаются один раз
+при первой установке.
 
-`opt_deps_altlinux` с `|` — не той же природы: `opt_deps` вообще не
-попадают в `Recommends`/`Suggests` собранного RPM, это информационное
-поле, поэтому там альтернативы синтаксически «работают» просто потому что
-ни на что не влияют.
+`postremove` различает удаление и обновление по наличию unit-файла: в
+`%postun` при обновлении новый пакет уже вернул файл на место.
 
 ## Локальные проверки
 
-На ALT Workstation dev-only инструменты запускаются в Distrobox. Согласованное
-имя окружения и базовый setup:
+На ALT Workstation dev-only инструменты запускаются в Distrobox:
 
 ```bash
 distrobox create --name nivora-dev \
   --image registry.altlinux.org/alt/alt:sisyphus
 distrobox enter nivora-dev
 sudo apt-get update
-sudo apt-get install git-core bash python3 shellcheck curl
+sudo apt-get install git-core bash python3 shellcheck curl sqlite3 rpm-build
 ```
 
 Не устанавливайте toolchain или distro-specific build dependencies на host.
-Проектные Go/Python-зависимости должны оставаться в рабочей копии или контейнере.
 
 ```bash
 .github/tools/run_checks.sh
 .github/tools/package_updates.sh check-all
+.github/tools/check_source_availability.sh <package> [version]
+NIVORA_ALT_BRANCH=sisyphus .github/tools/clean_build.sh --all
 .github/tools/verify_artifacts.sh --all
-.github/tools/test_package_lifecycle.sh
+NIVORA_ALT_BRANCH=p11 .github/tools/test_package_lifecycle.sh
 ```
+
+`NIVORA_ALT_BRANCH` (`p11` или `sisyphus`, по умолчанию `sisyphus`) выбирает
+ветку для `clean_build.sh` и `test_package_lifecycle.sh`. Образ каждой ветки
+закреплён по digest в `.github/support-matrix.toml`, общий резолвер —
+`.github/tools/lib/alt_branch.sh`.
 
 `stplr-spec` не публикуется в репозиториях дистрибутивов — CI собирает его из
 исходников на закреплённом коммите (`.github/actions/setup-stplr-spec`). Для
-локального запуска `verify-checksums`/`update-checksums`/`get-field` собрать
-так же вручную:
+локального запуска собрать так же вручную:
 
 ```bash
 git clone https://altlinux.space/stapler/stplr-utils.git
@@ -116,8 +210,8 @@ GOBIN="$HOME/.local/bin" go install -C stplr-utils ./cmd/stplr-spec
 `verify_artifacts.sh` завершаются с ошибкой конфигурации. Это не позволяет
 локальному или CI-запуску молча пропустить семантическую проверку рецептов.
 
-`run_checks.sh` выполняет `bash -n`, ShellCheck, Python compile, unit-тесты, validator и чтение
-всех `Staplerfile` через `stplr-spec`.
+`run_checks.sh` выполняет `bash -n`, ShellCheck, Python compile, unit-тесты,
+validator и чтение всех `Staplerfile` через `stplr-spec`.
 
 Если рецепт задаёт `appstream_app_id`, рядом со `Staplerfile` обязательно лежит
 `<appstream_app_id>.metainfo.xml`. Это не source для payload: Stapler v0.1.1
@@ -133,61 +227,60 @@ Validator разбирает XML и сверяет component ID с desktop launc
 `verify_artifacts.sh` сопоставляет готовые RPM с `files()`, проверяет владельцев путей,
 права, desktop-файлы, systemd units, иконки, лицензии и метаданные совместимости.
 
-`test_package_lifecycle.sh` собирает настоящие DEB текущей версии и использует настоящие
-RPM из clean-build. По умолчанию минимальные транзакционные fixtures изображают
-предыдущую версию того же package ID; это не выдаётся за runtime старого payload.
-При наличии `NIVORA_PREVIOUS_ARTIFACTS_DIR` тест вместо fixtures использует реальные
-предыдущие артефакты, названные `<package>.deb` и `<package>.rpm`; файл обязателен
-только для формата, который пакет реально поддерживает.
-Каждая поддерживаемая пара package/format проверяется в отдельном одноразовом Ubuntu или ALT-контейнере,
-чтобы зависимости ранее проверенного пакета не могли скрыть неполный список текущего.
-Через нативный пакетный менеджер проверяются:
+`test_package_lifecycle.sh` использует настоящие RPM из clean-build. По
+умолчанию минимальные транзакционные fixtures изображают предыдущую версию
+того же package ID; это не выдаётся за runtime старого payload. При наличии
+`NIVORA_PREVIOUS_ARTIFACTS_DIR` тест вместо fixtures использует реальные
+предыдущие артефакты, названные `<package>.rpm`. Каждый пакет проверяется в
+отдельном одноразовом контейнере ALT, чтобы зависимости ранее проверенного
+пакета не могли скрыть неполный список текущего. Проверяются:
 
 1. обновление с предыдущей версии Nivora на текущую;
 2. `Provides`, `Replaces` и `Conflicts`;
 3. наличие команды, desktop-файла или systemd unit;
-4. сохранение пользовательского состояния после обновления и удаления.
+4. права `4755` у Electron `chrome-sandbox`, где он есть;
+5. сохранение пользовательского состояния после обновления и удаления.
 
-Транзакционный install/upgrade/remove smoke выполняется для всех 16 активных пакетов.
-Полноценное обновление с ранее опубликованного payload проверяется только при передаче
-реальных артефактов через `NIVORA_PREVIOUS_ARTIFACTS_DIR`.
-Для точечной перепроверки после обновления можно передать разделённый запятыми список,
-например `NIVORA_LIFECYCLE_PACKAGES=github-desktop`; неизвестные и повторяющиеся package ID
-отклоняются до сборки.
-
-Локально DEB собираются в привилегированном контейнере. На GitHub-hosted runner используется
-`NIVORA_DEB_BUILD_MODE=host`: закреплённый stplr запускается непосредственно на одноразовом
-Ubuntu runner, потому что вложенный sandbox stplr запрещён внутри Docker. Ubuntu 24.04 может
-дополнительно блокировать непривилегированные user namespaces через AppArmor: тест временно
-снимает только это ограничение, проверяет полный набор namespaces перед сборкой и
-восстанавливает исходное значение при завершении. Для совместимости с моделью привилегий
-Stapler временный builder включается в группу `wheel`, отсутствующую в Ubuntu по умолчанию.
-Транзакционные сценарии в обоих режимах остаются изолированными в контейнерах.
-
-На ALT Workstation полный локальный DEB/RPM lifecycle воспроизводимо проверен из
-существующего Distrobox `ubuntu-dev`. Нужные distro-specific инструменты остаются
-внутри контейнера, а Podman вызывается на host через Distrobox:
-
-```bash
-distrobox enter ubuntu-dev
-sudo apt-get update
-sudo apt-get install rpm sqlite3
-podman() { distrobox-host-exec podman "$@"; }
-export -f podman
-.github/tools/test_package_lifecycle.sh
-```
+Для точечной перепроверки можно передать разделённый запятыми список,
+например `NIVORA_LIFECYCLE_PACKAGES=github-desktop`; неизвестные и
+повторяющиеся package ID отклоняются до сборки.
 
 ## Обновление пакета
 
 ```bash
+.github/tools/check_source_availability.sh package <новая-версия>
 stplr-spec update-package package
 stplr-spec verify-checksums --path package/Staplerfile
 .github/tools/run_checks.sh
-.github/tools/clean_build.sh package
+NIVORA_ALT_BRANCH=sisyphus .github/tools/clean_build.sh package
 ```
 
-Нестандартная логика обнаружения версий находится в `.github/tools/package_updates.sh`, а каждый
-`.stapler/update-check` вызывает его для своего package ID.
+Нестандартная логика обнаружения версий находится в
+`.github/tools/package_updates.sh`, а каждый `.stapler/update-check` вызывает
+его для своего package ID.
+
+### Источник версии обязан совпадать с источником загрузки
+
+Stapler v0.1.1 **не проверяет HTTP-статус вообще**: `pkg/dl/file.go` отдаёт
+`res.Body` в запись, не глядя на код ответа, поэтому страница 404 сохраняется
+как source, а `stplr-spec update-checksums` спокойно пинит её SHA-256. Рецепт
+после этого выглядит валидным и падает только на сборке — и то лишь если
+`package()` распаковывает payload.
+
+Поэтому:
+
+- `.github/tools/check_source_availability.sh` — обязательная фаза
+  `check-sources` автообновления. Она рендерит все массивы `sources*` для
+  планируемой версии, снимает `~name`/`~archive` ровно как
+  `FileDownloader.parseURLAndParams`, и требует 2xx и ненулевого размера до
+  того, как checksum будет зафиксирован;
+- детектор версии обязан спрашивать тот же хост, с которого идёт загрузка.
+  `telegram` — показательный случай: GitHub-тег `telegramdesktop/tdesktop`
+  появляется раньше, чем `td.telegram.org/tlinux/tsetup.<version>.tar.xz`,
+  поэтому `latest_telegram` подтверждает наличие тарбола и иначе остаётся на
+  текущей версии.
+
+### Изменяемые источники
 
 У ChatGPT и Parsec URL источника изменяемый (`latest`/без версии). Для них рецепт
 хранит SHA-256 от HTTP ETag в `source_fingerprint*`. Detect-job дважды получает
@@ -201,6 +294,8 @@ source URL. Это меняет ключ локального кэша Stapler �
 старому файлу из `/latest/` вызвать checksum mismatch у пользователя. Параметр
 не удалять при обновлении рецепта.
 
+### Автономный workflow
+
 Плановый workflow обновляет пакеты автономно и отправляет проверенные изменения
 прямо в `main`. Он запускается на 17-й минуте каждого часа
 (`17 * * * *` в UTC). Каждый пакет обрабатывается в отдельном временном worktree, поэтому
@@ -208,9 +303,20 @@ source URL. Это меняет ключ локального кэша Stapler �
 сохраняет на 30 дней диагностический artifact с полным логом, фазой сбоя, diff и
 получившимся `Staplerfile`; успешно собранные пакеты всё равно публикуются. Для
 каждого несовместимого пакета создаётся один постоянный issue: повторные сбои
-обновляют его, а успешное восстановление автоматически закрывает. Ожидаемый сбой
-отдельного пакета помечается предупреждением и не делает весь этап обновления
-неуспешным.
+обновляют его, а успешное восстановление автоматически закрывает.
+
+Фазы: `detect-version`, `prepare-worktree`, `check-sources`, `update-recipe`,
+`pin-upstream-commit`, `pin-source-fingerprint`, `sync-catalog`,
+`static-checks`, `clean-build`, `verify-artifact`.
+
+**Патч ограничен каталогом пакета**, и publish-gate принимает ровно один
+изменённый путь. Из этого следует правило: никакой общий файл не может
+требовать синхронного изменения вместе с версией пакета. Раньше этого правила
+не было, и `github-desktop` оказался неспособен обновиться в принципе — в
+`github-desktop-linux.yml` был захардкожен `3.6.5`, а validator требовал
+совпадения с рецептом. Версия теперь приходит только через обязательный вход
+`version`, а validator, наоборот, запрещает любой литерал версии в этом
+workflow.
 
 Служебный issue распознаётся только по точному заголовку, первой строке-marker и
 автору `github-actions[bot]`. Диагностика ограничена по размеру и выводится как
@@ -220,8 +326,8 @@ source URL. Это меняет ключ локального кэша Stapler �
 Сбой post-push gate ставит updater на паузу, если проверявшийся SHA остаётся
 предком текущего `main`; в pause-state записывается именно актуальная вершина,
 чтобы параллельный последующий push не потерял ошибку. Для восстановления запускают
-`post-push-verify.yml` на текущем потомке pause SHA с `resume_on_success=true`: workflow намеренно
-проверяет все 17 пакетов, а не только последний diff, и лишь затем снимает паузу.
+`post-push-verify.yml` на текущем потомке pause SHA с `resume_on_success=true`: workflow
+намеренно проверяет все пакеты, а не только последний diff, и лишь затем снимает паузу.
 
 Прямой push — принятая модель проекта. Updater не создаёт pull request и не
 подписывает commit или tag, поэтому перед push обязательны checksum, validator и
@@ -250,8 +356,15 @@ Upstream pull request разрешён и предпочтителен для и
 но его merge недостаточен для удаления обхода. Удаление выполняется только когда
 исправление вошло в новый поддерживаемый stable release, этот release и pinned
 main прошли соответствующий минимальный тест, а Nivora больше не зависит от
-старого поведения. До этого workaround остаётся узким, покрытым тестом и не
-копируется в несвязанные recipes.
+старого поведения.
+
+Известные дефекты Stapler v0.1.1, на которые опирается инфраструктура:
+
+| Дефект | Файл | Обход |
+|:--|:--|:--|
+| HTTP-статус не проверяется при загрузке source | `pkg/dl/file.go` | `check_source_availability.sh` как фаза `check-sources` |
+| `preupgrade`/`postupgrade` игнорируются для RPM и DEB | `internal/scripter/utils.go` | хуки различают установку и обновление по `$1` в `%post` |
+| `auto_req_filter` игнорируется ALT-финдером | `pkg/reqprov/rpm/altlinux.go` | используется `dirty` + `auto_req_skiplist` |
 
 ## Сборка в CI (github-desktop, distroshelf)
 
@@ -265,10 +378,9 @@ dist со всеми Cargo-крейтами внутри, без обращен�
 сборки), готового Linux-релиза нет вообще — основной канал upstream это
 Flathub. `.github/workflows/distroshelf-linux.yml` собирает пакет внутри
 официального контейнера `registry.altlinux.org/p11/base` — **не**
-Sisyphus, Fedora или Ubuntu: у них более новый glibc, а собранный там
-бинарник не запускается на системах со старым glibc (ALT p11 — glibc
-2.38); собирать нужно на окружении с glibc не новее, чем у самой старой
-поддерживаемой цели.
+Sisyphus: у Sisyphus более новый glibc, а собранный там бинарник не
+запускается на p11 (glibc 2.38). Собирать нужно на окружении с glibc не
+новее, чем у самой старой поддерживаемой цели.
 
 ALT p11 не публикует GTK4-флейвор VTE (`vte3-gtk4`) вообще, а системные
 glib2/libadwaita младше версий, которые Cargo.toml DistroShelf запрашивает
@@ -289,31 +401,17 @@ glib2/libadwaita младше версий, которые Cargo.toml DistroShel
 
 `build_deps` у самого `distroshelf/Staplerfile` — минимальный (`binutils`,
 как у `github-desktop`): весь тулчейн (`meson`, `rust`, dev-пакеты GTK4)
-нужен только workflow, не конечному пользователю. `deps_altlinux`
-перечисляет только прямые runtime-библиотеки (`libgtk4`, `libadwaita`,
-`glib2`, `liblz4`) — `vte3-gtk4` туда не входит, потому что VTE-GTK4
-bundled внутри пакета.
+нужен только workflow, не конечному пользователю. `deps`
+перечисляет только прямые runtime-библиотеки — `vte3-gtk4` туда не входит,
+потому что VTE-GTK4 bundled внутри пакета.
 
 ## Clean-build
 
 ```bash
-.github/tools/clean_build.sh package
-.github/tools/clean_build.sh --all
+NIVORA_ALT_BRANCH=sisyphus .github/tools/clean_build.sh package
+NIVORA_ALT_BRANCH=p11 .github/tools/clean_build.sh --all
 .github/tools/verify_artifacts.sh --all
 ```
 
 Скрипт всегда выполняет сборку в собственном одноразовом контейнере ALT и не
 подключает сторонние Stapler-каталоги.
-
-## Проверка жизненного цикла
-
-Для каждого критичного пакета нужно:
-
-1. Собрать fixture предыдущей версии и текущий RPM/DEB.
-2. Создать тестовый файл в каталоге данных.
-3. Обновить пакет до текущей версии.
-4. Проверить `Provides/Replaces/Conflicts`, payload и тестовый файл.
-5. Проверить удаление пакета без удаления пользовательского состояния.
-
-Автоматизированная проверка выполняется командой `.github/tools/test_package_lifecycle.sh` в
-одноразовых контейнерах, а не на рабочей системе сопровождающего.

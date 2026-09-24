@@ -104,7 +104,7 @@ nv
     <td width="50%" valign="top">
       <!-- package-card:yandex-music -->
       <img src="yandex-music/yandex-music.png" width="42" height="42" align="left" alt="Yandex Music">&nbsp; <strong><a href="yandex-music/README.md">Yandex Music</a></strong><br>&nbsp; <sub>Официальный клиент музыкального сервиса</sub><br><br>
-      <code>5.120.0</code> · <code>amd64</code><br>
+      <code>5.121.2</code> · <code>amd64</code><br>
       <code>stplr install nivora/yandex-music</code>
     </td>
     <td width="50%" valign="middle"><em>Ещё больше приложений появится после полной проверки рецептов.</em></td>

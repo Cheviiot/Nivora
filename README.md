@@ -1,99 +1,83 @@
 <p align="center">
-  <img src=".github/assets/readme-hero.png" width="100%" alt="Nivora — независимый каталог приложений для ALT Linux и Stapler">
+  <img src=".github/assets/readme-hero.png" width="100%" alt="Nivora — приложения для ALT Linux">
 </p>
 
 <p align="center">
-  <a href="https://stplr.dev/docs/intro/"><img src="https://img.shields.io/badge/Stapler-v0.1.1-8b5cf6?style=flat-square" alt="Stapler v0.1.1"></a>
-  <img src="https://img.shields.io/badge/packages-16-19bfc8?style=flat-square" alt="16 пакетов">
-  <img src="https://img.shields.io/badge/ALT-p11%20%7C%20sisyphus-52d99b?style=flat-square" alt="ALT p11 и Sisyphus">
-  <a href="https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/quality.yml?branch=main&amp;style=flat-square&amp;label=quality" alt="Статус CI"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-7188f5?style=flat-square" alt="MIT License"></a>
+  <a href="#совместимость"><img src="https://img.shields.io/badge/ALT-p11%20%C2%B7%20Sisyphus-39cfa4?style=flat-square" alt="ALT p11 и Sisyphus"></a>
+  <a href="https://stplr.dev/docs/intro/"><img src="https://img.shields.io/badge/Stapler-v0.1.1-1ab8cd?style=flat-square" alt="Stapler v0.1.1"></a>
+  <a href="https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/quality.yml?branch=main&amp;style=flat-square&amp;label=CI" alt="Статус проверок репозитория"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/Рецепты-MIT-8b5cf6?style=flat-square" alt="Рецепты под лицензией MIT"></a>
 </p>
 
 <p align="center">
-  Готовые рецепты десктопных приложений и системных инструментов<br>
-  для ALT Linux, которых нет в штатных репозиториях дистрибутива.
+  Приложения для общения, работы и повседневных задач — с установкой через Stapler.
 </p>
 
 <p align="center">
-  <a href="#-быстрый-старт">Быстрый старт</a> ·
-  <a href="#-каталог">Каталог</a> ·
-  <a href="#-совместимость">Совместимость</a> ·
-  <a href="#-безопасность-и-доверие">Безопасность</a> ·
-  <a href="CONTRIBUTING.md">Участие в проекте</a>
+  <a href="#быстрый-старт">Быстрый старт</a> &nbsp;·&nbsp;
+  <a href="#каталог">Каталог</a> &nbsp;·&nbsp;
+  <a href="#совместимость">Совместимость</a> &nbsp;·&nbsp;
+  <a href="#обновление">Обновление</a> &nbsp;·&nbsp;
+  <a href="#документация">Документация</a>
 </p>
 
 <!-- package-count -->
-<p align="center"><strong>16 пакетов</strong> · <strong>4 категории</strong> · <code>ALT p11</code> и <code>ALT Sisyphus</code> · <code>amd64</code>, <code>arm64</code></p>
+<p align="center"><strong>16 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
 
-> [!NOTE]
-> Nivora — независимый community-репозиторий. Он не является официальным
-> репозиторием Stapler или официальным каналом распространения приложений.
+## Быстрый старт
 
-## ✦ Почему Nivora
-
-| Прозрачные рецепты | Проверяемые загрузки | Честная совместимость |
-|:--|:--|:--|
-| Каждый `Staplerfile` открыт для аудита: источники, зависимости, hooks и состав пакета видны до установки. | Загружаемые файлы закреплены SHA-256, изменяемые upstream-источники дополнительно контролируются fingerprint, а доступность каждого источника подтверждается до фиксации контрольной суммы. | Матрица различает доказанную, частичную и неподдерживаемую конфигурации по каждой паре «ветка ALT + архитектура», без завышенных обещаний. |
-
-## ⚡ Быстрый старт
-
-Нужен [Stapler](https://stplr.dev/docs/intro/) `v0.1.1` или новее.
+Нужны **ALT Linux p11 или Sisyphus** и установленный
+[Stapler](https://stplr.dev/docs/intro/). Поддерживаемая версия Stapler — `v0.1.1`.
 
 ```bash
 # 1. Подключить Nivora
 sudo stplr repo add nivora https://github.com/Cheviiot/Nivora.git
 
-# 2. Загрузить индекс
+# 2. Обновить список пакетов
 sudo stplr refresh
 
-# 3. Изучить и установить пакет
+# 3. Посмотреть описание и установить приложение
 stplr info nivora/chatgpt
 sudo stplr install nivora/chatgpt
 ```
 
-Индекс обновляется только явной командой `sudo stplr refresh`. Nivora не
-полагается на неработающий в Stapler v0.1.1 параметр `autoPull`.
+> Nivora — независимый репозиторий сообщества. У проприетарных приложений
+> действуют условия их разработчиков: при интерактивной установке Stapler
+> предложит прочитать и принять их.
 
-Пять пакетов каталога — проприетарные (`chatgpt`, `claude`, `happ`, `parsec`,
-`yandex-music`). Они объявлены как `nonfree`, поэтому при интерактивной
-установке Stapler сначала показывает условия разработчика со ссылкой на
-оригинальный документ и не продолжает без вашего согласия.
+## Каталог
 
-## ◈ Каталог
+Название открывает страницу пакета с описанием и инструкцией. Справа указаны
+**версия**, **архитектуры рецепта** и **идентификатор установки**.
 
-Нажмите на название приложения, чтобы открыть подробности. В строке пакета —
-версия, архитектуры рецепта и идентификатор; ставится он командой
-`sudo stplr install <идентификатор>`.
+```bash
+sudo stplr install nivora/имя-пакета
+```
 
 <!-- catalog:start -->
 ### Интернет, сеть и VPN
 
-<table>
+<table width="100%">
   <tr><!-- package-card:happ -->
-    <td width="40" align="center"><img src="https://happ.su/imgs/apple-touch-icon.png" width="32" height="32" alt="Happ"></td>
-    <td><a href="https://happ.su/"><strong>Happ</strong></a><br><sub>GUI-клиент xray-core и VPN</sub></td>
+    <td width="400" nowrap><img src="https://happ.su/imgs/apple-touch-icon.png" width="24" height="24" alt=""> &nbsp;<a href="happ/README.md"><strong>Happ</strong></a><br><sub>VPN-клиент на базе Xray</sub></td>
     <td align="right" nowrap><code>4.3.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/happ</code></td>
   </tr>
   <tr><!-- package-card:tailscale -->
-    <td width="40" align="center"><img src="https://tailscale.com/favicon.png" width="32" height="32" alt="Tailscale"></td>
-    <td><a href="https://tailscale.com/"><strong>Tailscale</strong></a><br><sub>Mesh VPN на базе WireGuard</sub></td>
+    <td width="400" nowrap><img src="https://tailscale.com/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="tailscale/README.md"><strong>Tailscale</strong></a><br><sub>Частная сеть между устройствами</sub></td>
     <td align="right" nowrap><code>1.102.4</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/tailscale</code></td>
   </tr>
   <tr><!-- package-card:telegram -->
-    <td width="40" align="center"><img src="telegram/telegram-desktop.png" width="32" height="32" alt="Telegram"></td>
-    <td><a href="https://desktop.telegram.org/"><strong>Telegram</strong></a><br><sub>Официальный мессенджер</sub></td>
+    <td width="400" nowrap><img src="telegram/telegram-desktop.png" width="24" height="24" alt=""> &nbsp;<a href="telegram/README.md"><strong>Telegram</strong></a><br><sub>Сообщения, звонки и каналы</sub></td>
     <td align="right" nowrap><code>7.2.5</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/telegram</code></td>
   </tr>
   <tr><!-- package-card:vesktop -->
-    <td width="40" align="center"><img src="https://raw.githubusercontent.com/Vencord/Vesktop/main/build/icon.svg" width="32" height="32" alt="Vesktop"></td>
-    <td><a href="vesktop/README.md"><strong>Vesktop</strong></a><br><sub>Discord-клиент с Vencord</sub></td>
+    <td width="400" nowrap><img src="https://raw.githubusercontent.com/Vencord/Vesktop/main/build/icon.svg" width="24" height="24" alt=""> &nbsp;<a href="vesktop/README.md"><strong>Vesktop</strong></a><br><sub>Discord-клиент с Vencord</sub></td>
     <td align="right" nowrap><code>1.6.7</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/vesktop</code></td>
@@ -102,31 +86,27 @@ sudo stplr install nivora/chatgpt
 
 ### AI и разработка
 
-<table>
+<table width="100%">
   <tr><!-- package-card:chatgpt -->
-    <td width="40" align="center"><img src="chatgpt/chatgpt.png" width="32" height="32" alt="ChatGPT"></td>
-    <td><a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Десктопный клиент OpenAI</sub></td>
+    <td width="400" nowrap><img src="chatgpt/chatgpt.png" width="24" height="24" alt=""> &nbsp;<a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Приложение OpenAI со встроенным Codex</sub></td>
     <td align="right" nowrap><code>26.917.71314</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/chatgpt</code></td>
   </tr>
   <tr><!-- package-card:claude -->
-    <td width="40" align="center"><img src="claude/claude-tray-orange.png" width="32" height="32" alt="Claude"></td>
-    <td><a href="claude/README.md"><strong>Claude</strong></a><br><sub>Десктопный клиент Anthropic</sub></td>
+    <td width="400" nowrap><img src="claude/claude-tray-orange.png" width="24" height="24" alt=""> &nbsp;<a href="claude/README.md"><strong>Claude</strong></a><br><sub>Десктопное приложение Anthropic</sub></td>
     <td align="right" nowrap><code>2.7032.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/claude</code></td>
   </tr>
   <tr><!-- package-card:github-desktop -->
-    <td width="40" align="center"><img src="https://github.githubassets.com/favicons/favicon.png" width="32" height="32" alt="GitHub Desktop"></td>
-    <td><a href="github-desktop/README.md"><strong>GitHub Desktop</strong></a><br><sub>Официальный клиент GitHub</sub></td>
+    <td width="400" nowrap><img src="https://github.githubassets.com/favicons/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="github-desktop/README.md"><strong>GitHub Desktop</strong></a><br><sub>Linux-сборка из официальных исходников</sub></td>
     <td align="right" nowrap><code>3.6.6</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/github-desktop</code></td>
   </tr>
   <tr><!-- package-card:vintner -->
-    <td width="40" align="center"><img src=".github/assets/nivora.png" width="32" height="32" alt="Vintner"></td>
-    <td><a href="https://github.com/Cheviiot/vintner"><strong>Vintner</strong></a><br><sub>MSVC на Linux через Wine</sub></td>
+    <td width="400" nowrap><img src=".github/assets/nivora.png" width="24" height="24" alt=""> &nbsp;<a href="vintner/README.md"><strong>Vintner</strong></a><br><sub>Инструменты MSVC в Linux через Wine</sub></td>
     <td align="right" nowrap><code>0.5.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/vintner</code></td>
@@ -135,31 +115,27 @@ sudo stplr install nivora/chatgpt
 
 ### Медиа и игры
 
-<table>
+<table width="100%">
   <tr><!-- package-card:yandex-music -->
-    <td width="40" align="center"><img src="yandex-music/yandex-music.png" width="32" height="32" alt="Yandex Music"></td>
-    <td><a href="yandex-music/README.md"><strong>Yandex Music</strong></a><br><sub>Клиент Яндекс Музыки</sub></td>
+    <td width="400" nowrap><img src="yandex-music/yandex-music.png" width="24" height="24" alt=""> &nbsp;<a href="yandex-music/README.md"><strong>Яндекс Музыка</strong></a><br><sub>Музыка, подкасты и персональные подборки</sub></td>
     <td align="right" nowrap><code>5.121.2</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/yandex-music</code></td>
   </tr>
   <tr><!-- package-card:anidesk -->
-    <td width="40" align="center"><img src="anidesk/anidesk.png" width="32" height="32" alt="AniDesk"></td>
-    <td><a href="https://github.com/theDesConnet/AniDesk"><strong>AniDesk</strong></a><br><sub>Desktop-клиент Anixart</sub></td>
+    <td width="400" nowrap><img src="anidesk/anidesk.png" width="24" height="24" alt=""> &nbsp;<a href="anidesk/README.md"><strong>AniDesk</strong></a><br><sub>Десктопный клиент Anixart</sub></td>
     <td align="right" nowrap><code>0.0.1-beta.7</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/anidesk</code></td>
   </tr>
   <tr><!-- package-card:pineconemc -->
-    <td width="40" align="center"><img src="pineconemc/pineconemc.svg" width="32" height="32" alt="PineconeMC"></td>
-    <td><a href="https://pineconemc.com/"><strong>PineconeMC</strong></a><br><sub>Minecraft-лаунчер с Ely.by</sub></td>
+    <td width="400" nowrap><img src="pineconemc/pineconemc.svg" width="24" height="24" alt=""> &nbsp;<a href="pineconemc/README.md"><strong>PineconeMC</strong></a><br><sub>Лаунчер Minecraft с поддержкой Ely.by</sub></td>
     <td align="right" nowrap><code>11.1.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/pineconemc</code></td>
   </tr>
   <tr><!-- package-card:parsec -->
-    <td width="40" align="center"><img src="https://parsec.app/favicon.ico" width="32" height="32" alt="Parsec"></td>
-    <td><a href="https://parsec.app/downloads"><strong>Parsec</strong></a><br><sub>Удалённый рабочий стол</sub></td>
+    <td width="400" nowrap><img src="https://parsec.app/favicon.ico" width="24" height="24" alt=""> &nbsp;<a href="parsec/README.md"><strong>Parsec</strong></a><br><sub>Доступ к удалённому рабочему столу</sub></td>
     <td align="right" nowrap><code>150-104a</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/parsec</code></td>
@@ -168,31 +144,27 @@ sudo stplr install nivora/chatgpt
 
 ### Системные инструменты
 
-<table>
+<table width="100%">
   <tr><!-- package-card:armbian-imager -->
-    <td width="40" align="center"><img src="https://raw.githubusercontent.com/armbian/imager/main/public/armbian-icon.png" width="32" height="32" alt="Armbian Imager"></td>
-    <td><a href="armbian-imager/README.md"><strong>Armbian Imager</strong></a><br><sub>Запись образов Armbian</sub></td>
+    <td width="400" nowrap><img src="https://raw.githubusercontent.com/armbian/imager/main/public/armbian-icon.png" width="24" height="24" alt=""> &nbsp;<a href="armbian-imager/README.md"><strong>Armbian Imager</strong></a><br><sub>Выбор и запись образов Armbian</sub></td>
     <td align="right" nowrap><code>2.0.4</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/armbian-imager</code></td>
   </tr>
   <tr><!-- package-card:balena-etcher -->
-    <td width="40" align="center"><img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="32" height="32" alt="balenaEtcher"></td>
-    <td><a href="https://etcher.balena.io/"><strong>balenaEtcher</strong></a><br><sub>Запись образов на SD и USB</sub></td>
+    <td width="400" nowrap><img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="24" height="24" alt=""> &nbsp;<a href="balena-etcher/README.md"><strong>balenaEtcher</strong></a><br><sub>Запись образов на SD-карты и USB</sub></td>
     <td align="right" nowrap><code>2.1.7</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/balena-etcher</code></td>
   </tr>
   <tr><!-- package-card:distroshelf -->
-    <td width="40" align="center"><img src="https://raw.githubusercontent.com/ranfdev/DistroShelf/main/data/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg" width="32" height="32" alt="DistroShelf"></td>
-    <td><a href="distroshelf/README.md"><strong>DistroShelf</strong></a><br><sub>Управление Distrobox</sub></td>
+    <td width="400" nowrap><img src="https://raw.githubusercontent.com/ranfdev/DistroShelf/main/data/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg" width="24" height="24" alt=""> &nbsp;<a href="distroshelf/README.md"><strong>DistroShelf</strong></a><br><sub>Графическое управление Distrobox</sub></td>
     <td align="right" nowrap><code>1.5.2</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/distroshelf</code></td>
   </tr>
   <tr><!-- package-card:ventoy -->
-    <td width="40" align="center"><img src="https://raw.githubusercontent.com/ventoy/Ventoy/master/ICON/logo_128.png" width="32" height="32" alt="Ventoy"></td>
-    <td><a href="ventoy/README.md"><strong>Ventoy</strong></a><br><sub>Мультизагрузочные USB</sub></td>
+    <td width="400" nowrap><img src="https://raw.githubusercontent.com/ventoy/Ventoy/master/ICON/logo_128.png" width="24" height="24" alt=""> &nbsp;<a href="ventoy/README.md"><strong>Ventoy</strong></a><br><sub>Несколько загрузочных образов на одной флешке</sub></td>
     <td align="right" nowrap><code>1.1.17</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/ventoy</code></td>
@@ -200,83 +172,44 @@ sudo stplr install nivora/chatgpt
 </table>
 <!-- catalog:end -->
 
-## ◎ Совместимость
+## Совместимость
 
-Nivora — репозиторий **только для ALT Linux**. Поддерживаются две ветки:
-`p11` и `Sisyphus`. Рецепты не содержат зависимостей других дистрибутивов, и
-`compatible_with` каждого пакета ограничен `altlinux`.
+Nivora предназначена **только для ALT Linux**. Архитектуру выбирайте по строке
+нужного приложения в каталоге.
 
-Обязательный контракт — релизный Stapler `v0.1.1`; закреплённый commit `main`
-проверяется как advisory canary для раннего обнаружения несовместимости.
+| Архитектура | ALT p11 | ALT Sisyphus |
+|:--|:--|:--|
+| **amd64** · x86_64 | Проверки сборки и установки в CI | Проверки сборки и установки в CI |
+| **arm64** · aarch64 | Заявлена для части пакетов, без CI | Заявлена для части пакетов, без CI |
 
-| Уровень | Что означает |
-|:--|:--|
-| 🟢 `verified` | Сборка, metadata, установка, безопасный smoke и удаление выполняются блокирующими проверками в одноразовом контейнере этой ветки ALT. |
-| 🔵 `partial` | Поддержка объявлена с явными ограничениями, ячейка не является блокирующей проверкой. |
-| ⚫ `unsupported` | Цель исключается до сборки. |
+Для `amd64` также настроены проверки состава пакета, базового запуска и
+удаления. Для `arm64` Stapler собирает пакет на машине пользователя.
+Особенности приложений и границы проверок — в
+[матрице поддержки](.github/support-matrix.toml).
 
-У GitHub нет ALT-раннера, поэтому все проверки выполняются в официальных
-контейнерах ALT на runner-е `x86_64`. Отсюда честная граница: `amd64` на обеих
-ветках — `verified`, а `aarch64` объявлен, но **не проверяется в CI** и
-собирается Stapler-ом на машине пользователя.
-
-Точные цели и ограничения каждого пакета находятся в
-[машиночитаемой матрице](.github/support-matrix.toml).
-
-## ↻ Обновление
+## Обновление
 
 ```bash
 sudo stplr refresh
 sudo stplr upgrade
 ```
 
-Рецепты сохраняют пользовательские конфигурации. Обычное обновление или
-удаление пакета не сбрасывает настройки и не завершает принудительно
-пользовательскую сессию.
+`refresh` загружает актуальные рецепты, `upgrade` обновляет установленные
+пакеты. Пользовательские настройки сохраняются при обновлении и обычном
+удалении; отключённые системные службы остаются отключёнными.
 
-Для пакетов с системными службами (`tailscale`, `happ`) это уточнено явно:
-служба включается **один раз**, при первой установке. Обновление не включает
-её заново, если вы её отключили, но перезапускает уже работающую, чтобы вы не
-остались на старом бинарнике. Пользовательские настройки вроде Tailscale
-operator тоже назначаются только при первой установке.
+## Документация
 
-## ◉ Безопасность и доверие
-
-- Исходники рецептов и package hooks доступны для проверки до установки.
-- SHA-256 подтверждает целостность выбранной загрузки, но сам по себе не делает upstream доверенным.
-- Контрольная сумма фиксируется только после подтверждения, что источник действительно опубликован: Stapler v0.1.1 не проверяет HTTP-статус и иначе закрепил бы страницу ошибки как payload.
-- Проприетарные приложения остаются под лицензиями и условиями их разработчиков.
-- Проприетарные payload не публикуются в постоянных кэшах Nivora.
-- Успешный CI не является обещанием абсолютной безопасности или совместимости с любой системой.
-
-Подробнее: [модель доверия](.github/docs/security-model.md),
-[политика безопасности](SECURITY.md) и [история изменений](CHANGELOG.md).
-
-## Код и участие
-
-Хотите добавить пакет или улучшить существующий рецепт — начните с
-[руководства контрибьютора](CONTRIBUTING.md). Процесс обновления, локальные
-проверки и правила сопровождения описаны в
-[maintenance guide](.github/docs/maintenance.md).
-
-<details>
-<summary><strong>Команды сопровождающего</strong></summary>
-
-```bash
-.github/tools/run_checks.sh
-.github/tools/package_updates.sh check-all
-.github/tools/check_source_availability.sh <package>
-NIVORA_ALT_BRANCH=sisyphus .github/tools/clean_build.sh --all
-.github/tools/verify_artifacts.sh --all
-NIVORA_ALT_BRANCH=sisyphus .github/tools/test_package_lifecycle.sh
-```
-
-</details>
+| Задача | Куда перейти |
+|:--|:--|
+| Добавить приложение или улучшить рецепт | [Участие в проекте](CONTRIBUTING.md) |
+| Собрать пакет и разобраться в обновлениях | [Руководство сопровождающего](.github/docs/maintenance.md) |
+| Узнать об источниках, проверках и лицензиях | [Модель доверия](.github/docs/security-model.md) |
+| Сообщить об уязвимости | [Политика безопасности](SECURITY.md) |
+| Посмотреть, что изменилось | [История изменений](CHANGELOG.md) |
 
 ---
 
 <p align="center">
-  <img src=".github/assets/nivora.png" width="54" height="54" alt="Nivora"><br>
-  <strong>Nivora</strong> · Linux-пакеты без магии за кулисами<br>
-  <sub>MIT © 2026 Cheviiot</sub>
+  <sub>Сделано для сообщества ALT Linux · <a href="LICENSE">Рецепты — MIT</a> · © 2026 Cheviiot</sub>
 </p>

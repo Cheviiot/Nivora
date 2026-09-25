@@ -300,10 +300,10 @@ class ReadmeTests(unittest.TestCase):
         )
         cards = """<!-- package-card:alpha -->
 <code>1.2.3</code> <code>amd64</code>
-<code>stplr install nivora/alpha</code>
+<code>nivora/alpha</code>
 <!-- package-card:beta -->
 <code>4.5.6</code> <code>all</code>
-<code>stplr install nivora/beta</code>
+<code>nivora/beta</code>
 """
         text = f"""<!-- package-count -->
 <p><strong>2 пакета</strong></p>

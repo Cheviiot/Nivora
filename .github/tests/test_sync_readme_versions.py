@@ -14,25 +14,30 @@ SPEC.loader.exec_module(SYNC)
 
 class SyncCatalogTests(unittest.TestCase):
     def test_updates_html_card_version_and_architectures(self):
-        readme = """<!-- package-card:demo -->
-<strong>Demo</strong><br>
-<code>1.0.0</code> · <code>amd64</code><br>
-<code>stplr install nivora/demo</code>
+        readme = """  <tr><!-- package-card:demo -->
+    <td><strong>Demo</strong></td>
+    <td align="right" nowrap><code>1.0.0</code></td>
+    <td nowrap><code>amd64</code></td>
+    <td nowrap><code>nivora/demo</code></td>
+  </tr>
 """
         result = SYNC.sync_catalog(
             readme,
             {"demo": ("2.0.0", ["amd64", "arm64"])},
         )
         self.assertIn(
-            "<code>2.0.0</code> · <code>amd64</code> <code>arm64</code><br>",
+            '<td align="right" nowrap><code>2.0.0</code></td>\n'
+            '    <td nowrap><code>amd64</code> <code>arm64</code></td>',
             result,
         )
         self.assertNotIn("<code>1.0.0</code>", result)
 
     def test_rejects_missing_duplicate_and_cross_card_commands(self):
-        valid = """<!-- package-card:demo -->
-<code>1</code> · <code>amd64</code><br>
-<code>stplr install nivora/demo</code>
+        valid = """  <tr><!-- package-card:demo -->
+    <td align="right" nowrap><code>1</code></td>
+    <td nowrap><code>amd64</code></td>
+    <td nowrap><code>nivora/demo</code></td>
+  </tr>
 """
         cases = (
             valid.replace("<!-- package-card:demo -->", ""),
@@ -40,10 +45,13 @@ class SyncCatalogTests(unittest.TestCase):
                 "<!-- package-card:demo -->",
                 "<!-- package-card:demo --><!-- package-card:demo -->",
             ),
-            """<!-- package-card:demo -->
-<code>1</code> · <code>amd64</code><br>
-<!-- package-card:other -->
-<code>stplr install nivora/demo</code>
+            """  <tr><!-- package-card:demo -->
+    <td align="right" nowrap><code>1</code></td>
+    <td nowrap><code>amd64</code></td>
+  </tr>
+  <tr><!-- package-card:other -->
+    <td nowrap><code>nivora/demo</code></td>
+  </tr>
 """,
         )
         for candidate in cases:

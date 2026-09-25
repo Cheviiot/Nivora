@@ -697,14 +697,15 @@ def validate_readme_text(
             + ", ".join(EXPECTED_README_CATEGORIES)
         )
 
-    # Every cell of the showcase carries a package. A cell that only holds a
-    # filler sentence is an empty half-row next to the icons, and it silently
-    # outlives the package it was written for.
-    for cell in re.findall(r"<td[^>]*>(.*?)</td>", catalog, re.DOTALL):
-        if "package-card:" not in cell:
+    # One package per row. Two packages sharing a row are stretched to the
+    # taller one, so the shorter card ends up with dead space at the bottom,
+    # and a row holding no package at all is pure filler.
+    for row in re.findall(r"<tr[^>]*>(.*?)</tr>", catalog, re.DOTALL):
+        found = re.findall(r"package-card:([a-z0-9-]+)", row)
+        if len(found) != 1:
             errors.append(
-                "README.md: catalogue cell without a package card: "
-                + " ".join(cell.split())[:60]
+                "README.md: every catalogue row must hold exactly one package, "
+                f"got {found or 'none'}"
             )
 
     markers = list(
@@ -736,7 +737,7 @@ def validate_readme_text(
         )
         card = catalog[block_start:block_end]
 
-        command = f"<code>stplr install nivora/{package}</code>"
+        command = f"<code>nivora/{package}</code>"
         if card.count(command) != 1:
             errors.append(f"README.md: expected one install command for {package}")
         version = str(values["version"])

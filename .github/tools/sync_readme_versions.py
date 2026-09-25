@@ -7,9 +7,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 README = ROOT / "README.md"
+# The version and the architectures live in two adjacent cells of the package
+# row, so they are rewritten together.
 CARD_METADATA_RE = re.compile(
-    r"<code>[^<\n]+</code>\s*·\s*"
-    r"(?:<code>(?:amd64|arm64|all)</code>\s*)+<br>"
+    r'<td align="right" nowrap><code>[^<\n]+</code></td>\n'
+    r'(\s*)<td nowrap>(?:<code>(?:amd64|arm64|all)</code> ?)+</td>'
 )
 
 
@@ -44,7 +46,7 @@ def sync_catalog(
 ) -> str:
     for package, (version, architectures) in sorted(metadata.items()):
         marker = f"<!-- package-card:{package} -->"
-        command = f"<code>stplr install nivora/{package}</code>"
+        command = f"<code>nivora/{package}</code>"
         if text.count(marker) != 1:
             raise RuntimeError(
                 f"{package}: expected one README package marker, "
@@ -72,13 +74,16 @@ def sync_catalog(
                 f"got {len(matches)}"
             )
         match = matches[0]
+        indent = match.group(1)
         replacement = (
-            f"<code>{version}</code> · "
+            f'<td align="right" nowrap><code>{version}</code></td>\n'
+            + indent
+            + '<td nowrap>'
             + " ".join(
                 f"<code>{architecture}</code>"
                 for architecture in architectures
             )
-            + "<br>"
+            + "</td>"
         )
         absolute_start = marker_start + match.start()
         absolute_end = marker_start + match.end()

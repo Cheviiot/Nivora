@@ -62,139 +62,140 @@ sudo stplr install nivora/chatgpt
 
 ## ◈ Каталог
 
-Нажмите на название приложения, чтобы открыть подробности. Рядом с версией
-указаны архитектуры, которые объявляет рецепт.
+Нажмите на название приложения, чтобы открыть подробности. В строке пакета —
+версия, архитектуры рецепта и идентификатор; ставится он командой
+`sudo stplr install <идентификатор>`.
 
 <!-- catalog:start -->
 ### Интернет, сеть и VPN
 
 <table>
-  <tr>
-    <td width="50%" valign="top">
-      <!-- package-card:happ -->
-      <img src="https://happ.su/imgs/apple-touch-icon.png" width="42" height="42" align="left" alt="Happ"><strong><a href="https://happ.su/">Happ</a></strong><br><sub>GUI-клиент xray-core и TUN/VPN</sub><br><br>
-      <code>4.3.0</code> · <code>amd64</code> <code>arm64</code><br>
-      <code>stplr install nivora/happ</code>
-    </td>
-    <td width="50%" valign="top">
-      <!-- package-card:tailscale -->
-      <img src="https://tailscale.com/favicon.png" width="42" height="42" align="left" alt="Tailscale"><strong><a href="https://tailscale.com/">Tailscale</a></strong><br><sub>Mesh VPN на базе WireGuard</sub><br><br>
-      <code>1.102.4</code> · <code>amd64</code> <code>arm64</code><br>
-      <code>stplr install nivora/tailscale</code>
-    </td>
+  <tr><!-- package-card:happ -->
+    <td width="40" align="center"><img src="https://happ.su/imgs/apple-touch-icon.png" width="32" height="32" alt="Happ"></td>
+    <td><a href="https://happ.su/"><strong>Happ</strong></a><br><sub>GUI-клиент xray-core и VPN</sub></td>
+    <td align="right" nowrap><code>4.3.0</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/happ</code></td>
   </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <!-- package-card:telegram -->
-      <img src="telegram/telegram-desktop.png" width="42" height="42" align="left" alt="Telegram"><strong><a href="https://desktop.telegram.org/">Telegram</a></strong><br><sub>Официальный десктопный мессенджер</sub><br><br>
-      <code>7.2.5</code> · <code>amd64</code><br>
-      <code>stplr install nivora/telegram</code>
-    </td>
-    <td width="50%" valign="top">
-      <!-- package-card:vesktop -->
-      <img src="https://raw.githubusercontent.com/Vencord/Vesktop/main/build/icon.svg" width="42" height="42" align="left" alt="Vesktop"><strong><a href="vesktop/README.md">Vesktop</a></strong><br><sub>Discord-клиент с интеграцией Vencord</sub><br><br>
-      <code>1.6.7</code> · <code>amd64</code> <code>arm64</code><br>
-      <code>stplr install nivora/vesktop</code>
-    </td>
+  <tr><!-- package-card:tailscale -->
+    <td width="40" align="center"><img src="https://tailscale.com/favicon.png" width="32" height="32" alt="Tailscale"></td>
+    <td><a href="https://tailscale.com/"><strong>Tailscale</strong></a><br><sub>Mesh VPN на базе WireGuard</sub></td>
+    <td align="right" nowrap><code>1.102.4</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/tailscale</code></td>
+  </tr>
+  <tr><!-- package-card:telegram -->
+    <td width="40" align="center"><img src="telegram/telegram-desktop.png" width="32" height="32" alt="Telegram"></td>
+    <td><a href="https://desktop.telegram.org/"><strong>Telegram</strong></a><br><sub>Официальный мессенджер</sub></td>
+    <td align="right" nowrap><code>7.2.5</code></td>
+    <td nowrap><code>amd64</code></td>
+    <td nowrap><code>nivora/telegram</code></td>
+  </tr>
+  <tr><!-- package-card:vesktop -->
+    <td width="40" align="center"><img src="https://raw.githubusercontent.com/Vencord/Vesktop/main/build/icon.svg" width="32" height="32" alt="Vesktop"></td>
+    <td><a href="vesktop/README.md"><strong>Vesktop</strong></a><br><sub>Discord-клиент с Vencord</sub></td>
+    <td align="right" nowrap><code>1.6.7</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/vesktop</code></td>
   </tr>
 </table>
 
 ### AI и разработка
 
 <table>
-  <tr>
-    <td width="50%" valign="top">
-      <!-- package-card:chatgpt -->
-      <img src="chatgpt/chatgpt.png" width="42" height="42" align="left" alt="ChatGPT"><strong><a href="chatgpt/README.md">ChatGPT</a></strong><br><sub>Десктопный клиент OpenAI</sub><br><br>
-      <code>26.917.71314</code> · <code>amd64</code> <code>arm64</code><br>
-      <code>stplr install nivora/chatgpt</code>
-    </td>
-    <td width="50%" valign="top">
-      <!-- package-card:claude -->
-      <img src="claude/claude-tray-orange.png" width="42" height="42" align="left" alt="Claude"><strong><a href="claude/README.md">Claude</a></strong><br><sub>Десктопный клиент Anthropic</sub><br><br>
-      <code>2.7032.0</code> · <code>amd64</code> <code>arm64</code><br>
-      <code>stplr install nivora/claude</code>
-    </td>
+  <tr><!-- package-card:chatgpt -->
+    <td width="40" align="center"><img src="chatgpt/chatgpt.png" width="32" height="32" alt="ChatGPT"></td>
+    <td><a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Десктопный клиент OpenAI</sub></td>
+    <td align="right" nowrap><code>26.917.71314</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/chatgpt</code></td>
   </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <!-- package-card:github-desktop -->
-      <img src="https://github.githubassets.com/favicons/favicon.png" width="42" height="42" align="left" alt="GitHub Desktop"><strong><a href="github-desktop/README.md">GitHub Desktop</a></strong><br><sub>Официальный код GitHub Desktop, собранный для Linux</sub><br><br>
-      <code>3.6.6</code> · <code>amd64</code> <code>arm64</code><br>
-      <code>stplr install nivora/github-desktop</code>
-    </td>
-    <td width="50%" valign="top">
-      <!-- package-card:vintner -->
-      <img src=".github/assets/nivora.png" width="42" height="42" align="left" alt="Vintner"><strong><a href="https://github.com/Cheviiot/vintner">Vintner</a></strong><br><sub>Настоящий MSVC на Linux через Wine</sub><br><br>
-      <code>0.5.0</code> · <code>amd64</code> <code>arm64</code><br>
-      <code>stplr install nivora/vintner</code>
-    </td>
+  <tr><!-- package-card:claude -->
+    <td width="40" align="center"><img src="claude/claude-tray-orange.png" width="32" height="32" alt="Claude"></td>
+    <td><a href="claude/README.md"><strong>Claude</strong></a><br><sub>Десктопный клиент Anthropic</sub></td>
+    <td align="right" nowrap><code>2.7032.0</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/claude</code></td>
+  </tr>
+  <tr><!-- package-card:github-desktop -->
+    <td width="40" align="center"><img src="https://github.githubassets.com/favicons/favicon.png" width="32" height="32" alt="GitHub Desktop"></td>
+    <td><a href="github-desktop/README.md"><strong>GitHub Desktop</strong></a><br><sub>Официальный клиент GitHub</sub></td>
+    <td align="right" nowrap><code>3.6.6</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/github-desktop</code></td>
+  </tr>
+  <tr><!-- package-card:vintner -->
+    <td width="40" align="center"><img src=".github/assets/nivora.png" width="32" height="32" alt="Vintner"></td>
+    <td><a href="https://github.com/Cheviiot/vintner"><strong>Vintner</strong></a><br><sub>MSVC на Linux через Wine</sub></td>
+    <td align="right" nowrap><code>0.5.0</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/vintner</code></td>
   </tr>
 </table>
 
 ### Медиа и игры
 
 <table>
-  <tr>
-    <td width="50%" valign="top">
-      <!-- package-card:yandex-music -->
-      <img src="yandex-music/yandex-music.png" width="42" height="42" align="left" alt="Yandex Music"><strong><a href="yandex-music/README.md">Yandex Music</a></strong><br><sub>Официальный клиент музыкального сервиса</sub><br><br>
-      <code>5.121.2</code> · <code>amd64</code><br>
-      <code>stplr install nivora/yandex-music</code>
-    </td>
-    <td width="50%" valign="top">
-      <!-- package-card:anidesk -->
-      <img src="anidesk/anidesk.png" width="42" height="42" align="left" alt="AniDesk"><strong><a href="https://github.com/theDesConnet/AniDesk">AniDesk</a></strong><br><sub>Неофициальный desktop-клиент Anixart</sub><br><br>
-      <code>0.0.1-beta.7</code> · <code>amd64</code><br>
-      <code>stplr install nivora/anidesk</code>
-    </td>
+  <tr><!-- package-card:yandex-music -->
+    <td width="40" align="center"><img src="yandex-music/yandex-music.png" width="32" height="32" alt="Yandex Music"></td>
+    <td><a href="yandex-music/README.md"><strong>Yandex Music</strong></a><br><sub>Клиент Яндекс Музыки</sub></td>
+    <td align="right" nowrap><code>5.121.2</code></td>
+    <td nowrap><code>amd64</code></td>
+    <td nowrap><code>nivora/yandex-music</code></td>
   </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <!-- package-card:pineconemc -->
-      <img src="pineconemc/pineconemc.svg" width="42" height="42" align="left" alt="PineconeMC"><strong><a href="https://pineconemc.com/">PineconeMC</a></strong><br><sub>Minecraft launcher с Ely.by и offline-аккаунтами</sub><br><br>
-      <code>11.1.0</code> · <code>amd64</code> <code>arm64</code><br>
-      <code>stplr install nivora/pineconemc</code>
-    </td>
-    <td width="50%" valign="top">
-      <!-- package-card:parsec -->
-      <img src="https://parsec.app/favicon.ico" width="42" height="42" align="left" alt="Parsec"><strong><a href="https://parsec.app/downloads">Parsec</a></strong><br><sub>Удалённый рабочий стол с низкой задержкой</sub><br><br>
-      <code>150-104a</code> · <code>amd64</code><br>
-      <code>stplr install nivora/parsec</code>
-    </td>
+  <tr><!-- package-card:anidesk -->
+    <td width="40" align="center"><img src="anidesk/anidesk.png" width="32" height="32" alt="AniDesk"></td>
+    <td><a href="https://github.com/theDesConnet/AniDesk"><strong>AniDesk</strong></a><br><sub>Desktop-клиент Anixart</sub></td>
+    <td align="right" nowrap><code>0.0.1-beta.7</code></td>
+    <td nowrap><code>amd64</code></td>
+    <td nowrap><code>nivora/anidesk</code></td>
+  </tr>
+  <tr><!-- package-card:pineconemc -->
+    <td width="40" align="center"><img src="pineconemc/pineconemc.svg" width="32" height="32" alt="PineconeMC"></td>
+    <td><a href="https://pineconemc.com/"><strong>PineconeMC</strong></a><br><sub>Minecraft-лаунчер с Ely.by</sub></td>
+    <td align="right" nowrap><code>11.1.0</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/pineconemc</code></td>
+  </tr>
+  <tr><!-- package-card:parsec -->
+    <td width="40" align="center"><img src="https://parsec.app/favicon.ico" width="32" height="32" alt="Parsec"></td>
+    <td><a href="https://parsec.app/downloads"><strong>Parsec</strong></a><br><sub>Удалённый рабочий стол</sub></td>
+    <td align="right" nowrap><code>150-104a</code></td>
+    <td nowrap><code>amd64</code></td>
+    <td nowrap><code>nivora/parsec</code></td>
   </tr>
 </table>
 
 ### Системные инструменты
 
 <table>
-  <tr>
-    <td width="50%" valign="top">
-      <!-- package-card:armbian-imager -->
-      <img src="https://raw.githubusercontent.com/armbian/imager/main/public/armbian-icon.png" width="42" height="42" align="left" alt="Armbian Imager"><strong><a href="armbian-imager/README.md">Armbian Imager</a></strong><br><sub>Официальная запись образов Armbian</sub><br><br>
-      <code>2.0.4</code> · <code>amd64</code> <code>arm64</code><br>
-      <code>stplr install nivora/armbian-imager</code>
-    </td>
-    <td width="50%" valign="top">
-      <!-- package-card:balena-etcher -->
-      <img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="42" height="42" align="left" alt="balenaEtcher"><strong><a href="https://etcher.balena.io/">balenaEtcher</a></strong><br><sub>Запись образов на SD-карты и USB</sub><br><br>
-      <code>2.1.7</code> · <code>amd64</code><br>
-      <code>stplr install nivora/balena-etcher</code>
-    </td>
+  <tr><!-- package-card:armbian-imager -->
+    <td width="40" align="center"><img src="https://raw.githubusercontent.com/armbian/imager/main/public/armbian-icon.png" width="32" height="32" alt="Armbian Imager"></td>
+    <td><a href="armbian-imager/README.md"><strong>Armbian Imager</strong></a><br><sub>Запись образов Armbian</sub></td>
+    <td align="right" nowrap><code>2.0.4</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/armbian-imager</code></td>
   </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <!-- package-card:distroshelf -->
-      <img src="https://raw.githubusercontent.com/ranfdev/DistroShelf/main/data/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg" width="42" height="42" align="left" alt="DistroShelf"><strong><a href="distroshelf/README.md">DistroShelf</a></strong><br><sub>Графическое управление Distrobox-контейнерами</sub><br><br>
-      <code>1.5.2</code> · <code>amd64</code><br>
-      <code>stplr install nivora/distroshelf</code>
-    </td>
-    <td width="50%" valign="top">
-      <!-- package-card:ventoy -->
-      <img src="https://raw.githubusercontent.com/ventoy/Ventoy/master/ICON/logo_128.png" width="42" height="42" align="left" alt="Ventoy"><strong><a href="ventoy/README.md">Ventoy</a></strong><br><sub>Мультизагрузочные USB-накопители</sub><br><br>
-      <code>1.1.17</code> · <code>amd64</code> <code>arm64</code><br>
-      <code>stplr install nivora/ventoy</code>
-    </td>
+  <tr><!-- package-card:balena-etcher -->
+    <td width="40" align="center"><img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="32" height="32" alt="balenaEtcher"></td>
+    <td><a href="https://etcher.balena.io/"><strong>balenaEtcher</strong></a><br><sub>Запись образов на SD и USB</sub></td>
+    <td align="right" nowrap><code>2.1.7</code></td>
+    <td nowrap><code>amd64</code></td>
+    <td nowrap><code>nivora/balena-etcher</code></td>
+  </tr>
+  <tr><!-- package-card:distroshelf -->
+    <td width="40" align="center"><img src="https://raw.githubusercontent.com/ranfdev/DistroShelf/main/data/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg" width="32" height="32" alt="DistroShelf"></td>
+    <td><a href="distroshelf/README.md"><strong>DistroShelf</strong></a><br><sub>Управление Distrobox</sub></td>
+    <td align="right" nowrap><code>1.5.2</code></td>
+    <td nowrap><code>amd64</code></td>
+    <td nowrap><code>nivora/distroshelf</code></td>
+  </tr>
+  <tr><!-- package-card:ventoy -->
+    <td width="40" align="center"><img src="https://raw.githubusercontent.com/ventoy/Ventoy/master/ICON/logo_128.png" width="32" height="32" alt="Ventoy"></td>
+    <td><a href="ventoy/README.md"><strong>Ventoy</strong></a><br><sub>Мультизагрузочные USB</sub></td>
+    <td align="right" nowrap><code>1.1.17</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/ventoy</code></td>
   </tr>
 </table>
 <!-- catalog:end -->

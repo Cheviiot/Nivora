@@ -690,23 +690,38 @@ def validate_readme_text(
         return
     catalog = text[start:end]
 
-    categories = tuple(re.findall(r"^### ([^\n]+)$", catalog, re.MULTILINE))
-    if categories != EXPECTED_README_CATEGORIES:
-        errors.append(
-            "README.md: catalog categories must be exactly: "
-            + ", ".join(EXPECTED_README_CATEGORIES)
-        )
+    # A shared table keeps every category on the same column grid on GitHub.
+    if len(re.findall(r"<table\b", catalog)) != 1 or catalog.count("</table>") != 1:
+        errors.append("README.md: catalog must use a single table for aligned columns")
+
+    rows = re.findall(r"<tr[^>]*>(.*?)</tr>", catalog, re.DOTALL)
+    headers = re.findall(r"<th\b[^>]*>([^<]+)</th>", rows[0]) if rows else []
+    if headers != ["Приложение", "Версия", "Архитектуры", "Пакет"]:
+        errors.append("README.md: catalog column headers are missing or out of order")
 
     # One package per row. Two packages sharing a row are stretched to the
-    # taller one, so the shorter card ends up with dead space at the bottom,
-    # and a row holding no package at all is pure filler.
-    for row in re.findall(r"<tr[^>]*>(.*?)</tr>", catalog, re.DOTALL):
+    # taller one, so the shorter card ends up with dead space at the bottom.
+    # Only the column headers and category dividers may contain no package.
+    categories = []
+    for row in rows[1:]:
+        category = re.fullmatch(
+            r'\s*<th colspan="4" align="left">([^<]+)</th>\s*', row
+        )
+        if category:
+            categories.append(category.group(1))
+            continue
         found = re.findall(r"package-card:([a-z0-9-]+)", row)
         if len(found) != 1:
             errors.append(
                 "README.md: every catalogue row must hold exactly one package, "
                 f"got {found or 'none'}"
             )
+
+    if tuple(categories) != EXPECTED_README_CATEGORIES:
+        errors.append(
+            "README.md: catalog categories must be exactly: "
+            + ", ".join(EXPECTED_README_CATEGORIES)
+        )
 
     markers = list(
         re.finditer(

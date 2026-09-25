@@ -55,116 +55,109 @@ sudo stplr install nivora/имя-пакета
 ```
 
 <!-- catalog:start -->
-### Интернет, сеть и VPN
-
 <table width="100%">
+  <tr>
+    <th align="left">Приложение</th>
+    <th align="right">Версия</th>
+    <th align="left">Архитектуры</th>
+    <th width="220" align="left">Пакет</th>
+  </tr>
+  <tr><th colspan="4" align="left">Интернет, сеть и VPN</th></tr>
   <tr><!-- package-card:happ -->
-    <td width="400" nowrap><img src="https://happ.su/imgs/apple-touch-icon.png" width="24" height="24" alt=""> &nbsp;<a href="happ/README.md"><strong>Happ</strong></a><br><sub>VPN-клиент на базе Xray</sub></td>
+    <td width="340" nowrap><img src="https://happ.su/imgs/apple-touch-icon.png" width="24" height="24" alt=""> &nbsp;<a href="happ/README.md"><strong>Happ</strong></a><br><sub>VPN-клиент на базе Xray</sub></td>
     <td align="right" nowrap><code>4.3.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/happ</code></td>
   </tr>
   <tr><!-- package-card:tailscale -->
-    <td width="400" nowrap><img src="https://tailscale.com/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="tailscale/README.md"><strong>Tailscale</strong></a><br><sub>Частная сеть между устройствами</sub></td>
+    <td width="340" nowrap><img src="https://tailscale.com/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="tailscale/README.md"><strong>Tailscale</strong></a><br><sub>Частная сеть между устройствами</sub></td>
     <td align="right" nowrap><code>1.102.4</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/tailscale</code></td>
   </tr>
   <tr><!-- package-card:telegram -->
-    <td width="400" nowrap><img src="telegram/telegram-desktop.png" width="24" height="24" alt=""> &nbsp;<a href="telegram/README.md"><strong>Telegram</strong></a><br><sub>Сообщения, звонки и каналы</sub></td>
+    <td width="340" nowrap><img src="telegram/telegram-desktop.png" width="24" height="24" alt=""> &nbsp;<a href="telegram/README.md"><strong>Telegram</strong></a><br><sub>Сообщения, звонки и каналы</sub></td>
     <td align="right" nowrap><code>7.2.5</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/telegram</code></td>
   </tr>
   <tr><!-- package-card:vesktop -->
-    <td width="400" nowrap><img src="https://raw.githubusercontent.com/Vencord/Vesktop/main/build/icon.svg" width="24" height="24" alt=""> &nbsp;<a href="vesktop/README.md"><strong>Vesktop</strong></a><br><sub>Discord-клиент с Vencord</sub></td>
+    <td width="340" nowrap><img src="https://raw.githubusercontent.com/Vencord/Vesktop/main/build/icon.svg" width="24" height="24" alt=""> &nbsp;<a href="vesktop/README.md"><strong>Vesktop</strong></a><br><sub>Discord-клиент с Vencord</sub></td>
     <td align="right" nowrap><code>1.6.7</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/vesktop</code></td>
   </tr>
-</table>
-
-### AI и разработка
-
-<table width="100%">
+  <tr><th colspan="4" align="left">AI и разработка</th></tr>
   <tr><!-- package-card:chatgpt -->
-    <td width="400" nowrap><img src="chatgpt/chatgpt.png" width="24" height="24" alt=""> &nbsp;<a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Приложение OpenAI со встроенным Codex</sub></td>
+    <td width="340" nowrap><img src="chatgpt/chatgpt.png" width="24" height="24" alt=""> &nbsp;<a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Приложение OpenAI со встроенным Codex</sub></td>
     <td align="right" nowrap><code>26.917.71314</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/chatgpt</code></td>
   </tr>
   <tr><!-- package-card:claude -->
-    <td width="400" nowrap><img src="claude/claude-tray-orange.png" width="24" height="24" alt=""> &nbsp;<a href="claude/README.md"><strong>Claude</strong></a><br><sub>Десктопное приложение Anthropic</sub></td>
+    <td width="340" nowrap><img src="claude/claude-tray-orange.png" width="24" height="24" alt=""> &nbsp;<a href="claude/README.md"><strong>Claude</strong></a><br><sub>Десктопное приложение Anthropic</sub></td>
     <td align="right" nowrap><code>2.7032.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/claude</code></td>
   </tr>
   <tr><!-- package-card:github-desktop -->
-    <td width="400" nowrap><img src="https://github.githubassets.com/favicons/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="github-desktop/README.md"><strong>GitHub Desktop</strong></a><br><sub>Linux-сборка из официальных исходников</sub></td>
+    <td width="340" nowrap><img src="https://github.githubassets.com/favicons/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="github-desktop/README.md"><strong>GitHub Desktop</strong></a><br><sub>Linux-сборка из официальных исходников</sub></td>
     <td align="right" nowrap><code>3.6.6</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/github-desktop</code></td>
   </tr>
   <tr><!-- package-card:vintner -->
-    <td width="400" nowrap><img src=".github/assets/nivora.png" width="24" height="24" alt=""> &nbsp;<a href="vintner/README.md"><strong>Vintner</strong></a><br><sub>Инструменты MSVC в Linux через Wine</sub></td>
+    <td width="340" nowrap><img src=".github/assets/nivora.png" width="24" height="24" alt=""> &nbsp;<a href="vintner/README.md"><strong>Vintner</strong></a><br><sub>Инструменты MSVC в Linux через Wine</sub></td>
     <td align="right" nowrap><code>0.5.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/vintner</code></td>
   </tr>
-</table>
-
-### Медиа и игры
-
-<table width="100%">
+  <tr><th colspan="4" align="left">Медиа и игры</th></tr>
   <tr><!-- package-card:yandex-music -->
-    <td width="400" nowrap><img src="yandex-music/yandex-music.png" width="24" height="24" alt=""> &nbsp;<a href="yandex-music/README.md"><strong>Яндекс Музыка</strong></a><br><sub>Музыка, подкасты и персональные подборки</sub></td>
+    <td width="340" nowrap><img src="yandex-music/yandex-music.png" width="24" height="24" alt=""> &nbsp;<a href="yandex-music/README.md"><strong>Яндекс Музыка</strong></a><br><sub>Музыка, подкасты и персональные подборки</sub></td>
     <td align="right" nowrap><code>5.121.2</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/yandex-music</code></td>
   </tr>
   <tr><!-- package-card:anidesk -->
-    <td width="400" nowrap><img src="anidesk/anidesk.png" width="24" height="24" alt=""> &nbsp;<a href="anidesk/README.md"><strong>AniDesk</strong></a><br><sub>Десктопный клиент Anixart</sub></td>
+    <td width="340" nowrap><img src="anidesk/anidesk.png" width="24" height="24" alt=""> &nbsp;<a href="anidesk/README.md"><strong>AniDesk</strong></a><br><sub>Десктопный клиент Anixart</sub></td>
     <td align="right" nowrap><code>0.0.1-beta.7</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/anidesk</code></td>
   </tr>
   <tr><!-- package-card:pineconemc -->
-    <td width="400" nowrap><img src="pineconemc/pineconemc.svg" width="24" height="24" alt=""> &nbsp;<a href="pineconemc/README.md"><strong>PineconeMC</strong></a><br><sub>Лаунчер Minecraft с поддержкой Ely.by</sub></td>
+    <td width="340" nowrap><img src="pineconemc/pineconemc.svg" width="24" height="24" alt=""> &nbsp;<a href="pineconemc/README.md"><strong>PineconeMC</strong></a><br><sub>Лаунчер Minecraft с поддержкой Ely.by</sub></td>
     <td align="right" nowrap><code>11.1.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/pineconemc</code></td>
   </tr>
   <tr><!-- package-card:parsec -->
-    <td width="400" nowrap><img src="https://parsec.app/favicon.ico" width="24" height="24" alt=""> &nbsp;<a href="parsec/README.md"><strong>Parsec</strong></a><br><sub>Доступ к удалённому рабочему столу</sub></td>
+    <td width="340" nowrap><img src="https://parsec.app/favicon.ico" width="24" height="24" alt=""> &nbsp;<a href="parsec/README.md"><strong>Parsec</strong></a><br><sub>Доступ к удалённому рабочему столу</sub></td>
     <td align="right" nowrap><code>150-104a</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/parsec</code></td>
   </tr>
-</table>
-
-### Системные инструменты
-
-<table width="100%">
+  <tr><th colspan="4" align="left">Системные инструменты</th></tr>
   <tr><!-- package-card:armbian-imager -->
-    <td width="400" nowrap><img src="https://raw.githubusercontent.com/armbian/imager/main/public/armbian-icon.png" width="24" height="24" alt=""> &nbsp;<a href="armbian-imager/README.md"><strong>Armbian Imager</strong></a><br><sub>Выбор и запись образов Armbian</sub></td>
+    <td width="340" nowrap><img src="https://raw.githubusercontent.com/armbian/imager/main/public/armbian-icon.png" width="24" height="24" alt=""> &nbsp;<a href="armbian-imager/README.md"><strong>Armbian Imager</strong></a><br><sub>Выбор и запись образов Armbian</sub></td>
     <td align="right" nowrap><code>2.0.4</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/armbian-imager</code></td>
   </tr>
   <tr><!-- package-card:balena-etcher -->
-    <td width="400" nowrap><img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="24" height="24" alt=""> &nbsp;<a href="balena-etcher/README.md"><strong>balenaEtcher</strong></a><br><sub>Запись образов на SD-карты и USB</sub></td>
+    <td width="340" nowrap><img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="24" height="24" alt=""> &nbsp;<a href="balena-etcher/README.md"><strong>balenaEtcher</strong></a><br><sub>Запись образов на SD-карты и USB</sub></td>
     <td align="right" nowrap><code>2.1.7</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/balena-etcher</code></td>
   </tr>
   <tr><!-- package-card:distroshelf -->
-    <td width="400" nowrap><img src="https://raw.githubusercontent.com/ranfdev/DistroShelf/main/data/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg" width="24" height="24" alt=""> &nbsp;<a href="distroshelf/README.md"><strong>DistroShelf</strong></a><br><sub>Графическое управление Distrobox</sub></td>
+    <td width="340" nowrap><img src="https://raw.githubusercontent.com/ranfdev/DistroShelf/main/data/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg" width="24" height="24" alt=""> &nbsp;<a href="distroshelf/README.md"><strong>DistroShelf</strong></a><br><sub>Графическое управление Distrobox</sub></td>
     <td align="right" nowrap><code>1.5.2</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/distroshelf</code></td>
   </tr>
   <tr><!-- package-card:ventoy -->
-    <td width="400" nowrap><img src="https://raw.githubusercontent.com/ventoy/Ventoy/master/ICON/logo_128.png" width="24" height="24" alt=""> &nbsp;<a href="ventoy/README.md"><strong>Ventoy</strong></a><br><sub>Несколько загрузочных образов на одной флешке</sub></td>
+    <td width="340" nowrap><img src="https://raw.githubusercontent.com/ventoy/Ventoy/master/ICON/logo_128.png" width="24" height="24" alt=""> &nbsp;<a href="ventoy/README.md"><strong>Ventoy</strong></a><br><sub>Несколько загрузочных образов на одной флешке</sub></td>
     <td align="right" nowrap><code>1.1.17</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/ventoy</code></td>

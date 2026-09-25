@@ -296,20 +296,26 @@ class ReadmeTests(unittest.TestCase):
             "beta": {"version": "4.5.6", "architectures": ["all"]},
         }
         categories = "\n".join(
-            f"### {category}" for category in VALIDATOR.EXPECTED_README_CATEGORIES
+            f'<tr><th colspan="4" align="left">{category}</th></tr>'
+            for category in VALIDATOR.EXPECTED_README_CATEGORIES
         )
-        cards = """<!-- package-card:alpha -->
-<code>1.2.3</code> <code>amd64</code>
-<code>nivora/alpha</code>
-<!-- package-card:beta -->
-<code>4.5.6</code> <code>all</code>
-<code>nivora/beta</code>
+        cards = """<tr><!-- package-card:alpha -->
+<td>Alpha</td><td><code>1.2.3</code></td><td><code>amd64</code></td>
+<td><code>nivora/alpha</code></td>
+</tr>
+<tr><!-- package-card:beta -->
+<td>Beta</td><td><code>4.5.6</code></td><td><code>all</code></td>
+<td><code>nivora/beta</code></td>
+</tr>
 """
         text = f"""<!-- package-count -->
 <p><strong>2 пакета</strong></p>
 <!-- catalog:start -->
+<table>
+<tr><th>Приложение</th><th>Версия</th><th>Архитектуры</th><th>Пакет</th></tr>
 {categories}
-{cards}<!-- catalog:end -->
+{cards}</table>
+<!-- catalog:end -->
 """
         return text, metadata
 
@@ -342,7 +348,38 @@ class ReadmeTests(unittest.TestCase):
             # EXPECTED_README_CATEGORIES instead of naming one by hand.
             "missing category": (
                 text.replace(
-                    f"### {VALIDATOR.EXPECTED_README_CATEGORIES[-1]}\n", ""
+                    f'<tr><th colspan="4" align="left">'
+                    f'{VALIDATOR.EXPECTED_README_CATEGORIES[-1]}</th></tr>\n',
+                    "",
+                ),
+                "catalog categories",
+            ),
+            "split tables": (
+                text.replace(
+                    '<tr><!-- package-card:beta -->',
+                    '</table><table><tr><!-- package-card:beta -->',
+                ),
+                "single table",
+            ),
+            "missing column header": (
+                text.replace("<th>Версия</th>", ""),
+                "column headers",
+            ),
+            "empty row": (
+                text.replace("</table>", '<tr><td colspan="4"></td></tr></table>'),
+                "every catalogue row",
+            ),
+            "two packages in one row": (
+                text.replace(
+                    '</tr>\n<tr><!-- package-card:beta -->',
+                    '<!-- package-card:beta -->',
+                ),
+                "every catalogue row",
+            ),
+            "duplicate category": (
+                text.replace(
+                    VALIDATOR.EXPECTED_README_CATEGORIES[-1],
+                    VALIDATOR.EXPECTED_README_CATEGORIES[0],
                 ),
                 "catalog categories",
             ),

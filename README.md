@@ -24,7 +24,7 @@
 </p>
 
 <!-- package-count -->
-<p align="center"><strong>16 пакетов</strong> · <strong>6 категорий</strong> · <code>ALT p11</code> и <code>ALT Sisyphus</code> · <code>amd64</code>, <code>arm64</code></p>
+<p align="center"><strong>16 пакетов</strong> · <strong>4 категории</strong> · <code>ALT p11</code> и <code>ALT Sisyphus</code> · <code>amd64</code>, <code>arm64</code></p>
 
 > [!NOTE]
 > Nivora — независимый community-репозиторий. Он не является официальным
@@ -97,29 +97,6 @@ sudo stplr install nivora/chatgpt
       <code>stplr install nivora/vesktop</code>
     </td>
   </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <!-- package-card:yandex-music -->
-      <img src="yandex-music/yandex-music.png" width="42" height="42" align="left" alt="Yandex Music"><strong><a href="yandex-music/README.md">Yandex Music</a></strong><br><sub>Официальный клиент музыкального сервиса</sub><br><br>
-      <code>5.121.2</code> · <code>amd64</code><br>
-      <code>stplr install nivora/yandex-music</code>
-    </td>
-    <td width="50%" valign="middle"><em>Ещё больше приложений появится после полной проверки рецептов.</em></td>
-  </tr>
-</table>
-
-### Удалённый доступ
-
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <!-- package-card:parsec -->
-      <img src="https://parsec.app/favicon.ico" width="42" height="42" align="left" alt="Parsec"><strong><a href="https://parsec.app/downloads">Parsec</a></strong><br><sub>Удалённый рабочий стол с низкой задержкой</sub><br><br>
-      <code>150-104a</code> · <code>amd64</code><br>
-      <code>stplr install nivora/parsec</code>
-    </td>
-    <td width="50%" valign="middle"><em>Подходит для удалённой работы и игрового стриминга.</em></td>
-  </tr>
 </table>
 
 ### AI и разработка
@@ -155,23 +132,23 @@ sudo stplr install nivora/chatgpt
   </tr>
 </table>
 
-### Рабочий стол
+### Медиа и игры
 
 <table>
   <tr>
+    <td width="50%" valign="top">
+      <!-- package-card:yandex-music -->
+      <img src="yandex-music/yandex-music.png" width="42" height="42" align="left" alt="Yandex Music"><strong><a href="yandex-music/README.md">Yandex Music</a></strong><br><sub>Официальный клиент музыкального сервиса</sub><br><br>
+      <code>5.121.2</code> · <code>amd64</code><br>
+      <code>stplr install nivora/yandex-music</code>
+    </td>
     <td width="50%" valign="top">
       <!-- package-card:anidesk -->
       <img src="anidesk/anidesk.png" width="42" height="42" align="left" alt="AniDesk"><strong><a href="https://github.com/theDesConnet/AniDesk">AniDesk</a></strong><br><sub>Неофициальный desktop-клиент Anixart</sub><br><br>
       <code>0.0.1-beta.7</code> · <code>amd64</code><br>
       <code>stplr install nivora/anidesk</code>
     </td>
-    <td width="50%" valign="middle"><em>Приложения, которые органично дополняют Linux-десктоп.</em></td>
   </tr>
-</table>
-
-### Игры
-
-<table>
   <tr>
     <td width="50%" valign="top">
       <!-- package-card:pineconemc -->
@@ -179,7 +156,12 @@ sudo stplr install nivora/chatgpt
       <code>11.1.0</code> · <code>amd64</code> <code>arm64</code><br>
       <code>stplr install nivora/pineconemc</code>
     </td>
-    <td width="50%" valign="middle"><em>Игровые инструменты с воспроизводимой пакетной установкой.</em></td>
+    <td width="50%" valign="top">
+      <!-- package-card:parsec -->
+      <img src="https://parsec.app/favicon.ico" width="42" height="42" align="left" alt="Parsec"><strong><a href="https://parsec.app/downloads">Parsec</a></strong><br><sub>Удалённый рабочий стол с низкой задержкой</sub><br><br>
+      <code>150-104a</code> · <code>amd64</code><br>
+      <code>stplr install nivora/parsec</code>
+    </td>
   </tr>
 </table>
 
@@ -207,16 +189,12 @@ sudo stplr install nivora/chatgpt
       <code>1.5.2</code> · <code>amd64</code><br>
       <code>stplr install nivora/distroshelf</code>
     </td>
-    <td width="50%" valign="middle"><em>Инструменты для носителей и контейнеров.</em></td>
-  </tr>
-  <tr>
     <td width="50%" valign="top">
       <!-- package-card:ventoy -->
       <img src="https://raw.githubusercontent.com/ventoy/Ventoy/master/ICON/logo_128.png" width="42" height="42" align="left" alt="Ventoy"><strong><a href="ventoy/README.md">Ventoy</a></strong><br><sub>Мультизагрузочные USB-накопители</sub><br><br>
       <code>1.1.17</code> · <code>amd64</code> <code>arm64</code><br>
       <code>stplr install nivora/ventoy</code>
     </td>
-    <td width="50%" valign="middle"><em>Инструменты для носителей, контейнеров и управления пакетами.</em></td>
   </tr>
 </table>
 <!-- catalog:end -->

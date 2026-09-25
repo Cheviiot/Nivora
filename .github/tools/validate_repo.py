@@ -84,10 +84,8 @@ FOREIGN_DISTRO_SUFFIXES = (
 OVERRIDABLE_LIST_FIELDS = ("deps", "opt_deps", "build_deps")
 EXPECTED_README_CATEGORIES = (
     "Интернет, сеть и VPN",
-    "Удалённый доступ",
     "AI и разработка",
-    "Рабочий стол",
-    "Игры",
+    "Медиа и игры",
     "Системные инструменты",
 )
 
@@ -698,6 +696,16 @@ def validate_readme_text(
             "README.md: catalog categories must be exactly: "
             + ", ".join(EXPECTED_README_CATEGORIES)
         )
+
+    # Every cell of the showcase carries a package. A cell that only holds a
+    # filler sentence is an empty half-row next to the icons, and it silently
+    # outlives the package it was written for.
+    for cell in re.findall(r"<td[^>]*>(.*?)</td>", catalog, re.DOTALL):
+        if "package-card:" not in cell:
+            errors.append(
+                "README.md: catalogue cell without a package card: "
+                + " ".join(cell.split())[:60]
+            )
 
     markers = list(
         re.finditer(

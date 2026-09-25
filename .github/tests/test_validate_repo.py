@@ -338,8 +338,12 @@ class ReadmeTests(unittest.TestCase):
                 text.replace("<code>4.5.6</code>", "<code>4.5.5</code>"),
                 "version 4.5.6",
             ),
+            # Drop whichever category is declared last, so the case follows
+            # EXPECTED_README_CATEGORIES instead of naming one by hand.
             "missing category": (
-                text.replace("### Игры\n", ""),
+                text.replace(
+                    f"### {VALIDATOR.EXPECTED_README_CATEGORIES[-1]}\n", ""
+                ),
                 "catalog categories",
             ),
         }

@@ -127,10 +127,14 @@ jobs:
         with:
           persist-credentials: false
 
+      # The canary builds Stapler from source, and main now reaches
+      # internal/usecase/support -> coreos/go-systemd/sdjournal, which is cgo
+      # and needs systemd/sd-journal.h. Without it every canary job failed at
+      # the same step, which is why the lane was uniformly red.
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: rpm cpio
+          system-packages: rpm cpio libsystemd-dev
 
       - name: Собрать и проверить pinned main
         env:

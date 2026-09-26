@@ -99,6 +99,30 @@ PACKAGE_DIRECTORY_FILES = {
     ".stapler/update-run",
 }
 PACKAGE_TEST_RE = re.compile(r"tests/test-[a-z0-9-]+\.sh\Z")
+# Stapler helpers a continued line must never run into. A trailing backslash
+# followed by one of these swallows the command name as an argument: the build
+# then fails far from the typo, with files-find reporting a pattern that does
+# not exist because the pattern it got was the literal string "files-find".
+RECIPE_COMMANDS = (
+    "files-find",
+    "files-find-binary",
+    "files-find-desktop",
+    "files-find-doc",
+    "files-find-lang",
+    "files-find-library",
+    "files-find-license",
+    "files-find-manual",
+    "install",
+    "install-binary",
+    "install-config",
+    "install-desktop",
+    "install-library",
+    "install-license",
+    "install-manual",
+    "install-pixmap",
+    "install-systemd",
+    "install-systemd-user",
+)
 EXPECTED_README_CATEGORIES = (
     "Интернет, сеть и VPN",
     "AI и разработка",
@@ -209,6 +233,22 @@ def validate_appstream_sidecar(
         )
         return None
     return launchables[0]
+
+
+def validate_recipe_continuations(
+    package: str, text: str, errors: list[str]
+) -> None:
+    """Catch a continued line that runs into the next command."""
+    lines = text.splitlines()
+    for index, line in enumerate(lines[:-1]):
+        if not line.rstrip().endswith("\\"):
+            continue
+        following = lines[index + 1].strip()
+        if following.split(" ", 1)[0] in RECIPE_COMMANDS:
+            errors.append(
+                f"G0 {package}: line {index + 1} continues into "
+                f"{following.split(' ', 1)[0]!r} on the next line"
+            )
 
 
 def validate_package_directory(
@@ -680,6 +720,7 @@ def validate_package(
     appstream_id = scalar(text, "appstream_app_id")
     validate_package_directory(package, directory, text, appstream_id, errors)
     validate_local_sources_are_used(package, text, errors)
+    validate_recipe_continuations(package, text, errors)
     has_appstream_payload = bool(
         re.search(r"/usr/share/(?:metainfo|appdata)/[^\s'\"]+\.(?:metainfo|appdata)\.xml", text)
     )

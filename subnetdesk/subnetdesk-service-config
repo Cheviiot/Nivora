@@ -1,0 +1,102 @@
+#!/bin/bash
+# Перенести личность SubnetDesk рабочего пользователя в конфигурацию
+# root-службы — то же, что делает кнопка «Запустить службу» в приложении.
+#
+# Приложение выполняет это через собственный диалог пароля поверх sudo
+# (src/platform/gtk_sudo.rs). Первую попытку диалог отправляет сам, через 50 мс
+# после приглашения, и отправляет пустое значение, поэтому «Sorry, try again.»
+# появляется до того, как пользователь что-либо набрал: кнопка выглядит
+# сломанной, хотя верный пароль диалог принимает. Пакет делает ту же работу сам
+# и пароля не спрашивает: скрипт запускается от root — из ExecStartPre службы
+# или как `sudo subnetdesk-service-config`.
+set -euo pipefail
+
+readonly root_config='/root/.config/subnetdesk'
+readonly -a config_files=('SubnetDesk.toml' 'SubnetDesk2.toml')
+quiet=0
+
+for argument in "$@"; do
+    case "$argument" in
+    --quiet) quiet=1 ;;
+    *)
+        printf 'subnetdesk-service-config: неизвестный аргумент %s\n' "$argument" >&2
+        exit 2
+        ;;
+    esac
+done
+
+say() {
+    [ "$quiet" -eq 1 ] || printf '%s\n' "$1"
+}
+
+fail() {
+    printf 'subnetdesk-service-config: %s\n' "$1" >&2
+    exit 1
+}
+
+[ "$(id -u)" -eq 0 ] || fail 'запускать нужно от root: sudo subnetdesk-service-config'
+
+# Владельца берём по активному графическому сеансу. Если их несколько,
+# выбирать за администратора нельзя: чью личность обслуживает root-служба —
+# решение не скрипта.
+desktop_users() {
+    local session properties
+    while read -r session _; do
+        [ -n "$session" ] || continue
+        properties="$(loginctl show-session "$session" --property=Active \
+            --property=Class --property=Type --property=Name 2>/dev/null)" || continue
+        case "$properties" in *'Active=yes'*) ;; *) continue ;; esac
+        case "$properties" in *'Class=user'*) ;; *) continue ;; esac
+        case "$properties" in *'Type=x11'* | *'Type=wayland'*) ;; *) continue ;; esac
+        sed -n 's/^Name=//p' <<<"$properties"
+    done < <(loginctl list-sessions --no-legend 2>/dev/null)
+}
+
+mapfile -t users < <(desktop_users | sort -u)
+if [ "${#users[@]}" -eq 0 ]; then
+    say 'активного графического сеанса нет, конфигурация службы не тронута'
+    exit 0
+fi
+if [ "${#users[@]}" -gt 1 ]; then
+    say "активных графических сеансов несколько (${users[*]}), выбор за администратором"
+    exit 0
+fi
+
+user="${users[0]}"
+entry="$(getent passwd "$user")" || fail "пользователь ${user} не найден"
+uid="$(cut -d: -f3 <<<"$entry")"
+home="$(cut -d: -f6 <<<"$entry")"
+source_config="${home}/.config/subnetdesk"
+
+if [ ! -d "$source_config" ]; then
+    say "у ${user} ещё нет конфигурации SubnetDesk, нечего переносить"
+    exit 0
+fi
+
+install -d -m700 -o root -g root "$root_config"
+
+changed=0
+for name in "${config_files[@]}"; do
+    file="${source_config}/${name}"
+    # Файл лежит в каталоге, куда пишет непривилегированный пользователь,
+    # а копируем мы от root: берём только обычный файл, принадлежащий ему.
+    if [ -L "$file" ] || [ ! -f "$file" ]; then
+        continue
+    fi
+    if [ "$(stat -c %u -- "$file")" != "$uid" ]; then
+        printf 'subnetdesk-service-config: %s принадлежит не %s, пропущен\n' \
+            "$file" "$user" >&2
+        continue
+    fi
+    if cmp -s -- "$file" "${root_config}/${name}"; then
+        continue
+    fi
+    install -m600 -o root -g root -- "$file" "${root_config}/${name}"
+    changed=1
+done
+
+if [ "$changed" -eq 1 ]; then
+    say "личность ${user} перенесена в конфигурацию службы"
+else
+    say 'конфигурация службы уже совпадает'
+fi

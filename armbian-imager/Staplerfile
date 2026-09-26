@@ -109,5 +109,5 @@ files() {
 	files-find-license
 	files-find \
 		"/usr/share/metainfo/armbian-imager.metainfo.xml" \
-	files-find '/usr/share/icons/hicolor/*/apps/armbian-imager.png'
+		'/usr/share/icons/hicolor/*/apps/armbian-imager.png'
 }

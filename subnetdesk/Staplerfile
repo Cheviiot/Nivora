@@ -1,6 +1,6 @@
 name='subnetdesk'
 version='1.3.0'
-release=1
+release=2
 summary='Remote desktop for a local network or VPN, based on RustDesk'
 summary_ru='Удалённый рабочий стол внутри локальной сети или VPN на базе RustDesk'
 group='Networking/Remote access'
@@ -101,6 +101,8 @@ sources=(
 	"https://github.com/zibo-chen/SubnetDesk/releases/download/v${version}/subnetdesk-${version}-x86_64.deb?~archive=false&~name=subnetdesk.deb"
 	"https://raw.githubusercontent.com/zibo-chen/SubnetDesk/v${version}/LICENCE?~archive=false"
 	'local:///subnetdesk.pam?nivora=subnetdesk'
+	'local:///subnetdesk-service-config?nivora=subnetdesk'
+	'local:///nivora-config-sync.conf?nivora=subnetdesk'
 	'local:///subnetdesk.metainfo.xml?nivora=subnetdesk'
 	'local:///LICENSE?nivora=subnetdesk'
 )
@@ -109,6 +111,8 @@ sources_arm64=(
 	"https://github.com/zibo-chen/SubnetDesk/releases/download/v${version}/subnetdesk-${version}-aarch64.deb?~archive=false&~name=subnetdesk.deb"
 	"https://raw.githubusercontent.com/zibo-chen/SubnetDesk/v${version}/LICENCE?~archive=false"
 	'local:///subnetdesk.pam?nivora=subnetdesk'
+	'local:///subnetdesk-service-config?nivora=subnetdesk'
+	'local:///nivora-config-sync.conf?nivora=subnetdesk'
 	'local:///subnetdesk.metainfo.xml?nivora=subnetdesk'
 	'local:///LICENSE?nivora=subnetdesk'
 )
@@ -117,6 +121,8 @@ checksums=(
 	'sha256:59686cd464204dfc898473a49c1b80260b61b67dc2e6ce11b20ec60abdc7329a'
 	'sha256:8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef'
 	'sha256:b240a17badca46a0bb1bde50201241b3330e205316ce63fb649504fbe6e0d0c7'
+	'sha256:976a6ec3b742dfc1a59e1d71b48fd64886cc6b0ed03ba1a761d7ba0b4841d6c8'
+	'sha256:4afdfb4bf1cc960d1454183ec7660612d58aceb6e2b81914d2a4393e6a578282'
 	'sha256:d235c91e2bc6da1d485a3571b066062fe30f4f57172664d17756ca4604dba3c9'
 	'sha256:8da4557e7dfe6dc2cd27788896486b2d2e6572598dcd86e44f06b770d7c540ba'
 )
@@ -125,6 +131,8 @@ checksums_arm64=(
 	'sha256:93f5a83c4a5f4eb10c59a43a08ce0b3797103084972a0950c17633e6344703b4'
 	'sha256:8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef'
 	'sha256:b240a17badca46a0bb1bde50201241b3330e205316ce63fb649504fbe6e0d0c7'
+	'sha256:976a6ec3b742dfc1a59e1d71b48fd64886cc6b0ed03ba1a761d7ba0b4841d6c8'
+	'sha256:4afdfb4bf1cc960d1454183ec7660612d58aceb6e2b81914d2a4393e6a578282'
 	'sha256:d235c91e2bc6da1d485a3571b066062fe30f4f57172664d17756ca4604dba3c9'
 	'sha256:8da4557e7dfe6dc2cd27788896486b2d2e6572598dcd86e44f06b770d7c540ba'
 )
@@ -195,6 +203,17 @@ package() {
 	# impossible. ALT routes everything through system-auth.
 	install -Dm644 "${srcdir}/subnetdesk.pam" "${pkgdir}/etc/pam.d/subnetdesk"
 
+	# The application offers to copy the desktop user's identity into the
+	# root service's config itself, from a password dialog it builds on top
+	# of sudo. That dialog sends its first attempt on its own, 50ms after the
+	# prompt and with an empty value, so "Sorry, try again." shows up before
+	# the user has typed anything and the button looks broken. The helper
+	# performs the same copy without a password and the drop-in runs it on
+	# every service start, so the dialog is never needed.
+	install-binary "${srcdir}/subnetdesk-service-config"
+	install -Dm644 "${srcdir}/nivora-config-sync.conf" \
+		"${pkgdir}/usr/lib/systemd/system/subnetdesk.service.d/nivora-config-sync.conf"
+
 	install -Dm644 "${srcdir}/subnetdesk.metainfo.xml" \
 		"${pkgdir}/usr/share/metainfo/subnetdesk.metainfo.xml"
 
@@ -216,5 +235,6 @@ files() {
 		"/usr/share/icons/hicolor/scalable/apps/subnetdesk.svg" \
 		"/etc/pam.d/subnetdesk" \
 		"/etc/subnetdesk/startwm.sh" \
-		"/etc/subnetdesk/xorg.conf"
+		"/etc/subnetdesk/xorg.conf" \
+		"/usr/lib/systemd/system/subnetdesk.service.d/nivora-config-sync.conf"
 }

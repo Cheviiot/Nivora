@@ -652,5 +652,35 @@ class LocalSourceUseTests(unittest.TestCase):
         self.assertEqual(errors, [])
 
 
+class RecipeContinuationTests(unittest.TestCase):
+    def test_continuation_running_into_a_command_is_rejected(self):
+        # The typo that broke armbian-imager and github-desktop: the trailing
+        # backslash made files-find take "files-find" as a pattern, and the
+        # build failed with "pattern does not exist" far from the real cause.
+        recipe = (
+            "files() {\n"
+            "\tfiles-find \\\n"
+            '\t\t"/usr/share/metainfo/app.metainfo.xml" \\\n'
+            "\tfiles-find '/usr/share/icons/hicolor/*/apps/app.png'\n"
+            "}\n"
+        )
+        errors = []
+        VALIDATOR.validate_recipe_continuations("demo", recipe, errors)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("files-find", errors[0])
+
+    def test_properly_continued_argument_list_is_accepted(self):
+        recipe = (
+            "files() {\n"
+            "\tfiles-find \\\n"
+            '\t\t"/usr/share/metainfo/app.metainfo.xml" \\\n'
+            "\t\t'/usr/share/icons/hicolor/*/apps/app.png'\n"
+            "}\n"
+        )
+        errors = []
+        VALIDATOR.validate_recipe_continuations("demo", recipe, errors)
+        self.assertEqual(errors, [])
+
+
 if __name__ == "__main__":
     unittest.main()

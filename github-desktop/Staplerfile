@@ -147,5 +147,5 @@ files() {
 	files-find-license
 	files-find \
 		"/usr/share/metainfo/github-desktop.metainfo.xml" \
-	files-find "/usr/share/icons/hicolor/*/apps/github-desktop.svg"
+		"/usr/share/icons/hicolor/*/apps/github-desktop.svg"
 }

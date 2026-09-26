@@ -29,28 +29,24 @@ if command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
     fi
 fi
 
-# The operator is a user-visible choice. Set it once, while the package is
-# genuinely new, so a later upgrade cannot silently take it back from whoever
-# the user assigned it to.
-if [[ "$transaction_count" -gt 1 ]]; then
-    exit 0
-fi
+# Nivora used to assign the Tailscale operator here. It cannot work: the
+# operator is a per-profile preference, a freshly installed node has no
+# profile yet, and `tailscale login` creates one — which drops the setting
+# again. Verified against tailscaled's own log: EditPrefs sets
+# OperatorUser, the next PUT /localapi/v0/profiles/ clears it. The operator
+# has to be assigned after the first login, so the package points at the
+# right order instead of silently doing something that gets undone.
+if [[ "$transaction_count" -le 1 ]]; then
+    cat >&2 <<'HINT'
 
-REAL_USER="${SUDO_USER:-}"
-if [[ -z "$REAL_USER" ]] && [[ -n "${PKEXEC_UID:-}" ]]; then
-    REAL_USER=$(id -nu "$PKEXEC_UID")
-fi
-if [[ -z "$REAL_USER" ]] && command -v logname >/dev/null 2>&1; then
-    REAL_USER=$(logname 2>/dev/null) || REAL_USER=""
-fi
+Tailscale установлен, служба tailscaled запущена.
 
-if [[ -n "$REAL_USER" ]] && [[ "$REAL_USER" != "root" ]] &&
-    id "$REAL_USER" >/dev/null 2>&1 &&
-    command -v tailscale >/dev/null 2>&1; then
-    for _ in 1 2 3 4 5; do
-        tailscale status --json >/dev/null 2>&1 && break
-        sleep 1
-    done
-    optional_step "не удалось назначить Tailscale operator для ${REAL_USER}" \
-        tailscale set --operator="$REAL_USER"
+Первый вход выполняется от root, и только потом назначается оператор —
+иначе назначение будет стёрто при создании профиля:
+
+    sudo tailscale up
+    sudo tailscale set --operator=$USER
+
+После этого команда tailscale работает без sudo.
+HINT
 fi

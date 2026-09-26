@@ -1,6 +1,6 @@
 name='tailscale'
 version='1.102.4'
-release=2
+release=3
 summary='Mesh VPN built on WireGuard'
 summary_ru='Mesh VPN на базе WireGuard'
 group='Networking/Other'

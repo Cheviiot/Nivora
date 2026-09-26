@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="pineconemc.svg" width="96" height="96" alt="PineconeMC">
+  <img src="io.github.elyprismlauncher.ElyPrismLauncher.svg" width="96" height="96" alt="PineconeMC">
 </p>
 
 <h1 align="center">PineconeMC</h1>

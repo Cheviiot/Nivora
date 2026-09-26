@@ -1,11 +1,11 @@
 name='tailscale'
 version='1.102.4'
-release=3
-summary='Mesh VPN built on WireGuard'
-summary_ru='Mesh VPN на базе WireGuard'
+release=4
+summary='The easiest, most secure way to use WireGuard and 2FA.'
+summary_ru='Самый простой и безопасный способ использовать WireGuard и двухфакторную аутентификацию.'
 group='Networking/Other'
-desc='Tailscale is a secure mesh VPN built on WireGuard and identity-based access that connects devices and services across networks.'
-desc_ru='Tailscale — безопасный mesh VPN на базе WireGuard и identity-based access для соединения устройств и сервисов между сетями.'
+desc='The easiest, most secure, cross platform way to use WireGuard + oauth2 + 2FA/SSO.'
+desc_ru='Самый простой и безопасный кроссплатформенный способ использовать WireGuard совместно с oauth2 и 2FA/SSO.'
 homepage='https://tailscale.com'
 maintainer='Tailscale Inc <info@tailscale.com>'
 

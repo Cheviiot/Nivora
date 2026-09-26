@@ -1,11 +1,11 @@
 name='vesktop'
 version='1.6.7'
-release=3
-summary='Unofficial Discord desktop client with better Linux support'
-summary_ru='Неофициальный десктопный клиент Discord с улучшенной поддержкой Linux'
+release=6
+summary='Vesktop is a custom Discord desktop app'
+summary_ru='Vesktop — альтернативное десктопное приложение Discord'
 group='Networking/Instant messaging'
-desc='Vesktop is an unofficial Discord desktop app built by the Vencord team, aiming to give better performance and improved Linux support than the official Electron client.'
-desc_ru='Vesktop — неофициальное десктопное приложение Discord от команды Vencord, нацеленное на лучшую производительность и полноценную поддержку Linux по сравнению с официальным Electron-клиентом.'
+desc='Vesktop is a custom Discord desktop app which aims to give you better performance and improve linux support.'
+desc_ru='Vesktop — альтернативное десктопное приложение Discord, цель которого — лучшая производительность и улучшенная поддержка Linux.'
 homepage='https://vencord.dev/'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
@@ -13,6 +13,10 @@ architectures=('amd64' 'arm64')
 compatible_with=('altlinux')
 
 license=('GPL-3.0-or-later')
+
+appstream_app_id='vesktop'
+appstream_name='Vesktop'
+appstream_developer='Vencord'
 
 provides=()
 replaces=('vesktop')
@@ -48,24 +52,28 @@ sources=(
 	"https://github.com/Vencord/Vesktop/releases/download/v${version}/vesktop_${version}_amd64.deb?~archive=false&~name=vesktop.deb"
 	'local:///vesktop-launcher'
 	'local:///LICENSE?nivora=vesktop'
+	'local:///vesktop.metainfo.xml?nivora=vesktop'
 )
 
 sources_arm64=(
 	"https://github.com/Vencord/Vesktop/releases/download/v${version}/vesktop_${version}_arm64.deb?~archive=false&~name=vesktop.deb"
 	'local:///vesktop-launcher'
 	'local:///LICENSE?nivora=vesktop'
+	'local:///vesktop.metainfo.xml?nivora=vesktop'
 )
 
 checksums=(
 	'sha256:0204a3fcf8861d11debf72a9be70423d2dca6d4698766b6fda7cfe39beea6a61'
 	'sha256:7a51bc8517e4dc70bd8e1eaa101d3939034a71bd4b37705461124837e3b3d0d0'
 	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
+	'sha256:56556e9065ef7418639ebb724f10ee1e2f74edcaf9324a27b67f34eed0457c5a'
 )
 
 checksums_arm64=(
 	'sha256:2ea11d882ae60c5c7cda8ba9057f36d66e490d32276ad3f7a99d3de8345e26cc'
 	'sha256:7a51bc8517e4dc70bd8e1eaa101d3939034a71bd4b37705461124837e3b3d0d0'
 	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
+	'sha256:56556e9065ef7418639ebb724f10ee1e2f74edcaf9324a27b67f34eed0457c5a'
 )
 
 scripts=(
@@ -92,6 +100,11 @@ package() {
 	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"
 	cp -a "${srcdir}/extracted/usr/share/icons" "${pkgdir}/usr/share/"
 
+	# The AppStream component claims this desktop id; make the build
+	# fail here rather than shipping a component nothing can launch.
+	test -f "${pkgdir}/usr/share/applications/vesktop.desktop"
+	install -Dm644 "${srcdir}/vesktop.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/vesktop.metainfo.xml"
 	install-license LICENSE "vesktop/LICENSE.nivora"
 	install -Dm644 "${srcdir}/extracted/opt/Vesktop/LICENSES.chromium.html" \
 		"${pkgdir}/usr/share/licenses/vesktop/LICENSES.chromium.html"
@@ -104,6 +117,7 @@ files() {
 	files-find-desktop
 	files-find-license
 	files-find \
+		"/usr/share/metainfo/vesktop.metainfo.xml" \
 		"/opt/Vesktop/**/*" \
 		"/usr/share/icons/hicolor/scalable/apps/vesktop.svg"
 }

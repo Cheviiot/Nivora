@@ -4,7 +4,7 @@
 
 - Nivora — репозиторий **только для ALT Linux**. Поддерживаются ветки `p11` и
   `Sisyphus`; `compatible_with` каждого рецепта равен `('altlinux')`.
-- В репозитории ровно 16 каталогов с `Staplerfile`.
+- В репозитории ровно 17 каталогов с `Staplerfile`.
 - Каталог совпадает с `name` и командой в README.
 - Общая инфраструктура (`tools/`, `docs/`, интеграционные `tests/`) живёт внутри
   `.github/`; package-specific тесты и fixtures могут находиться рядом с
@@ -18,6 +18,40 @@
 Stapler сам добавляет текущее `name` в generated `Provides` и `Conflicts`. Рецепты не
 зависят от других Stapler-каталогов. Разрешённые переходы фиксирует validator:
 `codex → chatgpt`, `claude-desktop → claude` и `telegram-desktop → telegram`.
+
+## Состав каталога пакета
+
+Конфигурация репозитория Stapler — **один** файл `stapler-repo.toml` в корне.
+Пакетных файлов с таким именем быть не должно: Stapler их не читает, и раньше
+репозиторий вёз пятнадцать таких заглушек в двух несовместимых диалектах
+(`include = "../stapler-repo.toml"` и `[inherit]`), ни один из которых не
+соответствует полям, которые разбирает Stapler.
+
+Validator принимает в каталоге пакета только это:
+
+| Файл | Назначение |
+|:--|:--|
+| `Staplerfile` | рецепт |
+| `README.md` | описание пакета |
+| `LICENSE` | записка Nivora о лицензии, если она нужна |
+| `preinstall.sh`, `postinstall.sh`, `preremove.sh`, `postremove.sh` | хуки |
+| `.stapler/update-check`, `.stapler/update-run` | точки входа апдейтера |
+| `tests/test-*.sh` | тесты пакета, их запускает `run_checks.sh` |
+| `<appstream_app_id>.metainfo.xml`, `<appstream_app_id>.svg\|png` | метаданные и иконка для GNOME Software |
+| любой файл, объявленный как `local:///<имя>` | payload рецепта |
+
+Всё остальное — мёртвый вес. Отсюда два следствия, которые validator проверяет
+отдельно:
+
+- Объявленный `local://`-источник должен упоминаться в теле рецепта. Иначе он
+  только занимает строку в `checksums` — так было с `pineconemc.svg`, который
+  скачивался в `srcdir` и не устанавливался: иконку пакет берёт из апстримного
+  архива.
+- Два имени для одних и тех же байтов ассета — остаток. Иконка для плагина
+  обязана называться `<appstream_app_id>.png|svg`, поэтому файл с payload-именем
+  рядом с ней всегда лишний; так было у `chatgpt`, `telegram`, `pineconemc` и
+  `yandex-music`. Хуки из этого правила исключены: `postinstall.sh` и
+  `postremove.sh` законно выполняют один и тот же сброс кешей.
 
 ## Зависимости: одна цель, один список
 
@@ -213,11 +247,7 @@ GOBIN="$HOME/.local/bin" go install -C stplr-utils ./cmd/stplr-spec
 `run_checks.sh` выполняет `bash -n`, ShellCheck, Python compile, unit-тесты,
 validator и чтение всех `Staplerfile` через `stplr-spec`.
 
-Если рецепт задаёт `appstream_app_id`, рядом со `Staplerfile` обязательно лежит
-`<appstream_app_id>.metainfo.xml`. Это не source для payload: Stapler v0.1.1
-читает sidecar при индексации репозитория и обогащает им `info` и поиск.
-Validator разбирает XML и сверяет component ID с desktop launchable, поэтому
-повреждённый или забытый sidecar не игнорируется молча.
+Требования к AppStream описаны отдельным разделом ниже.
 
 Локальные URL уникальны между пакетами (например,
 `local:///LICENSE?nivora=chatgpt`). В Stapler v0.1.1 ключ local-cache основан на
@@ -244,6 +274,121 @@ Validator разбирает XML и сверяет component ID с desktop launc
 Для точечной перепроверки можно передать разделённый запятыми список,
 например `NIVORA_LIFECYCLE_PACKAGES=github-desktop`; неизвестные и
 повторяющиеся package ID отклоняются до сборки.
+
+## Графическая установка: GNOME Software
+
+Каталог рассчитан на установку не только из терминала. `stapler/gnome-software-plugin-stplr`
+подключает Stapler к GNOME Software, и у плагина ровно два жёстких требования
+к пакету. Оба проверяются validator-ом, потому что при их нарушении пакет не
+ломается — он просто не появляется в графическом каталоге, и заметить это по
+логам сборки невозможно.
+
+**Первое: `appstream_app_id`.** Плагин связывает приложение из GNOME Software с
+пакетом Stapler единственным запросом (`src/stplr.vala`):
+
+```
+appstream_app_id == '<id>'
+```
+
+Пакет без этого поля не сопоставляется ни с чем. Validator требует
+`appstream_app_id` от каждого рецепта, который ставит desktop-файл.
+
+**Второе: иконка рядом с рецептом.** Плагин ищет её по имени компонента в
+рабочей копии репозитория (`Utils.find_icon`):
+
+```
+/var/cache/stplr/repo/<репозиторий>/<пакет>/<appstream_app_id>.svg
+/var/cache/stplr/repo/<репозиторий>/<пакет>/<appstream_app_id>.png
+```
+
+То есть файл обязан лежать в каталоге пакета в git и называться именем
+компонента. Иконки, установленной в `/usr/share/icons`, плагину недостаточно:
+он туда не смотрит. Source-ом такая иконка не является — checksums её не
+касаются.
+
+Сам плагин объявляет `GS_PLUGIN_RULE_RUN_AFTER, "appstream"`, то есть название,
+описание, категории и лицензию подставляет штатный AppStream-плагин GNOME
+Software, а stplr-плагин добавляет только пакетную часть: версию, состояние,
+формат и происхождение. Поэтому качество карточки определяется метаданными.
+
+### component-id равен desktop-id
+
+`appstream_app_id` обязан совпадать с desktop-файлом, который пакет реально
+ставит: validator сверяет наличие `/usr/share/applications/<id>.desktop`, а
+менять desktop-id нельзя без отдельной миграции. Отсюда legacy-имена вида
+`ventoy` или `chatgpt` вместо обратного DNS. `appstreamcli validate` выдаёт на
+них `cid-desktopapp-is-not-rdns` — это принятая цена за то, что id пакета не
+разъезжается с установленным ярлыком.
+
+Отдельный случай — id, который сам оканчивается на `.desktop`
+(`org.telegram.desktop`). Launchable для него — `org.telegram.desktop.desktop`,
+и именно так его строят и генератор, и validator.
+
+### Метаданные генерируются из рецепта
+
+`.github/tools/sync_appstream.py` собирает `<id>.metainfo.xml` из полей
+рецепта: `appstream_name`, `summary`, `summary_ru`, `desc`, `desc_ru`,
+`homepage`, `license` и `group` (RPM-группа отображается в категории
+freedesktop). Писать документ руками нельзя — он разойдётся с рецептом;
+`run_checks.sh` выполняет `sync_appstream.py --check` и падает при расхождении.
+
+```bash
+.github/tools/sync_appstream.py           # перегенерировать
+.github/tools/sync_appstream.py --check   # убедиться, что совпадает
+```
+
+Генератор отличает свои файлы по маркеру в заголовке. Если upstream поставляет
+собственный metainfo (`distroshelf`, `pineconemc`), его файл остаётся нетронутым:
+там есть то, чего рецепт выразить не может.
+
+`developer id` выводится из домена `homepage`, а не из имени сопровождающего:
+человеческое имя даёт `developer-id-invalid`, а кириллическое — заведомо
+некорректный идентификатор. Для проектов на GitHub и GitLab берётся владелец
+(`io.github.<owner>`), иначе домен разворачивается (`ru.yandex.music`).
+
+Sidecar одновременно является `local:///` source и ставится в
+`/usr/share/metainfo/<id>.metainfo.xml` для системного кэша AppStream. Значит
+после перегенерации меняется его контрольная сумма — её нужно обновить в
+рецепте и поднять `release`.
+
+### Путь desktop-файла в files() приводит к content collision
+
+Явно перечислять `/usr/share/applications/<id>.desktop` в `files()` нельзя,
+если рецепт уже вызывает `files-find-desktop`: Stapler отвергает сборку с
+`content collision`. Вместо этого в `package()` ставится проверка, которая
+заодно ловит расхождение id и ярлыка:
+
+```bash
+test -f "${pkgdir}/usr/share/applications/<id>.desktop"
+```
+
+### Как проверить
+
+```bash
+podman run --rm -v "$PWD:/repo:ro" registry.altlinux.org/p11/base \
+  bash -c 'apt-get update -qq && apt-get install -y appstream >/dev/null &&
+           appstreamcli validate --no-net /repo/<пакет>/<id>.metainfo.xml'
+```
+
+## Лицензии
+
+`license=()` попадает прямо в RPM `License:` и в `<project_license>`
+метаданных, поэтому произвольное слово там читают все инструменты. Validator
+требует SPDX-идентификатор либо `LicenseRef-*` и отдельно отвергает `Custom`,
+`Proprietary`, `Commercial`, `Other` и `Unknown`.
+
+Проприетарные пакеты объявляют `LicenseRef-proprietary` — это конвенция SPDX и
+AppStream для условий, не являющихся публичной лицензией. Раньше там стояло
+`Custom`, и GNOME Software показывал его как неизвестную лицензию.
+
+Показ условий при установке — это механизм `nonfree`
+(`internal/build/step_04_nonfree_view.go`): при **интерактивной** установке
+Stapler показывает `nonfree_msg` или содержимое `nonfree_msgfile` вместе с
+`nonfree_url` и прерывает установку без согласия. В неинтерактивном режиме шаг
+пропускается целиком, поэтому на него нельзя полагаться как на юридическую
+гарантию. Тексты чужих EULA в репозиторий не кладутся: они меняются на стороне
+владельца, и зафиксированная в git копия быстро станет неверной. Поэтому
+используется `nonfree_msg` со ссылкой на актуальные условия.
 
 ## Обновление пакета
 
@@ -365,6 +510,7 @@ main прошли соответствующий минимальный тест
 | HTTP-статус не проверяется при загрузке source | `pkg/dl/file.go` | `check_source_availability.sh` как фаза `check-sources` |
 | `preupgrade`/`postupgrade` игнорируются для RPM и DEB | `internal/scripter/utils.go` | хуки различают установку и обновление по `$1` в `%post` |
 | `auto_req_filter` игнорируется ALT-финдером | `pkg/reqprov/rpm/altlinux.go` | используется `dirty` + `auto_req_skiplist` |
+| `backup=` не доходит до RPM: нет `%config(noreplace)` | сборщик RPM | обхода нет — README пакета честно предупреждает, что правки затираются, и предлагает drop-in |
 
 ## Сборка в CI (github-desktop, distroshelf)
 

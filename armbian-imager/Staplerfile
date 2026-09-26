@@ -1,11 +1,11 @@
 name='armbian-imager'
 version='2.0.4'
-release=1
-summary='Official Armbian image writer for removable media'
-summary_ru='Официальная запись образов Armbian на съёмные носители'
+release=3
+summary='Flash Armbian OS images'
+summary_ru='Запись образов Armbian'
 group='System/Configuration/Hardware'
-desc='Armbian Imager is the official graphical utility for downloading and safely writing Armbian operating-system images to SD cards and USB drives.'
-desc_ru='Armbian Imager — официальная графическая утилита для загрузки и безопасной записи образов Armbian на SD-карты и USB-накопители.'
+desc='Armbian Imager is a utility for flashing Armbian OS images to SD cards and USB drives for single board computers.'
+desc_ru='Armbian Imager — утилита для записи образов Armbian на SD-карты и USB-накопители для одноплатных компьютеров.'
 homepage='https://github.com/armbian/imager'
 maintainer='Armbian, Daniele Briguglio <superkali@armbian.com>'
 
@@ -13,6 +13,9 @@ architectures=('amd64' 'arm64')
 compatible_with=('altlinux')
 
 license=('GPL-2.0-or-later' 'MIT' 'CC-BY-4.0')
+
+appstream_app_id='armbian-imager'
+appstream_name='Armbian Imager'
 
 provides=()
 replaces=('armbian-imager')
@@ -36,21 +39,25 @@ build_deps=('binutils')
 sources=(
 	"https://github.com/armbian/imager/releases/download/v${version}/Armbian.Imager_${version}_amd64.deb?~archive=false&~name=armbian-imager.deb"
 	"https://raw.githubusercontent.com/armbian/imager/v${version}/LICENSE?~archive=false&~name=LICENSE"
+	'local:///armbian-imager.metainfo.xml?nivora=armbian-imager'
 )
 
 sources_arm64=(
 	"https://github.com/armbian/imager/releases/download/v${version}/Armbian.Imager_${version}_arm64.deb?~archive=false&~name=armbian-imager.deb"
 	"https://raw.githubusercontent.com/armbian/imager/v${version}/LICENSE?~archive=false&~name=LICENSE"
+	'local:///armbian-imager.metainfo.xml?nivora=armbian-imager'
 )
 
 checksums=(
 	'sha256:2b96b9360da5b64f555638b6893b22c13d761d5d015633c6429792501fb4d6f6'
 	'sha256:a01259a1b522cf0de95824f9860613b453153eebac468e96196d5d7dba84786c'
+	'sha256:5cfe8bd4913db6944860de8276c15f37f5359625fc06c28da10366a658b473aa'
 )
 
 checksums_arm64=(
 	'sha256:ca37850e01eea9da1d514b754768cda029549d3e3311dd433cad1f5a3eb38107'
 	'sha256:a01259a1b522cf0de95824f9860613b453153eebac468e96196d5d7dba84786c'
+	'sha256:5cfe8bd4913db6944860de8276c15f37f5359625fc06c28da10366a658b473aa'
 )
 
 scripts=(
@@ -85,6 +92,11 @@ package() {
 		"${srcdir}/extracted/usr/share/icons/hicolor/512x512/apps/armbian-imager.png" \
 		"${pkgdir}/usr/share/icons/hicolor/512x512/apps/armbian-imager.png"
 
+	# The AppStream component claims this desktop id; make the build
+	# fail here rather than shipping a component nothing can launch.
+	test -f "${pkgdir}/usr/share/applications/armbian-imager.desktop"
+	install -Dm644 "${srcdir}/armbian-imager.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/armbian-imager.metainfo.xml"
 	install-license LICENSE 'armbian-imager/LICENSE'
 	install-license \
 		"${srcdir}/extracted/usr/share/doc/armbian-imager/copyright" \
@@ -95,5 +107,7 @@ files() {
 	files-find-binary
 	files-find-desktop
 	files-find-license
+	files-find \
+		"/usr/share/metainfo/armbian-imager.metainfo.xml" \
 	files-find '/usr/share/icons/hicolor/*/apps/armbian-imager.png'
 }

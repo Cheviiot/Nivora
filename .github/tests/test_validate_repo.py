@@ -506,39 +506,35 @@ env:
 
 
 class AppStreamTests(unittest.TestCase):
-    def test_sidecar_id_and_launchable_are_required(self):
+    def test_sidecar_reports_the_launchable_it_declares(self):
         with tempfile.TemporaryDirectory() as directory:
             package_dir = Path(directory)
             sidecar = package_dir / "com.example.App.metainfo.xml"
+            # The component id and the desktop id need not match: upstream
+            # ChatGPT is com.openai.chatgpt launching chatgpt.desktop.
             sidecar.write_text(
                 """<component type="desktop-application">
   <id>com.example.App</id>
-  <launchable type="desktop-id">com.example.App.desktop</launchable>
+  <launchable type="desktop-id">example.desktop</launchable>
 </component>
 """,
                 encoding="utf-8",
             )
             errors = []
-            VALIDATOR.validate_appstream_sidecar(
-                "demo",
-                package_dir,
-                "com.example.App",
-                "/usr/share/applications/com.example.App.desktop",
-                errors,
+            launchable = VALIDATOR.validate_appstream_sidecar(
+                "demo", package_dir, "com.example.App", errors
             )
             self.assertEqual(errors, [])
+            self.assertEqual(launchable, "example.desktop")
 
             sidecar.write_text(
                 "<component><id>wrong</id></component>", encoding="utf-8"
             )
             errors = []
-            VALIDATOR.validate_appstream_sidecar(
-                "demo",
-                package_dir,
-                "com.example.App",
-                "/usr/share/applications/com.example.App.desktop",
-                errors,
+            launchable = VALIDATOR.validate_appstream_sidecar(
+                "demo", package_dir, "com.example.App", errors
             )
+            self.assertIsNone(launchable)
             self.assertGreaterEqual(len(errors), 2)
 
     def test_cross_package_local_url_collision_is_rejected(self):
@@ -551,6 +547,109 @@ class AppStreamTests(unittest.TestCase):
             errors,
         )
         self.assertEqual(len(errors), 1)
+
+
+class PackageLayoutTests(unittest.TestCase):
+    RECIPE = (
+        "sources=(\n"
+        "\t'https://example.invalid/app.tar.gz'\n"
+        "\t'local:///app-launcher'\n"
+        ")\n\n"
+        "checksums=(\n"
+        "\t'sha256:{zero}'\n"
+        "\t'sha256:{zero}'\n"
+        ")\n\n"
+        "package() {{\n"
+        "\tinstall -Dm755 app-launcher \"${{pkgdir}}/usr/bin/app\"\n"
+        "}}\n"
+    ).format(zero="0" * 64)
+
+    def layout(self, files, appstream_id=None, recipe=None):
+        with tempfile.TemporaryDirectory() as directory:
+            package_dir = Path(directory)
+            for name, payload in files.items():
+                target = package_dir / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(payload)
+            errors = []
+            VALIDATOR.validate_package_directory(
+                "demo", package_dir, recipe or self.RECIPE, appstream_id, errors
+            )
+            return errors
+
+    def test_declared_local_source_and_layout_files_are_accepted(self):
+        errors = self.layout({
+            "Staplerfile": b"x",
+            "README.md": b"y",
+            "postinstall.sh": b"z",
+            "tests/test-thing.sh": b"t",
+            "app-launcher": b"launcher",
+        })
+        self.assertEqual(errors, [])
+
+    def test_file_that_is_neither_source_nor_layout_is_rejected(self):
+        # The fifteen per-package stapler-repo.toml files Nivora carried were
+        # read by nothing: Stapler's repository config is a single root file.
+        errors = self.layout({"Staplerfile": b"x", "stapler-repo.toml": b"q"})
+        self.assertEqual(len(errors), 1)
+        self.assertIn("stapler-repo.toml", errors[0])
+
+    def test_appstream_icon_and_metadata_are_allowed_under_their_id(self):
+        errors = self.layout(
+            {
+                "Staplerfile": b"x",
+                "com.example.App.metainfo.xml": b"<component/>",
+                "com.example.App.png": b"icon",
+            },
+            appstream_id="com.example.App",
+        )
+        self.assertEqual(errors, [])
+
+    def test_two_names_for_the_same_icon_are_rejected(self):
+        errors = self.layout(
+            {
+                "Staplerfile": b"x",
+                "app.png": b"same-bytes",
+                "com.example.App.png": b"same-bytes",
+            },
+            appstream_id="com.example.App",
+            recipe=self.RECIPE.replace("local:///app-launcher", "local:///app.png"),
+        )
+        self.assertEqual(len(errors), 1)
+        self.assertIn("duplicates", errors[0])
+
+    def test_identical_hooks_are_not_treated_as_leftovers(self):
+        # postinstall and postremove legitimately run the same cache refresh.
+        errors = self.layout({
+            "Staplerfile": b"x",
+            "postinstall.sh": b"refresh",
+            "postremove.sh": b"refresh",
+        })
+        self.assertEqual(errors, [])
+
+
+class LocalSourceUseTests(unittest.TestCase):
+    def test_local_source_never_read_by_the_recipe_is_rejected(self):
+        recipe = (
+            "sources=(\n\t'local:///icon.svg'\n)\n\n"
+            "checksums=(\n\t'sha256:%s'\n)\n\n"
+            "package() {\n\t:\n}\n" % ("0" * 64)
+        )
+        errors = []
+        VALIDATOR.validate_local_sources_are_used("demo", recipe, errors)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("icon.svg", errors[0])
+
+    def test_local_source_used_in_the_body_is_accepted(self):
+        recipe = (
+            "sources=(\n\t'local:///icon.svg'\n)\n\n"
+            "checksums=(\n\t'sha256:%s'\n)\n\n"
+            "package() {\n\tinstall -Dm644 icon.svg \"${pkgdir}/x\"\n}\n"
+            % ("0" * 64)
+        )
+        errors = []
+        VALIDATOR.validate_local_sources_are_used("demo", recipe, errors)
+        self.assertEqual(errors, [])
 
 
 if __name__ == "__main__":

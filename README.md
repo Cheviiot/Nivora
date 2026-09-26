@@ -22,7 +22,7 @@
 </p>
 
 <!-- package-count -->
-<p align="center"><strong>16 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
+<p align="center"><strong>17 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
 
 ## Быстрый старт
 
@@ -69,6 +69,12 @@ sudo stplr install nivora/имя-пакета
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/happ</code></td>
   </tr>
+  <tr><!-- package-card:subnetdesk -->
+    <td width="340" nowrap><img src="subnetdesk/subnetdesk.svg" width="24" height="24" alt=""> &nbsp;<a href="subnetdesk/README.md"><strong>SubnetDesk</strong></a><br><sub>Удалённый рабочий стол в своей сети</sub></td>
+    <td align="right" nowrap><code>1.3.0</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/subnetdesk</code></td>
+  </tr>
   <tr><!-- package-card:tailscale -->
     <td width="340" nowrap><img src="https://tailscale.com/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="tailscale/README.md"><strong>Tailscale</strong></a><br><sub>Частная сеть между устройствами</sub></td>
     <td align="right" nowrap><code>1.102.4</code></td>
@@ -76,7 +82,7 @@ sudo stplr install nivora/имя-пакета
     <td nowrap><code>nivora/tailscale</code></td>
   </tr>
   <tr><!-- package-card:telegram -->
-    <td width="340" nowrap><img src="telegram/telegram-desktop.png" width="24" height="24" alt=""> &nbsp;<a href="telegram/README.md"><strong>Telegram</strong></a><br><sub>Сообщения, звонки и каналы</sub></td>
+    <td width="340" nowrap><img src="telegram/org.telegram.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="telegram/README.md"><strong>Telegram</strong></a><br><sub>Сообщения, звонки и каналы</sub></td>
     <td align="right" nowrap><code>7.2.5</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/telegram</code></td>
@@ -89,7 +95,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><th colspan="4" align="left">AI и разработка</th></tr>
   <tr><!-- package-card:chatgpt -->
-    <td width="340" nowrap><img src="chatgpt/chatgpt.png" width="24" height="24" alt=""> &nbsp;<a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Приложение OpenAI со встроенным Codex</sub></td>
+    <td width="340" nowrap><img src="chatgpt/com.openai.chatgpt.png" width="24" height="24" alt=""> &nbsp;<a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Приложение OpenAI со встроенным Codex</sub></td>
     <td align="right" nowrap><code>26.924.22138</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/chatgpt</code></td>
@@ -114,7 +120,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><th colspan="4" align="left">Медиа и игры</th></tr>
   <tr><!-- package-card:yandex-music -->
-    <td width="340" nowrap><img src="yandex-music/yandex-music.png" width="24" height="24" alt=""> &nbsp;<a href="yandex-music/README.md"><strong>Яндекс Музыка</strong></a><br><sub>Музыка, подкасты и персональные подборки</sub></td>
+    <td width="340" nowrap><img src="yandex-music/yandexmusic.png" width="24" height="24" alt=""> &nbsp;<a href="yandex-music/README.md"><strong>Яндекс Музыка</strong></a><br><sub>Музыка, подкасты и персональные подборки</sub></td>
     <td align="right" nowrap><code>5.121.2</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/yandex-music</code></td>
@@ -126,7 +132,7 @@ sudo stplr install nivora/имя-пакета
     <td nowrap><code>nivora/anidesk</code></td>
   </tr>
   <tr><!-- package-card:pineconemc -->
-    <td width="340" nowrap><img src="pineconemc/pineconemc.svg" width="24" height="24" alt=""> &nbsp;<a href="pineconemc/README.md"><strong>PineconeMC</strong></a><br><sub>Лаунчер Minecraft с поддержкой Ely.by</sub></td>
+    <td width="340" nowrap><img src="pineconemc/io.github.elyprismlauncher.ElyPrismLauncher.svg" width="24" height="24" alt=""> &nbsp;<a href="pineconemc/README.md"><strong>PineconeMC</strong></a><br><sub>Лаунчер Minecraft с поддержкой Ely.by</sub></td>
     <td align="right" nowrap><code>11.1.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/pineconemc</code></td>

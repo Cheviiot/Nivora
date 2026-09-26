@@ -1,11 +1,11 @@
 name='ventoy'
 version='1.1.17'
-release=2
-summary='Create and manage multiboot USB drives'
-summary_ru='Создание и управление мультизагрузочными USB-накопителями'
+release=4
+summary='A new bootable USB solution.'
+summary_ru='Новое решение для загрузочных USB-накопителей.'
 group='System/Configuration/Hardware'
-desc='Ventoy is an open source tool for creating multiboot USB drives for ISO, WIM, IMG, VHD(x) and EFI files. This package includes the official native Linux GUI.'
-desc_ru='Ventoy — открытая утилита для создания мультизагрузочных USB-накопителей с файлами ISO, WIM, IMG, VHD(x) и EFI. Пакет включает официальный нативный GUI для Linux.'
+desc='Ventoy is an open source tool to create a bootable USB drive for ISO, WIM, IMG, VHD(x) and EFI files. With Ventoy you do not need to format the disk repeatedly: copy the image files to the drive and boot them directly.'
+desc_ru='Ventoy — открытая утилита для создания загрузочного USB-накопителя с файлами ISO, WIM, IMG, VHD(x) и EFI. С Ventoy не нужно форматировать диск заново: файлы образов копируются на накопитель и загружаются напрямую.'
 homepage='https://www.ventoy.net/'
 maintainer='Ventoy Project <admin@ventoy.net>'
 
@@ -14,6 +14,9 @@ compatible_with=('altlinux')
 disable_network=1
 
 license=('GPL-3.0-only')
+
+appstream_app_id='ventoy'
+appstream_name='Ventoy'
 
 provides=()
 replaces=('ventoy')
@@ -37,6 +40,7 @@ sources=(
 	"https://raw.githubusercontent.com/ventoy/Ventoy/v${version}/COPYING?~archive=false&~name=COPYING"
 	'local:///ventoy'
 	'local:///ventoy.desktop'
+	'local:///ventoy.metainfo.xml?nivora=ventoy'
 )
 
 sources_arm64=(
@@ -44,6 +48,7 @@ sources_arm64=(
 	"https://raw.githubusercontent.com/ventoy/Ventoy/v${version}/COPYING?~archive=false&~name=COPYING"
 	'local:///ventoy'
 	'local:///ventoy.desktop'
+	'local:///ventoy.metainfo.xml?nivora=ventoy'
 )
 
 checksums=(
@@ -51,6 +56,7 @@ checksums=(
 	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
 	'sha256:8f0a81d29a973844791d3fb5dd0f572684855b6a66edcc48f9d39f4e77f72de2'
 	'sha256:98c00e3911109644ee139e2194ea00531f847d89289ddbd062566f28a34823c1'
+	'sha256:151f27c0a74e3ebc3f647ac6f1474ff4c5c9287a21f5a10fd93ac22c6a33ad83'
 )
 
 checksums_arm64=(
@@ -58,6 +64,7 @@ checksums_arm64=(
 	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
 	'sha256:8f0a81d29a973844791d3fb5dd0f572684855b6a66edcc48f9d39f4e77f72de2'
 	'sha256:98c00e3911109644ee139e2194ea00531f847d89289ddbd062566f28a34823c1'
+	'sha256:151f27c0a74e3ebc3f647ac6f1474ff4c5c9287a21f5a10fd93ac22c6a33ad83'
 )
 
 scripts=(
@@ -105,6 +112,11 @@ package() {
 	install -Dm644 \
 		"${source_root}/WebUI/static/img/VentoyLogo.png" \
 		"${pkgdir}/usr/share/icons/hicolor/128x128/apps/ventoy.png"
+	# The AppStream component claims this desktop id; make the build
+	# fail here rather than shipping a component nothing can launch.
+	test -f "${pkgdir}/usr/share/applications/ventoy.desktop"
+	install -Dm644 "${srcdir}/ventoy.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/ventoy.metainfo.xml"
 	install-license COPYING "ventoy/COPYING"
 	install-license "${source_root}/README" "ventoy/README"
 }
@@ -114,6 +126,7 @@ files() {
 	files-find-desktop
 	files-find-license
 	files-find \
+		"/usr/share/metainfo/ventoy.metainfo.xml" \
 		"/opt/ventoy/**/*" \
 		"/usr/share/icons/hicolor/128x128/apps/ventoy.png"
 }

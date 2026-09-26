@@ -1,11 +1,11 @@
 name='distroshelf'
 version='1.5.2'
-release=6
-summary='GTK4 client for managing Distrobox containers'
-summary_ru='GTK4-клиент для управления контейнерами Distrobox'
+release=7
+summary='Graphical interface for managing Distrobox containers'
+summary_ru='Графический интерфейс для управления контейнерами Distrobox'
 group='System/Configuration/Other'
-desc='DistroShelf is a GTK4/libadwaita graphical interface for creating, managing and entering Distrobox containers, with support for exporting apps and binaries to the host.'
-desc_ru='DistroShelf — графический интерфейс на GTK4/libadwaita для создания, управления и входа в контейнеры Distrobox, с поддержкой экспорта приложений и бинарников на хост.'
+desc='DistroShelf is a graphical interface for managing Distrobox containers on Linux.'
+desc_ru='DistroShelf — это графический интерфейс для управления контейнерами Distrobox в Linux.'
 homepage='https://github.com/ranfdev/DistroShelf'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 

@@ -1,18 +1,21 @@
 name='yandex-music'
 version='5.121.2'
-release=1
-summary='Official Yandex Music desktop client'
-summary_ru='Официальный десктопный клиент Яндекс Музыки'
+release=4
+summary='Personal recommendations, mixes for any occasion and the latest musical releases'
+summary_ru='Персональные рекомендации, подборки на любой случай и свежие музыкальные новинки'
 group='Sound'
-desc='Yandex Music is the official desktop client for the Yandex Music streaming service: personalized recommendations, curated playlists, podcasts, audiobooks and the "My Wave" endless radio.'
-desc_ru='Яндекс Музыка — официальный десктопный клиент стримингового сервиса Яндекс Музыки: персональные рекомендации, подборки, подкасты, аудиокниги и бесконечное радио «Моя волна».'
+desc='Personal recommendations, mixes for any occasion and the latest musical releases.'
+desc_ru='Персональные рекомендации, подборки на любой случай и свежие музыкальные новинки.'
 homepage='https://music.yandex.ru/download/'
 maintainer='Яндекс Музыка <music@support.yandex.ru>'
 
 architectures=('amd64')
 compatible_with=('altlinux')
 
-license=('Custom')
+license=('LicenseRef-proprietary')
+
+appstream_app_id='yandexmusic'
+appstream_name='Яндекс Музыка'
 nonfree=1
 nonfree_msg='Yandex Music является проприетарным приложением ООО «Яндекс». Использование клиента, учётной записи, подписки и сетевых функций регулируется условиями Яндекс Музыки.'
 nonfree_url='https://yandex.ru/legal/music_mobile_agreement/'
@@ -46,11 +49,13 @@ build_deps=('binutils')
 sources=(
 	"https://music-desktop-application.s3.yandex.net/stable/Yandex_Music_amd64_${version}.deb?~archive=false&~name=yandex-music.deb"
 	'local:///LICENSE?nivora=yandex-music'
+	'local:///yandexmusic.metainfo.xml?nivora=yandex-music'
 )
 
 checksums=(
 	'sha256:a5c369bfb2be56216dbbf1679930ae3c5f4fd6d2a8a4ede9961f59799a52d8c0'
 	'sha256:52a11692975a1dfe999f8cf953522d2ddfc2bd594a3a23c2e52035eb53d2fa2d'
+	'sha256:a2a9224a456819c1d22ae864f301585ffcee67e3bcee4755253b82f3d8263167'
 )
 
 scripts=(
@@ -82,6 +87,11 @@ package() {
 	sed -i 's|Exec="/opt/Яндекс Музыка/yandexmusic" %U|Exec=/usr/bin/yandex-music %U|' \
 		"${pkgdir}/usr/share/applications/yandexmusic.desktop"
 
+	# The AppStream component claims this desktop id; make the build
+	# fail here rather than shipping a component nothing can launch.
+	test -f "${pkgdir}/usr/share/applications/yandexmusic.desktop"
+	install -Dm644 "${srcdir}/yandexmusic.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/yandexmusic.metainfo.xml"
 	install-license LICENSE "yandex-music/LICENSE.nivora"
 	install -Dm644 "${srcdir}/extracted/opt/Яндекс Музыка/LICENSES.chromium.html" \
 		"${pkgdir}/usr/share/licenses/yandex-music/LICENSES.chromium.html"
@@ -94,6 +104,7 @@ files() {
 	files-find-desktop
 	files-find-license
 	files-find \
+		"/usr/share/metainfo/yandexmusic.metainfo.xml" \
 		"/opt/YandexMusic/**/*" \
 		"/usr/share/icons/hicolor/*/apps/yandexmusic.png"
 }

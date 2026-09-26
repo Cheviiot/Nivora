@@ -1,11 +1,11 @@
 name='pineconemc'
 version='11.1.0'
-release=1
-summary='Prism Launcher fork with Ely.by and offline account support'
-summary_ru='Форк Prism Launcher с поддержкой Ely.by и offline-аккаунтов'
+release=3
+summary='Discover, manage, and play Minecraft instances'
+summary_ru='Поиск, управление и запуск сборок Minecraft'
 group='Games/Other'
-desc='PineconeMC is a Prism Launcher fork with integrated Ely.by account support, offline accounts, modpack management and Minecraft instance management.'
-desc_ru='PineconeMC — форк Prism Launcher с интеграцией аккаунтов Ely.by, offline-аккаунтами, управлением модпаками и инстансами Minecraft.'
+desc='PineconeMC is a fork of Prism Launcher, a custom launcher for Minecraft that focuses on predictability, long term stability and simplicity, with Ely.by and offline account support added.'
+desc_ru='PineconeMC — форк Prism Launcher, лаунчера Minecraft, ориентированного на предсказуемость, долговременную стабильность и простоту, с добавленной поддержкой Ely.by и offline-аккаунтов.'
 homepage='https://pineconemc.com/'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
@@ -39,25 +39,21 @@ deps=('ca-certificates' 'xdg-utils')
 
 sources=(
 	"https://github.com/ElyPrismLauncher/Launcher/releases/download/${version}/PineconeMC-Linux-Qt6-Portable-${version}.tar.gz?~archive=false&~name=pineconemc.tar.gz"
-	"local:///pineconemc.svg"
 	'local:///LICENSE?nivora=pineconemc'
 )
 
 sources_arm64=(
 	"https://github.com/ElyPrismLauncher/Launcher/releases/download/${version}/PineconeMC-Linux-aarch64-Qt6-Portable-${version}.tar.gz?~archive=false&~name=pineconemc.tar.gz"
-	"local:///pineconemc.svg"
 	'local:///LICENSE?nivora=pineconemc'
 )
 
 checksums=(
 	'sha256:a6a242042f7fd34226f20a1067f93423db7079aaad809bd9ccf02d41e2094e37'
-	'sha256:256d854b05112270847c29f31990329e880c39dba8ab06a574db9f09749e758a'
 	'sha256:794a4007ac816a1425a98fdddf0716728fe1e2d899c4b9c1d505c1405e111ec9'
 )
 
 checksums_arm64=(
 	'sha256:c61a6e830b1f0960e927c38f85ea4fa29230f391799dfe548f5b337bef36fb93'
-	'sha256:256d854b05112270847c29f31990329e880c39dba8ab06a574db9f09749e758a'
 	'sha256:794a4007ac816a1425a98fdddf0716728fe1e2d899c4b9c1d505c1405e111ec9'
 )
 
@@ -89,8 +85,20 @@ package() {
 		"${pkgdir}/usr/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop"
 	sed -i 's/^Categories=.*/Categories=Game;/' \
 		"${pkgdir}/usr/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop"
+	# The fork ships Prism Launcher's AppStream document unchanged, so a
+	# graphical installer would name the application "Prism Launcher". The
+	# rich parts — screenshots, release history — are kept; only the identity
+	# is corrected, and the build fails if upstream stops using this wording.
+	metainfo="${pkgdir}/usr/share/metainfo/io.github.elyprismlauncher.ElyPrismLauncher.metainfo.xml"
 	install -Dm644 "${pkgdir}/opt/pineconemc/share/metainfo/io.github.elyprismlauncher.ElyPrismLauncher.metainfo.xml" \
-		"${pkgdir}/usr/share/metainfo/io.github.elyprismlauncher.ElyPrismLauncher.metainfo.xml"
+		"$metainfo"
+	grep -Fq "<name>Prism Launcher</name>" "$metainfo"
+	grep -Fq "<name>Prism Launcher Contributors</name>" "$metainfo"
+	sed -i \
+		-e "s|<name>Prism Launcher</name>|<name>PineconeMC</name>|" \
+		-e "s|<name>Prism Launcher Contributors</name>|<name>ElyPrismLauncher</name>|" \
+		"$metainfo"
+	grep -Fq "<name>PineconeMC</name>" "$metainfo"
 	install -Dm644 "${pkgdir}/opt/pineconemc/share/mime/packages/io.github.elyprismlauncher.ElyPrismLauncher.xml" \
 		"${pkgdir}/usr/share/mime/packages/io.github.elyprismlauncher.ElyPrismLauncher.xml"
 	install -Dm644 "${pkgdir}/opt/pineconemc/share/man/man6/elyprismlauncher.6" \

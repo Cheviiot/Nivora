@@ -28,6 +28,7 @@ readonly -a lifecycle_package_catalog=(
     'happ|/usr/bin/happ|/home/nivora-test/.config/happ/nivora-lifecycle-state|/usr/share/applications/Happ.desktop|/usr/lib/systemd/system/happd.service|-'
     'parsec|/usr/bin/parsecd|/home/nivora-test/.config/parsec/nivora-lifecycle-state|/usr/share/applications/parsecd.desktop|/usr/share/icons/hicolor/256x256/apps/parsecd.png|-'
     'pineconemc|/usr/bin/pineconemc|/home/nivora-test/.config/pineconemc/nivora-lifecycle-state|/usr/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop|/usr/share/icons/hicolor/scalable/apps/io.github.elyprismlauncher.ElyPrismLauncher.svg|-'
+    'subnetdesk|/usr/bin/subnetdesk|/home/nivora-test/.config/subnetdesk/nivora-lifecycle-state|/usr/share/applications/subnetdesk.desktop|/usr/lib/systemd/system/subnetdesk.service|-'
     'tailscale|/usr/bin/tailscale|/var/lib/tailscale/nivora-lifecycle-state|/usr/lib/systemd/system/tailscaled.service|-|-'
     'telegram|/usr/bin/telegram-desktop|/home/nivora-test/.config/telegram-desktop/nivora-lifecycle-state|/usr/share/applications/org.telegram.desktop.desktop|/usr/share/icons/hicolor/256x256/apps/org.telegram.desktop.png|-'
     'ventoy|/usr/bin/ventoy|/home/nivora-test/.config/ventoy/nivora-lifecycle-state|/usr/share/applications/ventoy.desktop|/usr/share/icons/hicolor/128x128/apps/ventoy.png|-'

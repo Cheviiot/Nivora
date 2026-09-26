@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="telegram-desktop.png" width="96" height="96" alt="Telegram">
+  <img src="org.telegram.desktop.png" width="96" height="96" alt="Telegram">
 </p>
 
 <h1 align="center">Telegram</h1>

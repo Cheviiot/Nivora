@@ -1,5 +1,18 @@
+# Рецепты и всё, что из них собирается, попадают в сборку на ALT как есть.
+# CRLF в любом из этих файлов сломал бы shebang, парсер TOML или XML, поэтому
+# перевод строки закреплён явно, а не отдан на усмотрение настроек клиента.
 * text=auto eol=lf
-*.png binary
-*.svg text eol=lf
-*.sh text eol=lf
+
 Staplerfile text eol=lf
+*.sh        text eol=lf
+*.py        text eol=lf
+*.toml      text eol=lf
+*.xml       text eol=lf
+*.yml       text eol=lf
+*.md        text eol=lf
+*.desktop   text eol=lf
+*.pam       text eol=lf
+*.svg       text eol=lf
+
+# Иконки для плагина GNOME Software: бинарные, diff по ним бессмыслен.
+*.png binary

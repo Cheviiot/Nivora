@@ -1,11 +1,11 @@
 name='telegram'
 version='7.2.5'
-release=1
-summary='Official Telegram messaging client'
-summary_ru='Официальный клиент мессенджера Telegram'
+release=4
+summary='New era of messaging'
+summary_ru='Новая эра обмена сообщениями'
 group='Networking/Instant messaging'
-desc='Telegram Desktop is the official Telegram messaging client with cloud-synced chats, voice and video calls, and no limits on file size or media history.'
-desc_ru='Telegram Desktop — официальный клиент мессенджера Telegram с облачной синхронизацией чатов, голосовыми и видеозвонками и без ограничений на размер файлов и историю медиа.'
+desc='Telegram Desktop messaging app.'
+desc_ru='Telegram Desktop — приложение для обмена сообщениями.'
 homepage='https://desktop.telegram.org/'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
@@ -14,6 +14,10 @@ compatible_with=('altlinux')
 disable_network=1
 
 license=('GPL-3.0-only')
+
+appstream_app_id='org.telegram.desktop'
+appstream_name='Telegram'
+appstream_developer='Telegram FZ-LLC'
 
 provides=('telegram-desktop')
 replaces=('telegram' 'telegram-desktop')
@@ -39,8 +43,9 @@ opt_deps=('xdg-utils' 'libappindicator-gtk3' 'ca-certificates' 'libalsa' 'libGL'
 sources=(
 	"https://td.telegram.org/tlinux/tsetup.${version}.tar.xz?~archive=false&~name=tsetup.tar.xz"
 	'local:///org.telegram.desktop.desktop'
-	'local:///telegram-desktop.png'
+	'local:///org.telegram.desktop.png'
 	'local:///LICENSE?nivora=telegram'
+	'local:///org.telegram.desktop.metainfo.xml?nivora=telegram'
 )
 
 checksums=(
@@ -48,6 +53,7 @@ checksums=(
 	'sha256:8ceb3f6aea1003f84f1b5757cd857f8237b294bb18456e5e0e54d96e6fff04ba'
 	'sha256:3fb1400c7dc9bbc3b5cb3ffedcbf4a9b09c53e28b57a7ff33a8a6b9048864090'
 	'sha256:f3ad1b5ecdc1c9e5ab3719a0b084a3e0b4fc87ad424fbf81043df9637be3d1f5'
+	'sha256:b530326e2589420363372ceec311bf54e7a279dadc471fd34d41ea9a3520c979'
 )
 
 scripts=(
@@ -79,9 +85,14 @@ package() {
 EOF
 
 	install-desktop org.telegram.desktop.desktop
-	install -Dm644 telegram-desktop.png \
+	install -Dm644 org.telegram.desktop.png \
 		"${pkgdir}/usr/share/icons/hicolor/256x256/apps/org.telegram.desktop.png"
 
+	# The AppStream component claims this desktop id; make the build
+	# fail here rather than shipping a component nothing can launch.
+	test -f "${pkgdir}/usr/share/applications/org.telegram.desktop.desktop"
+	install -Dm644 "${srcdir}/org.telegram.desktop.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/org.telegram.desktop.metainfo.xml"
 	install-license LICENSE "telegram/LICENSE.nivora"
 }
 
@@ -90,6 +101,7 @@ files() {
 	files-find-desktop
 	files-find-license
 	files-find \
+		"/usr/share/metainfo/org.telegram.desktop.metainfo.xml" \
 		"/opt/telegram-desktop/**/*" \
 		"/usr/share/icons/hicolor/256x256/apps/org.telegram.desktop.png"
 }

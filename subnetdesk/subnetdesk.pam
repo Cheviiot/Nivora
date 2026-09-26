@@ -1,0 +1,10 @@
+#%PAM-1.0
+# Стек PAM для проверки пароля системной учётной записи (вход в SubnetDesk
+# «как в ОС»). Upstream поставляет debian-вариант с common-auth и suse-вариант
+# с тем же набором; на ALT таких файлов нет вообще, поэтому сервис PAM просто
+# не открылся бы. ALT собирает всё в system-auth — ровно так же устроены
+# /etc/pam.d/polkit-1 и другие системные сервисы ALT.
+auth		include		system-auth
+account		include		system-auth
+password	include		system-auth
+session		include		system-auth

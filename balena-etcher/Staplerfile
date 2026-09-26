@@ -1,11 +1,11 @@
 name='balena-etcher'
 version='2.1.7'
-release=1
-summary='Safe SD card and USB drive image flasher'
-summary_ru='Безопасная запись образов на SD-карты и USB-накопители'
+release=3
+summary='Flash OS images to SD cards and USB drives, safely and easily.'
+summary_ru='Безопасная и простая запись образов систем на SD-карты и USB-накопители.'
 group='System/Configuration/Hardware'
-desc='balenaEtcher is a graphical utility for writing operating-system images to SD cards and USB drives with validation after flashing.'
-desc_ru='balenaEtcher — графическая утилита для записи образов операционных систем на SD-карты и USB-накопители с проверкой данных после прошивки.'
+desc='Etcher is a powerful OS image flasher built with web technologies to ensure flashing an SDCard or USB drive is a pleasant and safe experience. It protects you from accidentally writing to your hard-drives, ensures every byte of data was written correctly and much more.'
+desc_ru='Etcher — мощное средство записи образов систем, построенное на веб-технологиях, чтобы запись на SD-карту или USB-накопитель была удобной и безопасной. Оно защищает от случайной записи на жёсткие диски, проверяет корректность каждого записанного байта и многое другое.'
 homepage='https://etcher.balena.io/'
 maintainer='Balena Ltd. <hello@balena.io>'
 
@@ -13,6 +13,9 @@ architectures=('amd64')
 compatible_with=('altlinux')
 
 license=('Apache-2.0')
+
+appstream_app_id='balena-etcher'
+appstream_name='balenaEtcher'
 
 provides=()
 replaces=('balena-etcher')
@@ -56,11 +59,13 @@ build_deps=('binutils')
 sources=(
 	"https://github.com/balena-io/etcher/releases/download/v${version}/balena-etcher_${version}_amd64.deb?~archive=false&~name=balena-etcher.deb"
 	"https://raw.githubusercontent.com/balena-io/etcher/v${version}/LICENSE?~archive=false&~name=LICENSE"
+	'local:///balena-etcher.metainfo.xml?nivora=balena-etcher'
 )
 
 checksums=(
 	'sha256:9dbea6165ddee1ec1f1b7a38fe92f0d2c54c6217710438a7af6752c267d19395'
 	'sha256:39445b459f86621683f9731fb6a7d070819dc379840e8ef52f62bb1c68942291'
+	'sha256:d87b9c73d82438f927d7d377b84eaafb531fb814a18739d34938188e097e3aa7'
 )
 
 scripts=(
@@ -105,6 +110,11 @@ package() {
 		"${srcdir}/extracted/usr/share/pixmaps/balena-etcher.png" \
 		"${pkgdir}/usr/share/pixmaps/balena-etcher.png"
 
+	# The AppStream component claims this desktop id; make the build
+	# fail here rather than shipping a component nothing can launch.
+	test -f "${pkgdir}/usr/share/applications/balena-etcher.desktop"
+	install -Dm644 "${srcdir}/balena-etcher.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/balena-etcher.metainfo.xml"
 	install-license LICENSE "balena-etcher/LICENSE"
 	install-license \
 		"${srcdir}/extracted/usr/share/doc/balena-etcher/copyright" \
@@ -119,6 +129,7 @@ files() {
 	files-find-desktop
 	files-find-license
 	files-find \
+		"/usr/share/metainfo/balena-etcher.metainfo.xml" \
 		"/usr/lib/balena-etcher/**/*" \
 		"/usr/share/pixmaps/balena-etcher.png"
 }

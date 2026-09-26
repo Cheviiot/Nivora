@@ -1,14 +1,14 @@
 name='github-desktop'
 version='3.6.6'
-release=1
+release=4
 # Exact commit behind the upstream release-${version} tag. Keeping it
 # separate makes a stale pin visible when version is updated.
 upstream_commit='8b85519e733fd98a04c178249d2d10fd8f3db19e'
-summary='GitHub Desktop built from the official source'
-summary_ru='GitHub Desktop, собранный из официальных исходников'
+summary='Focus on what matters instead of fighting with Git.'
+summary_ru='Сосредоточьтесь на главном вместо борьбы с Git.'
 group='Development/Tools'
-desc='The original GitHub Desktop application, built for Linux by Nivora CI directly from the official desktop/desktop source tree without third-party forks.'
-desc_ru='Оригинальное приложение GitHub Desktop, собранное для Linux в CI Nivora напрямую из официального дерева desktop/desktop без сторонних форков.'
+desc='GitHub Desktop is an open source Electron-based GitHub app. It is written in TypeScript and uses React.'
+desc_ru='GitHub Desktop — открытое приложение GitHub на Electron. Написано на TypeScript и использует React.'
 homepage='https://github.com/desktop/desktop'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
@@ -16,6 +16,10 @@ architectures=('amd64' 'arm64')
 compatible_with=('altlinux')
 
 license=('MIT')
+
+appstream_app_id='github-desktop'
+appstream_name='GitHub Desktop'
+appstream_developer='GitHub'
 
 provides=()
 replaces=('github-desktop')
@@ -49,6 +53,7 @@ sources=(
 	"https://raw.githubusercontent.com/desktop/desktop/${upstream_commit}/LICENSE?~archive=false&~name=LICENSE"
 	"https://raw.githubusercontent.com/desktop/desktop/${upstream_commit}/app/static/logos/prod/icon-logo.icon/Assets/1%20%E2%80%93%20Layer%203.svg?~archive=false&~name=github-desktop.svg"
 	'local:///github-desktop-git-wrapper'
+	'local:///github-desktop.metainfo.xml?nivora=github-desktop'
 )
 
 sources_arm64=(
@@ -56,6 +61,7 @@ sources_arm64=(
 	"https://raw.githubusercontent.com/desktop/desktop/${upstream_commit}/LICENSE?~archive=false&~name=LICENSE"
 	"https://raw.githubusercontent.com/desktop/desktop/${upstream_commit}/app/static/logos/prod/icon-logo.icon/Assets/1%20%E2%80%93%20Layer%203.svg?~archive=false&~name=github-desktop.svg"
 	'local:///github-desktop-git-wrapper'
+	'local:///github-desktop.metainfo.xml?nivora=github-desktop'
 )
 
 checksums=(
@@ -63,6 +69,7 @@ checksums=(
 	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
 	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
 	'sha256:9267f4511eeaaec82066f2aa128b6cb7320dc46951657033c05ce7c802cf8a60'
+	'sha256:db47fc5d17af6dcb26e66e57cbe33e48f8361b8a0fa9bbb11ecc851f0f1aa35b'
 )
 
 checksums_arm64=(
@@ -70,6 +77,7 @@ checksums_arm64=(
 	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
 	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
 	'sha256:9267f4511eeaaec82066f2aa128b6cb7320dc46951657033c05ce7c802cf8a60'
+	'sha256:db47fc5d17af6dcb26e66e57cbe33e48f8361b8a0fa9bbb11ecc851f0f1aa35b'
 )
 
 scripts=(
@@ -120,6 +128,11 @@ MimeType=x-scheme-handler/x-github-desktop-auth;x-scheme-handler/x-github-client
 StartupWMClass=desktop
 EOF
 
+	# The AppStream component claims this desktop id; make the build
+	# fail here rather than shipping a component nothing can launch.
+	test -f "${pkgdir}/usr/share/applications/github-desktop.desktop"
+	install -Dm644 "${srcdir}/github-desktop.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/github-desktop.metainfo.xml"
 	install-license LICENSE "github-desktop/LICENSE"
 	install -Dm644 "${srcdir}/github-desktop/LICENSE" \
 		"${pkgdir}/usr/share/licenses/github-desktop/LICENSE.electron.txt"
@@ -132,5 +145,7 @@ files() {
 	files-find-binary
 	files-find-desktop
 	files-find-license
+	files-find \
+		"/usr/share/metainfo/github-desktop.metainfo.xml" \
 	files-find "/usr/share/icons/hicolor/*/apps/github-desktop.svg"
 }

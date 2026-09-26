@@ -12,6 +12,7 @@ readonly -a PACKAGES=(
     happ
     parsec
     pineconemc
+    subnetdesk
     tailscale
     telegram
     ventoy
@@ -371,6 +372,8 @@ latest_version() {
     happ) github_latest_release Happ-proxy/happ-desktop ;;
     parsec) latest_parsec ;;
     pineconemc) github_latest_release ElyPrismLauncher/Launcher ;;
+    # Tags are v-prefixed (v1.3.0); github_latest_release strips the prefix.
+    subnetdesk) github_latest_release zibo-chen/SubnetDesk ;;
     tailscale) latest_tailscale ;;
     telegram) latest_telegram ;;
     ventoy) github_latest_release ventoy/Ventoy ;;

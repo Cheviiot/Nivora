@@ -51,7 +51,18 @@ sudo apt-get install git-core bash python3 shellcheck curl sqlite3 rpm-build
 - Lifecycle-скрипты идемпотентны и не удаляют пользовательские данные. Хуки
   различают первую установку и обновление по `$1` в `%post`: сервис включается
   один раз, при обновлении используется `try-restart`.
-- `files()` описывает весь payload и не захватывает чужие пути.
+- `files()` описывает весь payload и не захватывает чужие пути. Путь
+  desktop-файла в нём не перечисляют, если уже вызывается `files-find-desktop`:
+  Stapler отвергнет сборку с `content collision`.
+- Пакет с графическим интерфейсом объявляет `appstream_app_id`, равный своему
+  desktop-id, и кладёт рядом с рецептом `<appstream_app_id>.svg` или `.png` —
+  иначе он не появится в GNOME Software. Метаданные генерирует
+  `.github/tools/sync_appstream.py`, руками их не пишут.
+- `license` — SPDX-идентификатор либо `LicenseRef-*`; для проприетарных
+  условий это `LicenseRef-proprietary`.
+- В каталоге пакета нет ничего, кроме рецепта, README, LICENSE, хуков,
+  `.stapler/`, `tests/test-*.sh`, метаданных с иконкой и файлов, объявленных
+  через `local:///`. `stapler-repo.toml` бывает только один — в корне.
 
 ## Проверка
 

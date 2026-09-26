@@ -1,13 +1,13 @@
 name='parsec'
 version='150-104a'
-release=8
+release=12
 # SHA-256 of the final HTTP ETag for the mutable versionless upstream DEB.
 source_fingerprint='1bdf98c2922f6cb3fbab46afd9a5609f6fae2b2136d3b573c6589b83b364ce37'
-summary='Low-latency remote desktop and game streaming client'
-summary_ru='Клиент удаленного рабочего стола и игрового стриминга с низкой задержкой'
+summary='Simple, low-latency desktop and game streaming.'
+summary_ru='Простой стриминг рабочего стола и игр с низкой задержкой.'
 group='Networking/Remote access'
-desc='Parsec is a proprietary low-latency remote desktop and game streaming client distributed as an official Linux deb package for Ubuntu 22.04 LTS Desktop.'
-desc_ru='Parsec — проприетарный клиент удаленного рабочего стола и игрового стриминга с низкой задержкой, распространяемый официальным deb-пакетом для Ubuntu 22.04 LTS Desktop.'
+desc='Simple, low-latency desktop and game streaming.'
+desc_ru='Простой стриминг рабочего стола и игр с низкой задержкой.'
 homepage='https://parsec.app/downloads'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
@@ -15,7 +15,11 @@ architectures=('amd64')
 compatible_with=('altlinux')
 disable_network=1
 
-license=('Custom')
+license=('LicenseRef-proprietary')
+
+appstream_app_id='parsecd'
+appstream_name='Parsec'
+appstream_developer='Parsec Cloud, Inc.'
 nonfree=1
 nonfree_msg='Parsec является проприетарным приложением Unity Technologies SF. Использование клиента, учетной записи, удаленного доступа и сетевых функций регулируется условиями Parsec/Unity.'
 nonfree_url='https://parsec.app/terms'
@@ -41,12 +45,14 @@ sources=(
 	"https://builds.parsec.app/package/parsec-linux.deb?~archive=false&~name=parsec.deb"
 	"local:///parsecd-wrapper"
 	'local:///LICENSE?nivora=parsec'
+	'local:///parsecd.metainfo.xml?nivora=parsec'
 )
 
 checksums=(
 	'sha256:c8a4407713d72dcb1c59f082977e81e1b9e8ffd679d0666882cde4c8a0821dd2'
 	'sha256:1f61e7fd256f16ec6594cf0581fc630e745fd488c2e06710232bb62b03d44d23'
 	'sha256:d8df7db0c861a3308e59beaabe617703e0e24a92d569044432e8b2c539f1fb6c'
+	'sha256:a40376e0c153933647cf00e9efa47b4f5aeacfae30f0aad2d805f72a0174b7c8'
 )
 
 scripts=(
@@ -70,6 +76,11 @@ package() {
 
 	mkdir -p "${pkgdir}/usr/share/parsec"
 	cp -a "${srcdir}/extracted/usr/share/parsec/." "${pkgdir}/usr/share/parsec/"
+	# The AppStream component claims this desktop id; make the build
+	# fail here rather than shipping a component nothing can launch.
+	test -f "${pkgdir}/usr/share/applications/parsecd.desktop"
+	install -Dm644 "${srcdir}/parsecd.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/parsecd.metainfo.xml"
 	install-license "${srcdir}/LICENSE" "parsec/LICENSE.nivora"
 }
 
@@ -78,6 +89,7 @@ files() {
 	files-find-desktop
 	files-find-license
 	files-find \
+		"/usr/share/metainfo/parsecd.metainfo.xml" \
 		"/usr/lib/parsec/parsecd" \
 		"/usr/share/icons/hicolor/256x256/apps/parsecd.png" \
 		"/usr/share/parsec/**/*"

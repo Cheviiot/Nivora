@@ -34,11 +34,24 @@ identity-based access для соединения устройств и серв
 |:--|:--|
 | `/usr/bin/tailscale` | клиент командной строки |
 | `/usr/sbin/tailscaled` | демон узла |
-| `/etc/default/tailscaled` | `PORT` и `FLAGS` демона, сохраняется при обновлении |
+| `/etc/default/tailscaled` | `PORT` и `FLAGS` демона; правки затираются при обновлении, см. ниже |
 | `/usr/lib/systemd/system/tailscaled.service` | сам сервис |
 | `/usr/lib/systemd/system/tailscale-wait-online.service` | ожидание подключения |
 | `/usr/lib/systemd/system/tailscale-online.target` | цель «Tailscale в сети» |
 | `/var/cache/tailscale` | кеш демона, удаляется вместе с пакетом |
+
+### Настройки демона и обновление пакета
+
+`/etc/default/tailscaled` объявлен в `backup=`, но Stapler v0.1.1 не переносит
+это объявление в собранный RPM: у файла нет флага `%config(noreplace)`
+(`rpm -qpc` пуст, `FILEFLAGS` = 0). Значит обновление пакета возвращает файл к
+поставляемому виду, а свои правки надо держать вне него — например в
+`/etc/systemd/system/tailscaled.service.d/override.conf`:
+
+```ini
+[Service]
+Environment=PORT=41641
+```
 
 ### Запуск других служб после подключения
 

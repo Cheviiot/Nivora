@@ -24,6 +24,7 @@ EXPECTED_PACKAGES = (
     "happ",
     "parsec",
     "pineconemc",
+    "subnetdesk",
     "tailscale",
     "telegram",
     "ventoy",
@@ -82,6 +83,22 @@ FOREIGN_DISTRO_SUFFIXES = (
     "alpine",
 )
 OVERRIDABLE_LIST_FIELDS = ("deps", "opt_deps", "build_deps")
+
+# Every file a package directory is allowed to hold beyond its own payload.
+# Anything else has to be a declared local source, otherwise it is dead weight
+# that no build, no check and no installed package ever reads.
+PACKAGE_DIRECTORY_FILES = {
+    "Staplerfile",
+    "README.md",
+    "LICENSE",
+    "preinstall.sh",
+    "postinstall.sh",
+    "preremove.sh",
+    "postremove.sh",
+    ".stapler/update-check",
+    ".stapler/update-run",
+}
+PACKAGE_TEST_RE = re.compile(r"tests/test-[a-z0-9-]+\.sh\Z")
 EXPECTED_README_CATEGORIES = (
     "Интернет, сеть и VPN",
     "AI и разработка",
@@ -145,18 +162,25 @@ def validate_appstream_sidecar(
     package: str,
     directory: Path,
     appstream_id: str,
-    expected_desktop: str,
     errors: list[str],
-) -> None:
+) -> str | None:
+    """Check the sidecar and report the desktop entry it launches.
+
+    A component id need not equal its desktop id: upstream ChatGPT ships
+    com.openai.chatgpt with <launchable>chatgpt.desktop</launchable>, which is
+    perfectly valid AppStream. So the launchable is read from the document
+    rather than guessed from the id, and the caller checks the recipe really
+    installs that entry.
+    """
     sidecar = directory / f"{appstream_id}.metainfo.xml"
     if not sidecar.is_file():
         errors.append(f"G2 {package}: missing Stapler AppStream sidecar {sidecar.name}")
-        return
+        return None
     try:
         root = ET.parse(sidecar).getroot()
     except (ET.ParseError, OSError) as error:
         errors.append(f"G2 {package}: invalid AppStream sidecar: {error}")
-        return
+        return None
 
     def local_name(tag: str) -> str:
         return tag.rsplit("}", 1)[-1]
@@ -178,11 +202,86 @@ def validate_appstream_sidecar(
         if local_name(child.tag) == "launchable"
         and child.get("type") == "desktop-id"
     ]
-    if launchables != [Path(expected_desktop).name]:
+    if len(launchables) != 1 or not launchables[0].endswith(".desktop"):
         errors.append(
-            f"G2 {package}: AppStream launchable differs from "
-            f"{Path(expected_desktop).name}"
+            f"G2 {package}: AppStream sidecar needs exactly one desktop-id "
+            "launchable"
         )
+        return None
+    return launchables[0]
+
+
+def validate_package_directory(
+    package: str,
+    directory: Path,
+    text: str,
+    appstream_id: str | None,
+    errors: list[str],
+) -> None:
+    """Reject files a package directory has no use for.
+
+    Nivora carried fifteen per-package stapler-repo.toml files in two
+    mutually incompatible dialects before this rule existed. Stapler reads
+    none of them: its repository config is a single file at the repository
+    root. The only way such a file accumulates is that nothing ever looked.
+    """
+    allowed = set(PACKAGE_DIRECTORY_FILES)
+    for group in source_arrays(text).values():
+        for source in group:
+            name = local_source_name(source)
+            if name:
+                allowed.add(name)
+    if appstream_id:
+        allowed.update(
+            f"{appstream_id}{suffix}" for suffix in (".metainfo.xml", ".svg", ".png")
+        )
+
+    seen: dict[str, str] = {}
+    for path in sorted(directory.rglob("*")):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(directory).as_posix()
+        if relative.split("/", 1)[0] == "__pycache__" or relative.endswith(".rpm"):
+            continue
+        if relative not in allowed and not PACKAGE_TEST_RE.fullmatch(relative):
+            errors.append(
+                f"G0 {package}: {relative} is neither a declared local source "
+                "nor a file the packaging layout uses"
+            )
+            continue
+        # Two names for the same asset means one of them is a leftover: the
+        # icon GNOME Software reads and the icon the payload installs are the
+        # same picture. Hook scripts are exempt — postinstall and postremove
+        # legitimately run the same cache refresh.
+        if path.suffix not in {".png", ".svg", ".xml", ".desktop"}:
+            continue
+        digest = sha256(path)
+        if digest in seen:
+            errors.append(
+                f"G0 {package}: {relative} duplicates {seen[digest]} byte for byte"
+            )
+        else:
+            seen[digest] = relative
+
+
+def validate_local_sources_are_used(
+    package: str, text: str, errors: list[str]
+) -> None:
+    """A local source that package() never reads only costs a checksum."""
+    bodies = [
+        match.end()
+        for match in re.finditer(
+            r"^checksums(?:_[a-z0-9_]+)?=\(.*?\)", text, re.MULTILINE | re.DOTALL
+        )
+    ]
+    body = text[max(bodies, default=0):]
+    for group in source_arrays(text).values():
+        for source in group:
+            name = local_source_name(source)
+            if name and name not in body:
+                errors.append(
+                    f"G1 {package}: local source {name} is declared but never used"
+                )
 
 
 def markdown_targets(text: str) -> set[str]:
@@ -486,6 +585,23 @@ def validate_package(
     if flag(text, "disable_network") != 1:
         errors.append(f"G1 {package}: disable_network=1 is required")
 
+    # license goes straight into RPM License: and into AppStream
+    # project_license, so a made-up word there is what every tool reads back.
+    # SPDX identifiers, or LicenseRef-* for terms that are not a public licence.
+    licenses = array(text, "license") or []
+    if not licenses:
+        errors.append(f"G0 {package}: license must be declared")
+    for value in licenses:
+        if value.startswith("LicenseRef-"):
+            continue
+        if not re.fullmatch(r"[A-Za-z0-9.+-]+", value):
+            errors.append(f"G0 {package}: license {value!r} is not an identifier")
+        elif value in {"Custom", "Proprietary", "Commercial", "Other", "Unknown"}:
+            errors.append(
+                f"G0 {package}: license {value!r} is not SPDX; use an SPDX "
+                "identifier or LicenseRef-proprietary"
+            )
+
     # ALT is the only target, so the dependency lists live in the base fields.
     compatible = array(text, "compatible_with")
     if compatible != ["altlinux"]:
@@ -562,24 +678,47 @@ def validate_package(
         )
 
     appstream_id = scalar(text, "appstream_app_id")
+    validate_package_directory(package, directory, text, appstream_id, errors)
+    validate_local_sources_are_used(package, text, errors)
     has_appstream_payload = bool(
         re.search(r"/usr/share/(?:metainfo|appdata)/[^\s'\"]+\.(?:metainfo|appdata)\.xml", text)
     )
     if appstream_id:
-        expected_desktop = f"/usr/share/applications/{appstream_id}"
-        if not appstream_id.endswith(".desktop"):
-            expected_desktop += ".desktop"
-        if expected_desktop not in text:
-            errors.append(
-                f"G2 {package}: AppStream ID is not adjacent to {expected_desktop}"
-            )
         if not has_appstream_payload:
             errors.append(f"G2 {package}: appstream_app_id lacks metadata payload")
-        validate_appstream_sidecar(
-            package, directory, appstream_id, expected_desktop, errors
+        launchable = validate_appstream_sidecar(
+            package, directory, appstream_id, errors
         )
+        if launchable:
+            expected_desktop = f"/usr/share/applications/{launchable}"
+            if expected_desktop not in text:
+                errors.append(
+                    f"G2 {package}: sidecar launches {launchable}, but the recipe "
+                    f"does not install {expected_desktop}"
+                )
+        # The GNOME Software plugin for Stapler resolves the icon by name from
+        # the package directory of the checked-out repository:
+        #   /var/cache/stplr/repo/<repo>/<package>/<appstream id>.{svg,png}
+        # Without a file under exactly that name the application shows up in
+        # GNOME Software with no icon at all.
+        if not any(
+            (directory / f"{appstream_id}{suffix}").is_file()
+            for suffix in (".svg", ".png")
+        ):
+            errors.append(
+                f"G2 {package}: GNOME Software needs {appstream_id}.svg or "
+                f"{appstream_id}.png next to the Staplerfile"
+            )
     elif has_appstream_payload:
         errors.append(f"G2 {package}: metadata payload needs appstream_app_id")
+    elif "/usr/share/applications/" in text or "install-desktop" in text:
+        # A package with a desktop entry is an application, and an application
+        # without appstream_app_id is invisible to the GNOME Software plugin:
+        # it matches packages with `appstream_app_id == '<id>'` and nothing else.
+        errors.append(
+            f"G2 {package}: installs a desktop entry but declares no "
+            "appstream_app_id, so GNOME Software cannot offer it"
+        )
 
     if "package()" not in text or "files()" not in text:
         errors.append(f"{package}: package() or files() is missing")

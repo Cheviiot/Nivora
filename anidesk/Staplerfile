@@ -1,12 +1,12 @@
 name='anidesk'
 version='0.0.1-beta.7'
 debian_version='0.0.1.beta.7'
-release=8
-summary='Unofficial Anixart desktop client'
-summary_ru='Неофициальный desktop-клиент Anixart'
+release=11
+summary='Unofficial desktop client of Anixart'
+summary_ru='Неофициальный десктопный клиент Anixart'
 group='Video/Players'
-desc='AniDesk is an unofficial Electron desktop client for Anixart with account support, a built-in video player and Anime4K WebGPU upscaling.'
-desc_ru='AniDesk — неофициальный Electron desktop-клиент Anixart с поддержкой аккаунта, встроенным видеоплеером и Anime4K-апскейлом через WebGPU.'
+desc='Unofficial desktop client of Anixart'
+desc_ru='Неофициальный десктопный клиент Anixart'
 homepage='https://github.com/theDesConnet/AniDesk'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
@@ -14,6 +14,10 @@ architectures=('amd64')
 compatible_with=('altlinux')
 
 license=('GPL-2.0-only')
+
+appstream_app_id='anidesk'
+appstream_name='AniDesk'
+appstream_developer='theDesConnet'
 
 provides=()
 replaces=('anidesk')
@@ -45,6 +49,7 @@ sources=(
 	"local:///anidesk.png"
 	"local:///anidesk-wrapper"
 	"local:///LICENSE?nivora=anidesk"
+	'local:///anidesk.metainfo.xml?nivora=anidesk'
 )
 
 checksums=(
@@ -52,6 +57,7 @@ checksums=(
 	'sha256:6d7791424bd7db712b121f7e66206289b1d31eb2a8ea998d9aeced2c7075dfe8'
 	'sha256:f58b9f720bd63ff49053f949dd3f0a738afc2aa2cee57fedbd2b73440c123721'
 	'sha256:892e6b268f44a850a102cc6367fec45853fe3556840d44a6106f08487553e6c4'
+	'sha256:8f851f2a8857a2e03767b8f2daeacd14531eac40a3a4ce3dcdf7b3f10960e28b'
 )
 
 scripts=(
@@ -207,6 +213,11 @@ PY
 	install -dm755 "${pkgdir}/usr/share/icons/hicolor/256x256/apps"
 	install -Dm644 anidesk.png "${pkgdir}/usr/share/icons/hicolor/256x256/apps/anidesk.png"
 
+	# The AppStream component claims this desktop id; make the build
+	# fail here rather than shipping a component nothing can launch.
+	test -f "${pkgdir}/usr/share/applications/anidesk.desktop"
+	install -Dm644 "${srcdir}/anidesk.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/anidesk.metainfo.xml"
 	install-license LICENSE "anidesk/LICENSE.nivora"
 	install-license "${srcdir}/extracted/usr/lib/anidesk/LICENSES.chromium.html" \
 		"anidesk/LICENSES.chromium.html"
@@ -219,6 +230,7 @@ files() {
 	files-find-desktop
 	files-find-license
 	files-find \
+		"/usr/share/metainfo/anidesk.metainfo.xml" \
 		"/usr/lib/anidesk/**/*" \
 		"/usr/share/doc/anidesk/*" \
 		"/usr/share/icons/hicolor/256x256/apps/anidesk.png" \

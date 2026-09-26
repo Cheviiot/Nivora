@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="yandex-music.png" width="96" height="96" alt="Yandex Music">
+  <img src="yandexmusic.png" width="96" height="96" alt="Yandex Music">
 </p>
 
 <h1 align="center">Yandex Music</h1>

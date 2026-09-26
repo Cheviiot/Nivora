@@ -1,0 +1,220 @@
+name='subnetdesk'
+version='1.3.0'
+release=1
+summary='Remote desktop for a local network or VPN, based on RustDesk'
+summary_ru='Удалённый рабочий стол внутри локальной сети или VPN на базе RustDesk'
+group='Networking/Remote access'
+desc='SubnetDesk is a RustDesk fork that keeps remote desktop, file transfer and port forwarding inside a local network or VPN: it has no public rendezvous or relay server and connects to peers by address.'
+desc_ru='SubnetDesk — форк RustDesk, который держит удалённый рабочий стол, передачу файлов и переброс портов внутри локальной сети или VPN: у него нет публичного rendezvous- и relay-сервера, соединение идёт по адресу узла.'
+homepage='https://github.com/zibo-chen/SubnetDesk'
+maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
+
+architectures=('amd64' 'arm64')
+compatible_with=('altlinux')
+disable_network=1
+
+license=('AGPL-3.0-only')
+
+appstream_app_id='subnetdesk'
+appstream_name='SubnetDesk'
+
+provides=()
+replaces=('subnetdesk')
+conflicts=()
+
+# Editable by the administrator: the PAM stack decides how a system account is
+# verified, and the two X11 files are the template of a headless session.
+#
+# Declared, but currently only an intent for RPM: Stapler v0.1.1 does not turn
+# backup= into an RPM %config flag. Verified on the built artifact —
+# `rpm -qp --queryformat '[%{FILENAMES} %{FILEFLAGS}\n]'` reports 0 for all
+# three paths, exactly as it does for tailscale's /etc/default/tailscaled. An
+# edited file is therefore replaced on upgrade, so the README tells the
+# administrator to keep a copy.
+backup=('/etc/pam.d/subnetdesk' '/etc/subnetdesk/startwm.sh' '/etc/subnetdesk/xorg.conf')
+
+auto_reqprov_method="dirty"
+auto_req=1
+auto_prov=0
+
+# auto_req covers what the dynamic linker resolves. Checked with objdump -p
+# over all 14 ELF objects of the payload: after subtracting the 11 sonames the
+# bundle provides itself (the Flutter plugins), 37 external sonames are left —
+# gtk3, gdk-pixbuf, pango, cairo, atk, glib, gstreamer and gst-plugins-base,
+# libpam, libpulse, X11, xcb, xkbcommon, wayland-client, glibc, libstdc++,
+# libgcc, zlib, fontconfig, epoxy and dbus. Every one of them is provided by an
+# ALT package in p11 and in Sisyphus, verified through
+# `apt-cache showpkg 'libfoo.so.N()(64bit)'` in both branches.
+#
+# Everything below is what the linker never sees, so auto_req cannot find it.
+# Each entry is a dlopen() or a subprocess found in the payload itself, not a
+# guess copied from the upstream Depends line:
+#
+# - xdotool provides libxdo.so.3. librustdesk.so carries a libxdo-sys stub that
+#   dlopen()s "libxdo.so.4", then "libxdo.so.3", then "libxdo.so"; ALT ships
+#   only .so.3, which is the second candidate, so the chain resolves. Without
+#   it the host accepts a session and then never injects a keystroke or a
+#   mouse move — being controlled is the point of the package.
+# - libva provides libva.so.2, libva-drm.so.2 and libva-x11.so.2. All three are
+#   dlopen'd by the bundled hardware codec layer ("libva.so.2", "Failed to load
+#   libva: %s", "vaInitialize"), and upstream requires them in its .deb and in
+#   its .rpm alike.
+# - libxkbcommon-x11 provides libxkbcommon-x11.so.0, dlopen'd next to the
+#   directly linked libxkbcommon.so.0 for the X11 keymap.
+# - procps provides /usr/bin/pkill, which the unit shipped by upstream runs in
+#   ExecStop, and /usr/bin/pgrep, which the payload runs as "pgrep -a Xwayland"
+#   to tell a Wayland session from an X11 one.
+# - xrandr is run as a subprocess: "xrandr --query | tr -s ' '" enumerates the
+#   modes of the controlled display, and "xrandr --mode" changes it.
+# - xauth is launched by the service to reach the X display of the logged-in
+#   user ("Failed to launch xauth", "/var/lib/gdm/Xauthority").
+# - pipewire carries /usr/lib64/gstreamer-1.0/libgstpipewire.so. GStreamer
+#   loads it by element name when the payload builds its Wayland capture
+#   pipeline ("pipewiresrc ... videoconvert ... appsink"), so without it a
+#   Wayland session cannot be captured at all.
+deps=('xdotool' 'libva' 'libxkbcommon-x11' 'procps' 'xrandr' 'xauth' 'pipewire')
+
+# Same rule, but each of these only unlocks one optional path, and the payload
+# degrades in a defined way without it:
+# - the tray is dlopen'd from a list ("libayatana-appindicator3.so.1", then
+#   "libappindicator3.so.1"); either package satisfies it, and ALT apt-rpm
+#   cannot express that choice inside deps, so both are listed here;
+# - a Wayland screen cast goes through the org.freedesktop.portal.ScreenCast
+#   D-Bus interface, and the payload itself suggests
+#   "systemctl --user restart xdg-desktop-portal" when it is missing;
+# - message boxes fall back through zenity, then kdialog, then xmessage;
+# - the headless session ships /etc/subnetdesk/xorg.conf with Driver "dummy",
+#   which needs an Xorg server and that driver present.
+opt_deps=(
+	'libayatana-appindicator3-1'
+	'libappindicator-gtk3'
+	'xdg-desktop-portal'
+	'zenity'
+	'kdialog'
+	'xorg-server'
+	'xorg-drv-dummy'
+)
+
+build_deps=('binutils')
+
+sources=(
+	"https://github.com/zibo-chen/SubnetDesk/releases/download/v${version}/subnetdesk-${version}-x86_64.deb?~archive=false&~name=subnetdesk.deb"
+	"https://raw.githubusercontent.com/zibo-chen/SubnetDesk/v${version}/LICENCE?~archive=false"
+	'local:///subnetdesk.pam?nivora=subnetdesk'
+	'local:///subnetdesk.metainfo.xml?nivora=subnetdesk'
+	'local:///LICENSE?nivora=subnetdesk'
+)
+
+sources_arm64=(
+	"https://github.com/zibo-chen/SubnetDesk/releases/download/v${version}/subnetdesk-${version}-aarch64.deb?~archive=false&~name=subnetdesk.deb"
+	"https://raw.githubusercontent.com/zibo-chen/SubnetDesk/v${version}/LICENCE?~archive=false"
+	'local:///subnetdesk.pam?nivora=subnetdesk'
+	'local:///subnetdesk.metainfo.xml?nivora=subnetdesk'
+	'local:///LICENSE?nivora=subnetdesk'
+)
+
+checksums=(
+	'sha256:59686cd464204dfc898473a49c1b80260b61b67dc2e6ce11b20ec60abdc7329a'
+	'sha256:8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef'
+	'sha256:b240a17badca46a0bb1bde50201241b3330e205316ce63fb649504fbe6e0d0c7'
+	'sha256:d235c91e2bc6da1d485a3571b066062fe30f4f57172664d17756ca4604dba3c9'
+	'sha256:8da4557e7dfe6dc2cd27788896486b2d2e6572598dcd86e44f06b770d7c540ba'
+)
+
+checksums_arm64=(
+	'sha256:93f5a83c4a5f4eb10c59a43a08ce0b3797103084972a0950c17633e6344703b4'
+	'sha256:8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef'
+	'sha256:b240a17badca46a0bb1bde50201241b3330e205316ce63fb649504fbe6e0d0c7'
+	'sha256:d235c91e2bc6da1d485a3571b066062fe30f4f57172664d17756ca4604dba3c9'
+	'sha256:8da4557e7dfe6dc2cd27788896486b2d2e6572598dcd86e44f06b770d7c540ba'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['preremove']='preremove.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x subnetdesk.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	# The Flutter bundle is linked with RUNPATH '$ORIGIN/lib', so the
+	# executable and its plugin libraries have to stay together in the
+	# directory upstream chose.
+	install -dm755 "${pkgdir}/usr/share"
+	cp -a "${srcdir}/extracted/usr/share/subnetdesk" "${pkgdir}/usr/share/"
+	chmod 755 "${pkgdir}/usr/share/subnetdesk/subnetdesk"
+
+	# Upstream creates this link from its postinst, which leaves it unowned
+	# by any package. Shipping it means RPM removes it again, and '$ORIGIN'
+	# is resolved from the real path of the binary, so lib/ is still found
+	# through the link.
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -s /usr/share/subnetdesk/subnetdesk "${pkgdir}/usr/bin/subnetdesk"
+
+	# Also copied out of /usr/share by the upstream maintainer scripts. The
+	# second entry is the x-scheme-handler/subnetdesk launcher and carries
+	# NoDisplay=true, so only the first one shows up in a menu.
+	install -Dm644 "${srcdir}/extracted/usr/share/applications/subnetdesk.desktop" \
+		"${pkgdir}/usr/share/applications/subnetdesk.desktop"
+	install -Dm644 "${srcdir}/extracted/usr/share/applications/subnetdesk-link.desktop" \
+		"${pkgdir}/usr/share/applications/subnetdesk-link.desktop"
+	# The AppStream launchable points at this exact name, so the build has to
+	# fail here if upstream ever renames the desktop entry.
+	test -f "${pkgdir}/usr/share/applications/subnetdesk.desktop"
+
+	install -Dm644 \
+		"${srcdir}/extracted/usr/share/icons/hicolor/256x256/apps/subnetdesk.png" \
+		"${pkgdir}/usr/share/icons/hicolor/256x256/apps/subnetdesk.png"
+	install -Dm644 \
+		"${srcdir}/extracted/usr/share/icons/hicolor/scalable/apps/subnetdesk.svg" \
+		"${pkgdir}/usr/share/icons/hicolor/scalable/apps/subnetdesk.svg"
+
+	# The unit stays byte-identical to the one upstream copies into place;
+	# install-systemd only puts it in /usr/lib/systemd/system instead of
+	# /etc/systemd/system, where an administrator override belongs.
+	install-systemd \
+		"${srcdir}/extracted/usr/share/subnetdesk/files/systemd/subnetdesk.service"
+
+	# Template of a headless X session: startwm.sh already takes the
+	# /etc/X11/Xsession branch that ALT provides, and xorg.conf describes the
+	# dummy display the service starts when nobody is logged in.
+	install -Dm755 "${srcdir}/extracted/etc/subnetdesk/startwm.sh" \
+		"${pkgdir}/etc/subnetdesk/startwm.sh"
+	install -Dm644 "${srcdir}/extracted/etc/subnetdesk/xorg.conf" \
+		"${pkgdir}/etc/subnetdesk/xorg.conf"
+
+	# The only file of the payload that is replaced. Upstream's
+	# /etc/pam.d/subnetdesk includes Debian's common-auth stack (its .rpm
+	# ships no PAM file at all), and ALT has no such service files, so
+	# pam_start would fail and logging in with a system account would be
+	# impossible. ALT routes everything through system-auth.
+	install -Dm644 "${srcdir}/subnetdesk.pam" "${pkgdir}/etc/pam.d/subnetdesk"
+
+	install -Dm644 "${srcdir}/subnetdesk.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/subnetdesk.metainfo.xml"
+
+	install-license LICENSE "subnetdesk/LICENSE.nivora"
+	install-license "${srcdir}/LICENCE" "subnetdesk/LICENCE"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-systemd
+	files-find-license
+	# The two desktop entries are already claimed by files-find-desktop;
+	# naming one here again makes Stapler abort with a content collision.
+	files-find \
+		"/usr/share/metainfo/subnetdesk.metainfo.xml" \
+		"/usr/share/subnetdesk/**/*" \
+		"/usr/share/icons/hicolor/256x256/apps/subnetdesk.png" \
+		"/usr/share/icons/hicolor/scalable/apps/subnetdesk.svg" \
+		"/etc/pam.d/subnetdesk" \
+		"/etc/subnetdesk/startwm.sh" \
+		"/etc/subnetdesk/xorg.conf"
+}

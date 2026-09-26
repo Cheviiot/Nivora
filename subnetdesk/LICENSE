@@ -1,0 +1,20 @@
+Сведения о лицензии пакета SubnetDesk
+
+Лицензия: AGPL-3.0-only.
+Исходный проект: https://github.com/zibo-chen/SubnetDesk
+Официальная страница релизов: https://github.com/zibo-chen/SubnetDesk/releases
+
+Нюансы пакета:
+- Пакет перепаковывает официальный `.deb` SubnetDesk без изменения payload.
+- SubnetDesk — форк RustDesk, поэтому под AGPL-3.0 распространяется и код
+  RustDesk, лежащий в основе приложения.
+- AGPL-3.0 требует предоставлять исходный код всем, кто взаимодействует с
+  программой по сети. Для локальной установки это условие выполняется ссылкой
+  на публичный репозиторий проекта.
+- Полный текст лицензии upstream устанавливается пакетом в
+  /usr/share/licenses/subnetdesk/LICENCE.
+- Конфигурация PAM (/etc/pam.d/subnetdesk) написана Nivora под ALT и
+  распространяется на условиях лицензии рецептов Nivora (MIT).
+
+Полный официальный текст AGPL-3.0:
+https://www.gnu.org/licenses/agpl-3.0.txt

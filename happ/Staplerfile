@@ -1,11 +1,11 @@
 name='happ'
 version='4.3.0'
-release=1
-summary='User-friendly GUI proxy client for xray-core'
-summary_ru='Удобный GUI-прокси-клиент для xray-core'
+release=4
+summary='Happ Proxy Client'
+summary_ru='Прокси-клиент Happ'
 group='Networking/Other'
-desc='Happ is a GUI client for xray-core with TUN/VPN mode via sing-box, anti-censorship tools, QR code import and subscription management.'
-desc_ru='Happ — GUI-клиент для xray-core с режимом TUN/VPN через sing-box, средствами обхода блокировок, импортом QR-кодов и управлением подписками.'
+desc='Happ is a user-friendly GUI client for xray-core with advanced features: Xray-core integration for proxy functionality, TUN/VPN mode support via sing-box, anti-censorship tools (byedpi), QR code support for easy configuration sharing and subscription management.'
+desc_ru='Happ — удобный графический клиент xray-core с расширенными возможностями: интеграция xray-core для проксирования, режим TUN/VPN через sing-box, средства обхода цензуры (byedpi), поддержка QR-кодов для обмена конфигурациями и управление подписками.'
 homepage='https://happ.su/'
 maintainer='FlyFrog LLC <support@happ.su>'
 
@@ -13,7 +13,10 @@ architectures=('amd64' 'arm64')
 compatible_with=('altlinux')
 disable_network=1
 
-license=('Custom')
+license=('LicenseRef-proprietary')
+
+appstream_app_id='Happ'
+appstream_name='Happ'
 nonfree=1
 nonfree_msg='Happ является проприетарным приложением FlyFrog LLC. Использование клиента, подписок и сетевых функций регулируется условиями Happ.'
 nonfree_url='https://happ.su/license'
@@ -47,6 +50,7 @@ sources=(
 	'local:///tray-idle.svg'
 	'local:///tray-connected.svg'
 	'local:///LICENSE?nivora=happ'
+	'local:///Happ.metainfo.xml?nivora=happ'
 )
 
 sources_arm64=(
@@ -56,6 +60,7 @@ sources_arm64=(
 	'local:///tray-idle.svg'
 	'local:///tray-connected.svg'
 	'local:///LICENSE?nivora=happ'
+	'local:///Happ.metainfo.xml?nivora=happ'
 )
 
 checksums=(
@@ -65,6 +70,7 @@ checksums=(
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'
 	'sha256:7e105f63e4535676e15e4d613426d6af843376a09fd25674bbbf367778668ae5'
 	'sha256:5f0fbc1b0b0e8399c8a04425512168e3dd87960381e85a7cb62a41d55b054b0f'
+	'sha256:7bc355e4548add7290da2647a0ddc185f6661f96ffdf43d2aa68099be54755f9'
 )
 
 checksums_arm64=(
@@ -74,6 +80,7 @@ checksums_arm64=(
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'
 	'sha256:7e105f63e4535676e15e4d613426d6af843376a09fd25674bbbf367778668ae5'
 	'sha256:5f0fbc1b0b0e8399c8a04425512168e3dd87960381e85a7cb62a41d55b054b0f'
+	'sha256:7bc355e4548add7290da2647a0ddc185f6661f96ffdf43d2aa68099be54755f9'
 )
 
 scripts=(
@@ -315,6 +322,11 @@ PY
 		"${pkgdir}/usr/share/mime/packages/happ-mime.xml"
 
 	install -Dm755 "${srcdir}/happ-launcher" "${pkgdir}/usr/bin/happ"
+	# The AppStream component claims this desktop id; make the build
+	# fail here rather than shipping a component nothing can launch.
+	test -f "${pkgdir}/usr/share/applications/Happ.desktop"
+	install -Dm644 "${srcdir}/Happ.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/Happ.metainfo.xml"
 	install-license "${srcdir}/LICENSE" "happ/LICENSE.nivora"
 }
 
@@ -325,6 +337,7 @@ files() {
 	files-find-systemd
 	files-find-license
 	files-find \
+		"/usr/share/metainfo/Happ.metainfo.xml" \
 		"/usr/share/icons/hicolor/512x512/apps/happ.png" \
 		"/usr/share/mime/packages/happ-mime.xml"
 }

@@ -5,6 +5,13 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../.." && pwd)"
 cd "$repo_root"
 
+# py_compile and unittest otherwise drop __pycache__ next to every checked
+# source, so a plain check run dirties the working tree it is validating.
+# The bytecode is disposable; it belongs in a temporary directory.
+pycache_dir="$(mktemp -d)"
+trap 'rm -r -- "${pycache_dir}" 2>/dev/null || true' EXIT
+export PYTHONPYCACHEPREFIX="${pycache_dir}"
+
 command -v stplr-spec >/dev/null 2>&1 || {
     echo 'stplr-spec is required for repository validation' >&2
     exit 2
@@ -46,6 +53,9 @@ while IFS= read -r -d '' test_script; do
 done < <(find . -mindepth 3 -maxdepth 3 -type f \
     -path './*/tests/test-*.sh' -not -path './.github/*' -print0 | sort -z)
 python3 .github/tools/validate_repo.py
+# The AppStream sidecars are generated from the recipes; a hand edit to
+# either side has to be reconciled, not silently shipped.
+python3 .github/tools/sync_appstream.py --check
 
 for staplerfile in */Staplerfile; do
     stplr-spec get-field --path "$staplerfile" name >/dev/null

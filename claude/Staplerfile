@@ -1,18 +1,21 @@
 name='claude'
 version='2.7032.0'
-release=1
-summary='Claude desktop application'
-summary_ru='Десктопное приложение Claude'
+release=4
+summary='Desktop application for Claude.ai'
+summary_ru='Десктопное приложение для Claude.ai'
 group='Development/Tools'
-desc='Claude is the Anthropic desktop application for Claude and Claude Code workflows with chat, project context, integrated terminal, editor and visual diff review.'
-desc_ru='Claude — десктопное приложение Anthropic для Claude и сценариев Claude Code: чат, контекст проекта, встроенный терминал, редактор и визуальный просмотр diff.'
+desc='Desktop application for Claude.ai'
+desc_ru='Десктопное приложение для Claude.ai'
 homepage='https://code.claude.com/docs/en/desktop-quickstart'
 maintainer='Anthropic PBC <support@anthropic.com>'
 
 architectures=('amd64' 'arm64')
 compatible_with=('altlinux')
 
-license=('Custom')
+license=('LicenseRef-proprietary')
+
+appstream_app_id='com.anthropic.Claude'
+appstream_name='Claude'
 nonfree=1
 nonfree_msg='Claude Desktop является проприетарным приложением Anthropic. Использование Claude, Claude Code, учетной записи, подписки, сетевых функций и моделей регулируется условиями Anthropic.'
 nonfree_url='https://www.anthropic.com/legal/consumer-terms'
@@ -45,24 +48,28 @@ sources=(
 	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_amd64.deb?~archive=false&~name=claude-desktop.deb"
 	"local:///claude-tray-orange.png"
 	'local:///LICENSE?nivora=claude'
+	'local:///com.anthropic.Claude.metainfo.xml?nivora=claude'
 )
 
 sources_arm64=(
 	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_arm64.deb?~archive=false&~name=claude-desktop.deb"
 	"local:///claude-tray-orange.png"
 	'local:///LICENSE?nivora=claude'
+	'local:///com.anthropic.Claude.metainfo.xml?nivora=claude'
 )
 
 checksums=(
 	'sha256:1e7f4504bca5b2f6b2d3c4123d145d727647e77f2ee2d046850711e61e7d7b11'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
 	'sha256:6f00d3f569c70728e382a749ee0242c86823d08f8c6f9dfcff178311831e5ccf'
+	'sha256:87dbe861a105a3cd1da4e5843230496e8b1d7e63c497117033bb2dd180ae6e36'
 )
 
 checksums_arm64=(
 	'sha256:6dca79fa4c8b65267780b5460c627159852e2dfa2ad011d03a0488f7bf226ec3'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
 	'sha256:6f00d3f569c70728e382a749ee0242c86823d08f8c6f9dfcff178311831e5ccf'
+	'sha256:87dbe861a105a3cd1da4e5843230496e8b1d7e63c497117033bb2dd180ae6e36'
 )
 
 scripts=(
@@ -110,6 +117,11 @@ package() {
 	ln -sfn /usr/lib/claude-desktop/claude-desktop "${pkgdir}/usr/bin/claude-desktop"
 
 	install -dm755 "${pkgdir}/usr/share/licenses/claude"
+	# The AppStream component claims this desktop id; make the build
+	# fail here rather than shipping a component nothing can launch.
+	test -f "${pkgdir}/usr/share/applications/com.anthropic.Claude.desktop"
+	install -Dm644 "${srcdir}/com.anthropic.Claude.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/com.anthropic.Claude.metainfo.xml"
 	install-license "${srcdir}/LICENSE" "claude/LICENSE.nivora"
 	install -Dm644 "${srcdir}/extracted/usr/share/doc/claude-desktop/copyright" \
 		"${pkgdir}/usr/share/licenses/claude/copyright"
@@ -126,6 +138,7 @@ files() {
 	files-find-desktop
 	files-find-license
 	files-find \
+		"/usr/share/metainfo/com.anthropic.Claude.metainfo.xml" \
 		"/usr/lib/claude-desktop/**/*" \
 		"/usr/share/icons/hicolor/*/apps/claude-desktop.png"
 }

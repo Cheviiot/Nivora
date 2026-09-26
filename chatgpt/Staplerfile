@@ -1,6 +1,6 @@
 name='chatgpt'
 version='26.924.22138'
-release=1
+release=4
 # SHA-256 of the final HTTP ETag for each mutable /latest/ source. The
 # autonomous detector compares these even when upstream keeps the version.
 source_fingerprint_amd64='3a59cee24f832436e30eedf3a2f47e235e949d01f53c49244085a6d6e08db83d'
@@ -16,7 +16,9 @@ maintainer='OpenAI <support@openai.com>'
 architectures=('amd64' 'arm64')
 compatible_with=('altlinux')
 
-license=('Custom')
+license=('LicenseRef-proprietary')
+
+appstream_app_id='com.openai.chatgpt'
 nonfree=1
 nonfree_msg='ChatGPT является проприетарным приложением OpenAI. Использование ChatGPT, Codex, учётной записи, подписки и сетевых функций регулируется условиями OpenAI.'
 nonfree_url='https://openai.com/policies/terms-of-use/'
@@ -48,12 +50,12 @@ build_deps=('binutils')
 
 sources=(
 	"https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_amd64.deb?nivora=${source_fingerprint_amd64}&~archive=false&~name=chatgpt.deb"
-	'local:///chatgpt.png'
+	'local:///com.openai.chatgpt.png'
 	'local:///LICENSE?nivora=chatgpt'
 )
 sources_arm64=(
 	"https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_arm64.deb?nivora=${source_fingerprint_arm64}&~archive=false&~name=chatgpt.deb"
-	'local:///chatgpt.png'
+	'local:///com.openai.chatgpt.png'
 	'local:///LICENSE?nivora=chatgpt'
 )
 
@@ -124,7 +126,7 @@ package() {
 		"${srcdir}/extracted/usr/share/applications/chatgpt.desktop"
 	install-desktop "${srcdir}/extracted/usr/share/applications/chatgpt.desktop"
 
-	install -Dm644 chatgpt.png "${pkgdir}/usr/share/pixmaps/chatgpt.png"
+	install -Dm644 com.openai.chatgpt.png "${pkgdir}/usr/share/pixmaps/chatgpt.png"
 
 	# Ships its own AppArmor profile granting unprivileged userns instead of
 	# a setuid chrome-sandbox helper (there isn't one in this build). Fail the
@@ -134,6 +136,15 @@ package() {
 	install -Dm644 "${srcdir}/extracted/etc/apparmor.d/chatgpt" \
 		"${pkgdir}/etc/apparmor.d/chatgpt"
 
+	# The AppStream component claims this desktop id; make the build
+	# fail here rather than shipping a component nothing can launch.
+	test -f "${pkgdir}/usr/share/applications/chatgpt.desktop"
+	# Upstream ships its own AppStream document, with component id
+	# com.openai.chatgpt launching chatgpt.desktop. It is installed as-is
+	# rather than replaced by a generated one.
+	install -Dm644 \
+		"${srcdir}/extracted/usr/share/metainfo/com.openai.chatgpt.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/com.openai.chatgpt.metainfo.xml"
 	install-license LICENSE "chatgpt/LICENSE.nivora"
 	install -Dm644 "${srcdir}/extracted/usr/lib/chatgpt/LICENSES.chromium.html" \
 		"${pkgdir}/usr/share/licenses/chatgpt/LICENSES.chromium.html"
@@ -145,6 +156,7 @@ files() {
 	files-find-desktop
 	files-find-license
 	files-find \
+		"/usr/share/metainfo/com.openai.chatgpt.metainfo.xml" \
 		"/usr/share/pixmaps/chatgpt.png" \
 		"/etc/apparmor.d/chatgpt"
 }

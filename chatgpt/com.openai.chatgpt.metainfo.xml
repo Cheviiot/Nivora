@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.openai.chatgpt</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <name>ChatGPT</name>
+  <summary>ChatGPT by OpenAI</summary>
+  <description>
+    <p>ChatGPT is an AI assistant from OpenAI.</p>
+  </description>
+  <developer_name>OpenAI</developer_name>
+  <url type="homepage">https://developers.openai.com/codex/app</url>
+  <launchable type="desktop-id">chatgpt.desktop</launchable>
+  <provides>
+    <id>chatgpt.desktop</id>
+  </provides>
+  <keywords><keyword>chatgpt</keyword></keywords>
+  <pkgname>chatgpt</pkgname>
+  <icon type="stock">chatgpt</icon>
+  <categories>
+    <category>Utility</category>
+    <category>Development</category>
+  </categories>
+</component>

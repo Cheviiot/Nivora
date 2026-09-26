@@ -2,16 +2,10 @@
 
 set -euo pipefail
 
-unit=/usr/lib/systemd/system/tailscaled.service
-
-# In postremove, the unit is missing only after a full removal. On an
-# upgrade the new version has already put it back, regardless of package format.
-if [[ ! -e "$unit" ]] && command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
-    if systemctl is-active --quiet tailscaled.service; then
-        systemctl stop tailscaled.service
-    fi
-    if systemctl is-enabled --quiet tailscaled.service; then
-        systemctl disable tailscaled.service
-    fi
-    systemctl daemon-reload
+# Stopping and disabling the daemon belongs to preremove, which RPM runs while
+# it still knows whether this is a removal or an upgrade. Here only the unit
+# files have changed on disk, so the single job left is telling systemd to
+# reread them.
+if command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
+    systemctl daemon-reload >/dev/null 2>&1 || true
 fi

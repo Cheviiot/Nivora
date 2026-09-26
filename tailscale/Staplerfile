@@ -1,6 +1,6 @@
 name='tailscale'
 version='1.102.4'
-release=1
+release=2
 summary='Mesh VPN built on WireGuard'
 summary_ru='Mesh VPN на базе WireGuard'
 group='Networking/Other'
@@ -53,6 +53,7 @@ checksums_arm64=(
 
 scripts=(
 	['postinstall']='postinstall.sh'
+	['preremove']='preremove.sh'
 	['postremove']='postremove.sh'
 )
 
@@ -65,8 +66,21 @@ package() {
 	install-binary "${src}/tailscale"
 	install-binary "${srcdir}/tailscale-purge-data"
 	install -Dm755 "${src}/tailscaled" "${pkgdir}/usr/sbin/tailscaled"
+
+	# Upstream ships three units, not one. tailscale-wait-online.service and
+	# tailscale-online.target are what lets another unit order itself behind a
+	# working Tailscale link (After=tailscale-online.target); without them that
+	# integration is simply unavailable.
 	install-systemd "${src}/systemd/tailscaled.service"
+	install-systemd "${src}/systemd/tailscale-wait-online.service"
+	install-systemd "${src}/systemd/tailscale-online.target"
 	install-config "${src}/systemd/tailscaled.defaults" "default/tailscaled"
+
+	# tailscaled.service declares CacheDirectory=tailscale, so systemd creates
+	# the directory at runtime. The upstream RPM still owns it, which is what
+	# makes removing the package take it away again.
+	install -dm755 "${pkgdir}/var/cache/tailscale"
+
 	install-license "${srcdir}/LICENSE" "tailscale/LICENSE.nivora"
 }
 
@@ -76,5 +90,6 @@ files() {
 	files-find-license
 	files-find \
 		"/usr/sbin/tailscaled" \
-		"/etc/default/tailscaled"
+		"/etc/default/tailscaled" \
+		"/var/cache/tailscale"
 }

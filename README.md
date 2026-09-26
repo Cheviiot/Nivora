@@ -90,7 +90,7 @@ sudo stplr install nivora/имя-пакета
   <tr><th colspan="4" align="left">AI и разработка</th></tr>
   <tr><!-- package-card:chatgpt -->
     <td width="340" nowrap><img src="chatgpt/chatgpt.png" width="24" height="24" alt=""> &nbsp;<a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Приложение OpenAI со встроенным Codex</sub></td>
-    <td align="right" nowrap><code>26.924.20706</code></td>
+    <td align="right" nowrap><code>26.924.22138</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/chatgpt</code></td>
   </tr>

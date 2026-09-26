@@ -1,10 +1,10 @@
 name='chatgpt'
-version='26.924.20706'
+version='26.924.22138'
 release=1
 # SHA-256 of the final HTTP ETag for each mutable /latest/ source. The
 # autonomous detector compares these even when upstream keeps the version.
-source_fingerprint_amd64='6b25e51b67ef2b154c427a02be6f6915794ca264a1d8c3d9412e37dee8fe0346'
-source_fingerprint_arm64='7ae74422d30a34c4c5fb45eafdd513476bb7851f92de3ce548c739b0289c3cf9'
+source_fingerprint_amd64='3a59cee24f832436e30eedf3a2f47e235e949d01f53c49244085a6d6e08db83d'
+source_fingerprint_arm64='43290ee24854ea36f8ecfcbe6bd87231f56466f6720fb78ca0a97264cf0a6eb7'
 summary='Official ChatGPT desktop app with integrated Codex'
 summary_ru='Официальное десктопное приложение ChatGPT со встроенным Codex'
 group='Development/Tools'
@@ -58,12 +58,12 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:760a0a98dcc05a40cbd8a36fec1dd7b32733e6a1f2a5285386ae7faf9a6ab033'
+	'sha256:ce3bb1aa82ccdfe3037ada2fd8d187796ea4a0d5ed031d0e4ec8adce8b7014e7'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
 	'sha256:ae0362ccf70609d206eeb12e0497cb8fbb6ce6a5b5ea15efbb634d276ad4e32b'
 )
 checksums_arm64=(
-	'sha256:0620e188af57bc33cd3cc016c7ec3fcf6ed087c1a90283d057598c9428975648'
+	'sha256:6570f078c5ea25461ce103b2e31fa7dd6c5e717136fa9237c701d22db62b5e3f'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
 	'sha256:ae0362ccf70609d206eeb12e0497cb8fbb6ce6a5b5ea15efbb634d276ad4e32b'
 )

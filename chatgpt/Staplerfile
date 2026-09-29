@@ -42,7 +42,11 @@ disable_network=1
 # even though device-kit-oai's native addons (node-hid, serialport) do
 # link it directly, since USB device access is easy to silently break and
 # not worth the risk of relying purely on auto_req's soname resolution.
-deps=('libnotify' 'libsecret' 'libXtst' 'libXScrnSaver' 'xdg-utils' 'gvfs' 'mesa-dri-drivers' 'libusb' 'xz')
+# bubblewrap даёт /usr/bin/bwrap: встроенный codex строит из него песочницу для
+# команд, которые запускает агент («error building bubblewrap command» без него).
+# Линковщик этого не видит — bwrap вызывается подпроцессом, имена bwrap и
+# bubblewrap лежат в строках /usr/lib/chatgpt/resources/codex.
+deps=('libnotify' 'libsecret' 'libXtst' 'libXScrnSaver' 'xdg-utils' 'gvfs' 'mesa-dri-drivers' 'libusb' 'xz' 'bubblewrap')
 
 opt_deps=('git' 'gnome-keyring')
 

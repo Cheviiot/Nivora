@@ -133,7 +133,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:pineconemc -->
     <td width="340" nowrap><img src="pineconemc/io.github.elyprismlauncher.ElyPrismLauncher.svg" width="24" height="24" alt=""> &nbsp;<a href="pineconemc/README.md"><strong>PineconeMC</strong></a><br><sub>Лаунчер Minecraft с поддержкой Ely.by</sub></td>
-    <td align="right" nowrap><code>11.1.0</code></td>
+    <td align="right" nowrap><code>11.1.1</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/pineconemc</code></td>
   </tr>

@@ -121,7 +121,7 @@ sudo stplr install nivora/имя-пакета
   <tr><th colspan="4" align="left">Медиа и игры</th></tr>
   <tr><!-- package-card:yandex-music -->
     <td width="340" nowrap><img src="yandex-music/yandexmusic.png" width="24" height="24" alt=""> &nbsp;<a href="yandex-music/README.md"><strong>Яндекс Музыка</strong></a><br><sub>Музыка, подкасты и персональные подборки</sub></td>
-    <td align="right" nowrap><code>5.121.2</code></td>
+    <td align="right" nowrap><code>5.122.0</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/yandex-music</code></td>
   </tr>

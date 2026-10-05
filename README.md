@@ -77,7 +77,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:tailscale -->
     <td width="340" nowrap><img src="https://tailscale.com/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="tailscale/README.md"><strong>Tailscale</strong></a><br><sub>Частная сеть между устройствами</sub></td>
-    <td align="right" nowrap><code>1.102.4</code></td>
+    <td align="right" nowrap><code>1.102.5</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/tailscale</code></td>
   </tr>

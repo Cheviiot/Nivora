@@ -164,7 +164,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:ventoy -->
     <td width="340" nowrap><img src="https://raw.githubusercontent.com/ventoy/Ventoy/master/ICON/logo_128.png" width="24" height="24" alt=""> &nbsp;<a href="ventoy/README.md"><strong>Ventoy</strong></a><br><sub>Несколько загрузочных образов на одной флешке</sub></td>
-    <td align="right" nowrap><code>1.1.17</code></td>
+    <td align="right" nowrap><code>1.1.18</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/ventoy</code></td>
   </tr>

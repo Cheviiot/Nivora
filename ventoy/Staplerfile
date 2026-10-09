@@ -1,6 +1,6 @@
 name='ventoy'
-version='1.1.17'
-release=4
+version='1.1.18'
+release=1
 summary='A new bootable USB solution.'
 summary_ru='Новое решение для загрузочных USB-накопителей.'
 group='System/Configuration/Hardware'
@@ -52,7 +52,7 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:7fb4ed08cef6a6b4d39dd19260d8c80291a78dfdf9af7d461571e23cbbc43805'
+	'sha256:d86ff9de63d94c8b8f1f6b14d23c55af4b88e8207bf2893890892a6a97b1ad54'
 	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
 	'sha256:8f0a81d29a973844791d3fb5dd0f572684855b6a66edcc48f9d39f4e77f72de2'
 	'sha256:98c00e3911109644ee139e2194ea00531f847d89289ddbd062566f28a34823c1'
@@ -60,7 +60,7 @@ checksums=(
 )
 
 checksums_arm64=(
-	'sha256:7fb4ed08cef6a6b4d39dd19260d8c80291a78dfdf9af7d461571e23cbbc43805'
+	'sha256:d86ff9de63d94c8b8f1f6b14d23c55af4b88e8207bf2893890892a6a97b1ad54'
 	'sha256:3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986'
 	'sha256:8f0a81d29a973844791d3fb5dd0f572684855b6a66edcc48f9d39f4e77f72de2'
 	'sha256:98c00e3911109644ee139e2194ea00531f847d89289ddbd062566f28a34823c1'

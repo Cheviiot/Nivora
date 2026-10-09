@@ -102,7 +102,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:claude -->
     <td width="340" nowrap><img src="claude/claude-tray-orange.png" width="24" height="24" alt=""> &nbsp;<a href="claude/README.md"><strong>Claude</strong></a><br><sub>Десктопное приложение Anthropic</sub></td>
-    <td align="right" nowrap><code>2.31226.0</code></td>
+    <td align="right" nowrap><code>2.31226.1</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/claude</code></td>
   </tr>

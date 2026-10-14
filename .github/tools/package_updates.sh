@@ -10,6 +10,7 @@ readonly -a PACKAGES=(
     distroshelf
     github-desktop
     happ
+    opencode
     parsec
     pineconemc
     subnetdesk
@@ -370,6 +371,7 @@ latest_version() {
         github_latest_release desktop/desktop | sed 's/^release-//'
         ;;
     happ) github_latest_release Happ-proxy/happ-desktop ;;
+    opencode) github_latest_release anomalyco/opencode ;;
     parsec) latest_parsec ;;
     pineconemc) github_latest_release ElyPrismLauncher/Launcher ;;
     # Tags are v-prefixed (v1.3.0); github_latest_release strips the prefix.

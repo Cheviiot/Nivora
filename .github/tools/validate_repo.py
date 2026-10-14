@@ -22,6 +22,7 @@ EXPECTED_PACKAGES = (
     "distroshelf",
     "github-desktop",
     "happ",
+    "opencode",
     "parsec",
     "pineconemc",
     "subnetdesk",

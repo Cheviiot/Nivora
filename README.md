@@ -22,7 +22,7 @@
 </p>
 
 <!-- package-count -->
-<p align="center"><strong>17 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
+<p align="center"><strong>18 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
 
 ## Быстрый старт
 
@@ -105,6 +105,12 @@ sudo stplr install nivora/имя-пакета
     <td align="right" nowrap><code>2.9939.4</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/claude</code></td>
+  </tr>
+  <tr><!-- package-card:opencode -->
+    <td width="340" nowrap><img src="opencode/ai.opencode.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="opencode/README.md"><strong>OpenCode Desktop</strong></a><br><sub>Открытый AI-агент для работы с кодом</sub></td>
+    <td align="right" nowrap><code>1.19.0</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/opencode</code></td>
   </tr>
   <tr><!-- package-card:github-desktop -->
     <td width="340" nowrap><img src="https://github.githubassets.com/favicons/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="github-desktop/README.md"><strong>GitHub Desktop</strong></a><br><sub>Linux-сборка из официальных исходников</sub></td>

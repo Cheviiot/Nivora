@@ -37,6 +37,7 @@ jobs:
         run: .github/tools/run_checks.sh
 
       - name: Сверить upstream-версии
+        if: github.event_name != 'pull_request'
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |

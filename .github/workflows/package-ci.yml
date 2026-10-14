@@ -61,6 +61,7 @@ jobs:
               --github-output "$GITHUB_OUTPUT"
           elif [[ "$EVENT_NAME" == pull_request ]]; then
             .github/tools/ci_plan.py \
+              --pull-request \
               --base "$PR_BASE_SHA" --head HEAD \
               --github-output "$GITHUB_OUTPUT"
           else

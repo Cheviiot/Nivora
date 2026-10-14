@@ -31,7 +31,7 @@ blocking_builders = ["alt-p11-x86_64", "alt-sisyphus-x86_64"]
 blocking_architectures = ["amd64", "noarch"]
 lifecycle = "install, smoke and remove in a disposable container of each ALT branch"
 main_canary = "advisory-alt-sisyphus-x86_64"
-pruning = "changed package only; every package for .github or stapler-repo.toml changes"
+pruning = "pull requests build changed packages after full static validation; common-only PRs and main pushes with common changes build every package"
 # GitHub offers no ALT runner, so every gate runs in an official ALT container
 # on an x86_64 runner. aarch64 is therefore declared but never gated: Stapler
 # builds it from the recipe on the user's own machine.

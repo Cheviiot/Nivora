@@ -20,7 +20,8 @@ for file in kimi-code chrome-sandbox chrome_crashpad_handler \
     printf 'fixture\n' > "$app/$file"
 done
 printf '"/opt/Kimi Code/kimi-code"\n' > "$app/resources/apparmor-profile"
-printf '[Desktop Entry]\nName=Kimi Code\nExec="/opt/Kimi Code/kimi-code"\n' \
+printf 'fixture-icon\n' > "$payload/usr/share/icons/hicolor/512x512/apps/kimi-code.png"
+printf '[Desktop Entry]\nName=Kimi Code\nExec="/opt/Kimi Code/kimi-code"\nStartupWMClass=Kimi Code\n' \
     > "$payload/usr/share/applications/kimi-code.desktop"
 printf '<component/>\n' \
     > "$payload/usr/share/metainfo/com.kimi.code.desktop.metainfo.xml"
@@ -45,5 +46,9 @@ test -f "$pkgdir/opt/Kimi Code/kimi-code"
 test -L "$pkgdir/usr/bin/kimi-code"
 test "$(readlink "$pkgdir/usr/bin/kimi-code")" = '/opt/Kimi Code/kimi-code'
 test -f "$pkgdir/usr/share/applications/kimi-code.desktop"
+grep -Fq 'StartupWMClass=kimi-code-app' \
+    "$pkgdir/usr/share/applications/kimi-code.desktop"
+test -f "$pkgdir/usr/share/icons/hicolor/512x512/apps/kimi-code.png"
+test -f "$pkgdir/usr/share/pixmaps/kimi-code.png"
 test -f "$pkgdir/usr/share/metainfo/com.kimi.code.desktop.metainfo.xml"
 test "$(stat -c '%a' "$pkgdir/opt/Kimi Code/chrome-sandbox")" = 4755

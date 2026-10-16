@@ -15,6 +15,8 @@ grep -Fq 'provides=()' "$staplerfile"
 grep -Fq 'replaces=('"'"'kimi-code'"'"')' "$staplerfile"
 grep -Fq 'conflicts=()' "$staplerfile"
 grep -Fq '/etc/apparmor.d/kimi-code' "$staplerfile"
+grep -Fq 'StartupWMClass=kimi-code-app' "$staplerfile"
+grep -Fq '/usr/share/pixmaps/kimi-code.png' "$staplerfile"
 # The AppArmor profile must keep granting user namespaces to the real binary.
 grep -Fq '"/opt/Kimi Code/kimi-code"' "$staplerfile"
 # These patterns intentionally contain literal recipe variables.

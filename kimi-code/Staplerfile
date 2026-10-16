@@ -1,6 +1,6 @@
 name='kimi-code'
 version='1.1.0'
-release=2
+release=3
 # SHA-256 of the final HTTP ETag for the mutable download URL. The
 # autonomous detector compares these even when upstream keeps the version.
 source_fingerprint_amd64='055970719a8fba3773beb51de404aaaeb2ce52a9120f620ccd04c4fe988964e3'
@@ -96,12 +96,24 @@ package() {
 	# Absolute links resolve against the build host, not pkgdir. Check the
 	# staged target directly so a first installation can build successfully.
 	test -f "${pkgdir}/opt/Kimi Code/kimi-code"
+	# Upstream ships StartupWMClass=Kimi Code, but the packaged app names
+	# itself "kimi-code-app" (root package.json of app.asar, no productName),
+	# and Electron turns that name into the X11 WM_CLASS - with the upstream
+	# value the shell cannot match the running window back to this desktop
+	# entry, so the taskbar shows a generic icon and the raw class name.
 	sed -i \
 		-e '0,/^Name=/{s/^Name=.*/Name=Kimi Code\nName[ru]=Kimi Code/}' \
+		-e 's/^StartupWMClass=.*/StartupWMClass=kimi-code-app/' \
 		"${srcdir}/extracted/usr/share/applications/kimi-code.desktop"
 	install-desktop "${srcdir}/extracted/usr/share/applications/kimi-code.desktop"
 
 	cp -a "${srcdir}/extracted/usr/share/icons" "${pkgdir}/usr/share/"
+	# The deb ships a single 512x512 hicolor icon; without a generated theme
+	# cache some shells do not resolve it, so keep the pixmaps copy the
+	# GNOME/KDE fallbacks always read (same pattern as the chatgpt package).
+	install -Dm644 \
+		"${srcdir}/extracted/usr/share/icons/hicolor/512x512/apps/kimi-code.png" \
+		"${pkgdir}/usr/share/pixmaps/kimi-code.png"
 
 	# Upstream ships its own AppStream document, with component id
 	# com.kimi.code.desktop launching kimi-code.desktop. It is installed as-is
@@ -125,5 +137,6 @@ files() {
 	files-find \
 		"/usr/share/metainfo/com.kimi.code.desktop.metainfo.xml" \
 		"/usr/share/icons/hicolor/512x512/apps/kimi-code.png" \
+		"/usr/share/pixmaps/kimi-code.png" \
 		"/etc/apparmor.d/kimi-code"
 }

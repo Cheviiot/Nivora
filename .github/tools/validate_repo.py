@@ -15,21 +15,17 @@ ROOT = Path(__file__).resolve().parents[2]
 
 EXPECTED_PACKAGES = (
     "anidesk",
-    "armbian-imager",
     "balena-etcher",
     "chatgpt",
     "claude",
     "distroshelf",
     "github-desktop",
     "happ",
-    "opencode",
+    "kimi-code",
     "parsec",
     "pineconemc",
-    "subnetdesk",
     "tailscale",
     "telegram",
-    "ventoy",
-    "vesktop",
     "vintner",
     "yandex-music",
 )
@@ -542,6 +538,7 @@ def validate_package(
 
     expected_fingerprint_fields = {
         "chatgpt": {"source_fingerprint_amd64", "source_fingerprint_arm64"},
+        "kimi-code": {"source_fingerprint_amd64"},
         "parsec": {"source_fingerprint"},
     }.get(package, set())
     declared_fingerprint_fields = re.findall(

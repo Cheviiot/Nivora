@@ -4,7 +4,9 @@
 
 - Nivora — репозиторий **только для ALT Linux**. Поддерживаются ветки `p11` и
   `Sisyphus`; `compatible_with` каждого рецепта равен `('altlinux')`.
-- В репозитории ровно 17 каталогов с `Staplerfile`.
+- В репозитории ровно 14 каталогов с `Staplerfile`.
+- Репозиторий развивается строго в одной git-ветке `main` (реф в
+  `stapler-repo.toml`, триггеры CI и обновления идут только через неё).
 - Каталог совпадает с `name` и командой в README.
 - Общая инфраструктура (`tools/`, `docs/`, интеграционные `tests/`) живёт внутри
   `.github/`; package-specific тесты и fixtures могут находиться рядом с
@@ -120,7 +122,7 @@ bundled-библиотеки на всю систему. `dirty` вместо э
   работает; у `dirty` работают оба.
 
 `auto_req=0` оставлен там, где список зависимостей полностью явный:
-`parsec`, `tailscale`, `ventoy`, `vintner`.
+`parsec`, `tailscale`, `vintner`.
 
 ### Как перепроверить зависимости
 
@@ -184,7 +186,7 @@ install/smoke/remove **в обеих ветках ALT** на `x86_64`. Canary с
 | `distroshelf` | Upstream не публикует готовый Linux-релиз — Nivora CI собирает пакет из исходников и публикует результат в собственном GitHub Release, как и для `github-desktop`. См. раздел «Сборка в CI» ниже |
 | `github-desktop` | Официальный upstream `desktop/desktop`; Linux-сборка без стороннего форка |
 | `telegram` | Upstream-тарбол не даёт своего package ID; desktop-id `org.telegram.desktop` сохранён; переходные metadata заменяют прежний package ID `telegram-desktop` |
-| `vesktop` | Пакет намеренно не называется `discord`: официальный `.deb`/`.tar.gz` Discord — самообновляющийся bootstrap без пригодного для SHA-256-пиннинга payload (см. `vesktop/README.md`). `vesktop` — реальный upstream package ID стороннего клиента Vencord, ставится как есть |
+| `kimi-code` | Upstream DEB `Package: kimi-code-app` от Moonshot AI; бинарник, desktop-id и AppStream-компонент базируются на имени `kimi-code`, которое и используется как package ID |
 
 ## Lifecycle-хуки
 
@@ -324,7 +326,7 @@ Software, а stplr-плагин добавляет только пакетную
 `appstream_app_id` обязан совпадать с desktop-файлом, который пакет реально
 ставит: validator сверяет наличие `/usr/share/applications/<id>.desktop`, а
 менять desktop-id нельзя без отдельной миграции. Отсюда legacy-имена вида
-`ventoy` или `chatgpt` вместо обратного DNS. `appstreamcli validate` выдаёт на
+`chatgpt` вместо обратного DNS. `appstreamcli validate` выдаёт на
 них `cid-desktopapp-is-not-rdns` — это принятая цена за то, что id пакета не
 разъезжается с установленным ярлыком.
 

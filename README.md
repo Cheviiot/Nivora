@@ -5,7 +5,7 @@
 <p align="center">
   <a href="#совместимость"><img src="https://img.shields.io/badge/ALT-p11%20%C2%B7%20Sisyphus-39cfa4?style=flat-square" alt="ALT p11 и Sisyphus"></a>
   <a href="https://stplr.dev/docs/intro/"><img src="https://img.shields.io/badge/Stapler-v0.1.1-1ab8cd?style=flat-square" alt="Stapler v0.1.1"></a>
-  <a href="https://github.com/Cheviiot/Nivora/actions/workflows/quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/quality.yml?branch=main&amp;style=flat-square&amp;label=CI" alt="Статус проверок репозитория"></a>
+  <a href="https://github.com/Cheviiot/Nivora/actions/workflows/package-ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/package-ci.yml?branch=main&amp;style=flat-square&amp;label=CI" alt="Статус проверок репозитория"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/Рецепты-MIT-8b5cf6?style=flat-square" alt="Рецепты под лицензией MIT"></a>
 </p>
 
@@ -22,7 +22,7 @@
 </p>
 
 <!-- package-count -->
-<p align="center"><strong>18 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
+<p align="center"><strong>14 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
 
 ## Быстрый старт
 
@@ -69,12 +69,6 @@ sudo stplr install nivora/имя-пакета
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/happ</code></td>
   </tr>
-  <tr><!-- package-card:subnetdesk -->
-    <td width="340" nowrap><img src="subnetdesk/subnetdesk.svg" width="24" height="24" alt=""> &nbsp;<a href="subnetdesk/README.md"><strong>SubnetDesk</strong></a><br><sub>Удалённый рабочий стол в своей сети</sub></td>
-    <td align="right" nowrap><code>1.3.0</code></td>
-    <td nowrap><code>amd64</code> <code>arm64</code></td>
-    <td nowrap><code>nivora/subnetdesk</code></td>
-  </tr>
   <tr><!-- package-card:tailscale -->
     <td width="340" nowrap><img src="https://tailscale.com/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="tailscale/README.md"><strong>Tailscale</strong></a><br><sub>Частная сеть между устройствами</sub></td>
     <td align="right" nowrap><code>1.104.1</code></td>
@@ -86,12 +80,6 @@ sudo stplr install nivora/имя-пакета
     <td align="right" nowrap><code>7.2.5</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/telegram</code></td>
-  </tr>
-  <tr><!-- package-card:vesktop -->
-    <td width="340" nowrap><img src="https://raw.githubusercontent.com/Vencord/Vesktop/main/build/icon.svg" width="24" height="24" alt=""> &nbsp;<a href="vesktop/README.md"><strong>Vesktop</strong></a><br><sub>Discord-клиент с Vencord</sub></td>
-    <td align="right" nowrap><code>1.6.7</code></td>
-    <td nowrap><code>amd64</code> <code>arm64</code></td>
-    <td nowrap><code>nivora/vesktop</code></td>
   </tr>
   <tr><th colspan="4" align="left">AI и разработка</th></tr>
   <tr><!-- package-card:chatgpt -->
@@ -106,11 +94,11 @@ sudo stplr install nivora/имя-пакета
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/claude</code></td>
   </tr>
-  <tr><!-- package-card:opencode -->
-    <td width="340" nowrap><img src="opencode/ai.opencode.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="opencode/README.md"><strong>OpenCode Desktop</strong></a><br><sub>Открытый AI-агент для работы с кодом</sub></td>
-    <td align="right" nowrap><code>1.19.0</code></td>
-    <td nowrap><code>amd64</code> <code>arm64</code></td>
-    <td nowrap><code>nivora/opencode</code></td>
+  <tr><!-- package-card:kimi-code -->
+    <td width="340" nowrap><img src="kimi-code/com.kimi.code.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="kimi-code/README.md"><strong>Kimi Code</strong></a><br><sub>Десктопный AI-агент для работы с кодом</sub></td>
+    <td align="right" nowrap><code>1.1.0</code></td>
+    <td nowrap><code>amd64</code></td>
+    <td nowrap><code>nivora/kimi-code</code></td>
   </tr>
   <tr><!-- package-card:github-desktop -->
     <td width="340" nowrap><img src="https://github.githubassets.com/favicons/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="github-desktop/README.md"><strong>GitHub Desktop</strong></a><br><sub>Linux-сборка из официальных исходников</sub></td>
@@ -150,12 +138,6 @@ sudo stplr install nivora/имя-пакета
     <td nowrap><code>nivora/parsec</code></td>
   </tr>
   <tr><th colspan="4" align="left">Системные инструменты</th></tr>
-  <tr><!-- package-card:armbian-imager -->
-    <td width="340" nowrap><img src="https://raw.githubusercontent.com/armbian/imager/main/public/armbian-icon.png" width="24" height="24" alt=""> &nbsp;<a href="armbian-imager/README.md"><strong>Armbian Imager</strong></a><br><sub>Выбор и запись образов Armbian</sub></td>
-    <td align="right" nowrap><code>2.0.4</code></td>
-    <td nowrap><code>amd64</code> <code>arm64</code></td>
-    <td nowrap><code>nivora/armbian-imager</code></td>
-  </tr>
   <tr><!-- package-card:balena-etcher -->
     <td width="340" nowrap><img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="24" height="24" alt=""> &nbsp;<a href="balena-etcher/README.md"><strong>balenaEtcher</strong></a><br><sub>Запись образов на SD-карты и USB</sub></td>
     <td align="right" nowrap><code>2.1.7</code></td>
@@ -167,12 +149,6 @@ sudo stplr install nivora/имя-пакета
     <td align="right" nowrap><code>1.5.2</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/distroshelf</code></td>
-  </tr>
-  <tr><!-- package-card:ventoy -->
-    <td width="340" nowrap><img src="https://raw.githubusercontent.com/ventoy/Ventoy/master/ICON/logo_128.png" width="24" height="24" alt=""> &nbsp;<a href="ventoy/README.md"><strong>Ventoy</strong></a><br><sub>Несколько загрузочных образов на одной флешке</sub></td>
-    <td align="right" nowrap><code>1.1.18</code></td>
-    <td nowrap><code>amd64</code> <code>arm64</code></td>
-    <td nowrap><code>nivora/ventoy</code></td>
   </tr>
 </table>
 <!-- catalog:end -->

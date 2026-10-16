@@ -13,13 +13,13 @@ alt_p11 = "registry.altlinux.org/p11/base@sha256:8024e8175572804b1b6bcfde76d464d
 alt_sisyphus = "registry.altlinux.org/sisyphus/base@sha256:1a6ab67cc12cfbe2419ed8b805ae6fd75ed036f9da7211b78876d1cd0083b7ba"
 
 [expectations]
-package_count = 18
+package_count = 14
 target_count = 2
-logical_runtime_cells = 60
-declared_supported_runtime_cells = 60
-verified_runtime_cells = 36
-blocking_ci_build_cells_full_common_change = 36
-advisory_main_build_cells_full_common_change = 18
+logical_runtime_cells = 42
+declared_supported_runtime_cells = 42
+verified_runtime_cells = 28
+blocking_ci_build_cells_full_common_change = 28
+advisory_main_build_cells_full_common_change = 14
 
 [tiers]
 verified = "build, package metadata, install, safe smoke and remove all run as required gates in a disposable ALT container of that branch"
@@ -67,15 +67,6 @@ architectures = ["amd64"]
 smoke_path = "/usr/bin/anidesk"
 support = [
   { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["external-service"] },
-]
-
-[[packages]]
-id = "armbian-imager"
-architectures = ["amd64", "arm64"]
-smoke_path = "/usr/bin/armbian-imager"
-support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["destructive-storage"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "destructive-storage"] },
 ]
 
 [[packages]]
@@ -131,12 +122,11 @@ support = [
 ]
 
 [[packages]]
-id = "opencode"
-architectures = ["amd64", "arm64"]
-smoke_path = "/usr/bin/opencode-desktop"
+id = "kimi-code"
+architectures = ["amd64"]
+smoke_path = "/usr/bin/kimi-code"
 support = [
   { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "login-required", "external-service"] },
 ]
 
 [[packages]]
@@ -157,15 +147,6 @@ support = [
 ]
 
 [[packages]]
-id = "subnetdesk"
-architectures = ["amd64", "arm64"]
-smoke_path = "/usr/bin/subnetdesk"
-support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["remote-host-out-of-scope", "service-enabled-on-install"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "remote-host-out-of-scope", "service-enabled-on-install"] },
-]
-
-[[packages]]
 id = "tailscale"
 architectures = ["amd64", "arm64"]
 smoke_path = "/usr/bin/tailscale"
@@ -180,24 +161,6 @@ architectures = ["amd64"]
 smoke_path = "/usr/bin/telegram-desktop"
 support = [
   { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service"] },
-]
-
-[[packages]]
-id = "ventoy"
-architectures = ["amd64", "arm64"]
-smoke_path = "/usr/bin/ventoy"
-support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["destructive-storage"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "destructive-storage"] },
-]
-
-[[packages]]
-id = "vesktop"
-architectures = ["amd64", "arm64"]
-smoke_path = "/usr/bin/vesktop"
-support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "login-required", "external-service"] },
 ]
 
 [[packages]]

@@ -1,9 +1,9 @@
 name='github-desktop'
-version='3.6.6'
-release=4
+version='3.6.7'
+release=1
 # Exact commit behind the upstream release-${version} tag. Keeping it
 # separate makes a stale pin visible when version is updated.
-upstream_commit='8b85519e733fd98a04c178249d2d10fd8f3db19e'
+upstream_commit='dbc92f973994da7fccc494d0e5a2ae0ffbd1434e'
 summary='Focus on what matters instead of fighting with Git.'
 summary_ru='Сосредоточьтесь на главном вместо борьбы с Git.'
 group='Development/Tools'
@@ -65,7 +65,7 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:35682d862ddc602f5ef438896458852fa1412aa0e50987bebd995387a1806c1c'
+	'sha256:31efe239e5b5ca28dc218a45916b9ddf4459cfb017d0af83faa82dc9993d594c'
 	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
 	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
 	'sha256:9267f4511eeaaec82066f2aa128b6cb7320dc46951657033c05ce7c802cf8a60'
@@ -73,7 +73,7 @@ checksums=(
 )
 
 checksums_arm64=(
-	'sha256:7faabf5a7433a6d7fd5dfc9af48d93a629a6916a45d387aeb6cea2afb24a63e0'
+	'sha256:0ea4857ba9a2be50555630b12ef4a2be004b3b9bcd52da627911dd05cc4af55d'
 	'sha256:891d678cd6aa67c0712f663b5fee690f24d11d360795300814f7bf2eb91ba530'
 	'sha256:182efd5af36dccaa389086695e38140ff42af0befd2caaa6661e4cc0ffe614b7'
 	'sha256:9267f4511eeaaec82066f2aa128b6cb7320dc46951657033c05ce7c802cf8a60'

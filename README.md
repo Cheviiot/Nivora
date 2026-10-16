@@ -102,7 +102,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:github-desktop -->
     <td width="340" nowrap><img src="https://github.githubassets.com/favicons/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="github-desktop/README.md"><strong>GitHub Desktop</strong></a><br><sub>Linux-сборка из официальных исходников</sub></td>
-    <td align="right" nowrap><code>3.6.6</code></td>
+    <td align="right" nowrap><code>3.6.7</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/github-desktop</code></td>
   </tr>

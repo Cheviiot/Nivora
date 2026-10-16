@@ -3,21 +3,17 @@ set -euo pipefail
 
 readonly -a PACKAGES=(
     anidesk
-    armbian-imager
     balena-etcher
     chatgpt
     claude
     distroshelf
     github-desktop
     happ
-    opencode
+    kimi-code
     parsec
     pineconemc
-    subnetdesk
     tailscale
     telegram
-    ventoy
-    vesktop
     vintner
     yandex-music
 )
@@ -132,7 +128,7 @@ version_is_newer() {
 
 is_mutable_source_package() {
     case "$1" in
-    chatgpt | parsec) return 0 ;;
+    chatgpt | kimi-code | parsec) return 0 ;;
     *) return 1 ;;
     esac
 }
@@ -173,6 +169,11 @@ source_fingerprints() {
         fingerprint="$(http_etag_fingerprint \
             'https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_arm64.deb')" || return
         printf 'source_fingerprint_arm64\t%s\n' "$fingerprint"
+        ;;
+    kimi-code)
+        fingerprint="$(http_etag_fingerprint \
+            'https://code.kimi.com/kimi-code/desktop/download/KimiCode-linux-amd64.deb')" || return
+        printf 'source_fingerprint_amd64\t%s\n' "$fingerprint"
         ;;
     parsec)
         fingerprint="$(http_etag_fingerprint \
@@ -329,6 +330,25 @@ latest_chatgpt() {
     rmdir "$temp_dir"
 }
 
+latest_kimi_code() {
+    local temp_dir version
+    temp_dir="$(mktemp -d)"
+    # The versionless download URL is the only upstream source of truth; read
+    # the version from the control part of that same artifact. A Range request
+    # is enough because ar puts control.tar.xz right after debian-binary.
+    curl --retry 3 --retry-delay 2 --retry-all-errors \
+        --connect-timeout 30 --max-time 60 -fsSL \
+        -r 0-2097151 \
+        -o "${temp_dir}/kimi-code.deb" \
+        'https://code.kimi.com/kimi-code/desktop/download/KimiCode-linux-amd64.deb'
+    (cd "$temp_dir" && ar x kimi-code.deb debian-binary control.tar.xz)
+    version="$(tar -xOf "${temp_dir}/control.tar.xz" ./control | awk '$1 == "Version:" {print $2; exit}')"
+    [[ -n "$version" ]] || die 'cannot determine latest Kimi Code Desktop version'
+    printf '%s\n' "$version"
+    find "$temp_dir" -mindepth 1 -delete
+    rmdir "$temp_dir"
+}
+
 upstream_source_published() {
     local url="$1"
     local headers status
@@ -362,7 +382,6 @@ latest_telegram() {
 latest_version() {
     case "$1" in
     anidesk) latest_anidesk ;;
-    armbian-imager) github_latest_release armbian/imager ;;
     balena-etcher) github_latest_release balena-io/etcher ;;
     chatgpt) latest_chatgpt ;;
     claude) latest_claude_desktop ;;
@@ -371,15 +390,11 @@ latest_version() {
         github_latest_release desktop/desktop | sed 's/^release-//'
         ;;
     happ) github_latest_release Happ-proxy/happ-desktop ;;
-    opencode) github_latest_release anomalyco/opencode ;;
+    kimi-code) latest_kimi_code ;;
     parsec) latest_parsec ;;
     pineconemc) github_latest_release ElyPrismLauncher/Launcher ;;
-    # Tags are v-prefixed (v1.3.0); github_latest_release strips the prefix.
-    subnetdesk) github_latest_release zibo-chen/SubnetDesk ;;
     tailscale) latest_tailscale ;;
     telegram) latest_telegram ;;
-    ventoy) github_latest_release ventoy/Ventoy ;;
-    vesktop) github_latest_release Vencord/Vesktop ;;
     vintner) github_latest_release Cheviiot/vintner ;;
     yandex-music) latest_yandex_music ;;
     *) die "unknown package: $1" ;;

@@ -10,7 +10,25 @@ optional_refresh() {
     fi
 }
 
-sandbox=/opt/Vesktop/chrome-sandbox
+profile=/etc/apparmor.d/kimi-code
+disabled=/etc/apparmor.d/disable/kimi-code
+if [[ -f /etc/apparmor.d/abi/4.0 ]]; then
+    if [[ -L "$disabled" && "$(readlink "$disabled")" == '.././kimi-code' ]]; then
+        rm -f "$disabled"
+    fi
+    if [[ ! -e "$disabled" && ! -L "$disabled" ]] &&
+        command -v aa-enabled >/dev/null 2>&1 &&
+        command -v apparmor_parser >/dev/null 2>&1 &&
+        aa-enabled --quiet; then
+        apparmor_parser -r -W -T "$profile"
+    fi
+elif command -v apparmor_parser >/dev/null 2>&1 &&
+    [[ ! -e "$disabled" && ! -L "$disabled" ]]; then
+    install -d /etc/apparmor.d/disable
+    ln -s '.././kimi-code' "$disabled"
+fi
+
+sandbox='/opt/Kimi Code/chrome-sandbox'
 if [[ ! -f "$sandbox" ]]; then
     echo "Ошибка: не найден Electron sandbox: ${sandbox}" >&2
     exit 1
@@ -22,9 +40,6 @@ chmod 4755 "$sandbox"
 
 if command -v update-desktop-database >/dev/null 2>&1; then
     optional_refresh "desktop-базу" update-desktop-database -q /usr/share/applications
-fi
-if command -v update-mime-database >/dev/null 2>&1; then
-    optional_refresh "базу MIME" update-mime-database /usr/share/mime
 fi
 if command -v gtk-update-icon-cache >/dev/null 2>&1; then
     optional_refresh "кэш иконок" gtk-update-icon-cache -f -q /usr/share/icons/hicolor

@@ -21,19 +21,26 @@ def package_ids() -> list[str]:
     return sorted(package["id"] for package in matrix["packages"])
 
 
-def classify_paths(paths: list[str], packages: list[str]) -> tuple[list[str], bool]:
+def classify_paths(
+    paths: list[str], packages: list[str], *, pull_request: bool = False
+) -> tuple[list[str], bool]:
     normalized = [path.removeprefix("./") for path in paths]
-    full = any(
-        path in COMMON_FILES or path.startswith(COMMON_PREFIXES)
-        for path in normalized
-    )
-    if full:
-        return packages, True
     selected = sorted(
         package
         for package in packages
         if any(path == package or path.startswith(f"{package}/") for path in normalized)
     )
+    full = any(
+        path in COMMON_FILES or path.startswith(COMMON_PREFIXES)
+        for path in normalized
+    )
+    # PRs run the global static validator first. Build only packages present
+    # in the diff; a main push still rebuilds every package after common-file
+    # changes. A common-only PR keeps the full plan.
+    if pull_request and selected:
+        return selected, False
+    if full:
+        return packages, True
     return selected, False
 
 
@@ -70,6 +77,7 @@ def main() -> int:
     parser.add_argument("--base", default="")
     parser.add_argument("--head", default="HEAD")
     parser.add_argument("--packages", default="")
+    parser.add_argument("--pull-request", action="store_true")
     parser.add_argument("--github-output", type=Path)
     args = parser.parse_args()
 
@@ -80,7 +88,9 @@ def main() -> int:
             paths: list[str] = []
         else:
             paths = changed_paths(args.base, args.head)
-            selected, full = classify_paths(paths, packages)
+            selected, full = classify_paths(
+                paths, packages, pull_request=args.pull_request
+            )
     except ValueError as error:
         parser.error(str(error))
 

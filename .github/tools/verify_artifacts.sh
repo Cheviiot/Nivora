@@ -294,22 +294,6 @@ for package in "${packages[@]}"; do
         }
     fi
 
-    if [[ "$package" == 'ventoy' ]]; then
-        for required_path in \
-            /usr/bin/ventoy \
-            '/opt/ventoy/VentoyGUI.*' \
-            /opt/ventoy/boot/boot.img \
-            /opt/ventoy/tool/VentoyWorker.sh \
-            /opt/ventoy/ventoy/ventoy.disk.img.xz \
-            /usr/share/applications/ventoy.desktop \
-            /usr/share/icons/hicolor/128x128/apps/ventoy.png; do
-            contains_path "$required_path" || {
-                echo "${package}: отсутствует компонент Ventoy: ${required_path}" >&2
-                exit 1
-            }
-        done
-    fi
-
     while read -r path _ _ _ mode owner group _; do
         [[ "$owner" == root && "$group" == root ]] || {
             echo "${package}: неверный владелец ${owner}:${group} у ${path}" >&2

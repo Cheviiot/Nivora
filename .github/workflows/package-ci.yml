@@ -61,12 +61,46 @@ jobs:
               --github-output "$GITHUB_OUTPUT"
           elif [[ "$EVENT_NAME" == pull_request ]]; then
             .github/tools/ci_plan.py \
+              --pull-request \
               --base "$PR_BASE_SHA" --head HEAD \
               --github-output "$GITHUB_OUTPUT"
           else
             .github/tools/ci_plan.py \
               --base "$BEFORE_SHA" --head HEAD \
               --github-output "$GITHUB_OUTPUT"
+          fi
+
+  # Сверка upstream-версий остаётся частью единого CI: отдельный lightweight job
+  # вместо прежнего дублирующего workflow, который прогонял run_checks.sh
+  # второй раз на тех же событиях.
+  versions:
+    name: Сверка upstream-версий
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Получить репозиторий
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Подготовить инструменты
+        uses: ./.github/actions/setup-stplr-spec
+        with:
+          system-packages: jq
+
+      - name: Сверить upstream-версии
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          .github/tools/package_updates.sh check-all
+          status=$?
+          set -e
+          if [[ "$status" -eq 10 ]]; then
+            echo "::warning::Для одного или нескольких пакетов доступны обновления"
+          elif [[ "$status" -ne 0 ]]; then
+            exit "$status"
           fi
 
   alt:
@@ -113,7 +147,10 @@ jobs:
   main-canary:
     name: advisory main ALT sisyphus · ${{ matrix.package }}
     needs: plan
-    if: ${{ needs.plan.outputs.has_packages == 'true' }}
+    # Canary предупреждает о будущих несовместимостей Stapler: PR обходятся без
+    # неё (каждый PR-джоб удваивал бы нагрузку), advisory-проверка остаётся на
+    # push в main и ручных запусках.
+    if: ${{ needs.plan.outputs.has_packages == 'true' && github.event_name != 'pull_request' }}
     continue-on-error: true
     strategy:
       fail-fast: false

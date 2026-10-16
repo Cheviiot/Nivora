@@ -19,21 +19,17 @@ readonly cache_volume="nivora-lifecycle-${branch}-cache-$$"
 # package | command | persistent state marker | desktop/unit | icon | sandbox
 readonly -a lifecycle_package_catalog=(
     'anidesk|/usr/bin/anidesk|/home/nivora-test/.config/anidesk/nivora-lifecycle-state|/usr/share/applications/anidesk.desktop|/usr/share/icons/hicolor/256x256/apps/anidesk.png|/usr/lib/anidesk/chrome-sandbox'
-    'armbian-imager|/usr/bin/armbian-imager|/home/nivora-test/.config/armbian-imager/nivora-lifecycle-state|/usr/share/applications/armbian-imager.desktop|/usr/share/icons/hicolor/512x512/apps/armbian-imager.png|-'
     'balena-etcher|/usr/bin/balena-etcher|/home/nivora-test/.config/balena-etcher/nivora-lifecycle-state|/usr/share/applications/balena-etcher.desktop|/usr/share/pixmaps/balena-etcher.png|/usr/lib/balena-etcher/chrome-sandbox'
     'chatgpt|/usr/bin/chatgpt|/home/nivora-test/.config/ChatGPT/nivora-lifecycle-state|/usr/share/applications/chatgpt.desktop|/usr/share/pixmaps/chatgpt.png|-'
     'claude|/usr/bin/claude-desktop|/home/nivora-test/.config/Claude/nivora-lifecycle-state|/usr/share/applications/com.anthropic.Claude.desktop|/usr/share/icons/hicolor/128x128/apps/claude-desktop.png|/usr/lib/claude-desktop/chrome-sandbox'
     'distroshelf|/usr/bin/distroshelf|/home/nivora-test/.config/distroshelf/nivora-lifecycle-state|/usr/share/applications/com.ranfdev.DistroShelf.desktop|/usr/share/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg|-'
     'github-desktop|/usr/bin/github-desktop|/home/nivora-test/.config/GitHub Desktop/nivora-lifecycle-state|/usr/share/applications/github-desktop.desktop|/usr/share/icons/hicolor/scalable/apps/github-desktop.svg|/opt/github-desktop/chrome-sandbox'
     'happ|/usr/bin/happ|/home/nivora-test/.config/happ/nivora-lifecycle-state|/usr/share/applications/Happ.desktop|/usr/lib/systemd/system/happd.service|-'
-    'opencode|/usr/bin/opencode-desktop|/home/nivora-test/.config/opencode/nivora-lifecycle-state|/usr/share/applications/ai.opencode.desktop.desktop|/usr/share/icons/hicolor/128x128/apps/ai.opencode.desktop.png|/opt/OpenCode/chrome-sandbox'
+    'kimi-code|/usr/bin/kimi-code|/home/nivora-test/.config/Kimi Code/nivora-lifecycle-state|/usr/share/applications/kimi-code.desktop|/usr/share/icons/hicolor/512x512/apps/kimi-code.png|/opt/Kimi Code/chrome-sandbox'
     'parsec|/usr/bin/parsecd|/home/nivora-test/.config/parsec/nivora-lifecycle-state|/usr/share/applications/parsecd.desktop|/usr/share/icons/hicolor/256x256/apps/parsecd.png|-'
     'pineconemc|/usr/bin/pineconemc|/home/nivora-test/.config/pineconemc/nivora-lifecycle-state|/usr/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop|/usr/share/icons/hicolor/scalable/apps/io.github.elyprismlauncher.ElyPrismLauncher.svg|-'
-    'subnetdesk|/usr/bin/subnetdesk|/home/nivora-test/.config/subnetdesk/nivora-lifecycle-state|/usr/share/applications/subnetdesk.desktop|/usr/lib/systemd/system/subnetdesk.service|-'
     'tailscale|/usr/bin/tailscale|/var/lib/tailscale/nivora-lifecycle-state|/usr/lib/systemd/system/tailscaled.service|-|-'
     'telegram|/usr/bin/telegram-desktop|/home/nivora-test/.config/telegram-desktop/nivora-lifecycle-state|/usr/share/applications/org.telegram.desktop.desktop|/usr/share/icons/hicolor/256x256/apps/org.telegram.desktop.png|-'
-    'ventoy|/usr/bin/ventoy|/home/nivora-test/.config/ventoy/nivora-lifecycle-state|/usr/share/applications/ventoy.desktop|/usr/share/icons/hicolor/128x128/apps/ventoy.png|-'
-    'vesktop|/usr/bin/vesktop|/home/nivora-test/.config/vesktop/nivora-lifecycle-state|/usr/share/applications/vesktop.desktop|/usr/share/icons/hicolor/scalable/apps/vesktop.svg|/opt/Vesktop/chrome-sandbox'
     'vintner|/usr/bin/vintner|/home/nivora-test/.config/vintner/nivora-lifecycle-state|-|-|-'
     'yandex-music|/usr/bin/yandex-music|/home/nivora-test/.config/yandex-music/nivora-lifecycle-state|/usr/share/applications/yandexmusic.desktop|/usr/share/icons/hicolor/256x256/apps/yandexmusic.png|/opt/YandexMusic/chrome-sandbox'
 )

@@ -65,7 +65,7 @@ sudo stplr install nivora/имя-пакета
   <tr><th colspan="4" align="left">Интернет, сеть и VPN</th></tr>
   <tr><!-- package-card:happ -->
     <td width="340" nowrap><img src="https://happ.su/imgs/apple-touch-icon.png" width="24" height="24" alt=""> &nbsp;<a href="happ/README.md"><strong>Happ</strong></a><br><sub>VPN-клиент на базе Xray</sub></td>
-    <td align="right" nowrap><code>4.5.3</code></td>
+    <td align="right" nowrap><code>4.5.4</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/happ</code></td>
   </tr>
@@ -84,13 +84,13 @@ sudo stplr install nivora/имя-пакета
   <tr><th colspan="4" align="left">AI и разработка</th></tr>
   <tr><!-- package-card:chatgpt -->
     <td width="340" nowrap><img src="chatgpt/com.openai.chatgpt.png" width="24" height="24" alt=""> &nbsp;<a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Приложение OpenAI со встроенным Codex</sub></td>
-    <td align="right" nowrap><code>26.1007.71326</code></td>
+    <td align="right" nowrap><code>26.1013.31256</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/chatgpt</code></td>
   </tr>
   <tr><!-- package-card:claude -->
     <td width="340" nowrap><img src="claude/claude-tray-orange.png" width="24" height="24" alt=""> &nbsp;<a href="claude/README.md"><strong>Claude</strong></a><br><sub>Десктопное приложение Anthropic</sub></td>
-    <td align="right" nowrap><code>2.37337.1</code></td>
+    <td align="right" nowrap><code>2.42304.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/claude</code></td>
   </tr>

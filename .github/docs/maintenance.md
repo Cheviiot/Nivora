@@ -4,7 +4,7 @@
 
 - Nivora — репозиторий **только для ALT Linux**. Поддерживаются ветки `p11` и
   `Sisyphus`; `compatible_with` каждого рецепта равен `('altlinux')`.
-- В репозитории ровно 14 каталогов с `Staplerfile`.
+- В репозитории ровно 15 каталогов с `Staplerfile`.
 - Репозиторий развивается строго в одной git-ветке `main` (реф в
   `stapler-repo.toml`, триггеры CI и обновления идут только через неё).
 - Каталог совпадает с `name` и командой в README.
@@ -187,6 +187,7 @@ install/smoke/remove **в обеих ветках ALT** на `x86_64`. Canary с
 | `github-desktop` | Официальный upstream `desktop/desktop`; Linux-сборка без стороннего форка |
 | `telegram` | Upstream-тарбол не даёт своего package ID; desktop-id `org.telegram.desktop` сохранён; переходные metadata заменяют прежний package ID `telegram-desktop` |
 | `kimi-code` | Upstream DEB `Package: kimi-code-app` от Moonshot AI; бинарник, desktop-id и AppStream-компонент базируются на имени `kimi-code`, которое и используется как package ID |
+| `unsloth` | Официальный upstream `Package: unsloth` (DEB-релизы `unslothai/unsloth`); desktop-файл апстрима `Unsloth.desktop` установлен как `unsloth.desktop`, потому что generated AppStream связывает компонент с `<appstream_app_id>.desktop` |
 
 ## Lifecycle-хуки
 

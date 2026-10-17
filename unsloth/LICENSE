@@ -1,0 +1,23 @@
+Сведения о лицензии пакета unsloth
+
+Лицензия: Apache-2.0 (основной код проекта Unsloth) и AGPL-3.0-only
+(скрипт install.sh студии, который поставляется внутри DEB).
+Источник: официальный релиз Unsloth Desktop, https://github.com/unslothai/unsloth
+Домашняя страница приложения: https://unsloth.ai/
+
+Нюансы пакета:
+- Unsloth Desktop — открытое ПО, пакет свободный (`nonfree` не объявлен).
+- DEB апстрима объявляет переходные Provides/Conflicts/Replaces на
+  `unsloth-studio-desktop`. В Nivora пакет новый и validator держит
+  provides/conflicts пустыми, поэтому переходные metadata не переносятся:
+  если апстримный DEB был установлен вручную, удалите его перед установкой
+  `nivora/unsloth`, иначе файлы разойдутся конфликтом.
+- Desktop-файл установлен как `unsloth.desktop` — generated AppStream
+  связывает компонент с `<appstream_app_id>.desktop`; иконки сохранены под
+  апстримным именем `unsloth-studio`.
+- Приложение скачивает модели и компоненты из сети (Hugging Face и др.);
+  скачанное хранится в домашнем каталоге и пакетом не удаляется.
+
+Справочные ссылки:
+- https://unsloth.ai/
+- https://github.com/unslothai/unsloth

@@ -1,0 +1,107 @@
+name='unsloth'
+version='0.1.908-beta'
+release=1
+summary='Unsloth Desktop — run and fine-tune LLMs locally'
+summary_ru='Unsloth Desktop — запуск и дообучение LLM локально'
+group='Development/Tools'
+desc='Unsloth Desktop is the official desktop app of the Unsloth project: run, fine-tune and train LLMs and diffusion models locally on NVIDIA, AMD and Intel GPUs, via Vulkan or on CPU, without a cloud.'
+desc_ru='Unsloth Desktop — официальное десктопное приложение проекта Unsloth: запускайте, дообучайте и обучайте LLM и модели диффузии локально на GPU NVIDIA, AMD и Intel, через Vulkan или на CPU, без облака.'
+homepage='https://unsloth.ai/'
+maintainer='Unsloth AI <team@unsloth.ai>'
+
+architectures=('amd64')
+compatible_with=('altlinux')
+
+license=('Apache-2.0' 'AGPL-3.0-only')
+
+appstream_app_id='unsloth'
+appstream_name='Unsloth'
+
+provides=()
+replaces=('unsloth')
+conflicts=()
+
+auto_reqprov_method="dirty"
+auto_req=1
+auto_prov=0
+disable_network=1
+
+# Tauri binary: auto_req covers everything readelf -d confirms as real
+# DT_NEEDED (webkit2gtk-4.1, gtk-3, soup-3, glib, ...). xdg-utils stays
+# explicit because the app shells out to xdg-open for links and the
+# unsloth:// scheme handler; it never shows up in the linker scan.
+deps=('xdg-utils')
+
+# libappindicator-gtk3 backs the tray icon (dlopen'd, not linked);
+# gst-plugins-bad1.0 covers media playback inside the webview (the upstream
+# DEB Recommends the same); polkit enables the shipped self-update action.
+opt_deps=('libappindicator-gtk3' 'gst-plugins-bad1.0' 'polkit')
+
+build_deps=('binutils')
+
+sources=(
+	"https://github.com/unslothai/unsloth/releases/download/v${version}/Unsloth-Desktop-Ubuntu.deb?~archive=false&~name=unsloth.deb"
+	'local:///unsloth.metainfo.xml?nivora=unsloth'
+	'local:///LICENSE?nivora=unsloth'
+)
+
+checksums=(
+	'sha256:7ca6b18af6b425391c064700cee58bb8829c648204c078d15d9b173c160049a6'
+	'sha256:8e46287742e968321db23e0f4ec563c41bfa159ea547fe21196439c347e684f6'
+	'sha256:0e886ee57679c2b039b7be8e375ba470b8ae994443d0cce221d10f20e277f62e'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+
+	mkdir -p "${srcdir}/extracted"
+	ar x unsloth.deb
+	tar -xf data.tar.* -C "${srcdir}/extracted"
+
+	install -Dm755 "${srcdir}/extracted/usr/bin/unsloth-studio" \
+		"${pkgdir}/usr/bin/unsloth-studio"
+
+	install -dm755 "${pkgdir}/usr/lib"
+	cp -a "${srcdir}/extracted/usr/lib/Unsloth" "${pkgdir}/usr/lib/"
+
+	cp -a "${srcdir}/extracted/usr/share/icons" "${pkgdir}/usr/share/"
+
+	# Upstream ships Unsloth.desktop, but the generated AppStream sidecar and
+	# the GNOME Software plugin key off <appstream_app_id>.desktop, so the
+	# entry is installed under its package id. Window matching does not
+	# depend on the file name: the binary reports WM_CLASS=unsloth-studio
+	# and upstream's StartupWMClass agrees. Upstream leaves Categories
+	# empty, which hides the app in menus, so give it Development.
+	mv "${srcdir}/extracted/usr/share/applications/Unsloth.desktop" \
+		"${srcdir}/extracted/usr/share/applications/unsloth.desktop"
+	sed -i 's/^Categories=.*/Categories=Development;/' \
+		"${srcdir}/extracted/usr/share/applications/unsloth.desktop"
+	install-desktop "${srcdir}/extracted/usr/share/applications/unsloth.desktop"
+
+	install -Dm644 \
+		"${srcdir}/extracted/usr/share/polkit-1/actions/ai.unsloth.studio.update.policy" \
+		"${pkgdir}/usr/share/polkit-1/actions/ai.unsloth.studio.update.policy"
+
+	# The AppStream sidecar is generated from this recipe by
+	# .github/tools/sync_appstream.py; it is installed for the system cache.
+	install -Dm644 "${srcdir}/unsloth.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/unsloth.metainfo.xml"
+
+	install-license LICENSE "unsloth/LICENSE.nivora"
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-license
+	files-find \
+		"/usr/lib/Unsloth/**/*" \
+		"/usr/share/icons/hicolor/*/apps/unsloth-studio.png" \
+		"/usr/share/metainfo/unsloth.metainfo.xml" \
+		"/usr/share/polkit-1/actions/ai.unsloth.studio.update.policy"
+}

@@ -2,6 +2,19 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-10-17 — Unsloth Desktop
+
+### Добавлено
+
+- Unsloth Desktop 0.1.908-beta из официальных DEB-артефактов релиза
+  `unslothai/unsloth`: Tauri-приложение для запуска и дообучения LLM
+  локально. Desktop-файл апстрима `Unsloth.desktop` установлен как
+  `unsloth.desktop` — generated AppStream связывает компонент с
+  `<appstream_app_id>.desktop`; иконки сохранены под апстримным именем
+  `unsloth-studio`. Детектор обновлений берёт последний тег `v*` целиком,
+  потому что все релизы Unsloth несут суффикс `-beta`, который generic
+  фильтр отбрасывает. Сборка только `amd64`.
+
 ## 2026-10-16 — Kimi Code Desktop, сокращение каталога и единый CI
 
 ### Исправлено

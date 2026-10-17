@@ -22,7 +22,7 @@
 </p>
 
 <!-- package-count -->
-<p align="center"><strong>14 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
+<p align="center"><strong>15 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
 
 ## Быстрый старт
 
@@ -111,6 +111,12 @@ sudo stplr install nivora/имя-пакета
     <td align="right" nowrap><code>0.5.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/vintner</code></td>
+  </tr>
+  <tr><!-- package-card:unsloth -->
+    <td width="340" nowrap><img src="unsloth/unsloth.png" width="24" height="24" alt=""> &nbsp;<a href="unsloth/README.md"><strong>Unsloth</strong></a><br><sub>Запуск и дообучение LLM локально</sub></td>
+    <td align="right" nowrap><code>0.1.908-beta</code></td>
+    <td nowrap><code>amd64</code></td>
+    <td nowrap><code>nivora/unsloth</code></td>
   </tr>
   <tr><th colspan="4" align="left">Медиа и игры</th></tr>
   <tr><!-- package-card:yandex-music -->

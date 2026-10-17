@@ -14,6 +14,7 @@ readonly -a PACKAGES=(
     pineconemc
     tailscale
     telegram
+    unsloth
     vintner
     yandex-music
 )
@@ -245,6 +246,22 @@ latest_anidesk() {
     printf '%s\n' "$version"
 }
 
+latest_unsloth() {
+    local version
+    # All Unsloth Desktop releases carry a -beta tag suffix (GitHub marks
+    # them stable anyway), so the generic github_latest_release filter would
+    # discard every tag; take the newest v* tag as-is.
+    version="$(
+        GIT_TERMINAL_PROMPT=0 timeout 60s \
+            git ls-remote --tags --refs https://github.com/unslothai/unsloth.git 'refs/tags/v*' |
+            awk '{sub("refs/tags/v", "", $2); print $2}' |
+            sort -V |
+            tail -1
+    )"
+    [[ -n "$version" ]] || die 'cannot determine latest Unsloth version'
+    printf '%s\n' "$version"
+}
+
 latest_claude_desktop() {
     local version
     version="$(
@@ -395,6 +412,7 @@ latest_version() {
     pineconemc) github_latest_release ElyPrismLauncher/Launcher ;;
     tailscale) latest_tailscale ;;
     telegram) latest_telegram ;;
+    unsloth) latest_unsloth ;;
     vintner) github_latest_release Cheviiot/vintner ;;
     yandex-music) latest_yandex_music ;;
     *) die "unknown package: $1" ;;

@@ -26,6 +26,7 @@ EXPECTED_PACKAGES = (
     "pineconemc",
     "tailscale",
     "telegram",
+    "unsloth",
     "vintner",
     "yandex-music",
 )

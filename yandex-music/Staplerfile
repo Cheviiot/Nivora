@@ -1,5 +1,5 @@
 name='yandex-music'
-version='5.122.0'
+version='5.123.4'
 release=1
 summary='Personal recommendations, mixes for any occasion and the latest musical releases'
 summary_ru='Персональные рекомендации, подборки на любой случай и свежие музыкальные новинки'
@@ -53,7 +53,7 @@ sources=(
 )
 
 checksums=(
-	'sha256:909133996189943126f5ea518b178abaf3d33dba26e7a83a8f5be12990dc43e3'
+	'sha256:f2923f414e432aed371e37f0a97d27c5087251587b10fba1132a04f973782a36'
 	'sha256:52a11692975a1dfe999f8cf953522d2ddfc2bd594a3a23c2e52035eb53d2fa2d'
 	'sha256:a2a9224a456819c1d22ae864f301585ffcee67e3bcee4755253b82f3d8263167'
 )

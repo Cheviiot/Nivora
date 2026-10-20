@@ -1,5 +1,5 @@
 name='tailscale'
-version='1.104.1'
+version='1.104.2'
 release=1
 summary='The easiest, most secure way to use WireGuard and 2FA.'
 summary_ru='Самый простой и безопасный способ использовать WireGuard и двухфакторную аутентификацию.'
@@ -40,13 +40,13 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:108d1d96ecf410d305571e173516f27038f870919a9b89c914a167c6d33a4528'
+	'sha256:512f613ed7d04fc7282f7dc5bd76aa105aae28168fbb9357eb749ebcbc29f0ae'
 	'sha256:fc0e166481e2f97c21dca773ad4bfe673842268935ce1628c14b96af98e70555'
 	'sha256:3c7a7d6d7f09890d5e682901acaeb12bda9542fc6450a709c9dc296a91e726a5'
 )
 
 checksums_arm64=(
-	'sha256:f60294374967f3dfd8cf57bbbd474d6cfce32d123e3a8ddeab82a87940daa806'
+	'sha256:5776aaa901b5ef1916e66be5bb54b9f481cd399c9c28db123a8cab620efa237b'
 	'sha256:fc0e166481e2f97c21dca773ad4bfe673842268935ce1628c14b96af98e70555'
 	'sha256:3c7a7d6d7f09890d5e682901acaeb12bda9542fc6450a709c9dc296a91e726a5'
 )

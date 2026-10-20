@@ -71,7 +71,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:tailscale -->
     <td width="340" nowrap><img src="https://tailscale.com/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="tailscale/README.md"><strong>Tailscale</strong></a><br><sub>Частная сеть между устройствами</sub></td>
-    <td align="right" nowrap><code>1.104.1</code></td>
+    <td align="right" nowrap><code>1.104.2</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/tailscale</code></td>
   </tr>
@@ -90,7 +90,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:claude -->
     <td width="340" nowrap><img src="claude/claude-tray-orange.png" width="24" height="24" alt=""> &nbsp;<a href="claude/README.md"><strong>Claude</strong></a><br><sub>Десктопное приложение Anthropic</sub></td>
-    <td align="right" nowrap><code>2.42304.2</code></td>
+    <td align="right" nowrap><code>3.1623.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/claude</code></td>
   </tr>

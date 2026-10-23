@@ -114,7 +114,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:unsloth -->
     <td width="340" nowrap><img src="unsloth/unsloth.png" width="24" height="24" alt=""> &nbsp;<a href="unsloth/README.md"><strong>Unsloth</strong></a><br><sub>Запуск и дообучение LLM локально</sub></td>
-    <td align="right" nowrap><code>0.1.909-beta</code></td>
+    <td align="right" nowrap><code>0.1.910-beta</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/unsloth</code></td>
   </tr>

@@ -1,6 +1,6 @@
 name='balena-etcher'
-version='2.1.7'
-release=3
+version='2.1.9'
+release=1
 summary='Flash OS images to SD cards and USB drives, safely and easily.'
 summary_ru='Безопасная и простая запись образов систем на SD-карты и USB-накопители.'
 group='System/Configuration/Hardware'
@@ -63,7 +63,7 @@ sources=(
 )
 
 checksums=(
-	'sha256:9dbea6165ddee1ec1f1b7a38fe92f0d2c54c6217710438a7af6752c267d19395'
+	'sha256:7e0d0e0986e5d0f3d9c03a4c0004f9891235150e0da99fa0bc332d8c03f1a4c0'
 	'sha256:39445b459f86621683f9731fb6a7d070819dc379840e8ef52f62bb1c68942291'
 	'sha256:d87b9c73d82438f927d7d377b84eaafb531fb814a18739d34938188e097e3aa7'
 )

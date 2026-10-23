@@ -84,19 +84,19 @@ sudo stplr install nivora/имя-пакета
   <tr><th colspan="4" align="left">AI и разработка</th></tr>
   <tr><!-- package-card:chatgpt -->
     <td width="340" nowrap><img src="chatgpt/com.openai.chatgpt.png" width="24" height="24" alt=""> &nbsp;<a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Приложение OpenAI со встроенным Codex</sub></td>
-    <td align="right" nowrap><code>26.1016.51333</code></td>
+    <td align="right" nowrap><code>26.1016.61520</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/chatgpt</code></td>
   </tr>
   <tr><!-- package-card:claude -->
     <td width="340" nowrap><img src="claude/claude-tray-orange.png" width="24" height="24" alt=""> &nbsp;<a href="claude/README.md"><strong>Claude</strong></a><br><sub>Десктопное приложение Anthropic</sub></td>
-    <td align="right" nowrap><code>3.1623.0</code></td>
+    <td align="right" nowrap><code>3.6556.2</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/claude</code></td>
   </tr>
   <tr><!-- package-card:kimi-code -->
     <td width="340" nowrap><img src="kimi-code/com.kimi.code.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="kimi-code/README.md"><strong>Kimi Code</strong></a><br><sub>Десктопный AI-агент для работы с кодом</sub></td>
-    <td align="right" nowrap><code>1.1.0</code></td>
+    <td align="right" nowrap><code>1.1.2</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/kimi-code</code></td>
   </tr>
@@ -114,14 +114,14 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:unsloth -->
     <td width="340" nowrap><img src="unsloth/unsloth.png" width="24" height="24" alt=""> &nbsp;<a href="unsloth/README.md"><strong>Unsloth</strong></a><br><sub>Запуск и дообучение LLM локально</sub></td>
-    <td align="right" nowrap><code>0.1.908-beta</code></td>
+    <td align="right" nowrap><code>0.1.909-beta</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/unsloth</code></td>
   </tr>
   <tr><th colspan="4" align="left">Медиа и игры</th></tr>
   <tr><!-- package-card:yandex-music -->
     <td width="340" nowrap><img src="yandex-music/yandexmusic.png" width="24" height="24" alt=""> &nbsp;<a href="yandex-music/README.md"><strong>Яндекс Музыка</strong></a><br><sub>Музыка, подкасты и персональные подборки</sub></td>
-    <td align="right" nowrap><code>5.123.4</code></td>
+    <td align="right" nowrap><code>5.122.0</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/yandex-music</code></td>
   </tr>
@@ -146,7 +146,7 @@ sudo stplr install nivora/имя-пакета
   <tr><th colspan="4" align="left">Системные инструменты</th></tr>
   <tr><!-- package-card:balena-etcher -->
     <td width="340" nowrap><img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="24" height="24" alt=""> &nbsp;<a href="balena-etcher/README.md"><strong>balenaEtcher</strong></a><br><sub>Запись образов на SD-карты и USB</sub></td>
-    <td align="right" nowrap><code>2.1.7</code></td>
+    <td align="right" nowrap><code>2.1.9</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/balena-etcher</code></td>
   </tr>

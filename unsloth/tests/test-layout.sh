@@ -10,6 +10,11 @@ grep -Fq 'install -Dm755 "${srcdir}/extracted/usr/bin/unsloth-studio"' "$stapler
 grep -Fq "usr/share/applications/unsloth.desktop" "$staplerfile"
 grep -Fq 'Categories=Development' "$staplerfile"
 grep -Fq 'ai.unsloth.studio.update.policy' "$staplerfile"
+# /usr/share must exist in pkgdir before cp -a drops icons into it; without
+# the mkdir cp silently turns the icons tree into usr/share/hicolor and
+# files() then fails with "glob pattern error: pattern does not exist".
+# shellcheck disable=SC2016
+grep -Fq 'install -dm755 "${pkgdir}/usr/share"' "$staplerfile"
 grep -Fq 'appstream_app_id='"'"'unsloth'"'"'' "$staplerfile"
 grep -Fq 'provides=()' "$staplerfile"
 grep -Fq 'replaces=('"'"'unsloth'"'"')' "$staplerfile"

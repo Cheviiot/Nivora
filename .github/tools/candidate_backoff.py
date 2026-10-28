@@ -142,7 +142,7 @@ def read_issues(path: Path) -> list[dict[str, Any]]:
     return flatten_issue_pages(value)
 
 
-def issue_metadata(issue: dict[str, Any], package: str) -> tuple[str, datetime] | None:
+def is_candidate_issue(issue: dict[str, Any], package: str) -> bool:
     user = issue.get("user")
     if (
         issue.get("state") != "open"
@@ -155,10 +155,17 @@ def issue_metadata(issue: dict[str, Any], package: str) -> tuple[str, datetime] 
             f"[autoupdate] {package}: обновление отложено",
         }
     ):
-        return None
+        return False
     body = issue.get("body")
     if not isinstance(body, str) or not body.startswith(ISSUE_MARKER.format(package=package) + "\n"):
+        return False
+    return True
+
+
+def issue_metadata(issue: dict[str, Any], package: str) -> tuple[str, datetime] | None:
+    if not is_candidate_issue(issue, package):
         return None
+    body = issue["body"]
     candidate_lines = [line for line in body.splitlines() if line.startswith("<!-- nivora-update-candidate:")]
     retry_lines = [line for line in body.splitlines() if line.startswith("<!-- nivora-update-retry-after:")]
     if len(candidate_lines) != 1 or len(retry_lines) != 1:
@@ -179,12 +186,8 @@ def filter_plan(
 ) -> dict[str, Any]:
     issue_groups: dict[str, list[dict[str, Any]]] = {package: [] for package in plan}
     for issue in issues:
-        body = issue.get("body")
-        if not isinstance(body, str):
-            continue
-        first_line = body.splitlines()[0] if body.splitlines() else ""
         for package in plan:
-            if first_line == ISSUE_MARKER.format(package=package):
+            if is_candidate_issue(issue, package):
                 issue_groups[package].append(issue)
                 break
 

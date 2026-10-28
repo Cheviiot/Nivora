@@ -21,14 +21,22 @@ ACTIVE_STATUSES = {"queued", "in_progress", "waiting", "requested", "pending"}
 def parse_timestamp(value: str) -> datetime:
     """Parse a GitHub ISO timestamp and normalize it to UTC."""
     if not isinstance(value, str):
-        raise ValueError("workflow run has no valid created_at timestamp")
+        raise ValueError("workflow run has no valid timestamp")
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError as error:
-        raise ValueError("workflow run has malformed created_at timestamp") from error
+        raise ValueError("workflow run has malformed timestamp") from error
     if parsed.tzinfo is None:
-        raise ValueError("workflow run created_at timestamp has no timezone")
+        raise ValueError("workflow run timestamp has no timezone")
     return parsed.astimezone(timezone.utc)
+
+
+def run_updated_at(run: dict[str, Any]) -> datetime:
+    """Use completion/update time for cooldowns, with legacy API fallback."""
+    value = run.get("updated_at")
+    if value is None:
+        value = run.get("created_at")
+    return parse_timestamp(value)
 
 
 def flattened_runs(value: Any) -> list[dict[str, Any]]:
@@ -87,8 +95,8 @@ def plan_recovery(request: dict[str, Any]) -> dict[str, str]:
 
     failed_runs = [run for run in matching if run.get("conclusion") != "success"]
     if failed_runs:
-        latest_failure = max(failed_runs, key=lambda run: parse_timestamp(run.get("created_at")))
-        failed_at = parse_timestamp(latest_failure.get("created_at"))
+        latest_failure = max(failed_runs, key=run_updated_at)
+        failed_at = run_updated_at(latest_failure)
         if now - failed_at < COOLDOWN:
             return {"action": "none", "reason": "retry-cooldown"}
 

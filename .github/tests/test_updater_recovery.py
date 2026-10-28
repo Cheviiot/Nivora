@@ -31,13 +31,24 @@ def request(**overrides):
     return values
 
 
-def recovery_run(sha=CURRENT_SHA, *, status="completed", conclusion="failure", created_at=None, resume=True):
-    return {
+def recovery_run(
+    sha=CURRENT_SHA,
+    *,
+    status="completed",
+    conclusion="failure",
+    created_at=None,
+    updated_at=None,
+    resume=True,
+):
+    run = {
         "display_title": f"post-push {sha} · updater 12345 · resume {str(resume).lower()}",
         "status": status,
         "conclusion": conclusion,
         "created_at": created_at or (NOW - timedelta(hours=7)).isoformat().replace("+00:00", "Z"),
     }
+    if updated_at is not None:
+        run["updated_at"] = updated_at
+    return run
 
 
 class RecoveryPlannerTests(unittest.TestCase):
@@ -65,6 +76,23 @@ class RecoveryPlannerTests(unittest.TestCase):
         run = recovery_run(created_at=(NOW - timedelta(hours=6)).isoformat())
         self.assertEqual(
             planner.plan_recovery(request(workflow_runs=[[run]])),
+            {"action": "dispatch", "reason": "retry-after-cooldown", "sha": CURRENT_SHA},
+        )
+
+    def test_long_failed_run_cooldown_starts_at_recent_updated_at(self):
+        run = recovery_run(
+            created_at=(NOW - timedelta(days=2)).isoformat(),
+            updated_at=(NOW - timedelta(hours=5, minutes=59)).isoformat(),
+        )
+        self.assertEqual(
+            planner.plan_recovery(request(workflow_runs=[run])),
+            {"action": "none", "reason": "retry-cooldown"},
+        )
+
+    def test_missing_updated_at_falls_back_to_created_at(self):
+        run = recovery_run(created_at=(NOW - timedelta(hours=6)).isoformat())
+        self.assertEqual(
+            planner.plan_recovery(request(workflow_runs=[run])),
             {"action": "dispatch", "reason": "retry-after-cooldown", "sha": CURRENT_SHA},
         )
 

@@ -119,6 +119,17 @@ class CandidateBackoffTests(unittest.TestCase):
             with self.subTest(candidate=candidate):
                 self.assertEqual(self.run_filter(issues=[candidate])["packages"], ["demo"])
 
+    def test_human_spoof_does_not_cancel_valid_bot_cooldown(self):
+        bot_issue = self.cooldown_issue()
+        human_spoof = {
+            **bot_issue,
+            "number": 8,
+            "user": {"login": "octocat"},
+        }
+        result = self.run_filter(issues=[human_spoof, bot_issue])
+        self.assertEqual(result["packages"], [])
+        self.assertEqual(result["deferred"], ["demo"])
+
     def test_missing_duplicate_or_corrupt_metadata_retries_safely(self):
         key = self.run_filter()["candidate_keys"]["demo"]
         body = "<!-- nivora-autonomous-update:demo -->\n"

@@ -83,7 +83,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:casement -->
     <td width="340" nowrap><img src="casement/io.github.cheviiot.Casement.svg" width="24" height="24" alt=""> &nbsp;<a href="casement/README.md"><strong>Casement</strong></a><br><sub>Удалённый рабочий стол для локальной сети и Tailscale</sub></td>
-    <td align="right" nowrap><code>0.1.0</code></td>
+    <td align="right" nowrap><code>0.1.1</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/casement</code></td>
   </tr>

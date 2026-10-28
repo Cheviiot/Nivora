@@ -1,6 +1,6 @@
 name='casement'
-version='0.1.0'
-release=3
+version='0.1.1'
+release=1
 summary='Remote desktop for the local network and Tailscale'
 summary_ru='Удалённый рабочий стол для локальной сети и Tailscale'
 group='Networking/Remote access'
@@ -57,7 +57,7 @@ sources=(
 )
 
 checksums=(
-	'sha256:348953e691fe7a773e757f425b076541ee418bd6056c61621934c036712e0eb8'
+	'sha256:d048c3cbc51cb6db3fe8604e9c0e7baaf890489ed85a6d620f1b604ed232ab29'
 	'sha256:c7d3d279119aa39bcd72d3ab1f19570bcddb46aa1a51c4be110876dbdccaff2e'
 	'sha256:1b8746ccb666b24b615d9c840daede47a9a6707fe2762015f5d91fe92548baec'
 	'sha256:82c104c606def661bbf166520401e3549c9c760c47a3fa361cb533dff9da450a'

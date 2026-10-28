@@ -97,19 +97,15 @@ for command in curl python3 sha256sum tar; do
     }
 done
 "${script_dir}/prepare_stplr.sh" "${builder_dir}/stplr"
+install -m 0644 "${script_dir}/lib/alt_apt_network.sh" \
+    "${builder_dir}/alt_apt_network.sh"
 
 cat >"${builder_dir}/Containerfile" <<EOF
 FROM ${image}
-RUN success=0; \
-    for attempt in 1 2 3; do \
-        apt-get update \
-        && apt-get dist-upgrade -y \
-        && apt-get install -y ca-certificates stplr binutils python3 \
-        && success=1 \
-        && break; \
-        sleep 5; \
-    done; \
-    test "\$success" -eq 1
+COPY alt_apt_network.sh /usr/local/lib/nivora/alt_apt_network.sh
+RUN bash /usr/local/lib/nivora/alt_apt_network.sh update \
+    && bash /usr/local/lib/nivora/alt_apt_network.sh run dist-upgrade -y \
+    && bash /usr/local/lib/nivora/alt_apt_network.sh run install -y ca-certificates stplr binutils python3
 COPY stplr /usr/local/bin/stplr
 RUN chmod 0755 /usr/local/bin/stplr && /usr/local/bin/stplr version
 EOF

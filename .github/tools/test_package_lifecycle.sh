@@ -119,20 +119,16 @@ install -d "${work_dir}/builder" "${work_dir}/fixtures/previous-rpm"
 
 NIVORA_STPLR_CHANNEL="${NIVORA_STPLR_CHANNEL:-stable}" \
     "${script_dir}/prepare_stplr.sh" "${work_dir}/builder/stplr"
+install -m 0644 "${script_dir}/lib/alt_apt_network.sh" \
+    "${work_dir}/builder/alt_apt_network.sh"
 chmod 0755 "$work_dir" "${work_dir}/builder"
 
 cat >"${work_dir}/builder/Containerfile" <<EOF
 FROM ${base_image}
-RUN success=0; \\
-    for attempt in 1 2 3; do \\
-        apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 update \\
-        && apt-get dist-upgrade -y \\
-        && apt-get install -y ca-certificates stplr binutils python3 \\
-        && success=1 \\
-        && break; \\
-        sleep "\$((attempt * 5))"; \\
-    done; \\
-    test "\$success" -eq 1
+COPY alt_apt_network.sh /usr/local/lib/nivora/alt_apt_network.sh
+RUN bash /usr/local/lib/nivora/alt_apt_network.sh update \\
+    && bash /usr/local/lib/nivora/alt_apt_network.sh run dist-upgrade -y \\
+    && bash /usr/local/lib/nivora/alt_apt_network.sh run install -y ca-certificates stplr binutils python3
 COPY stplr /usr/local/bin/stplr
 RUN chmod 0755 /usr/local/bin/stplr && /usr/local/bin/stplr version
 EOF
@@ -302,7 +298,7 @@ if [[ "$previous_summary" == \
     'Previous Nivora package fixture for lifecycle tests' ]]; then
     ! rpm -q bc >/dev/null 2>&1
 fi
-apt-get -qq install -y "$previous_artifact"
+bash /usr/local/lib/nivora/alt_apt_network.sh run -qq install -y "$previous_artifact"
 [[ "$(rpm -q --queryformat '%{EPOCHNUM}:%{VERSION}-%{RELEASE}' "$system_name")" == "$previous_evr" ]]
 if [[ "$previous_summary" == \
     'Previous Nivora package fixture for lifecycle tests' ]]; then
@@ -318,7 +314,7 @@ if [[ "$state_path" == /home/nivora-test/* ]]; then
     chown -R nivora-test:nivora-test /home/nivora-test
 fi
 
-apt-get -qq install -y "$artifact"
+bash /usr/local/lib/nivora/alt_apt_network.sh run -qq install -y "$artifact"
 rpm -q "$system_name"
 [[ "$(rpm -q --queryformat '%{EPOCHNUM}:%{VERSION}-%{RELEASE}' "$system_name")" == "$current_evr" ]]
 test -x "$command_path"
@@ -329,7 +325,7 @@ if [[ "$sandbox_path" != '-' ]]; then
     [[ "$(stat -c '%U:%G:%a' "$sandbox_path")" == 'root:root:4755' ]]
 fi
 
-apt-get -qq remove -y "$system_name"
+bash /usr/local/lib/nivora/alt_apt_network.sh run -qq remove -y "$system_name"
 test -f "$state_path"
 ! rpm -q "$system_name"
 EOF

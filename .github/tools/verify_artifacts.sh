@@ -117,9 +117,16 @@ for package in "${packages[@]}"; do
             exit 1
         }
     fi
-    if [[ "$recipe" == *'files-find-systemd'* ]]; then
+    if grep -Eq '^[[:space:]]*files-find-systemd([[:space:]]|$)' <<<"$recipe"; then
         contains_path '/usr/lib/systemd/system/*' || {
             echo "${package}: files-find-systemd не добавил unit-файл" >&2
+            exit 1
+        }
+    fi
+
+    if grep -Eq '^[[:space:]]*files-find-systemd-user([[:space:]]|$)' <<<"$recipe"; then
+        contains_path '/usr/lib/systemd/user/*' || {
+            echo "${package}: files-find-systemd-user не добавил user unit-файл" >&2
             exit 1
         }
     fi

@@ -133,6 +133,62 @@ expect_failure unexpected-result-file run_validator '["demo"]'
 
 reset_good_fixture
 expect_failure wrong-expected-version run_validator '["demo"]' \
-    '{"demo":{"current":"1","latest":"3","fingerprints":{}}'
+    '{"demo":{"current":"1","latest":"3","fingerprints":{}}}'
+
+# Exercise every mutable-source package through both trust boundaries: plan
+# parsing and the semantic recipe diff. A newly added fingerprint must work
+# for upgrades and same-version refreshes without accepting unplanned hashes.
+fingerprint_a="$(printf 'a%.0s' {1..64})"
+fingerprint_b="$(printf 'b%.0s' {1..64})"
+for package in chatgpt kimi-code parsec; do
+    case "$package" in
+    chatgpt) fields=(source_fingerprint_amd64 source_fingerprint_arm64) ;;
+    kimi-code) fields=(source_fingerprint_amd64) ;;
+    parsec) fields=(source_fingerprint) ;;
+    esac
+    install -d "$fixture/repo/$package"
+    {
+        printf "name='%s'\nversion='1'\nrelease=5\n" "$package"
+        for field in "${fields[@]}"; do
+            printf "%s='%s'\n" "$field" "$fingerprint_a"
+        done
+        printf "sources=(\n 'https://example.invalid/payload'\n)\nchecksums=(\n 'sha256:%064d'\n)\n" 1
+    } >"$fixture/repo/$package/Staplerfile"
+    git -C "$fixture/repo" add "$package/Staplerfile"
+    git -C "$fixture/repo" commit -qm "fixture $package"
+
+    fingerprints="$(printf '%s\n' "${fields[@]}" |
+        jq -Rsc --arg hash "$fingerprint_b" \
+            'split("\n") | map(select(length > 0) | {key: ., value: $hash}) | from_entries')"
+    for latest in 2 1; do
+        release=1
+        [[ "$latest" != 1 ]] || release=6
+        sed -i \
+            -e "s/^version='1'$/version='$latest'/" \
+            -e "s/^release=5$/release=$release/" \
+            -e "s/$fingerprint_a/$fingerprint_b/g" \
+            -e "s/$(printf '%064d' 1)/$(printf '%064d' 2)/" \
+            "$fixture/repo/$package/Staplerfile"
+        reset_good_fixture
+        mv "$fixture/results/demo" "$fixture/results/$package"
+        printf '%s\n' "$package" >"$fixture/results/checked-packages"
+        printf '%s\n' "$package" >"$fixture/results/successful-packages"
+        git -C "$fixture/repo" diff --binary -- "$package/Staplerfile" \
+            >"$fixture/results/$package/update.patch"
+        git -C "$fixture/repo" restore -- "$package/Staplerfile"
+        detected="$(jq -cn --arg package "$package" '[$package]')"
+        expected="$(jq -cn --arg package "$package" --arg latest "$latest" \
+            --argjson fingerprints "$fingerprints" \
+            '{($package): {current: "1", latest: $latest, fingerprints: $fingerprints}}')"
+        run_validator "$detected" "$expected" >/dev/null
+
+        tampered="$(jq '.[] .fingerprints |= with_entries(.value = ("c" * 64))' <<<"$expected")"
+        expect_failure unplanned-fingerprint run_validator "$detected" "$tampered"
+        missing="$(jq '.[] .fingerprints = {}' <<<"$expected")"
+        expect_failure missing-fingerprint run_validator "$detected" "$missing"
+        extra="$(jq '.[] .fingerprints.source_fingerprint_unknown = ("d" * 64)' <<<"$expected")"
+        expect_failure unknown-fingerprint run_validator "$detected" "$extra"
+    done
+done
 
 echo 'OK: строгая проверка update artifact отклоняет подмену и неполные результаты'

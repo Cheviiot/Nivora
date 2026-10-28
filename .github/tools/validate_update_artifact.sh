@@ -121,6 +121,7 @@ fingerprint = re.compile(r"^[0-9a-f]{64}$")
 for package, versions in value.items():
     expected_keys = {
         "chatgpt": {"source_fingerprint_amd64", "source_fingerprint_arm64"},
+        "kimi-code": {"source_fingerprint_amd64"},
         "parsec": {"source_fingerprint"},
     }.get(package, set())
     if (
@@ -427,6 +428,7 @@ if candidate_releases != [expected_release]:
 
 required_fingerprints = {
     "chatgpt": {"source_fingerprint_amd64", "source_fingerprint_arm64"},
+    "kimi-code": {"source_fingerprint_amd64"},
     "parsec": {"source_fingerprint"},
 }.get(package, set())
 trusted_fingerprints = {

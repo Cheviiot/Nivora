@@ -294,17 +294,24 @@ for package in "${packages[@]}"; do
         }
     fi
 
-    while read -r path _ _ _ mode owner group _; do
+    # --dump separates columns with spaces, including spaces inside filenames.
+    # Put the filename last so read preserves it, and query metadata explicitly.
+    file_metadata="$(
+        rpm -qp --queryformat \
+            '[%{FILEMODES:octal}\t%{FILEUSERNAME}\t%{FILEGROUPNAME}\t%{FILENAMES}\n]' \
+            "$artifact"
+    )"
+    while IFS=$'\t' read -r mode owner group path; do
         [[ "$owner" == root && "$group" == root ]] || {
             echo "${package}: неверный владелец ${owner}:${group} у ${path}" >&2
             exit 1
         }
         [[ "$path" == /usr/bin/* || "$path" == /usr/sbin/* ]] || continue
-        [[ "$mode" == 0100755 || "$mode" == 0120000 ]] || {
+        [[ "$mode" == 100755 || "$mode" == 120000 ]] || {
             echo "${package}: неверные права ${mode} у ${path}" >&2
             exit 1
         }
-    done < <(rpm -qp --dump "$artifact")
+    done <<<"$file_metadata"
 
     echo "OK: ${package} ($(basename "$artifact"), ${#payload[@]} путей)"
 done

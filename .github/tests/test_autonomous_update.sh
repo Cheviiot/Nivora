@@ -13,6 +13,7 @@ install -d \
     "$fixture/repo/.github/tools" \
     "$fixture/repo/demo" \
     "$fixture/repo/parsec" \
+    "$fixture/repo/kimi-code" \
     "$fixture/bin" \
     "$fixture/runner"
 cp "$repo_root/.github/tools/autonomous_package_updates.sh" \
@@ -23,11 +24,15 @@ fingerprint_b="$(printf 'b%.0s' {1..64})"
 fingerprint_c="$(printf 'c%.0s' {1..64})"
 printf "name='parsec'\nversion='1'\nrelease=4\nsource_fingerprint='%s'\nchecksum='old'\n" \
     "$fingerprint_a" >"$fixture/repo/parsec/Staplerfile"
+printf "name='kimi-code'\nversion='1'\nrelease=4\nsource_fingerprint_amd64='%s'\nchecksum='old'\n" \
+    "$fingerprint_a" >"$fixture/repo/kimi-code/Staplerfile"
 # The variable is intentionally expanded later by the generated mock.
 # shellcheck disable=SC2016
 printf '%s\n' \
     '#!/bin/bash' \
-    'printf "source_fingerprint\t%s\n" "${MUTABLE_TEST_FINGERPRINT:?}"' \
+    'field=source_fingerprint' \
+    '[[ "$2" != kimi-code ]] || field=source_fingerprint_amd64' \
+    'printf "%s\t%s\n" "$field" "${MUTABLE_TEST_FINGERPRINT:?}"' \
     >"$fixture/repo/.github/tools/package_updates.sh"
 chmod 0755 "$fixture/repo/.github/tools/package_updates.sh"
 for tool in sync_readme_versions.py run_checks.sh clean_build.sh verify_artifacts.sh; do
@@ -87,6 +92,10 @@ update-checksums)
     done
     sed -i "s/^checksum='old'$/checksum='new'/" "$recipe"
     ;;
+update-package)
+    sed -i -e "s/^version='1'$/version='2'/" -e 's/^release=4$/release=1/' \
+        -e "s/^checksum='old'$/checksum='new'/" "$2/Staplerfile"
+    ;;
 *)
     exit 2
     ;;
@@ -117,6 +126,32 @@ UPDATE_PLAN_JSON="{\"parsec\":{\"current\":\"1\",\"latest\":\"1\",\"fingerprints
     "$fixture/repo/.github/tools/autonomous_package_updates.sh" parsec
 grep -Fxq $'parsec\tupdate-recipe' "$fixture/raced-results/failed-packages"
 test ! -s "$fixture/raced-results/parsec/failed.patch"
+
+for latest in 1 2; do
+    expected_release=1
+    [[ "$latest" != 1 ]] || expected_release=5
+    PATH="$fixture/bin:$PATH" \
+    STPLR_SPEC_COMMAND="$fixture/bin/stplr-spec" \
+    RUNNER_TEMP="$fixture/runner" \
+    AUTONOMOUS_UPDATE_RESULTS_DIR="$fixture/kimi-results-$latest" \
+    MUTABLE_TEST_FINGERPRINT="$fingerprint_b" \
+    UPDATE_PLAN_JSON="{\"kimi-code\":{\"current\":\"1\",\"latest\":\"$latest\",\"fingerprints\":{\"source_fingerprint_amd64\":\"${fingerprint_b}\"}}}" \
+        "$fixture/repo/.github/tools/autonomous_package_updates.sh" kimi-code
+    grep -Fxq kimi-code "$fixture/kimi-results-$latest/successful-packages"
+    grep -Fq "+release=$expected_release" "$fixture/kimi-results-$latest/kimi-code/update.patch"
+    grep -Fq "+source_fingerprint_amd64='${fingerprint_b}'" \
+        "$fixture/kimi-results-$latest/kimi-code/update.patch"
+done
+
+PATH="$fixture/bin:$PATH" \
+STPLR_SPEC_COMMAND="$fixture/bin/stplr-spec" \
+RUNNER_TEMP="$fixture/runner" \
+AUTONOMOUS_UPDATE_RESULTS_DIR="$fixture/kimi-raced-results" \
+MUTABLE_TEST_FINGERPRINT="$fingerprint_c" \
+UPDATE_PLAN_JSON="{\"kimi-code\":{\"current\":\"1\",\"latest\":\"2\",\"fingerprints\":{\"source_fingerprint_amd64\":\"${fingerprint_b}\"}}}" \
+    "$fixture/repo/.github/tools/autonomous_package_updates.sh" kimi-code
+grep -Fxq $'kimi-code\tupdate-recipe' "$fixture/kimi-raced-results/failed-packages"
+test ! -s "$fixture/kimi-raced-results/kimi-code/failed.patch"
 
 SOURCE_GATE_EXIT=1 \
 PATH="$fixture/bin:$PATH" \

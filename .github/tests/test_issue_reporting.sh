@@ -59,6 +59,12 @@ if grep -Fq '<!-- nivora-updater-paused -->' \
     exit 1
 fi
 
+# A rejected upstream download is a normal per-package failure, and reporting
+# it must not turn an otherwise successful publish into a failed workflow.
+printf 'demo\tcheck-sources\n' >"$fixture/results/failed-packages"
+"$repo_root/.github/tools/report_update_failures.sh"
+grep -Fq '**check-sources**' "$fixture/results/demo/issue-body.md"
+
 "$repo_root/.github/tools/set_updater_pause.sh" true \
     aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa '@evil reason'
 grep -Fq 'repos/owner/repo/issues/10' "$GH_CALLS"

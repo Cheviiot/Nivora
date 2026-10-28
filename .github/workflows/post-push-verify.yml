@@ -167,10 +167,9 @@ jobs:
           [[ "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]]
           git fetch --no-tags origin main
           [[ "$(git rev-parse origin/main)" == "$REQUESTED_SHA" ]]
-          paused_sha="$(
-            gh variable get NIVORA_UPDATER_PAUSED_SHA \
-              --repo "$GITHUB_REPOSITORY" --json value --jq .value
-          )"
+          pause_state="$(.github/tools/get_updater_pause.sh)"
+          [[ "$(jq -r .paused <<<"$pause_state")" == true ]]
+          paused_sha="$(jq -r .sha <<<"$pause_state")"
           [[ "$paused_sha" =~ ^[0-9a-f]{40}$ ]]
           git merge-base --is-ancestor "$paused_sha" "$REQUESTED_SHA"
 

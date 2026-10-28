@@ -27,9 +27,33 @@ defaults:
     shell: bash
 
 jobs:
+  pause_status:
+    name: Проверить паузу обновлений
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: read
+    outputs:
+      paused: ${{ steps.pause.outputs.paused }}
+    steps:
+      - name: Получить репозиторий
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Проверить issue паузы
+        id: pause
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pause_state="$(.github/tools/get_updater_pause.sh)"
+          echo "paused=$(jq -r .paused <<<"$pause_state")" >>"$GITHUB_OUTPUT"
+
   detect:
     name: Найти обновления
-    if: ${{ vars.NIVORA_UPDATER_PAUSED != 'true' || inputs.force == true }}
+    needs: pause_status
+    if: ${{ needs.pause_status.outputs.paused != 'true' || inputs.force == true }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read

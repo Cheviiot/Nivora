@@ -30,10 +30,6 @@ print(value.replace("@", "@\u200b").replace("<!-- nivora-", "<!\u200b-- nivora-"
 PY
 )"
 
-gh variable set NIVORA_UPDATER_PAUSED --repo "$repository" --body "$state"
-if [[ "$state" == true ]]; then
-    gh variable set NIVORA_UPDATER_PAUSED_SHA --repo "$repository" --body "$sha"
-fi
 issue_number="$(
     gh api --paginate --slurp \
         "repos/${repository}/issues?state=all&per_page=100" 2>/dev/null |
@@ -42,19 +38,23 @@ issue_number="$(
              select(.user.login == "github-actions[bot]") |
              select(.title == $title) |
              select((((.body // "") | split("\n"))[0] // "") == $marker)]
-             [0].number // empty
-        ' 2>/dev/null
-)" || true
+            | if length > 1 then error("multiple updater pause issues found")
+              elif length == 1 then .[0].number
+              else ""
+              end
+        '
+)"
 
 if [[ "$state" == true ]]; then
     body="$marker
+<!-- nivora-updater-paused-sha: ${sha} -->
 
 Автоматические обновления приостановлены после сбоя проверки точного commit **${sha}**.
 
 - Причина: ${reason}
 - Запуск: ${run_url}
 
-После исправления запустите post-push проверку вручную для текущего SHA main с параметром resume_on_success. Recovery проверит все 18 пакетов и разрешит снятие паузы только для потомка этого commit."
+После исправления запустите post-push проверку вручную для текущего SHA main с параметром resume_on_success. Recovery проверит все пакеты и разрешит снятие паузы только для потомка этого commit."
     if [[ -n "$issue_number" ]]; then
         gh api --method PATCH "repos/${repository}/issues/${issue_number}" \
             -f state=open -f body="$body" >/dev/null

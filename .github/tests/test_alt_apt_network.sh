@@ -179,4 +179,10 @@ assert_contains "${failure_case}/stderr" 'all configured mirrors failed within 2
 [[ "$(grep -c '^rpm ' "${failure_case}/apt/sources.list.d/alt.list")" == 3 ]] ||
     fail 'permanent failure replaced the original source configuration'
 
+if NIVORA_ALT_APT_COMMAND_TIMEOUT_SECONDS=0 bash "$helper" run install fixture-package \
+    >"${test_root}/zero-timeout.stdout" 2>"${test_root}/zero-timeout.stderr"; then
+    fail 'zero transaction timeout unexpectedly disabled the deadline'
+fi
+assert_contains "${test_root}/zero-timeout.stderr" 'timeouts must be positive'
+
 echo 'OK: ALT apt mirror failover, branch/architecture preservation and bounded failure'

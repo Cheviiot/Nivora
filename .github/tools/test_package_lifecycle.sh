@@ -325,6 +325,14 @@ if [[ "$sandbox_path" != '-' ]]; then
     test -f "$sandbox_path"
     [[ "$(stat -c '%U:%G:%a' "$sandbox_path")" == 'root:root:4755' ]]
 fi
+if [[ "$package" == casement ]]; then
+    # Exercise the ELF loader and CLI parser without a display or user session.
+    # This detects missing/too-old shared libraries that file checks miss.
+    /usr/bin/casement-cli --help >/dev/null
+    test -x /usr/bin/casement-host
+    test -f /usr/lib/systemd/user/casement-host.service
+    test -f /usr/share/metainfo/io.github.cheviiot.Casement.metainfo.xml
+fi
 
 bash /usr/local/lib/nivora/alt_apt_network.sh run -qq remove -y "$system_name"
 test -f "$state_path"

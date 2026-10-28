@@ -23,7 +23,7 @@ for value_name in apt_retries connect_timeout io_timeout attempt_timeout total_t
     value="${!value_name}"
     [[ "$value" =~ ^[0-9]+$ ]] || fail "${value_name} must be a non-negative integer"
 done
-(( connect_timeout > 0 && io_timeout > 0 && attempt_timeout > 0 && total_timeout > 0 )) ||
+(( connect_timeout > 0 && io_timeout > 0 && attempt_timeout > 0 && total_timeout > 0 && command_timeout > 0 )) ||
     fail 'timeouts must be positive'
 
 apt_run() {

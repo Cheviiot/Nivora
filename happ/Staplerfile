@@ -1,5 +1,5 @@
 name='happ'
-version='4.5.4'
+version='4.6.1'
 release=1
 summary='Happ Proxy Client'
 summary_ru='Прокси-клиент Happ'
@@ -64,7 +64,7 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:bdc9bb479c519a74faf6b195c10b29eeae094a36c77fb1bd1d2b6e243f51d954'
+	'sha256:362538fabd97b6b77798a74f3e63a30a693a3300bcc05a2beca7d679948edbd5'
 	'sha256:5b0106dda286b039d6bdce45208f44ea3eb7a2deb4e00455190ce7a07177dde0'
 	'sha256:fa4d741a4e2df82b0a19291e2c7bad4a8753a1e59237b2bfe5fef7de8c22efd2'
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'
@@ -74,7 +74,7 @@ checksums=(
 )
 
 checksums_arm64=(
-	'sha256:ac7902dcf2494c97b109133848c7abd36d24a105aa2732d859fd48d4617af7a1'
+	'sha256:57c3da2d6e85b76f2c50ce7c58aca96a0bc7c5bfb910f0c85b147ca43a79d36f'
 	'sha256:5b0106dda286b039d6bdce45208f44ea3eb7a2deb4e00455190ce7a07177dde0'
 	'sha256:fa4d741a4e2df82b0a19291e2c7bad4a8753a1e59237b2bfe5fef7de8c22efd2'
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'

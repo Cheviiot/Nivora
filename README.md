@@ -65,13 +65,13 @@ sudo stplr install nivora/имя-пакета
   <tr><th colspan="4" align="left">Интернет, сеть и VPN</th></tr>
   <tr><!-- package-card:happ -->
     <td width="340" nowrap><img src="https://happ.su/imgs/apple-touch-icon.png" width="24" height="24" alt=""> &nbsp;<a href="happ/README.md"><strong>Happ</strong></a><br><sub>VPN-клиент на базе Xray</sub></td>
-    <td align="right" nowrap><code>4.5.4</code></td>
+    <td align="right" nowrap><code>4.6.1</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/happ</code></td>
   </tr>
   <tr><!-- package-card:tailscale -->
     <td width="340" nowrap><img src="https://tailscale.com/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="tailscale/README.md"><strong>Tailscale</strong></a><br><sub>Частная сеть между устройствами</sub></td>
-    <td align="right" nowrap><code>1.104.2</code></td>
+    <td align="right" nowrap><code>1.104.4</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/tailscale</code></td>
   </tr>
@@ -84,19 +84,19 @@ sudo stplr install nivora/имя-пакета
   <tr><th colspan="4" align="left">AI и разработка</th></tr>
   <tr><!-- package-card:chatgpt -->
     <td width="340" nowrap><img src="chatgpt/com.openai.chatgpt.png" width="24" height="24" alt=""> &nbsp;<a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Приложение OpenAI со встроенным Codex</sub></td>
-    <td align="right" nowrap><code>26.1021.22027</code></td>
+    <td align="right" nowrap><code>26.1023.51421</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/chatgpt</code></td>
   </tr>
   <tr><!-- package-card:claude -->
     <td width="340" nowrap><img src="claude/claude-tray-orange.png" width="24" height="24" alt=""> &nbsp;<a href="claude/README.md"><strong>Claude</strong></a><br><sub>Десктопное приложение Anthropic</sub></td>
-    <td align="right" nowrap><code>3.6556.2</code></td>
+    <td align="right" nowrap><code>4.29.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/claude</code></td>
   </tr>
   <tr><!-- package-card:kimi-code -->
     <td width="340" nowrap><img src="kimi-code/com.kimi.code.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="kimi-code/README.md"><strong>Kimi Code</strong></a><br><sub>Десктопный AI-агент для работы с кодом</sub></td>
-    <td align="right" nowrap><code>1.1.2</code></td>
+    <td align="right" nowrap><code>1.1.4</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/kimi-code</code></td>
   </tr>
@@ -108,7 +108,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:unsloth -->
     <td width="340" nowrap><img src="unsloth/unsloth.png" width="24" height="24" alt=""> &nbsp;<a href="unsloth/README.md"><strong>Unsloth</strong></a><br><sub>Запуск и дообучение LLM локально</sub></td>
-    <td align="right" nowrap><code>0.1.910-beta</code></td>
+    <td align="right" nowrap><code>0.1.911-beta</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/unsloth</code></td>
   </tr>

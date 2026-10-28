@@ -1,5 +1,5 @@
 name='unsloth'
-version='0.1.910-beta'
+version='0.1.911-beta'
 release=1
 summary='Unsloth Desktop — run and fine-tune LLMs locally'
 summary_ru='Unsloth Desktop — запуск и дообучение LLM локально'
@@ -46,7 +46,7 @@ sources=(
 )
 
 checksums=(
-	'sha256:e84696a13250ea45ed515526ef52fb63f8b420653878f1d519fa55333163cbd8'
+	'sha256:3c1dbc93d25743d2500eeaf0bb9c49036cd0cf5e88d9d72443efa7bb597f471b'
 	'sha256:8e46287742e968321db23e0f4ec563c41bfa159ea547fe21196439c347e684f6'
 	'sha256:0e886ee57679c2b039b7be8e375ba470b8ae994443d0cce221d10f20e277f62e'
 )

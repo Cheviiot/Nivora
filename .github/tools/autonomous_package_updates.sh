@@ -168,6 +168,9 @@ run_update_phases() {
             .github/tools/clean_build.sh "$package" || return
         echo verify-artifact >"$phase_file" || return
         .github/tools/verify_artifacts.sh "$package" || return
+        echo test-lifecycle >"$phase_file" || return
+        NIVORA_ALT_BRANCH="$alt_branch" NIVORA_LIFECYCLE_PACKAGES="$package" \
+            .github/tools/test_package_lifecycle.sh || return
     done
 }
 

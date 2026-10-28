@@ -40,6 +40,14 @@ for tool in sync_readme_versions.py run_checks.sh clean_build.sh verify_artifact
         "$tool" "$fixture/later-phases" >"$fixture/repo/.github/tools/$tool"
     chmod 0755 "$fixture/repo/.github/tools/$tool"
 done
+cat >"$fixture/repo/.github/tools/test_package_lifecycle.sh" <<'EOF'
+#!/bin/bash
+set -euo pipefail
+printf '%s\t%s\n' "$NIVORA_ALT_BRANCH" "$NIVORA_LIFECYCLE_PACKAGES" >>"$LIFECYCLE_TEST_LOG"
+exit "${LIFECYCLE_TEST_EXIT:-0}"
+EOF
+chmod 0755 "$fixture/repo/.github/tools/test_package_lifecycle.sh"
+export LIFECYCLE_TEST_LOG="$fixture/lifecycle.log"
 # The source gate runs before anything touches the recipe. It is stubbed as a
 # switch so the test can drive both outcomes.
 cat >"$fixture/repo/.github/tools/check_source_availability.sh" <<EOF
@@ -152,6 +160,21 @@ UPDATE_PLAN_JSON="{\"kimi-code\":{\"current\":\"1\",\"latest\":\"2\",\"fingerpri
     "$fixture/repo/.github/tools/autonomous_package_updates.sh" kimi-code
 grep -Fxq $'kimi-code\tupdate-recipe' "$fixture/kimi-raced-results/failed-packages"
 test ! -s "$fixture/kimi-raced-results/kimi-code/failed.patch"
+for branch in p11 sisyphus; do
+    grep -Fxq "$branch"$'\tparsec' "$LIFECYCLE_TEST_LOG"
+    [[ "$(grep -Fxc "$branch"$'\tkimi-code' "$LIFECYCLE_TEST_LOG")" -eq 2 ]]
+done
+
+LIFECYCLE_TEST_EXIT=47 \
+PATH="$fixture/bin:$PATH" \
+STPLR_SPEC_COMMAND="$fixture/bin/stplr-spec" \
+RUNNER_TEMP="$fixture/runner" \
+AUTONOMOUS_UPDATE_RESULTS_DIR="$fixture/lifecycle-failed-results" \
+MUTABLE_TEST_FINGERPRINT="$fingerprint_b" \
+UPDATE_PLAN_JSON="{\"parsec\":{\"current\":\"1\",\"latest\":\"1\",\"fingerprints\":{\"source_fingerprint\":\"${fingerprint_b}\"}}}" \
+    "$fixture/repo/.github/tools/autonomous_package_updates.sh" parsec
+grep -Fxq $'parsec\ttest-lifecycle' "$fixture/lifecycle-failed-results/failed-packages"
+test ! -e "$fixture/lifecycle-failed-results/parsec/update.patch"
 
 SOURCE_GATE_EXIT=1 \
 PATH="$fixture/bin:$PATH" \

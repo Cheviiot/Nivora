@@ -54,7 +54,7 @@ reset_good_fixture() {
     : >"$fixture/results/failed-packages"
     printf 'demo\n' >"$fixture/results/checked-packages"
     printf 'success\n' >"$fixture/results/demo/result"
-    printf 'verify-artifact\n' >"$fixture/results/demo/phase"
+    printf 'test-lifecycle\n' >"$fixture/results/demo/phase"
     cp "$fixture/good.patch" "$fixture/results/demo/update.patch"
 }
 

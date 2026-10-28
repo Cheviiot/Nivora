@@ -31,7 +31,7 @@ is_safe_phase() {
     case "$1" in
     detect-version | prepare-worktree | check-sources | update-recipe | \
         pin-upstream-commit | \
-        sync-catalog | static-checks | clean-build | verify-artifact | \
+        sync-catalog | static-checks | clean-build | verify-artifact | test-lifecycle | \
         no-update-diff | pin-source-fingerprint)
         return 0
         ;;
@@ -267,7 +267,7 @@ for package in "${detected_packages[@]}"; do
         [[ -n "${expected_latest[$package]:-}" ]] ||
             die "successful package has no trusted expected version: ${package}"
         [[ "$result" == success ]] || die "invalid success marker for ${package}"
-        [[ "$phase" == verify-artifact ]] ||
+        [[ "$phase" == test-lifecycle ]] ||
             die "successful package ended in the wrong phase: ${package}: ${phase}"
         [[ ! -e "${package_dir}/FAILED" ]] ||
             die "successful package has a FAILED marker: ${package}"

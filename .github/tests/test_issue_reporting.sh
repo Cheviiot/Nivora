@@ -42,9 +42,11 @@ export GITHUB_REPOSITORY='owner/repo'
 export GITHUB_RUN_ID='123'
 export AUTONOMOUS_UPDATE_RESULTS_DIR="$fixture/results"
 export AUTONOMOUS_UPDATE_RESOLVED_FILE="$fixture/results/resolved-packages"
+unset UPDATE_PLAN_JSON
 
 "$repo_root/.github/tools/report_update_failures.sh"
 grep -Fq 'repos/owner/repo/issues/9' "$GH_CALLS"
+grep -Fq "title=\[autoupdate\]\\ demo:\\ обновление\\ отложено" "$GH_CALLS"
 if grep -Fq 'repos/owner/repo/issues/7' "$GH_CALLS"; then
     echo 'spoofed user issue was selected' >&2
     exit 1
@@ -58,12 +60,39 @@ if grep -Fq '<!-- nivora-updater-paused -->' \
     echo 'embedded service marker was not neutralized' >&2
     exit 1
 fi
+if grep -Fq '<!-- nivora-update-candidate:' "$fixture/results/demo/issue-body.md"; then
+    echo 'missing trusted detection plan unexpectedly stamped a candidate' >&2
+    exit 1
+fi
+grep -Fq 'ручные действия не требуются' "$fixture/results/demo/issue-body.md"
 
 # A rejected upstream download is a normal per-package failure, and reporting
 # it must not turn an otherwise successful publish into a failed workflow.
 printf 'demo\tcheck-sources\n' >"$fixture/results/failed-packages"
 "$repo_root/.github/tools/report_update_failures.sh"
 grep -Fq '**check-sources**' "$fixture/results/demo/issue-body.md"
+
+# A trusted detection plan may stamp a retry window only for the exact current
+# recipe. Parse its trusted version and mutable-source fingerprint from the repo.
+install -d "$fixture/results/parsec"
+printf 'package=parsec\nphase=clean-build\nexit_status=1\n' \
+    >"$fixture/results/parsec/FAILED"
+printf 'failed build\n' >"$fixture/results/parsec/update.log"
+printf 'parsec\tclean-build\n' >"$fixture/results/failed-packages"
+parsec_current="$(sed -n "s/^version='\\([^']*\\)'$/\\1/p" "$repo_root/parsec/Staplerfile")"
+parsec_fingerprint="$(sed -n "s/^source_fingerprint='\\([0-9a-f]*\\)'$/\\1/p" "$repo_root/parsec/Staplerfile")"
+UPDATE_PLAN_JSON="$(
+    jq -cn --arg current "$parsec_current" --arg fingerprint "$parsec_fingerprint" \
+        '{parsec: {current: $current, latest: $current, fingerprints: {source_fingerprint: $fingerprint}}}'
+)"
+export UPDATE_PLAN_JSON
+"$repo_root/.github/tools/report_update_failures.sh"
+grep -Eq '^<!-- nivora-update-candidate: [0-9a-f]{64} -->$' \
+    "$fixture/results/parsec/issue-body.md"
+grep -Eq '^<!-- nivora-update-retry-after: [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z -->$' \
+    "$fixture/results/parsec/issue-body.md"
+grep -Fq 'отложен на 6 часов' "$fixture/results/parsec/issue-body.md"
+unset UPDATE_PLAN_JSON
 
 "$repo_root/.github/tools/set_updater_pause.sh" true \
     aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa '@evil reason'

@@ -1,6 +1,6 @@
 name='casement'
 version='0.1.0'
-release=2
+release=3
 summary='Remote desktop for the local network and Tailscale'
 summary_ru='Удалённый рабочий стол для локальной сети и Tailscale'
 group='Networking/Remote access'
@@ -45,7 +45,9 @@ deps=(
 	'pipewire'
 )
 
-build_deps=('binutils' 'cpio' 'rpm-utils')
+# Unpack the official binary RPM without rpm-utils, which pulls a compiler
+# toolchain through rpm-build on ALT. Casement itself is never compiled here.
+build_deps=('binutils' 'bsdtar')
 
 sources=(
 	"https://github.com/Cheviiot/Casement/releases/download/v${version}/casement-${version}-alt1.x86_64.rpm?~archive=false&~name=casement.rpm"
@@ -70,10 +72,7 @@ scripts=(
 package() {
 	cd "${srcdir}"
 	mkdir -p casement-extracted
-	(
-		cd casement-extracted
-		rpm2cpio "${srcdir}/casement.rpm" | cpio -idm --quiet
-	)
+	bsdtar -xf "${srcdir}/casement.rpm" -C casement-extracted
 
 	for binary in casement casement-cli casement-host; do
 		install -Dm755 "casement-extracted/usr/bin/${binary}" \

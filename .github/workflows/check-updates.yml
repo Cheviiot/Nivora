@@ -189,7 +189,7 @@ jobs:
       - distroshelf
     if: >-
       ${{
-        always() &&
+        !cancelled() &&
         needs.detect.result == 'success'
       }}
     runs-on: ubuntu-24.04
@@ -266,7 +266,7 @@ jobs:
   publish:
     name: Опубликовать проверенные обновления
     needs: [detect, github-desktop, update]
-    if: ${{ always() && needs.update.result == 'success' }}
+    if: ${{ !cancelled() && needs.update.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     permissions:

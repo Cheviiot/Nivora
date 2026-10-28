@@ -44,6 +44,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
+      - name: Получить инфраструктуру сборки
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
       - name: Собрать DistroShelf под ALT p11 с bundled VTE-GTK4
         env:
           VERSION: ${{ inputs.version || '1.5.2' }}
@@ -58,14 +63,15 @@ jobs:
           # результата гарантированно совместим с реальными установками
           # ALT Workstation 11; Sisyphus и другие дистрибутивы дают более
           # новый glibc, incompatible в обратную сторону.
-          apt-get update -qq
-          apt-get install -y \
+          bash /workspace/.github/tools/lib/alt_apt_network.sh update
+          bash /workspace/.github/tools/lib/alt_apt_network.sh run install -y \
+            ca-certificates \
             gcc gcc-c++ meson ninja-build rust pkgconfig gettext-tools \
             libgtk4-devel libadwaita-devel glib2-devel liblz4 \
             libpcre2-devel liblz4-devel libfribidi-devel libgnutls-devel \
             libsystemd-devel desktop-file-utils appstream curl tar xz sed
 
-          curl -sSL -o /tmp/vte.tar.xz \
+          curl -fSL --retry 3 --retry-all-errors --connect-timeout 20 --max-time 300 -o /tmp/vte.tar.xz \
             'https://download.gnome.org/sources/vte/0.82/vte-0.82.1.tar.xz'
           echo '79376d70402d271e2d38424418e1aea72357934d272e321e3906b71706a78e3a  /tmp/vte.tar.xz' |
             sha256sum -c -
@@ -80,7 +86,7 @@ jobs:
           mkdir -p /tmp/vte-license
           cp /tmp/vte-0.82.1/COPYING.LGPL3 /tmp/vte-license/LICENSE.vte
 
-          curl -sSL -o /tmp/distroshelf.tar.xz \
+          curl -fSL --retry 3 --retry-all-errors --connect-timeout 20 --max-time 300 -o /tmp/distroshelf.tar.xz \
             "https://github.com/ranfdev/DistroShelf/releases/download/v${VERSION}/distroshelf-${VERSION}.tar.xz"
           tar -xf /tmp/distroshelf.tar.xz -C /tmp
 
@@ -149,7 +155,7 @@ jobs:
           gzip -n -9 "distroshelf-${VERSION}-linux-x64.tar"
 
       - name: Сохранить артефакт
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: distroshelf-${{ inputs.version || '1.5.2' }}-linux-x64
           path: distroshelf-${{ inputs.version || '1.5.2' }}-linux-x64.tar.gz
@@ -166,7 +172,7 @@ jobs:
       contents: write
     steps:
       - name: Скачать артефакт
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           pattern: distroshelf-${{ inputs.version || '1.5.2' }}-linux-*
           merge-multiple: true

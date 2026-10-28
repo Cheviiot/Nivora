@@ -54,7 +54,7 @@ if [[ "$state" == true ]]; then
 - Причина: ${reason}
 - Запуск: ${run_url}
 
-После исправления запустите post-push проверку вручную для текущего SHA main с параметром resume_on_success. Recovery проверит все пакеты и разрешит снятие паузы только для потомка этого commit."
+Recovery проверит все пакеты на обеих ветках ALT. Каждый час updater автоматически проверяет текущий main и запускает полную post-push-проверку, если она ещё не выполняется для этого SHA. После сбоя повтор этого SHA откладывается на 6 часов, а новый SHA проверяется сразу. Issue закроется только после успешной полной проверки текущего main, если pause SHA остаётся его предком."
     if [[ -n "$issue_number" ]]; then
         gh api --method PATCH "repos/${repository}/issues/${issue_number}" \
             -f state=open -f body="$body" >/dev/null

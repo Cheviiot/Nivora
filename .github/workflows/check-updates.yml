@@ -34,21 +34,63 @@ jobs:
     permissions:
       contents: read
       issues: read
+      actions: write
     outputs:
       paused: ${{ steps.pause.outputs.paused }}
     steps:
       - name: Получить репозиторий
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
+          ref: main
+          fetch-depth: 0
           persist-credentials: false
 
-      - name: Проверить issue паузы
+      - name: Проверить issue и восстановить автообновления
         id: pause
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           pause_state="$(.github/tools/get_updater_pause.sh)"
-          echo "paused=$(jq -r .paused <<<"$pause_state")" >>"$GITHUB_OUTPUT"
+          paused="$(jq -r .paused <<<"$pause_state")"
+          echo "paused=${paused}" >>"$GITHUB_OUTPUT"
+          [[ "$paused" == true ]] || exit 0
+
+          paused_sha="$(jq -r .sha <<<"$pause_state")"
+          current_sha="$(git rev-parse HEAD)"
+          if ! git merge-base --is-ancestor "$paused_sha" "$current_sha"; then
+            echo "Pause SHA ${paused_sha} is not an ancestor of current main ${current_sha}; recovery remains blocked."
+            exit 0
+          fi
+
+          workflow_runs="$(
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/post-push-verify.yml/runs?per_page=100" |
+              jq -c '.workflow_runs'
+          )"
+          request="$(
+            jq -cn \
+              --argjson pause_state "$pause_state" \
+              --arg current_sha "$current_sha" \
+              --argjson paused_sha_is_ancestor true \
+              --argjson workflow_runs "$workflow_runs" \
+              --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              '{pause_state: $pause_state, current_sha: $current_sha,
+                paused_sha_is_ancestor: $paused_sha_is_ancestor,
+                workflow_runs: $workflow_runs, now: $now}'
+          )"
+          recovery="$(python3 .github/tools/plan_updater_recovery.py <<<"$request")"
+          if [[ "$(jq -r .action <<<"$recovery")" == dispatch ]]; then
+            recovery_sha="$(jq -r .sha <<<"$recovery")"
+            gh workflow run post-push-verify.yml \
+              --repo "$GITHUB_REPOSITORY" \
+              --ref main \
+              -f sha="$recovery_sha" \
+              -f updater_run_id="$GITHUB_RUN_ID" \
+              -f resume_on_success=true
+            echo "Dispatched full post-push recovery for ${recovery_sha}."
+          else
+            echo "Recovery skipped: $(jq -r .reason <<<"$recovery")."
+          fi
 
   detect:
     name: Найти обновления
@@ -210,7 +252,7 @@ jobs:
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: jq rpm cpio shellcheck
+          system-packages: jq rpm cpio shellcheck sqlite3
 
       - name: Изолированно обновить и проверить каждый пакет
         id: isolated

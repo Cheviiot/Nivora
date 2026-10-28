@@ -6,6 +6,8 @@ repo_root="$(cd "${script_dir}/../.." && pwd)"
 matrix="${repo_root}/.github/support-matrix.toml"
 target="${1:?usage: prepare_stplr.sh TARGET}"
 channel="${NIVORA_STPLR_CHANNEL:-stable}"
+# shellcheck source=.github/tools/lib/pinned_git_checkout.sh
+source "${script_dir}/lib/pinned_git_checkout.sh"
 
 read_matrix() {
     python3 - "$matrix" "$1" <<'PY'
@@ -68,11 +70,7 @@ stable)
             rmdir "$checkout"
         }
         trap cleanup_checkout EXIT
-        git -C "$checkout" init -q
-        git -C "$checkout" remote add origin "$repository"
-        git -C "$checkout" fetch -q --depth=1 origin "$commit"
-        git -C "$checkout" checkout -q --detach FETCH_HEAD
-        [[ "$(git -C "$checkout" rev-parse HEAD)" == "$commit" ]]
+        pinned_git_checkout "$repository" "$commit" "$checkout"
         (
             cd "$checkout"
             go build -trimpath \
@@ -101,11 +99,7 @@ main)
         rmdir "$checkout"
     }
     trap cleanup_checkout EXIT
-    git -C "$checkout" init -q
-    git -C "$checkout" remote add origin "$repository"
-    git -C "$checkout" fetch -q --depth=1 origin "$commit"
-    git -C "$checkout" checkout -q --detach FETCH_HEAD
-    [[ "$(git -C "$checkout" rev-parse HEAD)" == "$commit" ]]
+    pinned_git_checkout "$repository" "$commit" "$checkout"
     (
         cd "$checkout"
         go build -trimpath -o "$target" ./cmd/stplr

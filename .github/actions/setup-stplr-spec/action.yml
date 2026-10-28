@@ -26,17 +26,35 @@ runs:
         read -r -a packages <<<"$SYSTEM_PACKAGES"
         sudo apt-get install -y "${packages[@]}"
 
-    - name: Собрать закреплённый stplr-spec
+    - name: Восстановить доверенный stplr-spec из cache
+      id: stplr-spec-cache
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      continue-on-error: true
+      with:
+        path: ${{ runner.temp }}/nivora-stplr-spec-bin
+        key: nivora-stplr-spec-${{ runner.os }}-${{ runner.arch }}-ubuntu-24.04-go1.26.5-utils-c6ddbb5e4e5637d97bb7b2587729178d715c6c52-${{ hashFiles('.github/actions/setup-stplr-spec/action.yml', '.github/tools/prepare_stplr_spec.sh', '.github/tools/lib/pinned_git_checkout.sh') }}
+
+    - name: Добавить каталог stplr-spec в PATH
+      shell: bash
+      run: |
+        install -d "$RUNNER_TEMP/nivora-stplr-spec-bin"
+        echo "$RUNNER_TEMP/nivora-stplr-spec-bin" >>"$GITHUB_PATH"
+
+    - name: Собрать закреплённый stplr-spec при промахе cache
+      id: compile-stplr-spec
+      if: ${{ steps.stplr-spec-cache.outputs.cache-hit != 'true' }}
       shell: bash
       env:
         STPLR_UTILS_COMMIT: c6ddbb5e4e5637d97bb7b2587729178d715c6c52
-      run: |
-        git clone --filter=blob:none \
-          https://altlinux.space/stapler/stplr-utils.git \
-          "$RUNNER_TEMP/stplr-utils"
-        git -C "$RUNNER_TEMP/stplr-utils" checkout "$STPLR_UTILS_COMMIT"
-        (
-          cd "$RUNNER_TEMP/stplr-utils"
-          GOBIN="$RUNNER_TEMP/bin" go install ./cmd/stplr-spec
-        )
-        echo "$RUNNER_TEMP/bin" >>"$GITHUB_PATH"
+      run: >-
+        .github/tools/prepare_stplr_spec.sh
+        "$RUNNER_TEMP/nivora-stplr-spec-bin/stplr-spec"
+        https://altlinux.space/stapler/stplr-utils.git
+
+    - name: Сохранить собранный stplr-spec в cache
+      if: ${{ steps.stplr-spec-cache.outputs.cache-hit != 'true' && steps.compile-stplr-spec.outcome == 'success' }}
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      continue-on-error: true
+      with:
+        path: ${{ runner.temp }}/nivora-stplr-spec-bin
+        key: nivora-stplr-spec-${{ runner.os }}-${{ runner.arch }}-ubuntu-24.04-go1.26.5-utils-c6ddbb5e4e5637d97bb7b2587729178d715c6c52-${{ hashFiles('.github/actions/setup-stplr-spec/action.yml', '.github/tools/prepare_stplr_spec.sh', '.github/tools/lib/pinned_git_checkout.sh') }}

@@ -124,6 +124,51 @@ out="$(invoke "$repo" "$base")"
 assert_fields "$out" false main-advanced
 [[ "$(git --git-dir="${repo%/repo}/remote.git" rev-parse refs/heads/main)" == "$race_sha" ]]
 
+# A successful remote update whose acknowledgement was lost is still a push.
+# A subsequent fast-forward must not hide that publication from post-push CI.
+real_git="$(command -v git)"
+mock_bin="$scratch/lost-ack-bin"
+mkdir -p "$mock_bin"
+cat >"$mock_bin/git" <<'MOCK'
+#!/bin/bash
+set -euo pipefail
+is_push=false
+for argument in "$@"; do
+    [[ "$argument" != push ]] || is_push=true
+done
+if [[ "$is_push" == true && "$PWD" == "${TEST_LOST_ACK_REPO:?}" ]]; then
+    "${TEST_REAL_GIT:?}" "$@"
+    if [[ "${TEST_FAST_FORWARD:-0}" == 1 ]]; then
+        "${TEST_REAL_GIT}" clone -q "${TEST_REMOTE:?}" "${TEST_SUCCESSOR:?}"
+        printf 'successor\n' >>"${TEST_SUCCESSOR}/README.md"
+        "${TEST_REAL_GIT}" -C "$TEST_SUCCESSOR" commit -qam successor
+        "${TEST_REAL_GIT}" -C "$TEST_SUCCESSOR" push -q origin HEAD:main
+    fi
+    exit 1
+fi
+exec "${TEST_REAL_GIT:?}" "$@"
+MOCK
+chmod +x "$mock_bin/git"
+for fast_forward in 0 1; do
+    repo="$(new_case "lost-ack-${fast_forward}")"
+    base="$(git -C "$repo" rev-parse HEAD)"
+    printf 'name: demo\nversion: 2\n' >"$repo/demo/Staplerfile"
+    results="${repo%/repo}/results"
+    out="$(PATH="$mock_bin:$PATH" TEST_REAL_GIT="$real_git" \
+        TEST_LOST_ACK_REPO="$repo" TEST_FAST_FORWARD="$fast_forward" \
+        TEST_REMOTE="${repo%/repo}/remote.git" TEST_SUCCESSOR="${repo%/repo}/successor" \
+        AUTONOMOUS_UPDATE_RESULTS_DIR="$results" invoke "$repo" "$base")"
+    assert_fields "$out" true update
+    published="$(git -C "$repo" rev-parse HEAD)"
+    grep -Fxq "sha=$published" <<<"$out"
+    [[ "$(cat "$results/pushed-sha")" == "$published" ]]
+    remote_head="$(git --git-dir="${repo%/repo}/remote.git" rev-parse main)"
+    git --git-dir="${repo%/repo}/remote.git" merge-base --is-ancestor "$published" "$remote_head"
+    if [[ "$fast_forward" == 1 ]]; then
+        [[ "$remote_head" != "$published" ]]
+    fi
+done
+
 # An old base gets exactly one empty heartbeat; its new HEAD is fresh.
 repo="$(new_case heartbeat)"
 base="$(git -C "$repo" rev-parse HEAD)"

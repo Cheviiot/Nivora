@@ -128,7 +128,23 @@ if [[ "$remote_sha" == "$published_sha" ]]; then
     exit 0
 fi
 if [[ "$remote_sha" != "$expected_base" ]]; then
-    output false "$remote_sha" main-advanced
+    # The server may have accepted our push before the acknowledgement was
+    # lost, then accepted another writer's fast-forward. Verify ancestry so
+    # our already-published commit still gets its exact-SHA post-push gate.
+    if ! timeout 90s git "${git_args[@]}" fetch --no-tags origin refs/heads/main >&2; then
+        output false "$published_sha" push-failed
+        fail 'cannot verify publication ancestry after an ambiguous push'
+    fi
+    fetched_sha="$(git rev-parse --verify FETCH_HEAD)" || fail 'cannot resolve fetched main'
+    if git merge-base --is-ancestor "$published_sha" "$fetched_sha"; then
+        output true "$published_sha" "$reason"
+        if [[ -n "${AUTONOMOUS_UPDATE_RESULTS_DIR:-}" ]]; then
+            mkdir -p -- "$AUTONOMOUS_UPDATE_RESULTS_DIR"
+            printf '%s\n' "$published_sha" >"$AUTONOMOUS_UPDATE_RESULTS_DIR/pushed-sha"
+        fi
+        exit 0
+    fi
+    output false "$fetched_sha" main-advanced
     exit 0
 fi
 output false "$published_sha" push-failed

@@ -1,6 +1,6 @@
 name='casement'
 version='0.1.0'
-release=1
+release=2
 summary='Remote desktop for the local network and Tailscale'
 summary_ru='Удалённый рабочий стол для локальной сети и Tailscale'
 group='Networking/Remote access'

@@ -1,0 +1,104 @@
+name='casement'
+version='0.1.0'
+release=1
+summary='Remote desktop for the local network and Tailscale'
+summary_ru='Удалённый рабочий стол для локальной сети и Tailscale'
+group='Networking/Remote access'
+desc='Casement shows another computer’s screen and lets you control it with the mouse and keyboard. Computers connect directly over the local network or Tailscale, without relay servers, accounts or a cloud.'
+desc_ru='Casement показывает экран другого компьютера и даёт управлять им мышью и клавиатурой. Компьютеры соединяются напрямую, в локальной сети или через Tailscale, без серверов-посредников, учётных записей и облака.'
+homepage='https://github.com/Cheviiot/Casement'
+maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
+
+architectures=('amd64')
+compatible_with=('altlinux')
+disable_network=1
+
+license=('MIT')
+
+appstream_app_id='io.github.cheviiot.Casement'
+appstream_name='Casement'
+appstream_developer='Cheviiot'
+
+provides=()
+replaces=('casement')
+conflicts=()
+
+# The official ALT RPM requires these exact ALT package names for the GTK,
+# GStreamer and PipeWire runtime. dirty auto_req covers DT_NEEDED; the plugin
+# modules and PipeWire integration are discovered at runtime and stay explicit.
+auto_reqprov_method='dirty'
+auto_req=1
+auto_prov=0
+deps=(
+	'glib2'
+	'glibc-core'
+	'gst-plugins-bad1.0'
+	'gst-plugins-base1.0'
+	'gst-plugins-good1.0'
+	'libadwaita'
+	'libgcc1'
+	'libgio'
+	'libgraphene'
+	'libgst-plugins1.0'
+	'libgstreamer1.0'
+	'libgtk4'
+	'pipewire'
+)
+
+build_deps=('binutils' 'cpio' 'rpm-utils')
+
+sources=(
+	"https://github.com/Cheviiot/Casement/releases/download/v${version}/casement-${version}-alt1.x86_64.rpm?~archive=false&~name=casement.rpm"
+	'local:///LICENSE?nivora=casement'
+	'local:///io.github.cheviiot.Casement.svg?nivora=casement'
+	'local:///io.github.cheviiot.Casement.metainfo.xml?nivora=casement'
+)
+
+checksums=(
+	'sha256:348953e691fe7a773e757f425b076541ee418bd6056c61621934c036712e0eb8'
+	'sha256:c7d3d279119aa39bcd72d3ab1f19570bcddb46aa1a51c4be110876dbdccaff2e'
+	'sha256:1b8746ccb666b24b615d9c840daede47a9a6707fe2762015f5d91fe92548baec'
+	'sha256:82c104c606def661bbf166520401e3549c9c760c47a3fa361cb533dff9da450a'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['preremove']='preremove.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	cd "${srcdir}"
+	mkdir -p casement-extracted
+	(
+		cd casement-extracted
+		rpm2cpio "${srcdir}/casement.rpm" | cpio -idm --quiet
+	)
+
+	for binary in casement casement-cli casement-host; do
+		install -Dm755 "casement-extracted/usr/bin/${binary}" \
+			"${pkgdir}/usr/bin/${binary}"
+	done
+	install-systemd-user \
+		"casement-extracted/usr/lib/systemd/user/casement-host.service"
+	install-desktop \
+		"casement-extracted/usr/share/applications/io.github.cheviiot.Casement.desktop"
+
+	upstream_icon='casement-extracted/usr/share/icons/hicolor/scalable/apps/io.github.cheviiot.Casement.svg'
+	cmp -- "${upstream_icon}" io.github.cheviiot.Casement.svg
+	install -Dm644 io.github.cheviiot.Casement.svg \
+		"${pkgdir}/usr/share/icons/hicolor/scalable/apps/io.github.cheviiot.Casement.svg"
+	install -Dm644 io.github.cheviiot.Casement.metainfo.xml \
+		"${pkgdir}/usr/share/metainfo/io.github.cheviiot.Casement.metainfo.xml"
+	install-license LICENSE 'casement/LICENSE.nivora'
+}
+
+files() {
+	files-find-binary
+	files-find-desktop
+	files-find-systemd-user
+	files-find-license
+	files-find \
+		'/usr/share/icons/hicolor/scalable/apps/io.github.cheviiot.Casement.svg' \
+		'/usr/share/metainfo/io.github.cheviiot.Casement.metainfo.xml'
+}

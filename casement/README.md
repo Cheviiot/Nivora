@@ -1,0 +1,52 @@
+<p align="center">
+  <img src="io.github.cheviiot.Casement.svg" width="96" height="96" alt="Casement">
+</p>
+
+<h1 align="center">Casement</h1>
+
+<p align="center">
+  Удалённый рабочий стол для локальной сети и Tailscale
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2ea043?style=for-the-badge" alt="MIT"></a>
+  <img src="https://img.shields.io/badge/arch-amd64-2ea043?style=for-the-badge" alt="amd64">
+</p>
+
+---
+
+## Установка
+
+```bash
+sudo stplr install nivora/casement
+```
+
+## Возможности
+
+[Casement](https://github.com/Cheviiot/Casement) показывает экран другого
+компьютера и позволяет управлять им мышью и клавиатурой. Подключение идёт
+напрямую по локальной сети или через Tailscale — без учётной записи и
+серверов-посредников.
+
+Приложение также передаёт звук и текст буфера обмена, отправляет файлы и
+позволяет просматривать папки удалённого компьютера.
+
+## Технические детали
+
+Пакет переупаковывает официальный ALT RPM upstream для `x86_64`; arm64-релиза
+пока нет. При первой установке служба `casement-host` включается для новых
+пользовательских сеансов и запускается вместе с `graphical-session.target`.
+При обновлении пакет не включает её заново, поэтому пользовательское решение
+отключить службу сохраняется. При полном удалении глобальная автозагрузка
+службы выключается.
+
+Для приёма подключений на Linux-хосте нужен рабочий сеанс GNOME Wayland:
+служба использует Mutter RemoteDesktop/ScreenCast и PipeWire. Управление
+удалённым компьютером и работающие пользовательские сеансы не проверяются
+пакетным CI.
+
+---
+
+<p align="center">
+  Часть <a href="../README.md"><b>Nivora</b></a>
+</p>

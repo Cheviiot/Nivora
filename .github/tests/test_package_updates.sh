@@ -23,3 +23,12 @@ if version_is_newer 1.0.0-rc.1 1.0.0; then
 fi
 
 echo 'OK: package updater rejects downgrades'
+
+github_latest_release() {
+	[[ "$1" == 'Cheviiot/Casement' ]]
+	printf '%s\n' 'v0.1.0'
+}
+
+require_package casement
+[[ "$(latest_version casement)" == '0.1.0' ]]
+echo 'OK: Casement updater follows the latest stable GitHub release tag'

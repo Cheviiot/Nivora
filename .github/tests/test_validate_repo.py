@@ -605,6 +605,19 @@ class PackageLayoutTests(unittest.TestCase):
         )
         self.assertEqual(errors, [])
 
+    def test_casement_package_layout_fixture_is_closed(self):
+        package_dir = VALIDATOR.ROOT / "casement"
+        recipe = (package_dir / "Staplerfile").read_text(encoding="utf-8")
+        errors = []
+        VALIDATOR.validate_package_directory(
+            "casement",
+            package_dir,
+            recipe,
+            VALIDATOR.scalar(recipe, "appstream_app_id"),
+            errors,
+        )
+        self.assertEqual(errors, [])
+
     def test_two_names_for_the_same_icon_are_rejected(self):
         errors = self.layout(
             {

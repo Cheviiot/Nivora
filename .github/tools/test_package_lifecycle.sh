@@ -20,6 +20,7 @@ readonly cache_volume="nivora-lifecycle-${branch}-cache-$$"
 readonly -a lifecycle_package_catalog=(
     'anidesk|/usr/bin/anidesk|/home/nivora-test/.config/anidesk/nivora-lifecycle-state|/usr/share/applications/anidesk.desktop|/usr/share/icons/hicolor/256x256/apps/anidesk.png|/usr/lib/anidesk/chrome-sandbox'
     'balena-etcher|/usr/bin/balena-etcher|/home/nivora-test/.config/balena-etcher/nivora-lifecycle-state|/usr/share/applications/balena-etcher.desktop|/usr/share/pixmaps/balena-etcher.png|/usr/lib/balena-etcher/chrome-sandbox'
+    'casement|/usr/bin/casement|/home/nivora-test/.config/casement/nivora-lifecycle-state|/usr/share/applications/io.github.cheviiot.Casement.desktop|/usr/share/icons/hicolor/scalable/apps/io.github.cheviiot.Casement.svg|-'
     'chatgpt|/usr/bin/chatgpt|/home/nivora-test/.config/ChatGPT/nivora-lifecycle-state|/usr/share/applications/chatgpt.desktop|/usr/share/pixmaps/chatgpt.png|-'
     'claude|/usr/bin/claude-desktop|/home/nivora-test/.config/Claude/nivora-lifecycle-state|/usr/share/applications/com.anthropic.Claude.desktop|/usr/share/icons/hicolor/128x128/apps/claude-desktop.png|/usr/lib/claude-desktop/chrome-sandbox'
     'distroshelf|/usr/bin/distroshelf|/home/nivora-test/.config/distroshelf/nivora-lifecycle-state|/usr/share/applications/com.ranfdev.DistroShelf.desktop|/usr/share/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg|-'

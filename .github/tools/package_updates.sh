@@ -4,6 +4,7 @@ set -euo pipefail
 readonly -a PACKAGES=(
     anidesk
     balena-etcher
+    casement
     chatgpt
     claude
     distroshelf
@@ -399,6 +400,9 @@ latest_version() {
     case "$1" in
     anidesk) latest_anidesk ;;
     balena-etcher) github_latest_release balena-io/etcher ;;
+    casement)
+        github_latest_release Cheviiot/Casement | sed 's/^v//'
+        ;;
     chatgpt) latest_chatgpt ;;
     claude) latest_claude_desktop ;;
     distroshelf) github_latest_release ranfdev/DistroShelf ;;

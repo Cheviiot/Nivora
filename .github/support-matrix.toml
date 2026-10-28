@@ -13,13 +13,13 @@ alt_p11 = "registry.altlinux.org/p11/base@sha256:8024e8175572804b1b6bcfde76d464d
 alt_sisyphus = "registry.altlinux.org/sisyphus/base@sha256:1a6ab67cc12cfbe2419ed8b805ae6fd75ed036f9da7211b78876d1cd0083b7ba"
 
 [expectations]
-package_count = 15
+package_count = 14
 target_count = 2
-logical_runtime_cells = 44
-declared_supported_runtime_cells = 44
-verified_runtime_cells = 30
-blocking_ci_build_cells_full_common_change = 30
-advisory_main_build_cells_full_common_change = 15
+logical_runtime_cells = 40
+declared_supported_runtime_cells = 40
+verified_runtime_cells = 28
+blocking_ci_build_cells_full_common_change = 28
+advisory_main_build_cells_full_common_change = 14
 
 [tiers]
 verified = "build, package metadata, install, safe smoke and remove all run as required gates in a disposable ALT container of that branch"
@@ -169,15 +169,6 @@ architectures = ["amd64"]
 smoke_path = "/usr/bin/unsloth-studio"
 support = [
   { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["external-service", "large-download"] },
-]
-
-[[packages]]
-id = "vintner"
-architectures = ["amd64", "arm64"]
-smoke_path = "/usr/bin/vintner"
-support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["large-toolchain-out-of-scope", "wine-runtime"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "large-toolchain-out-of-scope", "wine-runtime"] },
 ]
 
 [[packages]]

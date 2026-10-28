@@ -31,7 +31,6 @@ readonly -a lifecycle_package_catalog=(
     'tailscale|/usr/bin/tailscale|/var/lib/tailscale/nivora-lifecycle-state|/usr/lib/systemd/system/tailscaled.service|-|-'
     'telegram|/usr/bin/telegram-desktop|/home/nivora-test/.config/telegram-desktop/nivora-lifecycle-state|/usr/share/applications/org.telegram.desktop.desktop|/usr/share/icons/hicolor/256x256/apps/org.telegram.desktop.png|-'
     'unsloth|/usr/bin/unsloth-studio|/home/nivora-test/.config/unsloth/nivora-lifecycle-state|/usr/share/applications/unsloth.desktop|/usr/share/icons/hicolor/128x128/apps/unsloth-studio.png|-'
-    'vintner|/usr/bin/vintner|/home/nivora-test/.config/vintner/nivora-lifecycle-state|-|-|-'
     'yandex-music|/usr/bin/yandex-music|/home/nivora-test/.config/yandex-music/nivora-lifecycle-state|/usr/share/applications/yandexmusic.desktop|/usr/share/icons/hicolor/256x256/apps/yandexmusic.png|/opt/YandexMusic/chrome-sandbox'
 )
 

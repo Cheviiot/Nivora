@@ -15,7 +15,6 @@ readonly -a PACKAGES=(
     tailscale
     telegram
     unsloth
-    vintner
     yandex-music
 )
 
@@ -413,7 +412,6 @@ latest_version() {
     tailscale) latest_tailscale ;;
     telegram) latest_telegram ;;
     unsloth) latest_unsloth ;;
-    vintner) github_latest_release Cheviiot/vintner ;;
     yandex-music) latest_yandex_music ;;
     *) die "unknown package: $1" ;;
     esac

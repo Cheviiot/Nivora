@@ -22,7 +22,7 @@
 </p>
 
 <!-- package-count -->
-<p align="center"><strong>15 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
+<p align="center"><strong>14 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
 
 ## Быстрый старт
 
@@ -105,12 +105,6 @@ sudo stplr install nivora/имя-пакета
     <td align="right" nowrap><code>3.6.7</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/github-desktop</code></td>
-  </tr>
-  <tr><!-- package-card:vintner -->
-    <td width="340" nowrap><img src=".github/assets/nivora.png" width="24" height="24" alt=""> &nbsp;<a href="vintner/README.md"><strong>Vintner</strong></a><br><sub>Инструменты MSVC в Linux через Wine</sub></td>
-    <td align="right" nowrap><code>0.5.0</code></td>
-    <td nowrap><code>amd64</code> <code>arm64</code></td>
-    <td nowrap><code>nivora/vintner</code></td>
   </tr>
   <tr><!-- package-card:unsloth -->
     <td width="340" nowrap><img src="unsloth/unsloth.png" width="24" height="24" alt=""> &nbsp;<a href="unsloth/README.md"><strong>Unsloth</strong></a><br><sub>Запуск и дообучение LLM локально</sub></td>

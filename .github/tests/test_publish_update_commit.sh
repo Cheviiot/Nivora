@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# Fixture publishers must never write into a live updater's diagnostics directory.
+unset AUTONOMOUS_UPDATE_RESULTS_DIR
+
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 scratch="$(mktemp -d "${TMPDIR:-/tmp}/nivora-publish-test.XXXXXX")"
 cleanup() {

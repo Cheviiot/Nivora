@@ -102,7 +102,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:kimi-code -->
     <td width="340" nowrap><img src="kimi-code/com.kimi.code.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="kimi-code/README.md"><strong>Kimi Code</strong></a><br><sub>Десктопный AI-агент для работы с кодом</sub></td>
-    <td align="right" nowrap><code>1.1.4</code></td>
+    <td align="right" nowrap><code>1.2.0</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/kimi-code</code></td>
   </tr>

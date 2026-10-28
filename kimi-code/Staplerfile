@@ -1,9 +1,9 @@
 name='kimi-code'
-version='1.1.4'
+version='1.2.0'
 release=1
 # SHA-256 of the final HTTP ETag for the mutable download URL. The
 # autonomous detector compares these even when upstream keeps the version.
-source_fingerprint_amd64='eec40ed6d4051ed279d51a00d614918c81f50d1b7bcd063356687b23d91560a7'
+source_fingerprint_amd64='8fed48035a10c095ecc2298d911a1ddbdc63530c9d769bd1f2c2b9b0ca501270'
 summary='Kimi Code Desktop — AI coding agent by Moonshot AI'
 summary_ru='Десктопный AI-агент Kimi Code от Moonshot AI'
 group='Development/Tools'
@@ -55,7 +55,7 @@ sources=(
 )
 
 checksums=(
-	'sha256:c9f6eceaa56c42da2e80ee0e48ee277e2330222636ccef5c41cd45a3fd35b8fd'
+	'sha256:ce5dc4d10c01b7c06d750d0d2cd7968171cde4480adc3e41335e8795055aa013'
 	'sha256:a2f0b091b653467dcc16cb2db6c11a94d3b3b983686dd3eecfa7e7e9f51a4c1b'
 )
 

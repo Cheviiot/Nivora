@@ -79,6 +79,12 @@ jobs:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 180
     steps:
+      - name: Получить инструменты Nivora
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          path: nivora-infrastructure
+          persist-credentials: false
+
       - name: Установить Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
@@ -104,16 +110,8 @@ jobs:
       - name: Добавить поддержку OAuth callback в Linux
         working-directory: github-desktop
         run: |
-          main_process='app/src/main-process/main.ts'
-          perl -0pi -e \
-            "s/if \\(__DEV_SECRETS__\\) \\{\\n  possibleProtocols\\.add\\('x-github-desktop-dev-auth'\\)\\n\\} else \\{\\n  possibleProtocols\\.add\\('x-github-desktop-auth'\\)\\n\\}/possibleProtocols.add('x-github-desktop-auth')\\nif (__DEV_SECRETS__) {\\n  possibleProtocols.add('x-github-desktop-dev-auth')\\n}/" \
-            "$main_process"
-          perl -0pi -e \
-            "s/if \\(__WIN32__ && args\\['protocol-launcher'\\] === true\\)/if ((__WIN32__ || __LINUX__) \\&\\& args['protocol-launcher'] === true)/" \
-            "$main_process"
-          grep -Fq "possibleProtocols.add('x-github-desktop-auth')" \
-            "$main_process"
-          grep -Fq "(__WIN32__ || __LINUX__)" "$main_process"
+          python3 "$GITHUB_WORKSPACE/nivora-infrastructure/.github/tools/patch_github_desktop.py" \
+            app/src/main-process/main.ts
 
       - name: Установить зависимости из upstream lockfile
         working-directory: github-desktop

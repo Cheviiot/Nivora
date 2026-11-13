@@ -108,7 +108,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:opencode -->
     <td width="340" nowrap><img src="opencode/ai.opencode.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="opencode/README.md"><strong>OpenCode Desktop</strong></a><br><sub>Открытый AI-агент для работы с кодом</sub></td>
-    <td align="right" nowrap><code>2.2.7</code></td>
+    <td align="right" nowrap><code>2.3.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/opencode</code></td>
   </tr>

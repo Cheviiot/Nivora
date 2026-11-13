@@ -22,7 +22,7 @@
 </p>
 
 <!-- package-count -->
-<p align="center"><strong>15 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
+<p align="center"><strong>14 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
 
 ## Быстрый старт
 
@@ -65,19 +65,19 @@ sudo stplr install nivora/имя-пакета
   <tr><th colspan="4" align="left">Интернет, сеть и VPN</th></tr>
   <tr><!-- package-card:happ -->
     <td width="340" nowrap><img src="https://happ.su/imgs/apple-touch-icon.png" width="24" height="24" alt=""> &nbsp;<a href="happ/README.md"><strong>Happ</strong></a><br><sub>VPN-клиент на базе Xray</sub></td>
-    <td align="right" nowrap><code>4.6.1</code></td>
+    <td align="right" nowrap><code>4.7.2</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/happ</code></td>
   </tr>
   <tr><!-- package-card:tailscale -->
     <td width="340" nowrap><img src="https://tailscale.com/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="tailscale/README.md"><strong>Tailscale</strong></a><br><sub>Частная сеть между устройствами</sub></td>
-    <td align="right" nowrap><code>1.104.4</code></td>
+    <td align="right" nowrap><code>1.104.7</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/tailscale</code></td>
   </tr>
   <tr><!-- package-card:telegram -->
     <td width="340" nowrap><img src="telegram/org.telegram.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="telegram/README.md"><strong>Telegram</strong></a><br><sub>Сообщения, звонки и каналы</sub></td>
-    <td align="right" nowrap><code>7.2.5</code></td>
+    <td align="right" nowrap><code>7.4.3</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/telegram</code></td>
   </tr>
@@ -90,38 +90,32 @@ sudo stplr install nivora/имя-пакета
   <tr><th colspan="4" align="left">AI и разработка</th></tr>
   <tr><!-- package-card:chatgpt -->
     <td width="340" nowrap><img src="chatgpt/com.openai.chatgpt.png" width="24" height="24" alt=""> &nbsp;<a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Приложение OpenAI со встроенным Codex</sub></td>
-    <td align="right" nowrap><code>26.1023.51421</code></td>
+    <td align="right" nowrap><code>26.1111.21308</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/chatgpt</code></td>
   </tr>
   <tr><!-- package-card:claude -->
     <td width="340" nowrap><img src="claude/claude-tray-orange.png" width="24" height="24" alt=""> &nbsp;<a href="claude/README.md"><strong>Claude</strong></a><br><sub>Десктопное приложение Anthropic</sub></td>
-    <td align="right" nowrap><code>4.29.0</code></td>
+    <td align="right" nowrap><code>5.11492.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/claude</code></td>
   </tr>
-  <tr><!-- package-card:kimi-code -->
-    <td width="340" nowrap><img src="kimi-code/com.kimi.code.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="kimi-code/README.md"><strong>Kimi Code</strong></a><br><sub>Десктопный AI-агент для работы с кодом</sub></td>
-    <td align="right" nowrap><code>1.2.0</code></td>
-    <td nowrap><code>amd64</code></td>
-    <td nowrap><code>nivora/kimi-code</code></td>
-  </tr>
   <tr><!-- package-card:github-desktop -->
     <td width="340" nowrap><img src="https://github.githubassets.com/favicons/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="github-desktop/README.md"><strong>GitHub Desktop</strong></a><br><sub>Linux-сборка из официальных исходников</sub></td>
-    <td align="right" nowrap><code>3.6.7</code></td>
+    <td align="right" nowrap><code>3.6.10</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/github-desktop</code></td>
   </tr>
-  <tr><!-- package-card:unsloth -->
-    <td width="340" nowrap><img src="unsloth/unsloth.png" width="24" height="24" alt=""> &nbsp;<a href="unsloth/README.md"><strong>Unsloth</strong></a><br><sub>Запуск и дообучение LLM локально</sub></td>
-    <td align="right" nowrap><code>0.1.911-beta</code></td>
-    <td nowrap><code>amd64</code></td>
-    <td nowrap><code>nivora/unsloth</code></td>
+  <tr><!-- package-card:opencode -->
+    <td width="340" nowrap><img src="opencode/ai.opencode.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="opencode/README.md"><strong>OpenCode Desktop</strong></a><br><sub>Открытый AI-агент для работы с кодом</sub></td>
+    <td align="right" nowrap><code>2.2.7</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/opencode</code></td>
   </tr>
   <tr><th colspan="4" align="left">Медиа и игры</th></tr>
   <tr><!-- package-card:yandex-music -->
     <td width="340" nowrap><img src="yandex-music/yandexmusic.png" width="24" height="24" alt=""> &nbsp;<a href="yandex-music/README.md"><strong>Яндекс Музыка</strong></a><br><sub>Музыка, подкасты и персональные подборки</sub></td>
-    <td align="right" nowrap><code>5.123.4</code></td>
+    <td align="right" nowrap><code>5.127.0</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/yandex-music</code></td>
   </tr>
@@ -133,7 +127,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:pineconemc -->
     <td width="340" nowrap><img src="pineconemc/io.github.elyprismlauncher.ElyPrismLauncher.svg" width="24" height="24" alt=""> &nbsp;<a href="pineconemc/README.md"><strong>PineconeMC</strong></a><br><sub>Лаунчер Minecraft с поддержкой Ely.by</sub></td>
-    <td align="right" nowrap><code>11.1.1</code></td>
+    <td align="right" nowrap><code>11.1.2</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/pineconemc</code></td>
   </tr>

@@ -11,6 +11,26 @@ VALIDATOR = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(VALIDATOR)
 
 
+class RepositoryTextTests(unittest.TestCase):
+    def test_private_scratch_is_excluded_but_product_sources_are_scanned(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for cache in (".cache", "external", ".venv"):
+                path = root / cache / "diagnostic.txt"
+                path.parent.mkdir()
+                path.write_text("chmod " + "777", encoding="utf-8")
+            product = root / "product.txt"
+            product.write_text("chmod " + "777", encoding="utf-8")
+            old_root = VALIDATOR.ROOT
+            VALIDATOR.ROOT = root
+            try:
+                errors = []
+                VALIDATOR.validate_repository_text(errors)
+                self.assertEqual(errors, ["product.txt: chmod " + "777 is forbidden"])
+            finally:
+                VALIDATOR.ROOT = old_root
+
+
 class ParserTests(unittest.TestCase):
     def test_scalar_and_array(self):
         text = "name='demo'\narchitectures=('amd64' 'arm64')\n"

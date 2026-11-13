@@ -121,7 +121,6 @@ fingerprint = re.compile(r"^[0-9a-f]{64}$")
 for package, versions in value.items():
     expected_keys = {
         "chatgpt": {"source_fingerprint_amd64", "source_fingerprint_arm64"},
-        "kimi-code": {"source_fingerprint_amd64"},
         "parsec": {"source_fingerprint"},
     }.get(package, set())
     if (
@@ -296,6 +295,8 @@ for package in "${detected_packages[@]}"; do
             die "update patch does not apply cleanly for ${package}"
 
         semantic_tmp="$(mktemp -d)"
+        # TMPDIR may live inside a checkout; do not inherit its Git prefix.
+        git -C "$semantic_tmp" init -q
         install -d "${semantic_tmp}/${package}"
         cp "${repo_root}/${package}/Staplerfile" \
             "${semantic_tmp}/${package}/Staplerfile"
@@ -428,7 +429,6 @@ if candidate_releases != [expected_release]:
 
 required_fingerprints = {
     "chatgpt": {"source_fingerprint_amd64", "source_fingerprint_arm64"},
-    "kimi-code": {"source_fingerprint_amd64"},
     "parsec": {"source_fingerprint"},
 }.get(package, set())
 trusted_fingerprints = {

@@ -1,5 +1,5 @@
 name='pineconemc'
-version='11.1.1'
+version='11.1.2'
 release=1
 summary='Discover, manage, and play Minecraft instances'
 summary_ru='Поиск, управление и запуск сборок Minecraft'
@@ -48,12 +48,12 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:27aa8b8b35433676997c6712aa4f9fb004bd1dbf402e5be7d7da039675c85515'
+	'sha256:72ebc0b4409527ddd1924c599f7b1d9e7e2c5bcae82c4e964b4b96884512bfde'
 	'sha256:794a4007ac816a1425a98fdddf0716728fe1e2d899c4b9c1d505c1405e111ec9'
 )
 
 checksums_arm64=(
-	'sha256:9fcd85f3e2ba229c97931deecdf10c58ed64c9f3544b90c6ef2b808c726cebeb'
+	'sha256:e09470029dd1dc40dfdd84dfec0fab41b0ab755f2529cb0f370333065d9cd462'
 	'sha256:794a4007ac816a1425a98fdddf0716728fe1e2d899c4b9c1d505c1405e111ec9'
 )
 

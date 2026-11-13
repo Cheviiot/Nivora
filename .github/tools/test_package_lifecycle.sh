@@ -26,12 +26,11 @@ readonly -a lifecycle_package_catalog=(
     'distroshelf|/usr/bin/distroshelf|/home/nivora-test/.config/distroshelf/nivora-lifecycle-state|/usr/share/applications/com.ranfdev.DistroShelf.desktop|/usr/share/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg|-'
     'github-desktop|/usr/bin/github-desktop|/home/nivora-test/.config/GitHub Desktop/nivora-lifecycle-state|/usr/share/applications/github-desktop.desktop|/usr/share/icons/hicolor/scalable/apps/github-desktop.svg|/opt/github-desktop/chrome-sandbox'
     'happ|/usr/bin/happ|/home/nivora-test/.config/happ/nivora-lifecycle-state|/usr/share/applications/Happ.desktop|/usr/lib/systemd/system/happd.service|-'
-    'kimi-code|/usr/bin/kimi-code|/home/nivora-test/.config/Kimi Code/nivora-lifecycle-state|/usr/share/applications/kimi-code.desktop|/usr/share/icons/hicolor/512x512/apps/kimi-code.png|/opt/Kimi Code/chrome-sandbox'
+    'opencode|/usr/bin/opencode-desktop|/home/nivora-test/.config/opencode/nivora-lifecycle-state|/usr/share/applications/ai.opencode.desktop.desktop|/usr/share/icons/hicolor/128x128/apps/ai.opencode.png|/opt/OpenCode/chrome-sandbox'
     'parsec|/usr/bin/parsecd|/home/nivora-test/.config/parsec/nivora-lifecycle-state|/usr/share/applications/parsecd.desktop|/usr/share/icons/hicolor/256x256/apps/parsecd.png|-'
     'pineconemc|/usr/bin/pineconemc|/home/nivora-test/.config/pineconemc/nivora-lifecycle-state|/usr/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop|/usr/share/icons/hicolor/scalable/apps/io.github.elyprismlauncher.ElyPrismLauncher.svg|-'
     'tailscale|/usr/bin/tailscale|/var/lib/tailscale/nivora-lifecycle-state|/usr/lib/systemd/system/tailscaled.service|-|-'
     'telegram|/usr/bin/telegram-desktop|/home/nivora-test/.config/telegram-desktop/nivora-lifecycle-state|/usr/share/applications/org.telegram.desktop.desktop|/usr/share/icons/hicolor/256x256/apps/org.telegram.desktop.png|-'
-    'unsloth|/usr/bin/unsloth-studio|/home/nivora-test/.config/unsloth/nivora-lifecycle-state|/usr/share/applications/unsloth.desktop|/usr/share/icons/hicolor/128x128/apps/unsloth-studio.png|-'
     'yandex-music|/usr/bin/yandex-music|/home/nivora-test/.config/yandex-music/nivora-lifecycle-state|/usr/share/applications/yandexmusic.desktop|/usr/share/icons/hicolor/256x256/apps/yandexmusic.png|/opt/YandexMusic/chrome-sandbox'
 )
 
@@ -332,6 +331,9 @@ if [[ "$package" == casement ]]; then
     test -x /usr/bin/casement-host
     test -f /usr/lib/systemd/user/casement-host.service
     test -f /usr/share/metainfo/io.github.cheviiot.Casement.metainfo.xml
+fi
+if [[ "$package" == opencode ]]; then
+    runuser -u nivora-test -- /opt/OpenCode/resources/opencode-cli --version >/dev/null
 fi
 
 bash /usr/local/lib/nivora/alt_apt_network.sh run -qq remove -y "$system_name"

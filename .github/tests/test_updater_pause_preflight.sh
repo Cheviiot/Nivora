@@ -105,6 +105,17 @@ case_dir="${repo%/repo}"
 base="$(git -C "$repo" rev-parse HEAD)"
 write_pause_issue "$case_dir/pause-issue.json" "$base"
 write_runs "$case_dir/runs.json" "{\"workflow_runs\":[{\"display_title\":\"post-push ${base} · updater 12345 · resume true\",\"status\":\"in_progress\",\"conclusion\":null,\"created_at\":\"2026-10-01T00:00:00Z\"}]}"
+# A real 100-run API response can exceed Linux's 128 KiB argument limit.
+python3 - "$case_dir/runs.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+response = json.loads(path.read_text())
+response["workflow_runs"][0]["api_metadata"] = "x" * (512 * 1024)
+path.write_text(json.dumps(response))
+PY
 run_preflight "$repo"
 assert_paused_true "$case_dir/output"
 [[ "$(main_ref "$repo")" == "$base" ]]

@@ -32,20 +32,19 @@ write_paused_output() {
 }
 
 read_recovery_plan() {
-    local state="$1" sha="$2" runs request
-    runs="$(gh api \
-        "repos/${repository}/actions/workflows/post-push-verify.yml/runs?per_page=100" |
-        jq -c '.workflow_runs')"
-    request="$(jq -cn \
+    local state="$1" sha="$2"
+    # Full run histories exceed Linux's per-argument limit. Keep API payloads
+    # on stdin; only small, validated pause metadata belongs in arguments.
+    gh api "repos/${repository}/actions/workflows/post-push-verify.yml/runs?per_page=100" |
+        jq -c \
         --argjson pause_state "$state" \
         --arg current_sha "$sha" \
         --argjson paused_sha_is_ancestor true \
-        --argjson workflow_runs "$runs" \
         --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
         '{pause_state: $pause_state, current_sha: $current_sha,
           paused_sha_is_ancestor: $paused_sha_is_ancestor,
-          workflow_runs: $workflow_runs, now: $now}')"
-    python3 "$script_dir/plan_updater_recovery.py" <<<"$request"
+          workflow_runs: .workflow_runs, now: $now}' |
+        python3 "$script_dir/plan_updater_recovery.py"
 }
 
 pause_state="$(.github/tools/get_updater_pause.sh)"

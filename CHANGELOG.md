@@ -2,6 +2,14 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-11-13 — OpenCode Desktop и обновление каталога
+
+- Добавлен OpenCode Desktop 2.2.7 из официальных DEB для amd64 и arm64.
+- Unsloth и Kimi Code удалены из каталога и автообновлений.
+- Обновлены ChatGPT, Claude, GitHub Desktop, Happ, PineconeMC, Tailscale, Telegram и Яндекс Музыка.
+- Telegram получает готовый Linux-архив непосредственно из официального GitHub Release.
+- Исправлены обработка больших ответов GitHub API в recovery и совместимость Linux-сборки GitHub Desktop с текущим OAuth-кодом upstream.
+
 ## 2026-10-28 — Casement
 
 ### Добавлено

@@ -10,12 +10,11 @@ readonly -a PACKAGES=(
     distroshelf
     github-desktop
     happ
-    kimi-code
+    opencode
     parsec
     pineconemc
     tailscale
     telegram
-    unsloth
     yandex-music
 )
 
@@ -129,7 +128,7 @@ version_is_newer() {
 
 is_mutable_source_package() {
     case "$1" in
-    chatgpt | kimi-code | parsec) return 0 ;;
+    chatgpt | parsec) return 0 ;;
     *) return 1 ;;
     esac
 }
@@ -170,11 +169,6 @@ source_fingerprints() {
         fingerprint="$(http_etag_fingerprint \
             'https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_arm64.deb')" || return
         printf 'source_fingerprint_arm64\t%s\n' "$fingerprint"
-        ;;
-    kimi-code)
-        fingerprint="$(http_etag_fingerprint \
-            'https://code.kimi.com/kimi-code/desktop/download/KimiCode-linux-amd64.deb')" || return
-        printf 'source_fingerprint_amd64\t%s\n' "$fingerprint"
         ;;
     parsec)
         fingerprint="$(http_etag_fingerprint \
@@ -243,22 +237,6 @@ latest_anidesk() {
             tail -1
     )"
     [[ -n "$version" ]] || die 'cannot determine latest AniDesk version'
-    printf '%s\n' "$version"
-}
-
-latest_unsloth() {
-    local version
-    # All Unsloth Desktop releases carry a -beta tag suffix (GitHub marks
-    # them stable anyway), so the generic github_latest_release filter would
-    # discard every tag; take the newest v* tag as-is.
-    version="$(
-        GIT_TERMINAL_PROMPT=0 timeout 60s \
-            git ls-remote --tags --refs https://github.com/unslothai/unsloth.git 'refs/tags/v*' |
-            awk '{sub("refs/tags/v", "", $2); print $2}' |
-            sort -V |
-            tail -1
-    )"
-    [[ -n "$version" ]] || die 'cannot determine latest Unsloth version'
     printf '%s\n' "$version"
 }
 
@@ -347,25 +325,6 @@ latest_chatgpt() {
     rmdir "$temp_dir"
 }
 
-latest_kimi_code() {
-    local temp_dir version
-    temp_dir="$(mktemp -d)"
-    # The versionless download URL is the only upstream source of truth; read
-    # the version from the control part of that same artifact. A Range request
-    # is enough because ar puts control.tar.xz right after debian-binary.
-    curl --retry 3 --retry-delay 2 --retry-all-errors \
-        --connect-timeout 30 --max-time 60 -fsSL \
-        -r 0-2097151 \
-        -o "${temp_dir}/kimi-code.deb" \
-        'https://code.kimi.com/kimi-code/desktop/download/KimiCode-linux-amd64.deb'
-    (cd "$temp_dir" && ar x kimi-code.deb debian-binary control.tar.xz)
-    version="$(tar -xOf "${temp_dir}/control.tar.xz" ./control | awk '$1 == "Version:" {print $2; exit}')"
-    [[ -n "$version" ]] || die 'cannot determine latest Kimi Code Desktop version'
-    printf '%s\n' "$version"
-    find "$temp_dir" -mindepth 1 -delete
-    rmdir "$temp_dir"
-}
-
 upstream_source_published() {
     local url="$1"
     local headers status
@@ -381,18 +340,15 @@ upstream_source_published() {
 
 latest_telegram() {
     local version
-    # The GitHub tag is only the announcement. The recipe downloads from
-    # td.telegram.org, which publishes tsetup.<version>.tar.xz separately and
-    # sometimes later. Reporting a version whose tarball is still missing
-    # wedges the updater on a 404 forever, so the download host has the last
-    # word here.
+    # Follow the official release asset used by the recipe. The separate
+    # td.telegram.org mirror can lag behind an already published GitHub release.
     version="$(github_latest_release telegramdesktop/tdesktop)" || return
     if upstream_source_published \
-        "https://td.telegram.org/tlinux/tsetup.${version}.tar.xz"; then
+        "https://github.com/telegramdesktop/tdesktop/releases/download/v${version}/td-setup-linux-x64-${version}.tar.xz"; then
         printf '%s\n' "$version"
         return 0
     fi
-    echo "package_updates: telegram ${version} is tagged upstream but tsetup.${version}.tar.xz is not published yet" >&2
+    echo "package_updates: telegram ${version} is tagged upstream but its official Linux release asset is not published yet" >&2
     current_version telegram
 }
 
@@ -410,12 +366,11 @@ latest_version() {
         github_latest_release desktop/desktop | sed 's/^release-//'
         ;;
     happ) github_latest_release Happ-proxy/happ-desktop ;;
-    kimi-code) latest_kimi_code ;;
+    opencode) github_latest_release anomalyco/opencode ;;
     parsec) latest_parsec ;;
     pineconemc) github_latest_release ElyPrismLauncher/Launcher ;;
     tailscale) latest_tailscale ;;
     telegram) latest_telegram ;;
-    unsloth) latest_unsloth ;;
     yandex-music) latest_yandex_music ;;
     *) die "unknown package: $1" ;;
     esac

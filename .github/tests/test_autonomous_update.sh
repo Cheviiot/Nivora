@@ -13,7 +13,7 @@ install -d \
     "$fixture/repo/.github/tools" \
     "$fixture/repo/demo" \
     "$fixture/repo/parsec" \
-    "$fixture/repo/kimi-code" \
+    "$fixture/repo/chatgpt" \
     "$fixture/bin" \
     "$fixture/runner"
 cp "$repo_root/.github/tools/autonomous_package_updates.sh" \
@@ -24,15 +24,17 @@ fingerprint_b="$(printf 'b%.0s' {1..64})"
 fingerprint_c="$(printf 'c%.0s' {1..64})"
 printf "name='parsec'\nversion='1'\nrelease=4\nsource_fingerprint='%s'\nchecksum='old'\n" \
     "$fingerprint_a" >"$fixture/repo/parsec/Staplerfile"
-printf "name='kimi-code'\nversion='1'\nrelease=4\nsource_fingerprint_amd64='%s'\nchecksum='old'\n" \
-    "$fingerprint_a" >"$fixture/repo/kimi-code/Staplerfile"
+printf "name='chatgpt'\nversion='1'\nrelease=4\nsource_fingerprint_amd64='%s'\nsource_fingerprint_arm64='%s'\nchecksum='old'\n" \
+    "$fingerprint_a" "$fingerprint_a" >"$fixture/repo/chatgpt/Staplerfile"
 # The variable is intentionally expanded later by the generated mock.
 # shellcheck disable=SC2016
 printf '%s\n' \
     '#!/bin/bash' \
-    'field=source_fingerprint' \
-    '[[ "$2" != kimi-code ]] || field=source_fingerprint_amd64' \
-    'printf "%s\t%s\n" "$field" "${MUTABLE_TEST_FINGERPRINT:?}"' \
+    'if [[ "$2" == chatgpt ]]; then' \
+    '  printf "%s\t%s\n" source_fingerprint_amd64 "${MUTABLE_TEST_FINGERPRINT:?}" source_fingerprint_arm64 "$MUTABLE_TEST_FINGERPRINT"' \
+    'else' \
+    '  printf "source_fingerprint\t%s\n" "${MUTABLE_TEST_FINGERPRINT:?}"' \
+    'fi' \
     >"$fixture/repo/.github/tools/package_updates.sh"
 chmod 0755 "$fixture/repo/.github/tools/package_updates.sh"
 for tool in sync_readme_versions.py run_checks.sh clean_build.sh verify_artifacts.sh; do
@@ -141,28 +143,28 @@ for latest in 1 2; do
     PATH="$fixture/bin:$PATH" \
     STPLR_SPEC_COMMAND="$fixture/bin/stplr-spec" \
     RUNNER_TEMP="$fixture/runner" \
-    AUTONOMOUS_UPDATE_RESULTS_DIR="$fixture/kimi-results-$latest" \
+    AUTONOMOUS_UPDATE_RESULTS_DIR="$fixture/chatgpt-results-$latest" \
     MUTABLE_TEST_FINGERPRINT="$fingerprint_b" \
-    UPDATE_PLAN_JSON="{\"kimi-code\":{\"current\":\"1\",\"latest\":\"$latest\",\"fingerprints\":{\"source_fingerprint_amd64\":\"${fingerprint_b}\"}}}" \
-        "$fixture/repo/.github/tools/autonomous_package_updates.sh" kimi-code
-    grep -Fxq kimi-code "$fixture/kimi-results-$latest/successful-packages"
-    grep -Fq "+release=$expected_release" "$fixture/kimi-results-$latest/kimi-code/update.patch"
+    UPDATE_PLAN_JSON="{\"chatgpt\":{\"current\":\"1\",\"latest\":\"$latest\",\"fingerprints\":{\"source_fingerprint_amd64\":\"${fingerprint_b}\",\"source_fingerprint_arm64\":\"${fingerprint_b}\"}}}" \
+        "$fixture/repo/.github/tools/autonomous_package_updates.sh" chatgpt
+    grep -Fxq chatgpt "$fixture/chatgpt-results-$latest/successful-packages"
+    grep -Fq "+release=$expected_release" "$fixture/chatgpt-results-$latest/chatgpt/update.patch"
     grep -Fq "+source_fingerprint_amd64='${fingerprint_b}'" \
-        "$fixture/kimi-results-$latest/kimi-code/update.patch"
+        "$fixture/chatgpt-results-$latest/chatgpt/update.patch"
 done
 
 PATH="$fixture/bin:$PATH" \
 STPLR_SPEC_COMMAND="$fixture/bin/stplr-spec" \
 RUNNER_TEMP="$fixture/runner" \
-AUTONOMOUS_UPDATE_RESULTS_DIR="$fixture/kimi-raced-results" \
+AUTONOMOUS_UPDATE_RESULTS_DIR="$fixture/chatgpt-raced-results" \
 MUTABLE_TEST_FINGERPRINT="$fingerprint_c" \
-UPDATE_PLAN_JSON="{\"kimi-code\":{\"current\":\"1\",\"latest\":\"2\",\"fingerprints\":{\"source_fingerprint_amd64\":\"${fingerprint_b}\"}}}" \
-    "$fixture/repo/.github/tools/autonomous_package_updates.sh" kimi-code
-grep -Fxq $'kimi-code\tupdate-recipe' "$fixture/kimi-raced-results/failed-packages"
-test ! -s "$fixture/kimi-raced-results/kimi-code/failed.patch"
+UPDATE_PLAN_JSON="{\"chatgpt\":{\"current\":\"1\",\"latest\":\"2\",\"fingerprints\":{\"source_fingerprint_amd64\":\"${fingerprint_b}\",\"source_fingerprint_arm64\":\"${fingerprint_b}\"}}}" \
+    "$fixture/repo/.github/tools/autonomous_package_updates.sh" chatgpt
+grep -Fxq $'chatgpt\tupdate-recipe' "$fixture/chatgpt-raced-results/failed-packages"
+test ! -s "$fixture/chatgpt-raced-results/chatgpt/failed.patch"
 for branch in p11 sisyphus; do
     grep -Fxq "$branch"$'\tparsec' "$LIFECYCLE_TEST_LOG"
-    [[ "$(grep -Fxc "$branch"$'\tkimi-code' "$LIFECYCLE_TEST_LOG")" -eq 2 ]]
+    [[ "$(grep -Fxc "$branch"$'\tchatgpt' "$LIFECYCLE_TEST_LOG")" -eq 2 ]]
 done
 
 LIFECYCLE_TEST_EXIT=47 \

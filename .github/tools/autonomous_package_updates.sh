@@ -39,7 +39,7 @@ pin_github_desktop_source() {
 
 is_mutable_source_package() {
     case "$1" in
-    chatgpt | kimi-code | parsec) return 0 ;;
+    chatgpt | parsec) return 0 ;;
     *) return 1 ;;
     esac
 }

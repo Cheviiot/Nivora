@@ -140,10 +140,9 @@ expect_failure wrong-expected-version run_validator '["demo"]' \
 # for upgrades and same-version refreshes without accepting unplanned hashes.
 fingerprint_a="$(printf 'a%.0s' {1..64})"
 fingerprint_b="$(printf 'b%.0s' {1..64})"
-for package in chatgpt kimi-code parsec; do
+for package in chatgpt parsec; do
     case "$package" in
     chatgpt) fields=(source_fingerprint_amd64 source_fingerprint_arm64) ;;
-    kimi-code) fields=(source_fingerprint_amd64) ;;
     parsec) fields=(source_fingerprint) ;;
     esac
     install -d "$fixture/repo/$package"

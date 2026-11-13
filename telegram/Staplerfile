@@ -1,6 +1,6 @@
 name='telegram'
-version='7.2.5'
-release=4
+version='7.4.3'
+release=1
 summary='New era of messaging'
 summary_ru='Новая эра обмена сообщениями'
 group='Networking/Instant messaging'
@@ -41,7 +41,7 @@ deps=('libharfbuzz' 'libpng16' 'libpcre2' 'libbrotlicommon' 'libbrotlidec' 'bzli
 opt_deps=('xdg-utils' 'libappindicator-gtk3' 'ca-certificates' 'libalsa' 'libGL' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk' 'pipewire')
 
 sources=(
-	"https://td.telegram.org/tlinux/tsetup.${version}.tar.xz?~archive=false&~name=tsetup.tar.xz"
+	"https://github.com/telegramdesktop/tdesktop/releases/download/v${version}/td-setup-linux-x64-${version}.tar.xz?~archive=false&~name=tsetup.tar.xz"
 	'local:///org.telegram.desktop.desktop'
 	'local:///org.telegram.desktop.png'
 	'local:///LICENSE?nivora=telegram'
@@ -49,7 +49,7 @@ sources=(
 )
 
 checksums=(
-	'sha256:4f44bf31589ebe5c29621f01091367b192661e7933e2c3551b7820e6dfa061c0'
+	'sha256:a2032e74a3c57c183cc280938b89d85d965fd8d1eacbfb5967faa7b3bee402ca'
 	'sha256:8ceb3f6aea1003f84f1b5757cd857f8237b294bb18456e5e0e54d96e6fff04ba'
 	'sha256:3fb1400c7dc9bbc3b5cb3ffedcbf4a9b09c53e28b57a7ff33a8a6b9048864090'
 	'sha256:f3ad1b5ecdc1c9e5ab3719a0b084a3e0b4fc87ad424fbf81043df9637be3d1f5'

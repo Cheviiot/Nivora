@@ -22,12 +22,11 @@ EXPECTED_PACKAGES = (
     "distroshelf",
     "github-desktop",
     "happ",
-    "kimi-code",
+    "opencode",
     "parsec",
     "pineconemc",
     "tailscale",
     "telegram",
-    "unsloth",
     "yandex-music",
 )
 
@@ -579,7 +578,6 @@ def validate_package(
 
     expected_fingerprint_fields = {
         "chatgpt": {"source_fingerprint_amd64", "source_fingerprint_arm64"},
-        "kimi-code": {"source_fingerprint_amd64"},
         "parsec": {"source_fingerprint"},
     }.get(package, set())
     declared_fingerprint_fields = re.findall(
@@ -1050,6 +1048,8 @@ def validate_repository_text(errors: list[str]) -> None:
         if not path.is_file() or ".git" in path.parts:
             continue
         relative = path.relative_to(ROOT)
+        if relative.parts[0] in {".cache", "external", ".venv"}:
+            continue
         if path.suffix.lower() in {".png", ".ico", ".zip", ".gz"}:
             continue
         try:

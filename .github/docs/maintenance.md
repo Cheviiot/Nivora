@@ -38,7 +38,7 @@ ALT. Запущенная или ожидающая проверка того ж
 
 - Nivora — репозиторий **только для ALT Linux**. Поддерживаются ветки `p11` и
   `Sisyphus`; `compatible_with` каждого рецепта равен `('altlinux')`.
-- В репозитории ровно 15 каталогов с `Staplerfile`.
+- В репозитории ровно 14 каталогов с `Staplerfile`.
 - Репозиторий развивается строго в одной git-ветке `main` (реф в
   `stapler-repo.toml`, триггеры CI и обновления идут только через неё).
 - Каталог совпадает с `name` и командой в README.
@@ -220,8 +220,6 @@ install/smoke/remove **в обеих ветках ALT** на `x86_64`. Canary с
 | `distroshelf` | Upstream не публикует готовый Linux-релиз — Nivora CI собирает пакет из исходников и публикует результат в собственном GitHub Release, как и для `github-desktop`. См. раздел «Сборка в CI» ниже |
 | `github-desktop` | Официальный upstream `desktop/desktop`; Linux-сборка без стороннего форка |
 | `telegram` | Upstream-тарбол не даёт своего package ID; desktop-id `org.telegram.desktop` сохранён; переходные metadata заменяют прежний package ID `telegram-desktop` |
-| `kimi-code` | Upstream DEB `Package: kimi-code-app` от Moonshot AI; бинарник, desktop-id и AppStream-компонент базируются на имени `kimi-code`, которое и используется как package ID |
-| `unsloth` | Официальный upstream `Package: unsloth` (DEB-релизы `unslothai/unsloth`); desktop-файл апстрима `Unsloth.desktop` установлен как `unsloth.desktop`, потому что generated AppStream связывает компонент с `<appstream_app_id>.desktop` |
 
 ## Lifecycle-хуки
 
@@ -653,3 +651,15 @@ NIVORA_ALT_BRANCH=p11 .github/tools/clean_build.sh --all
 
 Скрипт всегда выполняет сборку в собственном одноразовом контейнере ALT и не
 подключает сторонние Stapler-каталоги.
+
+## Локальные проверки и готовые бинарники
+
+`run_checks.sh` держит временные fixtures и bytecode в игнорируемом `.cache/`.
+Скачанные для проверки upstream DEB и справочные исходники находятся в
+игнорируемом `external/`; оба каталога исключены из обхода продуктовых исходников.
+Источники и закреплённые версии заданы в `Staplerfile`. После проверки временные
+загрузки удаляются; компиляция приложений на хосте не требуется.
+
+OpenCode использует официальный Desktop DEB, AppStream ID `ai.opencode.desktop`
+и executable `/opt/OpenCode/ai.opencode`. Из upstream устанавливается только
+канонический desktop entry; legacy entry не добавляет второй пункт меню.

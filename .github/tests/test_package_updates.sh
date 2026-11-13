@@ -32,3 +32,29 @@ github_latest_release() {
 require_package casement
 [[ "$(latest_version casement)" == '0.1.0' ]]
 echo 'OK: Casement updater follows the latest stable GitHub release tag'
+
+# The desktop package follows the same stable-release selector as other apps.
+github_latest_release() {
+    case "$1" in
+    anomalyco/opencode) printf '%s\n' '2.2.7' ;;
+    telegramdesktop/tdesktop) printf '%s\n' '7.4.3' ;;
+    *) return 1 ;;
+    esac
+}
+require_package opencode
+[[ "$(latest_version opencode)" == '2.2.7' ]]
+for removed in kimi-code unsloth; do
+    if (require_package "$removed" >/dev/null 2>&1); then
+        echo "removed package was accepted: $removed" >&2
+        exit 1
+    fi
+done
+
+upstream_source_published() {
+    [[ "$1" == 'https://github.com/telegramdesktop/tdesktop/releases/download/v7.4.3/td-setup-linux-x64-7.4.3.tar.xz' ]]
+    [[ "${MOCK_TELEGRAM_PUBLISHED:-1}" == 1 ]]
+}
+current_version() { printf '%s\n' '7.2.5'; }
+[[ "$(latest_telegram)" == '7.4.3' ]]
+[[ "$(MOCK_TELEGRAM_PUBLISHED=0 latest_telegram 2>/dev/null)" == '7.2.5' ]]
+echo 'OK: catalog removal and official Telegram release assets stay synchronized'

@@ -5,6 +5,10 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../.." && pwd)"
 cd "$repo_root"
 
+# Keep all test fixtures and disposable bytecode inside the ignored cache.
+export TMPDIR="${repo_root}/.cache/tmp"
+mkdir -p "$TMPDIR"
+
 # py_compile and unittest otherwise drop __pycache__ next to every checked
 # source, so a plain check run dirties the working tree it is validating.
 # The bytecode is disposable; it belongs in a temporary directory.
@@ -18,7 +22,7 @@ command -v stplr-spec >/dev/null 2>&1 || {
 }
 
 mapfile -d '' shell_files < <(
-    find . -type f -not -path './.git/*' -print0 |
+    find . \( -path './.git' -o -path './.cache' -o -path './external' -o -path './.venv' \) -prune -o -type f -print0 |
         while IFS= read -r -d '' file; do
             if head -n 1 -- "$file" 2>/dev/null |
                 grep -IqE '^#!.*(bash|/sh)([[:space:]]|$)'; then
@@ -28,7 +32,7 @@ mapfile -d '' shell_files < <(
 )
 
 mapfile -d '' python_files < <(
-    find . -type f -name '*.py' -not -path './.git/*' -print0
+    find . \( -path './.git' -o -path './.cache' -o -path './external' -o -path './.venv' \) -prune -o -type f -name '*.py' -print0
 )
 
 for file in "${shell_files[@]}"; do
@@ -51,7 +55,7 @@ done < <(find .github/tests -maxdepth 1 -type f \
 while IFS= read -r -d '' test_script; do
     bash "$test_script"
 done < <(find . -mindepth 3 -maxdepth 3 -type f \
-    -path './*/tests/test-*.sh' -not -path './.github/*' -print0 | sort -z)
+    -path './*/tests/test-*.sh' -not -path './.github/*' -not -path './.cache/*' -not -path './external/*' -not -path './.venv/*' -print0 | sort -z)
 python3 .github/tools/validate_repo.py
 # The AppStream sidecars are generated from the recipes; a hand edit to
 # either side has to be reconciled, not silently shipped.

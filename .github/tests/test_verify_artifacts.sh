@@ -24,12 +24,12 @@ set -euo pipefail
 case "$*" in
 *'--queryformat %{NAME}'*) echo 'demo+stplr-default|0|1|alt1|x86_64' ;;
 *'-qlp'*)
-    printf '%s\n' '/opt/Kimi Code/kimi-code' /usr/bin/demo /usr/share/licenses/demo/LICENSE
+    printf '%s\n' '/opt/Demo App/demo' /usr/bin/demo /usr/share/licenses/demo/LICENSE
     [[ -z "${TEST_UNIT_PATH:-}" ]] || printf '%s\n' "$TEST_UNIT_PATH"
     ;;
 *'--queryformat [%{FILEMODES:octal}'*)
     [[ "${TEST_METADATA_FAILURE:-0}" != 1 ]] || exit 42
-    printf '100644\t%s\t%s\t/opt/Kimi Code/resources/app file\n' \
+    printf '100644\t%s\t%s\t/opt/Demo App/resources/app file\n' \
         "${TEST_FILE_OWNER:-root}" "${TEST_FILE_GROUP:-root}"
     printf '%s\troot\troot\t/usr/bin/demo\n' "${TEST_BINARY_MODE:-100755}"
     ;;
@@ -54,7 +54,7 @@ expect_failure() {
 verify
 TEST_BINARY_MODE=120000 verify
 TEST_FILE_OWNER=user expect_failure 'non-root owner'
-grep -Fq 'user:root у /opt/Kimi Code/resources/app file' "$fixture/output"
+grep -Fq 'user:root у /opt/Demo App/resources/app file' "$fixture/output"
 TEST_FILE_GROUP=users expect_failure 'non-root group'
 TEST_BINARY_MODE=100644 expect_failure 'non-executable command'
 TEST_BINARY_MODE=104755 expect_failure 'setuid command'

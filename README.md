@@ -77,7 +77,7 @@ sudo stplr install nivora/имя-пакета
   </tr>
   <tr><!-- package-card:telegram -->
     <td width="340" nowrap><img src="telegram/org.telegram.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="telegram/README.md"><strong>Telegram</strong></a><br><sub>Сообщения, звонки и каналы</sub></td>
-    <td align="right" nowrap><code>7.4.3</code></td>
+    <td align="right" nowrap><code>7.4.4</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/telegram</code></td>
   </tr>

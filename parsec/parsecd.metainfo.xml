@@ -5,11 +5,11 @@
   <id>parsecd</id>
   <launchable type="desktop-id">parsecd.desktop</launchable>
   <name>Parsec</name>
-  <summary>Simple, low-latency desktop and game streaming.</summary>
-  <summary xml:lang="ru">Простой стриминг рабочего стола и игр с низкой задержкой.</summary>
+  <summary>Low-latency client for remote desktops and games</summary>
+  <summary xml:lang="ru">Клиент удалённого рабочего стола и игр с низкой задержкой</summary>
   <description>
-    <p>Simple, low-latency desktop and game streaming.</p>
-    <p xml:lang="ru">Простой стриминг рабочего стола и игр с низкой задержкой.</p>
+    <p>Parsec is a client for connecting to remote computers and streaming their desktop or games with low latency.</p>
+    <p xml:lang="ru">Parsec — клиент для подключения к удалённым компьютерам и трансляции их рабочего стола или игр с низкой задержкой.</p>
   </description>
   <project_license>LicenseRef-proprietary</project_license>
   <metadata_license>MIT</metadata_license>

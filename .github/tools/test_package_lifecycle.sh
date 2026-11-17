@@ -21,11 +21,8 @@ readonly -a lifecycle_package_catalog=(
     'anidesk|/usr/bin/anidesk|/home/nivora-test/.config/anidesk/nivora-lifecycle-state|/usr/share/applications/anidesk.desktop|/usr/share/icons/hicolor/256x256/apps/anidesk.png|/usr/lib/anidesk/chrome-sandbox'
     'antigravity|/usr/bin/antigravity|/home/nivora-test/.config/Antigravity/nivora-lifecycle-state|/usr/share/applications/antigravity.desktop|/usr/share/icons/hicolor/256x256/apps/com.google.Antigravity.png|/opt/antigravity/chrome-sandbox'
     'balena-etcher|/usr/bin/balena-etcher|/home/nivora-test/.config/balena-etcher/nivora-lifecycle-state|/usr/share/applications/balena-etcher.desktop|/usr/share/pixmaps/balena-etcher.png|/usr/lib/balena-etcher/chrome-sandbox'
-    'casement|/usr/bin/casement|/home/nivora-test/.config/casement/nivora-lifecycle-state|/usr/share/applications/io.github.cheviiot.Casement.desktop|/usr/share/icons/hicolor/scalable/apps/io.github.cheviiot.Casement.svg|-'
     'chatgpt|/usr/bin/chatgpt|/home/nivora-test/.config/ChatGPT/nivora-lifecycle-state|/usr/share/applications/chatgpt.desktop|/usr/share/pixmaps/chatgpt.png|-'
     'claude|/usr/bin/claude-desktop|/home/nivora-test/.config/Claude/nivora-lifecycle-state|/usr/share/applications/com.anthropic.Claude.desktop|/usr/share/icons/hicolor/128x128/apps/claude-desktop.png|/usr/lib/claude-desktop/chrome-sandbox'
-    'distroshelf|/usr/bin/distroshelf|/home/nivora-test/.config/distroshelf/nivora-lifecycle-state|/usr/share/applications/com.ranfdev.DistroShelf.desktop|/usr/share/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg|-'
-    'github-desktop|/usr/bin/github-desktop|/home/nivora-test/.config/GitHub Desktop/nivora-lifecycle-state|/usr/share/applications/github-desktop.desktop|/usr/share/icons/hicolor/scalable/apps/github-desktop.svg|/opt/github-desktop/chrome-sandbox'
     'happ|/usr/bin/happ|/home/nivora-test/.config/happ/nivora-lifecycle-state|/usr/share/applications/Happ.desktop|/usr/lib/systemd/system/happd.service|-'
     'opencode|/usr/bin/opencode-desktop|/home/nivora-test/.config/opencode/nivora-lifecycle-state|/usr/share/applications/ai.opencode.desktop.desktop|/usr/share/icons/hicolor/128x128/apps/ai.opencode.png|/opt/OpenCode/chrome-sandbox'
     'parsec|/usr/bin/parsecd|/home/nivora-test/.config/parsec/nivora-lifecycle-state|/usr/share/applications/parsecd.desktop|/usr/share/icons/hicolor/256x256/apps/parsecd.png|-'
@@ -341,14 +338,6 @@ test -x "$command_path"
 if [[ "$sandbox_path" != '-' ]]; then
     test -f "$sandbox_path"
     [[ "$(stat -c '%U:%G:%a' "$sandbox_path")" == 'root:root:4755' ]]
-fi
-if [[ "$package" == casement ]]; then
-    # Exercise the ELF loader and CLI parser without a display or user session.
-    # This detects missing/too-old shared libraries that file checks miss.
-    /usr/bin/casement-cli --help >/dev/null
-    test -x /usr/bin/casement-host
-    test -f /usr/lib/systemd/user/casement-host.service
-    test -f /usr/share/metainfo/io.github.cheviiot.Casement.metainfo.xml
 fi
 if [[ "$package" == opencode ]]; then
     runuser -u nivora-test -- /opt/OpenCode/resources/opencode-cli --version >/dev/null

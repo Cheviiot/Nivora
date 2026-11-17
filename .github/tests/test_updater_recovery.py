@@ -65,6 +65,22 @@ class RecoveryPlannerTests(unittest.TestCase):
             {"action": "none", "reason": "recovery-active"},
         )
 
+    def test_scheduled_full_run_is_deduplicated_without_an_updater_run_id(self):
+        run = recovery_run(status="in_progress", conclusion=None)
+        run["display_title"] = f"post-push {CURRENT_SHA} · updater  · resume true"
+        self.assertEqual(
+            planner.plan_recovery(request(workflow_runs=[run])),
+            {"action": "none", "reason": "recovery-active"},
+        )
+
+    def test_failed_scheduled_full_run_retries_after_the_same_cooldown(self):
+        run = recovery_run(created_at=(NOW - timedelta(hours=6)).isoformat())
+        run["display_title"] = f"post-push {CURRENT_SHA} · updater  · resume true"
+        self.assertEqual(
+            planner.plan_recovery(request(workflow_runs=[run])),
+            {"action": "dispatch", "reason": "retry-after-cooldown", "sha": CURRENT_SHA},
+        )
+
     def test_recent_failure_is_backed_off(self):
         run = recovery_run(created_at=(NOW - timedelta(hours=5, minutes=59)).isoformat())
         self.assertEqual(

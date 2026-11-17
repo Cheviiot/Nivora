@@ -4,12 +4,12 @@
 <component type="desktop-application">
   <id>com.google.Antigravity</id>
   <launchable type="desktop-id">antigravity.desktop</launchable>
-  <name>Antigravity</name>
-  <summary>Google Antigravity App</summary>
-  <summary xml:lang="ru">Приложение Google Antigravity</summary>
+  <name>Google Antigravity App</name>
+  <summary>Manage AI agents and projects with Google Antigravity</summary>
+  <summary xml:lang="ru">Работа с ИИ-агентами и проектами Google Antigravity</summary>
   <description>
-    <p>Official Google Antigravity desktop application for Linux.</p>
-    <p xml:lang="ru">Официальное десктопное приложение Google Antigravity для Linux.</p>
+    <p>Google Antigravity App is a desktop application for managing AI agents, parallel tasks, and project workspaces.</p>
+    <p xml:lang="ru">Google Antigravity App — настольное приложение для работы с ИИ-агентами, параллельными задачами и проектами.</p>
   </description>
   <project_license>LicenseRef-proprietary</project_license>
   <metadata_license>MIT</metadata_license>

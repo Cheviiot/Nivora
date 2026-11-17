@@ -1,45 +1,37 @@
 <p align="center">
-  <img src="claude-tray-orange.png" width="96" height="96" alt="Claude">
+  <img src="com.anthropic.Claude.png" width="72" height="72" alt="Claude">
 </p>
 
-<h1 align="center">Claude</h1>
+# Claude
 
-<p align="center">
-  Десктопное приложение Anthropic для Claude и сценариев Claude Code
-</p>
+Официальное настольное приложение Anthropic объединяет чат Claude, Cowork и Claude Code. В интерфейсе доступны параллельные сессии, просмотр изменений, терминал и редактор.
 
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Custom-lightgrey?style=for-the-badge" alt="Лицензия"></a>
-  <img src="https://img.shields.io/badge/arch-amd64%20%7C%20arm64-2ea043?style=for-the-badge" alt="amd64, arm64">
-</p>
+[Официальный сайт и описание](https://code.claude.com/docs/en/desktop-linux) · [Лицензия](LICENSE)
 
----
+**Платформа:** ALT Linux p11.
+
+**Архитектуры:** amd64 · arm64 (предварительная поддержка).
 
 ## Установка
+
+Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
+затем выполните:
 
 ```bash
 sudo stplr install nivora/claude
 ```
 
-Пакет заменяет прежнее имя `nivora/claude-desktop` (см. `replaces` в
-`Staplerfile`). Исполняемая команда остаётся `/usr/bin/claude-desktop`, чтобы
-не конфликтовать с командой `claude` из Claude Code CLI.
+Текущая версия указана в [каталоге](../README.md#каталог).
+[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
 
-## Возможности
+## Запуск
 
-Chat, контекст проекта, встроенный терминал, редактор и визуальный просмотр
-diff — переупаковка официального DEB из APT-источника Anthropic с сохранением
-upstream desktop-id `com.anthropic.Claude`.
+Откройте приложение из меню или выполните от своего пользователя:
 
-## Сетевая изоляция
+```bash
+claude-desktop
+```
 
-Claude хранит Chromium-профиль, cookies, browser storage, Crashpad-каталоги и
-Cowork VM sockets в пользовательском профиле. Это не сетевая песочница:
-приложение обращается к сервисам Anthropic через Интернет, а временный OAuth
-callback-сервер использует loopback-порт локальной системы.
+Версия для Linux у разработчика обозначена как beta. Для Cowork нужна аппаратная виртуализация; подробности — в [официальных требованиях](https://code.claude.com/docs/en/desktop-linux#cowork-requirements). Доступность функций зависит от тарифного плана.
 
----
-
-<p align="center">
-  Часть <a href="../README.md"><b>Nivora</b></a>
-</p>
+[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)

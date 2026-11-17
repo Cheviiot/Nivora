@@ -92,6 +92,24 @@ grep -Eq '^<!-- nivora-update-candidate: [0-9a-f]{64} -->$' \
 grep -Eq '^<!-- nivora-update-retry-after: [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z -->$' \
     "$fixture/results/parsec/issue-body.md"
 grep -Fq 'отложен на 6 часов' "$fixture/results/parsec/issue-body.md"
+
+# A failed full-catalogue repair leaves every unpublished candidate deferred
+# on the original recipe fingerprint, even if its individual gates passed.
+: >"$fixture/results/failed-packages"
+printf 'parsec\n' >"$fixture/results/successful-packages"
+printf 'parsec\n' >"$fixture/results/resolved-packages"
+printf 'candidate recipe diff\n' >"$fixture/results/parsec/update.patch"
+: >"$GH_CALLS"
+AUTONOMOUS_UPDATE_REPAIR_FAILED=true "$repo_root/.github/tools/report_update_failures.sh"
+grep -Fq '**full-repair-catalogue**' "$fixture/results/parsec/issue-body.md"
+grep -Eq '^<!-- nivora-update-candidate: [0-9a-f]{64} -->$' \
+    "$fixture/results/parsec/issue-body.md"
+grep -Fq 'отложен на 6 часов' "$fixture/results/parsec/issue-body.md"
+grep -Fq 'Пауза сохранена' "$fixture/results/parsec/issue-body.md"
+if grep -Fq 'state=closed' "$GH_CALLS"; then
+    echo 'unpublished repair was reported as resolved' >&2
+    exit 1
+fi
 unset UPDATE_PLAN_JSON
 
 "$repo_root/.github/tools/set_updater_pause.sh" true \

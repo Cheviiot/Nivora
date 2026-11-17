@@ -1,45 +1,36 @@
 <p align="center">
-  <img src="https://happ.su/imgs/apple-touch-icon.png" width="96" height="96" alt="Happ">
+  <img src="Happ.png" width="72" height="72" alt="Happ">
 </p>
 
-<h1 align="center">Happ</h1>
+# Happ
 
-<p align="center">
-  Удобный GUI-прокси-клиент для xray-core
-</p>
+Графическое приложение для подключения к прокси-серверам на основе Xray. Для подключения используется ваша конфигурация или подписка на серверы.
 
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Custom-lightgrey?style=for-the-badge" alt="Лицензия"></a>
-  <img src="https://img.shields.io/badge/arch-amd64%20%7C%20arm64-2ea043?style=for-the-badge" alt="amd64, arm64">
-</p>
+[Официальный сайт и описание](https://happ.info/) · [Лицензия](LICENSE)
 
----
+**Платформа:** ALT Linux p11.
+
+**Архитектуры:** amd64 · arm64 (предварительная поддержка).
 
 ## Установка
+
+Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
+затем выполните:
 
 ```bash
 sudo stplr install nivora/happ
 ```
 
-## Возможности
+Текущая версия указана в [каталоге](../README.md#каталог).
+[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
 
-[Happ](https://happ.su/) — GUI-клиент для xray-core с режимом TUN/VPN через
-sing-box, средствами обхода блокировок, импортом QR-кодов и управлением
-подписками.
+## Запуск
 
-## Технические детали
+Откройте приложение из меню или выполните от своего пользователя:
 
-Пакет ставит и включает systemd-сервис `happd.service`, обеспечивающий
-TUN/VPN-режим без ручного запуска демона после установки.
+```bash
+happ
+```
 
-Собственный Qt-рантайм Happ по умолчанию откатывается на generic-тему GNOME,
-которая не умеет сообщать текущую системную цветовую схему. Launcher-обёртка
-`/usr/bin/happ` явно включает `QT_QPA_PLATFORMTHEME=xdgdesktopportal`, чтобы
-приложение читало тёмную/светлую тему через XDG Desktop Portal и подхватывало
-её смену на лету, а не оставалось на светлой теме по умолчанию.
 
----
-
-<p align="center">
-  Часть <a href="../README.md"><b>Nivora</b></a>
-</p>
+[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)

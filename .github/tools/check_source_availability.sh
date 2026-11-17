@@ -48,6 +48,12 @@ if [[ -n "$version" ]]; then
     [[ "$version" =~ ^[A-Za-z0-9._+~-]+$ ]] || die "invalid version: ${version}"
     "$stplr_spec_command" set-field --path "$probe_recipe" version "$version" ||
         die "cannot set probe version ${version}"
+    if [[ "$package" == anidesk ]]; then
+        # Upstream tags use -beta.N, while the .deb filename uses .beta.N.
+        "$stplr_spec_command" set-field --path "$probe_recipe" \
+            debian_version "${version/-beta./.beta.}" ||
+            die "cannot set probe AniDesk Debian version ${version}"
+    fi
     if [[ "$package" == antigravity ]]; then
         hub="$("${script_dir}/package_updates.sh" antigravity-hub "$version")" ||
             die "cannot resolve Antigravity App build for ${version}"

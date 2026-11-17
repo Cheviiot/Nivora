@@ -3,56 +3,22 @@
 </p>
 
 <p align="center">
-  <a href="#совместимость"><img src="https://img.shields.io/badge/ALT-p11%20%C2%B7%20Sisyphus-39cfa4?style=flat-square" alt="ALT p11 и Sisyphus"></a>
-  <a href="https://stplr.dev/docs/intro/"><img src="https://img.shields.io/badge/Stapler-v0.1.1-1ab8cd?style=flat-square" alt="Stapler v0.1.1"></a>
-  <a href="https://github.com/Cheviiot/Nivora/actions/workflows/package-ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/package-ci.yml?branch=main&amp;style=flat-square&amp;label=CI" alt="Статус проверок репозитория"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/Рецепты-MIT-8b5cf6?style=flat-square" alt="Рецепты под лицензией MIT"></a>
+  Приложения для <strong>ALT Linux p11</strong> с установкой через Stapler.
 </p>
 
 <p align="center">
-  Приложения для общения, работы и повседневных задач — с установкой через Stapler.
-</p>
-
-<p align="center">
-  <a href="#быстрый-старт">Быстрый старт</a> &nbsp;·&nbsp;
+  <a href=".github/docs/installation.md">Установка и обновление</a> &nbsp;·&nbsp;
   <a href="#каталог">Каталог</a> &nbsp;·&nbsp;
-  <a href="#совместимость">Совместимость</a> &nbsp;·&nbsp;
-  <a href="#обновление">Обновление</a> &nbsp;·&nbsp;
-  <a href="#документация">Документация</a>
+  <a href=".github/docs/index.md">Документация</a>
 </p>
 
 <!-- package-count -->
-<p align="center"><strong>15 пакетов</strong> &nbsp;·&nbsp; 4 категории &nbsp;·&nbsp; Открытые рецепты</p>
-
-## Быстрый старт
-
-Нужны **ALT Linux p11 или Sisyphus** и установленный
-[Stapler](https://stplr.dev/docs/intro/). Поддерживаемая версия Stapler — `v0.1.1`.
-
-```bash
-# 1. Подключить Nivora
-sudo stplr repo add nivora https://github.com/Cheviiot/Nivora.git
-
-# 2. Обновить список пакетов
-sudo stplr refresh
-
-# 3. Посмотреть описание и установить приложение
-stplr info nivora/chatgpt
-sudo stplr install nivora/chatgpt
-```
-
-> Nivora — независимый репозиторий сообщества. У проприетарных приложений
-> действуют условия их разработчиков: при интерактивной установке Stapler
-> предложит прочитать и принять их.
+<p align="center"><strong>12 пакетов</strong> &nbsp;·&nbsp; 4 категории</p>
 
 ## Каталог
 
-Название открывает страницу пакета с описанием и инструкцией. Справа указаны
-**версия**, **архитектуры рецепта** и **идентификатор установки**.
-
-```bash
-sudo stplr install nivora/имя-пакета
-```
+Откройте название приложения, чтобы узнать больше и скопировать команду установки.
+Описания основаны на материалах разработчиков; ссылка «Сайт» ведёт к первичному источнику.
 
 <!-- catalog:start -->
 <table width="100%">
@@ -60,143 +26,90 @@ sudo stplr install nivora/имя-пакета
     <th align="left">Приложение</th>
     <th align="right">Версия</th>
     <th align="left">Архитектуры</th>
-    <th width="220" align="left">Пакет</th>
+    <th align="left">Пакет</th>
   </tr>
   <tr><th colspan="4" align="left">Интернет, сеть и VPN</th></tr>
   <tr><!-- package-card:happ -->
-    <td width="340" nowrap><img src="https://happ.su/imgs/apple-touch-icon.png" width="24" height="24" alt=""> &nbsp;<a href="happ/README.md"><strong>Happ</strong></a><br><sub>VPN-клиент на базе Xray</sub></td>
+    <td><img src="happ/Happ.png" width="24" height="24" alt=""> &nbsp;<a href="happ/README.md"><strong>Happ</strong></a><br><sub>Прокси-клиент на основе Xray · <a href="https://happ.info/">Сайт</a></sub></td>
     <td align="right" nowrap><code>4.7.2</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/happ</code></td>
   </tr>
   <tr><!-- package-card:tailscale -->
-    <td width="340" nowrap><img src="https://tailscale.com/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="tailscale/README.md"><strong>Tailscale</strong></a><br><sub>Частная сеть между устройствами</sub></td>
+    <td><img src="https://tailscale.com/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="tailscale/README.md"><strong>Tailscale</strong></a><br><sub>Частная сеть между устройствами с WireGuard · <a href="https://tailscale.com/">Сайт</a></sub></td>
     <td align="right" nowrap><code>1.104.7</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/tailscale</code></td>
   </tr>
   <tr><!-- package-card:telegram -->
-    <td width="340" nowrap><img src="telegram/org.telegram.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="telegram/README.md"><strong>Telegram</strong></a><br><sub>Сообщения, звонки и каналы</sub></td>
+    <td><img src="telegram/org.telegram.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="telegram/README.md"><strong>Telegram Desktop</strong></a><br><sub>Сообщения с синхронизацией между устройствами · <a href="https://desktop.telegram.org/">Сайт</a></sub></td>
     <td align="right" nowrap><code>7.4.4</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/telegram</code></td>
   </tr>
-  <tr><!-- package-card:casement -->
-    <td width="340" nowrap><img src="casement/io.github.cheviiot.Casement.svg" width="24" height="24" alt=""> &nbsp;<a href="casement/README.md"><strong>Casement</strong></a><br><sub>Удалённый рабочий стол для локальной сети и Tailscale</sub></td>
-    <td align="right" nowrap><code>0.1.2</code></td>
-    <td nowrap><code>amd64</code></td>
-    <td nowrap><code>nivora/casement</code></td>
-  </tr>
   <tr><th colspan="4" align="left">AI и разработка</th></tr>
   <tr><!-- package-card:antigravity -->
-    <td width="340" nowrap><img src="antigravity/com.google.Antigravity.png" width="24" height="24" alt=""> &nbsp;<a href="antigravity/README.md"><strong>Antigravity</strong></a><br><sub>Приложение Google Antigravity</sub></td>
+    <td><img src="antigravity/com.google.Antigravity.png" width="24" height="24" alt=""> &nbsp;<a href="antigravity/README.md"><strong>Google Antigravity App</strong></a><br><sub>Проекты и параллельная работа с ИИ-агентами · <a href="https://antigravity.google/">Сайт</a></sub></td>
     <td align="right" nowrap><code>2.32.1</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/antigravity</code></td>
   </tr>
   <tr><!-- package-card:chatgpt -->
-    <td width="340" nowrap><img src="chatgpt/com.openai.chatgpt.png" width="24" height="24" alt=""> &nbsp;<a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Приложение OpenAI со встроенным Codex</sub></td>
+    <td><img src="chatgpt/com.openai.chatgpt.png" width="24" height="24" alt=""> &nbsp;<a href="chatgpt/README.md"><strong>ChatGPT</strong></a><br><sub>Чат, файлы и проекты со встроенным Codex · <a href="https://learn.chatgpt.com/docs/app">Сайт</a></sub></td>
     <td align="right" nowrap><code>26.1111.21308</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/chatgpt</code></td>
   </tr>
   <tr><!-- package-card:claude -->
-    <td width="340" nowrap><img src="claude/claude-tray-orange.png" width="24" height="24" alt=""> &nbsp;<a href="claude/README.md"><strong>Claude</strong></a><br><sub>Десктопное приложение Anthropic</sub></td>
+    <td><img src="claude/com.anthropic.Claude.png" width="24" height="24" alt=""> &nbsp;<a href="claude/README.md"><strong>Claude</strong></a><br><sub>Приложение Anthropic с чатом, Cowork и Claude Code · <a href="https://code.claude.com/docs/en/desktop-linux">Сайт</a></sub></td>
     <td align="right" nowrap><code>5.11492.5</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/claude</code></td>
   </tr>
-  <tr><!-- package-card:github-desktop -->
-    <td width="340" nowrap><img src="https://github.githubassets.com/favicons/favicon.png" width="24" height="24" alt=""> &nbsp;<a href="github-desktop/README.md"><strong>GitHub Desktop</strong></a><br><sub>Linux-сборка из официальных исходников</sub></td>
-    <td align="right" nowrap><code>3.6.11</code></td>
-    <td nowrap><code>amd64</code> <code>arm64</code></td>
-    <td nowrap><code>nivora/github-desktop</code></td>
-  </tr>
   <tr><!-- package-card:opencode -->
-    <td width="340" nowrap><img src="opencode/ai.opencode.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="opencode/README.md"><strong>OpenCode Desktop</strong></a><br><sub>Открытый AI-агент для работы с кодом</sub></td>
+    <td><img src="opencode/ai.opencode.desktop.png" width="24" height="24" alt=""> &nbsp;<a href="opencode/README.md"><strong>OpenCode</strong></a><br><sub>Открытый ИИ-агент для разработки с выбором моделей · <a href="https://opencode.ai/">Сайт</a></sub></td>
     <td align="right" nowrap><code>2.3.0</code></td>
     <td nowrap><code>amd64</code> <code>arm64</code></td>
     <td nowrap><code>nivora/opencode</code></td>
   </tr>
   <tr><th colspan="4" align="left">Медиа и игры</th></tr>
-  <tr><!-- package-card:yandex-music -->
-    <td width="340" nowrap><img src="yandex-music/yandexmusic.png" width="24" height="24" alt=""> &nbsp;<a href="yandex-music/README.md"><strong>Яндекс Музыка</strong></a><br><sub>Музыка, подкасты и персональные подборки</sub></td>
-    <td align="right" nowrap><code>5.127.0</code></td>
-    <td nowrap><code>amd64</code></td>
-    <td nowrap><code>nivora/yandex-music</code></td>
-  </tr>
   <tr><!-- package-card:anidesk -->
-    <td width="340" nowrap><img src="anidesk/anidesk.png" width="24" height="24" alt=""> &nbsp;<a href="anidesk/README.md"><strong>AniDesk</strong></a><br><sub>Десктопный клиент Anixart</sub></td>
+    <td><img src="anidesk/anidesk.png" width="24" height="24" alt=""> &nbsp;<a href="anidesk/README.md"><strong>AniDesk</strong></a><br><sub>Неофициальный настольный клиент Anixart · <a href="https://github.com/theDesConnet/AniDesk">Сайт</a></sub></td>
     <td align="right" nowrap><code>0.0.1-beta.7</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/anidesk</code></td>
   </tr>
-  <tr><!-- package-card:pineconemc -->
-    <td width="340" nowrap><img src="pineconemc/io.github.elyprismlauncher.ElyPrismLauncher.svg" width="24" height="24" alt=""> &nbsp;<a href="pineconemc/README.md"><strong>PineconeMC</strong></a><br><sub>Лаунчер Minecraft с поддержкой Ely.by</sub></td>
-    <td align="right" nowrap><code>11.1.2</code></td>
-    <td nowrap><code>amd64</code> <code>arm64</code></td>
-    <td nowrap><code>nivora/pineconemc</code></td>
-  </tr>
   <tr><!-- package-card:parsec -->
-    <td width="340" nowrap><img src="https://parsec.app/favicon.ico" width="24" height="24" alt=""> &nbsp;<a href="parsec/README.md"><strong>Parsec</strong></a><br><sub>Доступ к удалённому рабочему столу</sub></td>
+    <td><img src="parsec/parsecd.png" width="24" height="24" alt=""> &nbsp;<a href="parsec/README.md"><strong>Parsec</strong></a><br><sub>Подключение к удалённому рабочему столу и играм · <a href="https://parsec.app/downloads">Сайт</a></sub></td>
     <td align="right" nowrap><code>150-104a</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/parsec</code></td>
   </tr>
+  <tr><!-- package-card:pineconemc -->
+    <td><img src="pineconemc/io.github.elyprismlauncher.ElyPrismLauncher.svg" width="24" height="24" alt=""> &nbsp;<a href="pineconemc/README.md"><strong>PineconeMC</strong></a><br><sub>Лаунчер Minecraft с модами, модпаками и Ely.by · <a href="https://pineconemc.com/">Сайт</a></sub></td>
+    <td align="right" nowrap><code>11.1.2</code></td>
+    <td nowrap><code>amd64</code> <code>arm64</code></td>
+    <td nowrap><code>nivora/pineconemc</code></td>
+  </tr>
+  <tr><!-- package-card:yandex-music -->
+    <td><img src="yandex-music/yandexmusic.png" width="24" height="24" alt=""> &nbsp;<a href="yandex-music/README.md"><strong>Яндекс Музыка</strong></a><br><sub>Музыка, рекомендации и «Моя волна» · <a href="https://music.yandex.ru/download/">Сайт</a></sub></td>
+    <td align="right" nowrap><code>5.127.0</code></td>
+    <td nowrap><code>amd64</code></td>
+    <td nowrap><code>nivora/yandex-music</code></td>
+  </tr>
   <tr><th colspan="4" align="left">Системные инструменты</th></tr>
   <tr><!-- package-card:balena-etcher -->
-    <td width="340" nowrap><img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="24" height="24" alt=""> &nbsp;<a href="balena-etcher/README.md"><strong>balenaEtcher</strong></a><br><sub>Запись образов на SD-карты и USB</sub></td>
+    <td><img src="balena-etcher/balena-etcher.png" width="24" height="24" alt=""> &nbsp;<a href="balena-etcher/README.md"><strong>balenaEtcher</strong></a><br><sub>Запись образов на USB и SD-карты с проверкой · <a href="https://etcher.balena.io/">Сайт</a></sub></td>
     <td align="right" nowrap><code>2.1.9</code></td>
     <td nowrap><code>amd64</code></td>
     <td nowrap><code>nivora/balena-etcher</code></td>
   </tr>
-  <tr><!-- package-card:distroshelf -->
-    <td width="340" nowrap><img src="https://raw.githubusercontent.com/ranfdev/DistroShelf/main/data/icons/hicolor/scalable/apps/com.ranfdev.DistroShelf.svg" width="24" height="24" alt=""> &nbsp;<a href="distroshelf/README.md"><strong>DistroShelf</strong></a><br><sub>Графическое управление Distrobox</sub></td>
-    <td align="right" nowrap><code>1.5.2</code></td>
-    <td nowrap><code>amd64</code></td>
-    <td nowrap><code>nivora/distroshelf</code></td>
-  </tr>
 </table>
 <!-- catalog:end -->
 
-## Совместимость
+`amd64` — компьютеры x86_64; `arm64` — AArch64.
+У ARM64 предварительная поддержка: подробности в
+[руководстве по установке](.github/docs/installation.md#платформа-и-архитектуры).
 
-Nivora предназначена **только для ALT Linux**. Архитектуру выбирайте по строке
-нужного приложения в каталоге.
-
-| Архитектура | ALT p11 | ALT Sisyphus |
-|:--|:--|:--|
-| **amd64** · x86_64 | Проверки сборки и установки в CI | Проверки сборки и установки в CI |
-| **arm64** · aarch64 | Заявлена для части пакетов, без CI | Заявлена для части пакетов, без CI |
-
-Для `amd64` также настроены проверки состава пакета, базового запуска и
-удаления. Для `arm64` Stapler собирает пакет на машине пользователя.
-Особенности приложений и границы проверок — в
-[матрице поддержки](.github/support-matrix.toml).
-
-## Обновление
-
-```bash
-sudo stplr refresh
-sudo stplr upgrade
-```
-
-`refresh` загружает актуальные рецепты, `upgrade` обновляет установленные
-пакеты. Пользовательские настройки сохраняются при обновлении и обычном
-удалении; отключённые системные службы остаются отключёнными.
-
-## Документация
-
-| Задача | Куда перейти |
-|:--|:--|
-| Добавить приложение или улучшить рецепт | [Участие в проекте](CONTRIBUTING.md) |
-| Собрать пакет и разобраться в обновлениях | [Руководство сопровождающего](.github/docs/maintenance.md) |
-| Узнать об источниках, проверках и лицензиях | [Модель доверия](.github/docs/security-model.md) |
-| Сообщить об уязвимости | [Политика безопасности](SECURITY.md) |
-| Посмотреть, что изменилось | [История изменений](CHANGELOG.md) |
-
----
-
-<p align="center">
-  <sub>Сделано для сообщества ALT Linux · <a href="LICENSE">Рецепты — MIT</a> · © 2026 Cheviiot</sub>
-</p>
+Nivora — независимый каталог сообщества. Условия использования приложений
+и доступ к их сервисам определяют разработчики.

@@ -1,124 +1,111 @@
 # Участие в Nivora
 
-Проект принимает исправления рецептов, автоматизации и документации.
-Nivora упаковывает **только для ALT Linux** (ветки `p11` и `Sisyphus`).
-Зависимости и поля других дистрибутивов в рецепты не добавляются — validator
-их отклоняет.
+[Документация](.github/docs/index.md) · [Правила пакетов](.github/docs/package-guide.md)
+
+Nivora сопровождает приложения для **ALT Linux p11**.
+Рабочая ветка проекта — **main**. Изменения и автоматические обновления
+публикуются в ней; для обычного сопровождения отдельные ветки и PR не создаются.
 
 ## Среда разработки
 
-Рабочая система проекта — ALT Workstation. Инструменты сборки и зависимости,
-которые нужны только для разработки, устанавливаются не на host, а в Distrobox.
-Воспроизводимое базовое окружение:
+Инструменты, необходимые только для разработки, устанавливайте в Distrobox.
+На основной системе остаются контейнерная инфраструктура и пакеты,
+необходимые для интеграции с ОС и оборудованием.
 
 ```bash
-distrobox create --name nivora-dev \
-  --image registry.altlinux.org/alt/alt:sisyphus
+distrobox create --name nivora-dev --image registry.altlinux.org/p11/base
 distrobox enter nivora-dev
 sudo apt-get update
-sudo apt-get install git-core bash python3 shellcheck curl sqlite3 rpm-build
+sudo apt-get install git-core bash python3 curl jq shellcheck sqlite3 rpm-build binutils cpio tar
+git clone https://github.com/Cheviiot/Nivora.git
+cd Nivora
+git switch main
+git pull --ff-only
 ```
 
-Название контейнера — `nivora-dev`. Языковые зависимости держите локально в
-рабочей копии или в этом контейнере. Host-пакеты допустимы только для интеграции
-с ОС, оборудованием и самой контейнерной инфраструктурой.
+Нужны Python 3.11 или новее и `stplr-spec`. В CI используются ShellCheck 0.9.0,
+Go 1.26.5 и закреплённая версия утилит Stapler:
+[setup-stplr-spec](.github/actions/setup-stplr-spec/action.yml).
 
-## Перед изменением
-
-1. Проверьте официальное название, package ID, desktop-id и AppStream component-id.
-2. Найдите официальный HTTPS-источник для каждой архитектуры.
-3. Уточните лицензию и возможность переупаковки.
-4. Сверьте каждое имя зависимости в обеих ветках ALT
-   (`apt-cache policy <имя>` на p11 и в контейнере Sisyphus), а SONAME
-   payload — через `apt-cache showpkg 'libfoo.so.N()(64bit)'`.
-5. Убедитесь, что источник версии и источник загрузки — один и тот же хост.
-6. Для проприетарного приложения подтвердите право пользователя скачать
-   официальный артефакт напрямую: Nivora не зеркалирует такой payload, а сам
-   рецепт объявляет `nonfree=1` с `nonfree_url`.
-
-## Требования к пакету
-
-- README служат витриной приложений. Диагностику, инструкции по сопровождению
-  и технические подробности переработки размещайте в `.github/docs/maintenance.md`;
-  историю изменений — в `CHANGELOG.md`.
-- Имя каталога точно совпадает с `name`.
-- Версия совпадает с upstream; изменение рецепта повышает `release`.
-- Скачиваемые sources привязаны к версии и защищены SHA-256.
-- `local:///`-файлы присутствуют в каталоге, а скрипты имеют executable bit.
-- `provides`, `replaces` и `conflicts` описывают package names, а не имена бинарников или desktop-id.
-- Зависимости лежат в базовых `deps`/`opt_deps`/`build_deps`; ветку уточняют
-  только `deps_altlinux_p11`/`deps_altlinux_sisyphus`, и каждый override
-  содержит полный список, потому что он заменяет базовый, а не дополняет его.
-- Альтернатив (`'a | b'`, `'(a or b)'`) нет ни в одном поле зависимостей:
-  ALT `apt-rpm` их не разбирает.
-- Lifecycle-скрипты идемпотентны и не удаляют пользовательские данные. Хуки
-  различают первую установку и обновление по `$1` в `%post`: сервис включается
-  один раз, при обновлении используется `try-restart`.
-- `files()` описывает весь payload и не захватывает чужие пути. Путь
-  desktop-файла в нём не перечисляют, если уже вызывается `files-find-desktop`:
-  Stapler отвергнет сборку с `content collision`.
-- Пакет с графическим интерфейсом объявляет `appstream_app_id` и кладёт рядом
-  с рецептом `<appstream_app_id>.svg` или `.png` — иначе он не появится в
-  GNOME Software. По умолчанию launchable — `<appstream_app_id>.desktop`;
-  если upstream использует другой desktop-id, его задают через
-  `appstream_desktop_id`, сохраняя component-id и единственный ярлык.
-  Метаданные генерирует `.github/tools/sync_appstream.py`, руками их не пишут.
-- `license` — SPDX-идентификатор либо `LicenseRef-*`; для проприетарных
-  условий это `LicenseRef-proprietary`.
-- В каталоге пакета нет ничего, кроме рецепта, README, LICENSE, хуков,
-  `.stapler/`, `tests/test-*.sh`, метаданных с иконкой и файлов, объявленных
-  через `local:///`. `stapler-repo.toml` бывает только один — в корне.
-
-## Проверка
+Если совместимый Go установлен в контейнере, собрать локальный `stplr-spec`
+можно так:
 
 ```bash
-.github/tools/run_checks.sh
-.github/tools/check_source_availability.sh package
-stplr-spec verify-checksums --path package/Staplerfile
-NIVORA_ALT_BRANCH=sisyphus .github/tools/clean_build.sh package
-NIVORA_ALT_BRANCH=p11 .github/tools/clean_build.sh package
-NIVORA_LIFECYCLE_PACKAGES=package .github/tools/test_package_lifecycle.sh
+mkdir -p .cache/bin
+STPLR_UTILS_COMMIT=c6ddbb5e4e5637d97bb7b2587729178d715c6c52 \
+  .github/tools/prepare_stplr_spec.sh \
+  "$PWD/.cache/bin/stplr-spec" \
+  https://altlinux.space/stapler/stplr-utils.git
+export PATH="$PWD/.cache/bin:$PATH"
 ```
 
-Обязательный Stapler lane использует release `v0.1.1`. Отдельный canary
-закреплён на commit `9df2b9284d3a37cdc418cef2e77781bac3b8dc3e` ветки `main` и служит только
-предупреждением о будущих несовместимостях. Нельзя добавлять зависимость от
-возможности canary, пока она не вышла в поддерживаемом release.
+Полная сборка требует работающего Podman или Docker, доступного из среды запуска.
+Скрипты создают собственные одноразовые контейнеры p11. Полный прогон также
+доступен в [GitHub Actions](https://github.com/Cheviiot/Nivora/actions/workflows/clean-build.yml)
+на ветке `main`.
 
-CI может исполнять только код из текущей рабочей копии и закреплённых
-первичных источников. Для pull request из fork не выдаются write permissions,
-release tokens или другие секреты; такой код не запускается в привилегированном
-контексте с секретами. Загрузки, логи и diff считаются недоверенными данными.
+## Работа с изменением
 
-Для изменения package ID нужны отдельные RPM-тесты замены в обеих ветках ALT
-и проверка сохранности данных.
+1. Синхронизируйте `main` и изучите текущие изменения.
+2. Проверьте официальное имя приложения, первичный источник загрузки, лицензию
+   и наличие зависимостей в p11.
+3. Исправьте рецепт и необходимые хуки. При изменении упаковки увеличьте
+   `release`; при обновлении приложения измените `version`.
+4. Обновите описания по первичным источникам. README служат карточками приложений;
+   устройство пакета и диагностику описывайте в [.github/docs](.github/docs/index.md).
+5. Синхронизируйте метаданные, выполните проверки и изучите итоговый diff.
+6. Опубликуйте commit обычным push в `main`. Если удалённая ветка продвинулась,
+   согласуйте изменения и повторите затронутые проверки.
 
-## Временные обходы Stapler
+Историю `main` не переписывают. Автоматический publisher тоже отказывается
+публиковать кандидат, если исходный SHA уже изменился.
 
-Локальный workaround допустим только для подтверждённого дефекта Stapler. В
-комментарии рядом с ним или в `.github/docs/maintenance.md` должны быть:
+## Проверки
 
-- ссылка на upstream issue или pull request;
-- минимальный воспроизводящий тест и затронутая stable-версия;
-- локальный безопасный обход;
-- точный критерий удаления.
+Из корня рабочей копии:
 
-Workaround удаляется не при merge upstream, а после выхода исправления в
-поддерживаемом stable release, прохождения stable и pinned-main lanes и удаления
-минимального теста, который больше не воспроизводит дефект. Исправления Stapler
-можно отправлять отдельным upstream pull request; код Nivora не должен форкать
-или незаметно переопределять модель Stapler.
+```bash
+python3 .github/tools/sync_readme_versions.py
+python3 .github/tools/sync_appstream.py
+.github/tools/run_checks.sh
+git diff --check
+```
 
-## Pull request
+Для изменённого приложения, например Telegram:
 
-Один pull request должен решать одну задачу. В описании укажите:
+```bash
+.github/tools/check_source_availability.sh telegram
+stplr-spec verify-checksums --path telegram/Staplerfile
+.github/tools/clean_build.sh telegram
+.github/tools/verify_artifacts.sh telegram
+NIVORA_LIFECYCLE_PACKAGES=telegram .github/tools/test_package_lifecycle.sh
+```
 
-- что изменилось;
-- ссылку на upstream;
-- выполненные проверки и сборки;
-- оставшиеся ограничения.
+`run_checks.sh` проверяет shell/Python, структуру, рецепты, локальные источники,
+документационные ссылки и AppStream. Сборка RPM и lifecycle выполняются отдельно.
+Изменение общих инструментов требует полного прогона:
 
-Сопровождающий также может отправить проверенное изменение прямо в `main`.
-Это осознанная политика проекта, а не обещание signed commits: перед push
-обязательны те же проверки, а пользовательская модель доверия остаётся TOFU
-(первичное доверие HTTPS-репозиторию и аккаунту владельца).
+```bash
+.github/tools/clean_build.sh --all
+.github/tools/verify_artifacts.sh --all
+.github/tools/test_package_lifecycle.sh
+```
+
+Обязательный прогон использует Stapler v0.1.1 на p11.
+Дополнительный прогон с закреплённым commit будущего Stapler служит ранним
+предупреждением. Его pin в [матрице](.github/support-matrix.toml)
+не означает отдельную рабочую ветку Nivora.
+
+## Как описать результат
+
+Сообщение commit должно объяснять изменение и причину. Значимые изменения
+поведения заносите в [CHANGELOG](CHANGELOG.md).
+Для ошибки приложите воспроизводимый сценарий в
+[Issues](https://github.com/Cheviiot/Nivora/issues).
+
+Различайте выполненные проверки: сборку RPM, установку в контейнере,
+запуск графического приложения и вход во внешний сервис.
+ARM64 нельзя объявлять полностью проверенной без соответствующего прогона.
+
+Подробные требования — в [правилах пакетов](.github/docs/package-guide.md).
+Права CI и обращение с секретами — в [модели доверия](.github/docs/security-model.md).

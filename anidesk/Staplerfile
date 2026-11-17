@@ -1,17 +1,17 @@
 name='anidesk'
 version='0.0.1-beta.7'
 debian_version='0.0.1.beta.7'
-release=11
-summary='Unofficial desktop client of Anixart'
-summary_ru='Неофициальный десктопный клиент Anixart'
+release=12
+summary='Unofficial desktop client for Anixart'
+summary_ru='Неофициальный настольный клиент Anixart'
 group='Video/Players'
-desc='Unofficial desktop client of Anixart'
-desc_ru='Неофициальный десктопный клиент Anixart'
+desc='AniDesk is an unofficial desktop client for the Anixart service.'
+desc_ru='AniDesk — неофициальный настольный клиент сервиса Anixart.'
 homepage='https://github.com/theDesConnet/AniDesk'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 
 license=('GPL-2.0-only')
 
@@ -57,7 +57,7 @@ checksums=(
 	'sha256:6d7791424bd7db712b121f7e66206289b1d31eb2a8ea998d9aeced2c7075dfe8'
 	'sha256:f58b9f720bd63ff49053f949dd3f0a738afc2aa2cee57fedbd2b73440c123721'
 	'sha256:892e6b268f44a850a102cc6367fec45853fe3556840d44a6106f08487553e6c4'
-	'sha256:8f851f2a8857a2e03767b8f2daeacd14531eac40a3a4ce3dcdf7b3f10960e28b'
+	'sha256:0a6a49abbf41cb3fdd0f05f23cdbb321b3b92cf155ec0a50a5f510489407ad05'
 )
 
 scripts=(

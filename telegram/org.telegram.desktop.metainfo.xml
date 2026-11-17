@@ -4,12 +4,12 @@
 <component type="desktop-application">
   <id>org.telegram.desktop</id>
   <launchable type="desktop-id">org.telegram.desktop.desktop</launchable>
-  <name>Telegram</name>
-  <summary>New era of messaging</summary>
-  <summary xml:lang="ru">Новая эра обмена сообщениями</summary>
+  <name>Telegram Desktop</name>
+  <summary>Desktop messaging with chat synchronization</summary>
+  <summary xml:lang="ru">Настольный мессенджер с синхронизацией переписки</summary>
   <description>
-    <p>Telegram Desktop messaging app.</p>
-    <p xml:lang="ru">Telegram Desktop — приложение для обмена сообщениями.</p>
+    <p>Telegram Desktop is the official desktop messaging application for Telegram, with chats synchronized across devices.</p>
+    <p xml:lang="ru">Telegram Desktop — официальное настольное приложение Telegram с синхронизацией переписки между устройствами.</p>
   </description>
   <project_license>GPL-3.0-only</project_license>
   <metadata_license>MIT</metadata_license>

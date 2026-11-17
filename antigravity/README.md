@@ -1,35 +1,37 @@
 <p align="center">
-  <img src="com.google.Antigravity.png" width="96" height="96" alt="Antigravity">
+  <img src="com.google.Antigravity.png" width="72" height="72" alt="Google Antigravity App">
 </p>
 
-<h1 align="center">Antigravity</h1>
+# Google Antigravity App
 
-<p align="center">
-  Десктопное приложение Google Antigravity
-</p>
+Приложение Google для работы с несколькими ИИ-агентами. Разговоры можно объединять в проекты, работать с несколькими папками и выполнять задачи параллельно.
 
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Custom-lightgrey?style=for-the-badge" alt="Лицензия"></a>
-  <img src="https://img.shields.io/badge/arch-amd64%20%7C%20arm64-2ea043?style=for-the-badge" alt="amd64, arm64">
-</p>
+[Официальный сайт и описание](https://antigravity.google/) · [Лицензия](LICENSE)
 
----
+**Платформа:** ALT Linux p11.
+
+**Архитектуры:** amd64 · arm64 (предварительная поддержка).
 
 ## Установка
+
+Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
+затем выполните:
 
 ```bash
 sudo stplr install nivora/antigravity
 ```
 
-## Возможности
+Текущая версия указана в [каталоге](../README.md#каталог).
+[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
 
-Официальное десктопное приложение Google Antigravity для Linux.
+## Запуск
 
-Для работы нужна учётная запись Google. Встроенный Electron-updater отключён —
-обновления идут через Stapler.
+Откройте приложение из меню или выполните от своего пользователя:
 
----
+```bash
+antigravity
+```
 
-<p align="center">
-  Часть <a href="../README.md"><b>Nivora</b></a>
-</p>
+В Nivora представлен Antigravity App. Доступ к сервису определяется условиями Google и вашей учётной записью.
+
+[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)

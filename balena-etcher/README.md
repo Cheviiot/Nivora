@@ -1,42 +1,37 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/balena-io/etcher/master/assets/icon.png" width="96" height="96" alt="balenaEtcher">
+  <img src="balena-etcher.png" width="72" height="72" alt="balenaEtcher">
 </p>
 
-<h1 align="center">balenaEtcher</h1>
+# balenaEtcher
 
-<p align="center">
-  Безопасная запись образов на SD-карты и USB-накопители
-</p>
+balenaEtcher записывает образы операционных систем на USB-накопители и SD-карты. Приложение помогает выбрать образ и устройство, затем проверяет результат записи.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge" alt="Лицензия">
-  <img src="https://img.shields.io/badge/arch-amd64-2ea043?style=for-the-badge" alt="amd64">
-</p>
+[Официальный сайт и описание](https://etcher.balena.io/) · [Лицензия](https://github.com/balena-io/etcher/blob/master/LICENSE)
 
----
+**Платформа:** ALT Linux p11.
+
+**Архитектуры:** amd64.
 
 ## Установка
+
+Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
+затем выполните:
 
 ```bash
 sudo stplr install nivora/balena-etcher
 ```
 
-## Возможности
+Текущая версия указана в [каталоге](../README.md#каталог).
+[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
 
-balenaEtcher — графическая утилита [balena.io](https://etcher.balena.io/) для
-записи образов операционных систем на SD-карты и USB-накопители с проверкой
-данных после прошивки.
+## Запуск
 
-## Технические детали
+Откройте приложение из меню или выполните от своего пользователя:
 
-Пакет переупаковывает официальный Linux-релиз Electron-приложения без
-изменений кода. Как и у других Electron-пакетов Nivora, Electron-песочница
-(`chrome-sandbox`) получает setuid-бит `4755` только когда ядро не
-поддерживает непривилегированные user namespaces; в остальных случаях
-используется обычный `0755` без setuid.
+```bash
+balena-etcher
+```
 
----
+Запись заменяет содержимое выбранного накопителя. Перед началом проверьте, какое устройство выбрано.
 
-<p align="center">
-  Часть <a href="../README.md"><b>Nivora</b></a>
-</p>
+[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)

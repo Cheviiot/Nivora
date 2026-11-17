@@ -5,11 +5,11 @@
   <id>ai.opencode.desktop</id>
   <launchable type="desktop-id">ai.opencode.desktop.desktop</launchable>
   <name>OpenCode</name>
-  <summary>Open source AI coding agent desktop app</summary>
-  <summary xml:lang="ru">Десктопное приложение AI-агента OpenCode для работы с кодом</summary>
+  <summary>Open source desktop AI agent for software development</summary>
+  <summary xml:lang="ru">Открытый настольный ИИ-агент для разработки</summary>
   <description>
-    <p>OpenCode Desktop is an open source AI coding agent for working on software projects with multiple model providers.</p>
-    <p xml:lang="ru">OpenCode Desktop — открытый AI-агент для работы над программными проектами с поддержкой разных провайдеров моделей.</p>
+    <p>OpenCode is an open source coding agent with a desktop interface, parallel sessions, and support for multiple model providers.</p>
+    <p xml:lang="ru">OpenCode — открытый ИИ-агент для разработки с настольным интерфейсом, параллельными сессиями и поддержкой разных провайдеров моделей.</p>
   </description>
   <project_license>MIT</project_license>
   <metadata_license>MIT</metadata_license>

@@ -27,7 +27,7 @@ fetch_main() {
 
 write_paused_output() {
     if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
-        printf 'paused=%s\n' "$1" >>"$GITHUB_OUTPUT"
+        printf 'paused=%s\nrepair_allowed=%s\n' "$1" "${2:-false}" >>"$GITHUB_OUTPUT"
     fi
 }
 
@@ -82,6 +82,7 @@ fi
 publish_result="$(
     EXPECTED_BASE_SHA="$current_sha" \
         SUCCESSFUL_PACKAGES='[]' \
+        NIVORA_HEARTBEAT_ONLY=1 \
         GH_TOKEN="${GH_TOKEN:-}" \
         .github/tools/publish_update_commit.sh
 )"
@@ -118,7 +119,16 @@ if [[ "$(jq -r .action <<<"$recovery")" == dispatch ]]; then
         -f updater_run_id="$run_id" \
         -f resume_on_success=true
     echo "Dispatched full post-push recovery for refreshed SHA ${recovery_sha}." >&2
+    write_paused_output true
 else
-    echo "Recovery skipped: $(jq -r .reason <<<"$recovery")." >&2
+    recovery_reason="$(jq -r .reason <<<"$recovery")"
+    echo "Recovery skipped: ${recovery_reason}." >&2
+    # A failed current main can contain an obsolete mutable-source checksum.
+    # During its cooldown, let the isolated updater prepare a repair; the
+    # separate full-catalogue gate must pass before that batch can be published.
+    if [[ "$recovery_reason" == retry-cooldown ]]; then
+        write_paused_output true true
+    else
+        write_paused_output true
+    fi
 fi
-write_paused_output true

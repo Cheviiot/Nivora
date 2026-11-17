@@ -1,20 +1,20 @@
 name='chatgpt'
 version='26.1111.21308'
-release=1
+release=2
 # SHA-256 of the final HTTP ETag for each mutable /latest/ source. The
 # autonomous detector compares these even when upstream keeps the version.
 source_fingerprint_amd64='e5e490e2fe5ba8acb26248c1e2b65d39e22fdc940ca5ed5c21133a8a4b2af7b4'
 source_fingerprint_arm64='f300e86973f4f3cd0a56e8190b2456e19ec11a715eb53b41901bc387fa43255f'
-summary='Official ChatGPT desktop app with integrated Codex'
-summary_ru='Официальное десктопное приложение ChatGPT со встроенным Codex'
+summary='ChatGPT desktop app with integrated Codex'
+summary_ru='Настольное приложение ChatGPT со встроенным Codex'
 group='Development/Tools'
-desc='ChatGPT for Desktop is the official OpenAI application: chat, voice, image generation, and an integrated Codex panel (coding agent, codex:// URL handling) that replaced the standalone Codex desktop app upstream.'
-desc_ru='ChatGPT for Desktop — официальное приложение OpenAI: чат, голос, генерация изображений и встроенная панель Codex (агент для работы с кодом, обработка codex:// ссылок), заменившая собой отдельное приложение Codex у апстрима.'
-homepage='https://developers.openai.com/codex/app'
+desc='ChatGPT is the official OpenAI desktop application for chat, files, and projects, with integrated Codex for coding tasks.'
+desc_ru='ChatGPT — официальное настольное приложение OpenAI для чата, работы с файлами и проектами, со встроенным Codex для задач разработки.'
+homepage='https://learn.chatgpt.com/docs/app'
 maintainer='OpenAI <support@openai.com>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 
 license=('LicenseRef-proprietary')
 

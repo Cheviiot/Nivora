@@ -29,20 +29,11 @@ class ClassifyPathsTests(unittest.TestCase):
             (self.packages, True),
         )
 
-    def test_pull_request_with_package_and_common_files_builds_only_package(self):
+    def test_mixed_package_and_common_files_build_every_package(self):
         self.assertEqual(
             CI_PLAN.classify_paths(
                 ["alpha/Staplerfile", ".github/support-matrix.toml"],
                 self.packages,
-                pull_request=True,
-            ),
-            (["alpha"], False),
-        )
-
-    def test_common_only_pull_request_still_builds_every_package(self):
-        self.assertEqual(
-            CI_PLAN.classify_paths(
-                [".github/tools/ci_plan.py"], self.packages, pull_request=True
             ),
             (self.packages, True),
         )

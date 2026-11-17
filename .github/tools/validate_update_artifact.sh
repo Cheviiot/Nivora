@@ -4,7 +4,6 @@ set -euo pipefail
 readonly results_dir="${AUTONOMOUS_UPDATE_RESULTS_DIR:?AUTONOMOUS_UPDATE_RESULTS_DIR is required}"
 readonly detected_packages_json="${DETECTED_PACKAGES_JSON:?DETECTED_PACKAGES_JSON is required}"
 readonly expected_updates_json="${EXPECTED_UPDATES_JSON:?EXPECTED_UPDATES_JSON is required}"
-readonly expected_github_desktop_commit="${EXPECTED_GITHUB_DESKTOP_COMMIT:-}"
 
 semantic_tmp=''
 cleanup() {
@@ -30,7 +29,6 @@ is_safe_package() {
 is_safe_phase() {
     case "$1" in
     detect-version | prepare-worktree | check-sources | update-recipe | \
-        pin-upstream-commit | \
         sync-catalog | static-checks | clean-build | verify-artifact | test-lifecycle | \
         no-update-diff | pin-source-fingerprint)
         return 0
@@ -309,7 +307,6 @@ for package in "${detected_packages[@]}"; do
             EXPECTED_CURRENT="${expected_current[$package]}" \
             EXPECTED_LATEST="${expected_latest[$package]}" \
             EXPECTED_FINGERPRINTS="${expected_fingerprints[$package]}" \
-            EXPECTED_GITHUB_DESKTOP_COMMIT="$expected_github_desktop_commit" \
             python3 - <<'PY'
 import hashlib
 import os
@@ -322,7 +319,6 @@ package = os.environ["PACKAGE_ID"]
 expected_current = os.environ["EXPECTED_CURRENT"]
 expected_latest = os.environ["EXPECTED_LATEST"]
 expected_fingerprints = __import__("json").loads(os.environ["EXPECTED_FINGERPRINTS"])
-expected_github_desktop_commit = os.environ["EXPECTED_GITHUB_DESKTOP_COMMIT"]
 trusted = trusted_path.read_text(encoding="utf-8").splitlines()
 candidate = candidate_path.read_text(encoding="utf-8").splitlines()
 
@@ -336,7 +332,10 @@ version_value = re.compile(
     r"^version=(?:'([0-9A-Za-z.+~_-]+)'|\"([0-9A-Za-z.+~_-]+)\"|"
     r"([0-9A-Za-z.+~_-]+))$"
 )
-commit_value = re.compile(r"^upstream_commit='([0-9a-f]{40})'$")
+debian_version_value = re.compile(
+    r"^debian_version=(?:'([0-9A-Za-z.+~_-]+)'|\"([0-9A-Za-z.+~_-]+)\"|"
+    r"([0-9A-Za-z.+~_-]+))$"
+)
 hub_value = re.compile(r"^upstream_hub='([0-9]+\.[0-9]+\.[0-9]+-[0-9]+)'$")
 release_value = re.compile(r"^release=([1-9][0-9]*)$")
 fingerprint_value = re.compile(
@@ -468,16 +467,18 @@ if set(candidate_fingerprints) != required_fingerprints:
 if candidate_fingerprints != expected_fingerprints:
     raise SystemExit("candidate mutable-source fingerprints differ from detection plan")
 
-if package == "github-desktop":
-    if not re.fullmatch(r"[0-9a-f]{40}", expected_github_desktop_commit):
-        raise SystemExit("trusted GitHub Desktop commit is missing")
-    candidate_commits = [
-        match.group(1)
-        for line in candidate
-        if (match := commit_value.fullmatch(line)) is not None
-    ]
-    if candidate_commits != [expected_github_desktop_commit]:
-        raise SystemExit("candidate GitHub Desktop commit differs from build output")
+if package == "anidesk":
+    for label, lines, version in (
+        ("trusted", trusted, expected_current),
+        ("candidate", candidate, expected_latest),
+    ):
+        debian_versions = [
+            next(value for value in match.groups() if value is not None)
+            for line in lines
+            if (match := debian_version_value.fullmatch(line)) is not None
+        ]
+        if debian_versions != [version.replace("-beta.", ".beta.", 1)]:
+            raise SystemExit(f"{label} AniDesk Debian version differs from detection plan")
 
 changed = 0
 changed_checksum = 0
@@ -494,9 +495,9 @@ for index, (before, after) in enumerate(zip(trusted, candidate, strict=True)):
         changed_fingerprint += 1
         continue
     if (
-        package == "github-desktop"
-        and commit_value.fullmatch(before)
-        and commit_value.fullmatch(after)
+        package == "anidesk"
+        and debian_version_value.fullmatch(before)
+        and debian_version_value.fullmatch(after)
     ):
         continue
     if index in allowed_remote_checksum_lines:

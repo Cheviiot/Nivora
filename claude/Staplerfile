@@ -1,16 +1,16 @@
 name='claude'
 version='5.11492.5'
-release=1
-summary='Desktop application for Claude.ai'
-summary_ru='Десктопное приложение для Claude.ai'
+release=2
+summary='Claude desktop app with Chat, Cowork, and Claude Code'
+summary_ru='Настольное приложение Claude с чатом, Cowork и Claude Code'
 group='Development/Tools'
-desc='Desktop application for Claude.ai'
-desc_ru='Десктопное приложение для Claude.ai'
-homepage='https://code.claude.com/docs/en/desktop-quickstart'
+desc='Claude is the official Anthropic desktop application for chat, Cowork tasks, and software development with Claude Code.'
+desc_ru='Claude — официальное настольное приложение Anthropic для чата, задач Cowork и разработки с Claude Code.'
+homepage='https://code.claude.com/docs/en/desktop-linux'
 maintainer='Anthropic PBC <support@anthropic.com>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 
 license=('LicenseRef-proprietary')
 
@@ -62,14 +62,14 @@ checksums=(
 	'sha256:b96208b207e450b740f7dbe304f6077fed80e7f3d37ddd545991c4e8201564cf'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
 	'sha256:6f00d3f569c70728e382a749ee0242c86823d08f8c6f9dfcff178311831e5ccf'
-	'sha256:87dbe861a105a3cd1da4e5843230496e8b1d7e63c497117033bb2dd180ae6e36'
+	'sha256:eb838e25c203190690a5ce084f37531f88429d3c5f07c59f287d75f639dabc45'
 )
 
 checksums_arm64=(
 	'sha256:fe6cd8a70f96b96eb4e6b647300cfaee6aaff4ce133a0fbbe11c2cdb775f5a6a'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
 	'sha256:6f00d3f569c70728e382a749ee0242c86823d08f8c6f9dfcff178311831e5ccf'
-	'sha256:87dbe861a105a3cd1da4e5843230496e8b1d7e63c497117033bb2dd180ae6e36'
+	'sha256:eb838e25c203190690a5ce084f37531f88429d3c5f07c59f287d75f639dabc45'
 )
 
 scripts=(

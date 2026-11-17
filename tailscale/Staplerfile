@@ -1,16 +1,16 @@
 name='tailscale'
 version='1.104.7'
-release=1
-summary='The easiest, most secure way to use WireGuard and 2FA.'
-summary_ru='Самый простой и безопасный способ использовать WireGuard и двухфакторную аутентификацию.'
+release=2
+summary='Private networking with WireGuard encryption'
+summary_ru='Частная сеть между устройствами с шифрованием WireGuard'
 group='Networking/Other'
-desc='The easiest, most secure, cross platform way to use WireGuard + oauth2 + 2FA/SSO.'
-desc_ru='Самый простой и безопасный кроссплатформенный способ использовать WireGuard совместно с oauth2 и 2FA/SSO.'
+desc='Tailscale connects devices in a private network using WireGuard encryption.'
+desc_ru='Tailscale объединяет устройства в частную сеть с шифрованием WireGuard.'
 homepage='https://tailscale.com'
 maintainer='Tailscale Inc <info@tailscale.com>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 disable_network=1
 
 license=('BSD-3-Clause')

@@ -3,6 +3,8 @@ set -euo pipefail
 
 results_dir="${AUTONOMOUS_UPDATE_RESULTS_DIR:?AUTONOMOUS_UPDATE_RESULTS_DIR is required}"
 resolved_file="${AUTONOMOUS_UPDATE_RESOLVED_FILE:-${results_dir}/successful-packages}"
+repair_failed="${AUTONOMOUS_UPDATE_REPAIR_FAILED:-false}"
+[[ "$repair_failed" == true || "$repair_failed" == false ]] || exit 2
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 repository="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
 run_url="https://github.com/${repository}/actions/runs/${GITHUB_RUN_ID:?GITHUB_RUN_ID is required}"
@@ -29,9 +31,9 @@ is_safe_package() {
 
 is_safe_phase() {
     case "$1" in
-    detect-version | prepare-worktree | check-sources | update-recipe | pin-upstream-commit | \
+    detect-version | prepare-worktree | check-sources | update-recipe | \
         pin-source-fingerprint | sync-catalog | static-checks | clean-build | \
-        verify-artifact | test-lifecycle | no-update-diff)
+        verify-artifact | test-lifecycle | no-update-diff | full-repair-catalogue)
         return 0
         ;;
     *) return 1 ;;
@@ -119,13 +121,25 @@ while IFS=$'\t' read -r package phase; do
             "$package" "$phase"
         printf -- '- Последний запуск: %s\n' "$run_url"
         printf -- '- Диагностика Actions хранится 30 дней в artifact запуска.\n'
-        printf -- '- Остальные пакеты обновляются независимо от этого сбоя.\n\n'
+        if [[ "$repair_failed" == true ]]; then
+            printf -- '- Пауза сохранена: для публикации восстановления требуется успешная проверка всего каталога.\n\n'
+        else
+            printf -- '- Остальные пакеты обновляются независимо от этого сбоя.\n\n'
+        fi
         printf '### Состояние\n\n'
-        append_snippet "${results_dir}/${package}/FAILED" head
+        if [[ "$phase" == full-repair-catalogue ]]; then
+            printf 'Проверки отдельного кандидата прошли, но полная проверка объединённого набора завершилась сбоем. Журнал сохранён в paused-repair-diagnostics этого запуска.\n'
+        else
+            append_snippet "${results_dir}/${package}/FAILED" head
+        fi
         printf '\n### Последние строки журнала\n\n'
         append_snippet "${results_dir}/${package}/update.log" tail
         printf '\n### Изменения рецепта\n\n'
-        append_snippet "${results_dir}/${package}/failed.patch" head
+        if [[ "$phase" == full-repair-catalogue ]]; then
+            append_snippet "${results_dir}/${package}/update.patch" head
+        else
+            append_snippet "${results_dir}/${package}/failed.patch" head
+        fi
     } >"$report"
 
     if [[ -n "$issue_number" ]]; then
@@ -138,7 +152,15 @@ while IFS=$'\t' read -r package phase; do
             -f title="$title" \
             -f body="$(<"$report")" >/dev/null
     fi
-done <"${results_dir}/failed-packages"
+done < <(
+    cat "${results_dir}/failed-packages"
+    if [[ "$repair_failed" == true ]]; then
+        while IFS= read -r package; do
+            [[ -n "$package" ]] || continue
+            printf '%s\tfull-repair-catalogue\n' "$package"
+        done <"${results_dir}/successful-packages"
+    fi
+)
 
 while IFS= read -r package; do
     [[ -n "$package" ]] || continue
@@ -156,7 +178,7 @@ while IFS= read -r package; do
             -f state_reason=completed >/dev/null
     fi
 done < <(
-    if [[ -f "$resolved_file" ]]; then
+    if [[ "$repair_failed" != true && -f "$resolved_file" ]]; then
         sort -u "$resolved_file"
     fi
 )

@@ -5,11 +5,11 @@
   <id>balena-etcher</id>
   <launchable type="desktop-id">balena-etcher.desktop</launchable>
   <name>balenaEtcher</name>
-  <summary>Flash OS images to SD cards and USB drives, safely and easily.</summary>
-  <summary xml:lang="ru">Безопасная и простая запись образов систем на SD-карты и USB-накопители.</summary>
+  <summary>Write OS images to USB drives and SD cards</summary>
+  <summary xml:lang="ru">Запись образов систем на USB-накопители и SD-карты</summary>
   <description>
-    <p>Etcher is a powerful OS image flasher built with web technologies to ensure flashing an SDCard or USB drive is a pleasant and safe experience. It protects you from accidentally writing to your hard-drives, ensures every byte of data was written correctly and much more.</p>
-    <p xml:lang="ru">Etcher — мощное средство записи образов систем, построенное на веб-технологиях, чтобы запись на SD-карту или USB-накопитель была удобной и безопасной. Оно защищает от случайной записи на жёсткие диски, проверяет корректность каждого записанного байта и многое другое.</p>
+    <p>balenaEtcher writes operating system images to USB drives and SD cards and validates the written data.</p>
+    <p xml:lang="ru">balenaEtcher записывает образы операционных систем на USB-накопители и SD-карты и проверяет записанные данные.</p>
   </description>
   <project_license>Apache-2.0</project_license>
   <metadata_license>MIT</metadata_license>

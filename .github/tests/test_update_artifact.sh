@@ -135,6 +135,47 @@ reset_good_fixture
 expect_failure wrong-expected-version run_validator '["demo"]' \
     '{"demo":{"current":"1","latest":"3","fingerprints":{}}}'
 
+# AniDesk's Debian filename version is derived from the approved tag version.
+# Its update hook writes this scalar unquoted; arbitrary values stay forbidden.
+install -d "$fixture/repo/anidesk"
+cat >"$fixture/repo/anidesk/Staplerfile" <<'EOF'
+name='anidesk'
+version='0.0.1-beta.7'
+debian_version='0.0.1.beta.7'
+release=5
+sources=(
+ 'https://example.invalid/v${version}/anidesk_${debian_version}_amd64.deb'
+)
+checksums=(
+ 'sha256:0000000000000000000000000000000000000000000000000000000000000001'
+)
+EOF
+git -C "$fixture/repo" add anidesk/Staplerfile
+git -C "$fixture/repo" commit -qm 'fixture anidesk'
+for latest in 0.0.1-beta.8 0.0.2; do
+    sed -i \
+        -e "s/^version='0.0.1-beta.7'$/version='$latest'/" \
+        -e "s/^debian_version='0.0.1.beta.7'$/debian_version=${latest/-beta./.beta.}/" \
+        -e 's/^release=5$/release=1/' \
+        -e "s/$(printf '%064d' 1)/$(printf '%064d' 2)/" \
+        "$fixture/repo/anidesk/Staplerfile"
+    reset_good_fixture
+    mv "$fixture/results/demo" "$fixture/results/anidesk"
+    printf 'anidesk\n' >"$fixture/results/checked-packages"
+    printf 'anidesk\n' >"$fixture/results/successful-packages"
+    git -C "$fixture/repo" diff --binary -- anidesk/Staplerfile \
+        >"$fixture/results/anidesk/update.patch"
+    git -C "$fixture/repo" restore -- anidesk/Staplerfile
+    expected="$(jq -cn --arg latest "$latest" \
+        '{anidesk:{current:"0.0.1-beta.7",latest:$latest,fingerprints:{}}}')"
+    run_validator '["anidesk"]' "$expected" >/dev/null
+    for invalid in 0.0.1.beta.7 9.9.9; do
+        sed -i "s/^+debian_version=.*$/+debian_version='$invalid'/" \
+            "$fixture/results/anidesk/update.patch"
+        expect_failure unplanned-anidesk-filename run_validator '["anidesk"]' "$expected"
+    done
+done
+
 # Antigravity tracks a full immutable build ID through the same fingerprint
 # plan, deriving the digest from upstream_hub instead of storing it twice.
 install -d "$fixture/repo/antigravity"

@@ -8,12 +8,6 @@ on:
         required: true
         default: all
         type: string
-      branch:
-        description: "Ветка ALT"
-        required: true
-        default: sisyphus
-        type: choice
-        options: [sisyphus, p11]
 
 permissions:
   contents: read
@@ -28,7 +22,7 @@ defaults:
 
 jobs:
   build:
-    name: Изолированная сборка
+    name: Изолированная сборка ALT p11
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     steps:
@@ -45,7 +39,7 @@ jobs:
       - name: Собрать пакеты
         env:
           REQUESTED_PACKAGES: ${{ inputs.packages }}
-          NIVORA_ALT_BRANCH: ${{ inputs.branch }}
+          NIVORA_ALT_BRANCH: p11
         run: |
           if [[ "$REQUESTED_PACKAGES" == all ]]; then
             .github/tools/clean_build.sh --all

@@ -5,11 +5,11 @@
   <id>anidesk</id>
   <launchable type="desktop-id">anidesk.desktop</launchable>
   <name>AniDesk</name>
-  <summary>Unofficial desktop client of Anixart</summary>
-  <summary xml:lang="ru">Неофициальный десктопный клиент Anixart</summary>
+  <summary>Unofficial desktop client for Anixart</summary>
+  <summary xml:lang="ru">Неофициальный настольный клиент Anixart</summary>
   <description>
-    <p>Unofficial desktop client of Anixart</p>
-    <p xml:lang="ru">Неофициальный десктопный клиент Anixart</p>
+    <p>AniDesk is an unofficial desktop client for the Anixart service.</p>
+    <p xml:lang="ru">AniDesk — неофициальный настольный клиент сервиса Anixart.</p>
   </description>
   <project_license>GPL-2.0-only</project_license>
   <metadata_license>MIT</metadata_license>

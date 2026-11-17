@@ -1,16 +1,16 @@
 name='balena-etcher'
 version='2.1.9'
-release=1
-summary='Flash OS images to SD cards and USB drives, safely and easily.'
-summary_ru='Безопасная и простая запись образов систем на SD-карты и USB-накопители.'
+release=2
+summary='Write OS images to USB drives and SD cards'
+summary_ru='Запись образов систем на USB-накопители и SD-карты'
 group='System/Configuration/Hardware'
-desc='Etcher is a powerful OS image flasher built with web technologies to ensure flashing an SDCard or USB drive is a pleasant and safe experience. It protects you from accidentally writing to your hard-drives, ensures every byte of data was written correctly and much more.'
-desc_ru='Etcher — мощное средство записи образов систем, построенное на веб-технологиях, чтобы запись на SD-карту или USB-накопитель была удобной и безопасной. Оно защищает от случайной записи на жёсткие диски, проверяет корректность каждого записанного байта и многое другое.'
+desc='balenaEtcher writes operating system images to USB drives and SD cards and validates the written data.'
+desc_ru='balenaEtcher записывает образы операционных систем на USB-накопители и SD-карты и проверяет записанные данные.'
 homepage='https://etcher.balena.io/'
 maintainer='Balena Ltd. <hello@balena.io>'
 
 architectures=('amd64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 
 license=('Apache-2.0')
 
@@ -65,7 +65,7 @@ sources=(
 checksums=(
 	'sha256:7e0d0e0986e5d0f3d9c03a4c0004f9891235150e0da99fa0bc332d8c03f1a4c0'
 	'sha256:39445b459f86621683f9731fb6a7d070819dc379840e8ef52f62bb1c68942291'
-	'sha256:d87b9c73d82438f927d7d377b84eaafb531fb814a18739d34938188e097e3aa7'
+	'sha256:c29f715213f3617b229e75f2e44ea000bf18984e29d3a4ea2747ef5ce291aadc'
 )
 
 scripts=(

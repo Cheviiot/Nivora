@@ -118,6 +118,7 @@ path.write_text(json.dumps(response))
 PY
 run_preflight "$repo"
 assert_paused_true "$case_dir/output"
+grep -Fxq 'repair_allowed=false' "$case_dir/output"
 [[ "$(main_ref "$repo")" == "$base" ]]
 [[ ! -e "$case_dir/dispatched" ]]
 
@@ -133,6 +134,7 @@ new_sha="$(main_ref "$repo")"
 [[ "$new_sha" != "$base" ]]
 [[ "$(git --git-dir="$case_dir/remote.git" show -s --format=%s "$new_sha")" == 'chore: keep autonomous maintenance active' ]]
 [[ "$(<"$case_dir/dispatched")" == "$new_sha" ]]
+grep -Fxq 'repair_allowed=false' "$case_dir/output"
 [[ "$(git --git-dir="$case_dir/remote.git" show "$new_sha:demo/Staplerfile")" == "$(git --git-dir="$case_dir/remote.git" show "$base:demo/Staplerfile")" ]]
 
 # A completed failure within cooldown is replanned only after publishing; the dispatch uses the new SHA.
@@ -146,6 +148,20 @@ run_preflight "$repo"
 new_sha="$(main_ref "$repo")"
 [[ "$new_sha" != "$base" ]]
 [[ "$(<"$case_dir/dispatched")" == "$new_sha" ]]
+
+# A failed recent main inside recovery cooldown can prepare an isolated repair,
+# without launching another recovery or advancing main with a heartbeat.
+repo="$(new_case repair-cooldown)"
+case_dir="${repo%/repo}"
+git -C "$repo" commit --allow-empty -qm 'recent main'
+git -C "$repo" push -q origin HEAD:main
+base="$(git -C "$repo" rev-parse HEAD)"
+write_pause_issue "$case_dir/pause-issue.json" "$base"
+write_runs "$case_dir/runs.json" "{\"workflow_runs\":[{\"display_title\":\"post-push ${base} · updater 12345 · resume true\",\"status\":\"completed\",\"conclusion\":\"failure\",\"created_at\":\"2026-10-01T00:00:00Z\",\"updated_at\":\"${recent}\"}]}"
+run_preflight "$repo"
+assert_paused_true "$case_dir/output"
+grep -Fxq 'repair_allowed=true' "$case_dir/output"
+[[ "$(main_ref "$repo")" == "$base" && ! -e "$case_dir/dispatched" ]]
 
 # If main races to a history that no longer contains pause SHA, do not dispatch recovery.
 repo="$(new_case stale-remote)"
@@ -171,6 +187,7 @@ EOF
 chmod +x "$repo/.git/hooks/pre-push"
 run_preflight "$repo"
 assert_paused_true "$case_dir/output"
+grep -Fxq 'repair_allowed=false' "$case_dir/output"
 [[ "$(main_ref "$repo")" == "$stale_sha" ]]
 [[ ! -e "$case_dir/dispatched" ]]
 

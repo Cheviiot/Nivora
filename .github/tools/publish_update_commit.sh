@@ -62,6 +62,15 @@ recipes=( */Staplerfile )
     fail 'expected README.md and package Staplerfiles'
 git add -- README.md "${recipes[@]}"
 
+if [[ "${NIVORA_HEARTBEAT_ONLY:-0}" == 1 ]]; then
+    git diff --cached --quiet || fail 'heartbeat-only publication cannot contain recipe or catalog changes'
+fi
+if [[ "${NIVORA_FULL_REPAIR_RESULT:-skipped}" == success ]]; then
+    repair_tree="${NIVORA_VERIFIED_REPAIR_TREE:-}"
+    [[ "$repair_tree" =~ ^[0-9a-f]{40}$ ]] || fail 'full repair has no valid verified tree'
+    [[ "$(git write-tree)" == "$repair_tree" ]] || fail 'publication tree differs from the full verified repair'
+fi
+
 reason=update
 if git diff --cached --quiet; then
     last_commit_time="$(git show -s --format=%ct HEAD)" || fail 'cannot read last commit time'
@@ -89,6 +98,26 @@ else
 fi
 
 published_sha="$(git rev-parse --verify HEAD 2>/dev/null)" || fail 'cannot resolve publication commit'
+
+# Re-read pause immediately before the ordinary push: a different post-push
+# run may have paused maintenance after this run's initial detection. Only a
+# successfully verified complete repair tree may be published in that state.
+if [[ "${NIVORA_CHECK_UPDATER_PAUSE:-0}" == 1 ]]; then
+    pause_state="$("$script_dir/get_updater_pause.sh")"
+    if [[ "$(jq -r .paused <<<"$pause_state")" == true ]]; then
+        if [[ "${NIVORA_FULL_REPAIR_RESULT:-skipped}" != success ]]; then
+            output false "$head_sha" paused-without-full-repair
+            exit 0
+        fi
+        paused_sha="$(jq -r .sha <<<"$pause_state")"
+        [[ "$paused_sha" =~ ^[0-9a-f]{40}$ ]] || fail 'pause SHA is invalid'
+        if ! git merge-base --is-ancestor "$paused_sha" "$expected_base"; then
+            output false "$head_sha" pause-sha-not-ancestor
+            exit 0
+        fi
+    fi
+fi
+
 remote_url="$(git remote get-url origin 2>/dev/null)" || fail 'origin remote is required'
 
 git_args=(-c http.connectTimeout=90 -c http.lowSpeedLimit=20 -c http.lowSpeedTime=90 -c http.version=HTTP/1.1)

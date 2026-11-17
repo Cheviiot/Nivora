@@ -5,11 +5,11 @@
   <id>yandexmusic</id>
   <launchable type="desktop-id">yandexmusic.desktop</launchable>
   <name>Яндекс Музыка</name>
-  <summary>Personal recommendations, mixes for any occasion and the latest musical releases</summary>
-  <summary xml:lang="ru">Персональные рекомендации, подборки на любой случай и свежие музыкальные новинки</summary>
+  <summary>Music with personalized recommendations</summary>
+  <summary xml:lang="ru">Музыка с персональными рекомендациями</summary>
   <description>
-    <p>Personal recommendations, mixes for any occasion and the latest musical releases.</p>
-    <p xml:lang="ru">Персональные рекомендации, подборки на любой случай и свежие музыкальные новинки.</p>
+    <p>Yandex Music is a desktop music streaming application with personalized recommendations and My Vibe. Listening requires Yandex Plus or another subscription that includes it.</p>
+    <p xml:lang="ru">Яндекс Музыка — настольное приложение для прослушивания музыки с персональными рекомендациями и «Моей волной». Для прослушивания нужна подписка Яндекс Плюс или другая подписка, которая его включает.</p>
   </description>
   <project_license>LicenseRef-proprietary</project_license>
   <metadata_license>MIT</metadata_license>

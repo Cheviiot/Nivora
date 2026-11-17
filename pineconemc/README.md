@@ -1,46 +1,37 @@
 <p align="center">
-  <img src="io.github.elyprismlauncher.ElyPrismLauncher.svg" width="96" height="96" alt="PineconeMC">
+  <img src="io.github.elyprismlauncher.ElyPrismLauncher.svg" width="72" height="72" alt="PineconeMC">
 </p>
 
-<h1 align="center">PineconeMC</h1>
+# PineconeMC
 
-<p align="center">
-  Форк Prism Launcher с поддержкой Ely.by и offline-аккаунтов
-</p>
+Лаунчер Minecraft на основе Prism Launcher. Он поддерживает управление игровыми сборками, установку модов и модпаков, а также учётные записи Ely.by.
 
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--only-blue?style=for-the-badge" alt="Лицензия"></a>
-  <img src="https://img.shields.io/badge/arch-amd64%20%7C%20arm64-2ea043?style=for-the-badge" alt="amd64, arm64">
-</p>
+[Официальный сайт и описание](https://pineconemc.com/) · [Лицензия](LICENSE)
 
----
+**Платформа:** ALT Linux p11.
+
+**Архитектуры:** amd64 · arm64 (предварительная поддержка).
 
 ## Установка
+
+Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
+затем выполните:
 
 ```bash
 sudo stplr install nivora/pineconemc
 ```
 
-## Возможности
+Текущая версия указана в [каталоге](../README.md#каталог).
+[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
 
-[PineconeMC](https://pineconemc.com/) — форк Prism Launcher с интеграцией
-аккаунтов Ely.by, offline-аккаунтами, управлением модпаками и инстансами
-Minecraft.
+## Запуск
 
-## Технические детали
+Откройте приложение из меню или выполните от своего пользователя:
 
-Пакет собирается из официального релиза
-[`ElyPrismLauncher/Launcher`](https://github.com/ElyPrismLauncher/Launcher)
-без изменений кода. Java-рантайм для запуска Minecraft PineconeMC
-устанавливает и управляет им самостоятельно — Nivora не добавляет отдельную
-зависимость на JDK/JRE.
+```bash
+pineconemc
+```
 
-Встроенное обновление самого launcher отключено: package-managed файлы
-обновляются только через Stapler. Загрузка Java, Minecraft и модпаков остаётся
-пользовательской функцией приложения.
+Java и требования конкретной версии Minecraft настраиваются для выбранной игровой сборки.
 
----
-
-<p align="center">
-  Часть <a href="../README.md"><b>Nivora</b></a>
-</p>
+[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)

@@ -2,10 +2,10 @@
 minVersion = "v0.1.1"
 
 title = "Nivora"
-summary = "Независимый каталог Linux-приложений для Stapler"
+summary = "Приложения для ALT Linux p11 с установкой через Stapler"
 description = """
-Nivora содержит открытые рецепты упаковки приложений,
-которых может не быть в системных репозиториях дистрибутива."""
+Nivora содержит открытые рецепты установки приложений для ALT Linux p11.
+Описания, источники и условия использования представлены в каталоге приложений."""
 homepage = "https://github.com/Cheviiot/Nivora"
 icon = "https://raw.githubusercontent.com/Cheviiot/Nivora/main/.github/assets/nivora.png"
 

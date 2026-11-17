@@ -17,11 +17,8 @@ EXPECTED_PACKAGES = (
     "anidesk",
     "antigravity",
     "balena-etcher",
-    "casement",
     "chatgpt",
     "claude",
-    "distroshelf",
-    "github-desktop",
     "happ",
     "opencode",
     "parsec",
@@ -40,6 +37,10 @@ REQUIRED_ROOT_FILES = {
     Path("stapler-repo.toml"),
     Path(".github/assets/readme-hero.png"),
     Path(".github/support-matrix.toml"),
+    Path(".github/docs/index.md"),
+    Path(".github/docs/installation.md"),
+    Path(".github/docs/package-guide.md"),
+    Path(".github/docs/troubleshooting.md"),
     Path(".github/docs/maintenance.md"),
     Path(".github/docs/security-model.md"),
     *(Path(f"{package}/README.md") for package in EXPECTED_PACKAGES),
@@ -61,12 +62,8 @@ APPROVED_TRANSITION_ALIASES = {
     "telegram": ["telegram-desktop"],
 }
 SUPPORTED_TIERS = {"verified", "partial", "unsupported"}
-# ALT is the only supported distribution. Every other target was dropped
-# together with its per-distro dependency fields.
-EXPECTED_TARGETS = {
-    "alt-p11",
-    "alt-sisyphus",
-}
+# ALT p11 is the sole build and runtime target.
+EXPECTED_TARGETS = {"alt-p11"}
 SUPPORTED_ARCHITECTURES = {"amd64", "arm64"}
 # Fields that used to carry a foreign distribution's dependency list. Their
 # presence now means the recipe was written against the pre-ALT layout.
@@ -361,7 +358,7 @@ def load_support_matrix(errors: list[str]) -> dict[str, object]:
         errors.append("support matrix: duplicate target IDs")
     if set(target_ids) != EXPECTED_TARGETS:
         errors.append(
-            "support matrix: target IDs differ from the approved ALT target set"
+            "support matrix: the only approved target is alt-p11"
         )
     for target in targets:
         if not isinstance(target, dict):
@@ -369,6 +366,10 @@ def load_support_matrix(errors: list[str]) -> dict[str, object]:
         if target.get("distro") != "altlinux":
             errors.append(
                 f"support matrix: {target.get('id')}: only ALT targets are supported"
+            )
+        if target.get("release") != "p11" or target.get("branch_id") != "p11":
+            errors.append(
+                f"support matrix: {target.get('id')}: release and branch_id must be p11"
             )
         gated = target.get("gated_architectures")
         if not isinstance(gated, list) or any(
@@ -510,12 +511,27 @@ def load_support_matrix(errors: list[str]) -> dict[str, object]:
                 errors.append(
                     f"support matrix: blocking lifecycle workflow lacks {required}"
                 )
+    ci_coverage = matrix.get("ci_coverage", {})
+    if ci_coverage.get("blocking_builders") != ["alt-p11-x86_64"]:
+        errors.append(
+            "support matrix: the only blocking builder must be alt-p11-x86_64"
+        )
+    if ci_coverage.get("main_canary") != "advisory-alt-p11-x86_64":
+        errors.append(
+            "support matrix: the Stapler main canary must also target ALT p11"
+        )
+
     images = matrix.get("images", {})
-    if set(images) != {"alt_p11", "alt_sisyphus"}:
-        errors.append("support matrix: images must be exactly the two ALT branches")
+    if set(images) != {"alt_p11"}:
+        errors.append("support matrix: images must contain only alt_p11")
     for name, image in images.items():
-        if "@sha256:" not in image:
-            errors.append(f"support matrix: image {name} is not digest-pinned")
+        if not re.fullmatch(
+            r"registry\.altlinux\.org/p11/base@sha256:[0-9a-f]{64}", str(image)
+        ):
+            errors.append(
+                f"support matrix: image {name} must be the official ALT p11 base "
+                "with an exact SHA-256 digest"
+            )
     stapler = matrix.get("stapler", {})
     if stapler.get("stable_version") != "0.1.1":
         errors.append("support matrix: stable Stapler must remain v0.1.1")
@@ -640,11 +656,12 @@ def validate_package(
                 "identifier or LicenseRef-proprietary"
             )
 
-    # ALT is the only target, so the dependency lists live in the base fields.
+    # Stapler recognises distro_release IDs, so p11 compatibility is enforced
+    # by its native repository filter and build pre-checks.
     compatible = array(text, "compatible_with")
-    if compatible != ["altlinux"]:
+    if compatible != ["altlinux_p11"]:
         errors.append(
-            f"G0 {package}: compatible_with must be ['altlinux'], got {compatible}"
+            f"G0 {package}: compatible_with must be ['altlinux_p11'], got {compatible}"
         )
     if array(text, "incompatible_with") is not None:
         errors.append(
@@ -658,19 +675,17 @@ def validate_package(
                     f"G2 {package}: {field}_{suffix} belongs to a distribution "
                     "Nivora does not support"
                 )
-        if array(text, f"{field}_altlinux") is not None:
-            errors.append(
-                f"G2 {package}: {field}_altlinux is redundant; {field} is the ALT "
-                "list. Only the branch overrides may specialise it"
-            )
-        for branch_field in re.findall(
-            rf"^({re.escape(field)}_altlinux_[a-z0-9_]+)=", text, re.MULTILINE
+        # Stapler combines architecture and distro suffixes, for example
+        # deps_amd64_altlinux_p11. A pure architecture override remains valid.
+        for override in re.findall(
+            rf"^({re.escape(field)}_(?:[a-z0-9]+_)*altlinux(?:_[a-z0-9_]+)?)=",
+            text,
+            re.MULTILINE,
         ):
-            branch = branch_field.rsplit("_", 1)[-1]
-            if branch not in {"p11", "sisyphus"}:
-                errors.append(
-                    f"G2 {package}: {branch_field} targets an unknown ALT branch"
-                )
+            errors.append(
+                f"G2 {package}: {override} is redundant or unsupported; "
+                f"declare the ALT p11 list in {field} or an architecture-only override"
+            )
     if array(text, "deps") is None:
         errors.append(f"G2 {package}: deps must be declared, even if empty")
     # ALT's apt-rpm cannot parse an alternative in a dependency at all, neither
@@ -972,39 +987,6 @@ def validate_readme_hero(errors: list[str]) -> None:
         errors.append("README hero: PNG must not exceed 1 MiB")
 
 
-def validate_github_desktop_workflow(errors: list[str]) -> None:
-    """The build workflow must never hard-code a package version.
-
-    A literal version in this workflow used to be cross-checked against the
-    recipe. That made the package impossible to update autonomously: the
-    updater only ever patches its own package directory, and the publish gate
-    accepts a single changed path, so a recipe bump could never carry the
-    matching workflow edit and the static checks failed forever. The version
-    now arrives exclusively through the required `version` input.
-    """
-    path = ROOT / ".github/workflows/github-desktop-linux.yml"
-    if not path.is_file():
-        return
-    text = path.read_text(encoding="utf-8")
-    if re.search(r"inputs\.version\s*\|\|", text):
-        errors.append(
-            "github-desktop workflow: inputs.version must not have a hard-coded "
-            "fallback; it blocks autonomous updates"
-        )
-    if re.search(
-        r"(?m)^      version:\n(?:^        [^\n]*\n)*?^        default:", text
-    ):
-        errors.append(
-            "github-desktop workflow: the version input must not have a default; "
-            "it blocks autonomous updates"
-        )
-    for match in re.finditer(r"(?m)^\s*(?:version|VERSION):\s*[\"']?(\d+\.\d+[^\s\"']*)", text):
-        errors.append(
-            "github-desktop workflow: hard-coded version literal "
-            f"{match.group(1)}"
-        )
-
-
 def validate_updater_package_list(errors: list[str]) -> None:
     """The updater carries its own package list; it must not drift.
 
@@ -1111,7 +1093,6 @@ def main() -> int:
     validate_unique_local_source_urls(metadata, errors)
     validate_readme(metadata, errors)
     validate_readme_hero(errors)
-    validate_github_desktop_workflow(errors)
     validate_updater_package_list(errors)
     validate_autonomous_update_workflow(errors)
     for path in sorted([

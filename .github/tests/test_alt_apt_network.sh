@@ -123,38 +123,35 @@ run_apt_transaction() {
         bash "$helper" run install -y fixture-package
 }
 
-for branch_case in 'p11|p11|p11/branch' 'sisyphus|alt|Sisyphus'; do
-    IFS='|' read -r branch tag suite <<<"$branch_case"
-    case_dir="${test_root}/${branch}"
-    setup_case "$case_dir" "$tag" "$suite"
-    if [[ "$branch" == sisyphus ]]; then
+for failure_mode in download signature; do
+    case_dir="${test_root}/${failure_mode}"
+    setup_case "$case_dir" p11 p11/branch
+    if [[ "$failure_mode" == signature ]]; then
         gpg_warning=1
     else
         gpg_warning=0
     fi
     if ! run_update "$case_dir" 0 "$gpg_warning" >"${case_dir}/stdout" 2>"${case_dir}/stderr"; then
         cat "${case_dir}/stderr" >&2
-        fail "${branch} did not fall back to the supplied mirror"
+        fail "${failure_mode}: p11 did not fall back to the supplied mirror"
     fi
     active="${case_dir}/apt/sources.list.d/alt.list"
-    [[ "$(grep -c '^rpm ' "$active")" == 3 ]] || fail "${branch} changed the source architecture count"
-    assert_contains "$active" "rpm [${tag}] http://mirror.yandex.ru/altlinux ${suite}/x86_64 classic"
-    assert_contains "$active" "rpm [${tag}] http://mirror.yandex.ru/altlinux ${suite}/x86_64-i586 classic"
-    assert_contains "$active" "rpm [${tag}] http://mirror.yandex.ru/altlinux ${suite}/noarch classic"
+    [[ "$(grep -c '^rpm ' "$active")" == 3 ]] || fail "${failure_mode}: changed the source architecture count"
+    assert_contains "$active" 'rpm [p11] http://mirror.yandex.ru/altlinux p11/branch/x86_64 classic'
+    assert_contains "$active" 'rpm [p11] http://mirror.yandex.ru/altlinux p11/branch/x86_64-i586 classic'
+    assert_contains "$active" 'rpm [p11] http://mirror.yandex.ru/altlinux p11/branch/noarch classic'
     assert_contains "${case_dir}/sources-seen" 'http://ftp.altlinux.org'
     assert_contains "${case_dir}/sources-seen" 'http://mirror.yandex.ru/altlinux'
     primary_http_line="$(grep -n -m1 'http://ftp.altlinux.org' "${case_dir}/sources-seen" | cut -d: -f1)"
     mirror_http_line="$(grep -n -m1 'http://mirror.yandex.ru/altlinux' "${case_dir}/sources-seen" | cut -d: -f1)"
     ((primary_http_line < mirror_http_line)) ||
-        fail "${branch} did not preserve primary-then-mirror ordering"
+        fail "${failure_mode}: did not preserve primary-then-mirror ordering"
     ! grep -Fq 'https://' "${case_dir}/sources-seen" ||
-        fail "${branch} attempted HTTPS before CA certificates were installed"
+        fail "${failure_mode}: attempted HTTPS before CA certificates were installed"
     assert_contains "${case_dir}/args" 'Acquire::Retries=0'
     assert_contains "${case_dir}/args" 'Acquire::http::Timeout=15'
-    if [[ "$branch" == sisyphus ]]; then
-        assert_contains "${case_dir}/stderr" 'selected http://mirror.yandex.ru/altlinux'
-    fi
-    if [[ "$branch" == p11 ]]; then
+    assert_contains "${case_dir}/stderr" 'selected http://mirror.yandex.ru/altlinux'
+    if [[ "$failure_mode" == download ]]; then
         run_apt_transaction "$case_dir" >"${case_dir}/transaction.stdout" \
             2>"${case_dir}/transaction.stderr" || {
             cat "${case_dir}/transaction.stderr" >&2
@@ -165,7 +162,7 @@ for branch_case in 'p11|p11|p11/branch' 'sisyphus|alt|Sisyphus'; do
         assert_contains "${case_dir}/args" 'install'
     fi
     ! grep -Eiq 'trusted=yes|AllowInsecure|allow-unauthenticated' "${case_dir}/args" ||
-        fail "${branch} disabled repository signature checks"
+        fail "${failure_mode}: disabled repository signature checks"
 done
 
 failure_case="${test_root}/permanent-failure"
@@ -185,4 +182,4 @@ if NIVORA_ALT_APT_COMMAND_TIMEOUT_SECONDS=0 bash "$helper" run install fixture-p
 fi
 assert_contains "${test_root}/zero-timeout.stderr" 'timeouts must be positive'
 
-echo 'OK: ALT apt mirror failover, branch/architecture preservation and bounded failure'
+echo 'OK: ALT p11 apt mirror failover, architecture preservation and bounded failure'

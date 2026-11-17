@@ -1,16 +1,16 @@
 name='happ'
 version='4.7.2'
-release=1
-summary='Happ Proxy Client'
-summary_ru='Прокси-клиент Happ'
+release=2
+summary='Graphical proxy client based on Xray'
+summary_ru='Графический прокси-клиент на основе Xray'
 group='Networking/Other'
-desc='Happ is a user-friendly GUI client for xray-core with advanced features: Xray-core integration for proxy functionality, TUN/VPN mode support via sing-box, anti-censorship tools (byedpi), QR code support for easy configuration sharing and subscription management.'
-desc_ru='Happ — удобный графический клиент xray-core с расширенными возможностями: интеграция xray-core для проксирования, режим TUN/VPN через sing-box, средства обхода цензуры (byedpi), поддержка QR-кодов для обмена конфигурациями и управление подписками.'
-homepage='https://happ.su/'
+desc='Happ is a graphical client for connecting to proxy servers, built on the Xray core.'
+desc_ru='Happ — графический клиент для подключения к прокси-серверам на основе ядра Xray.'
+homepage='https://happ.info/'
 maintainer='FlyFrog LLC <support@happ.su>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 disable_network=1
 
 license=('LicenseRef-proprietary')
@@ -70,7 +70,7 @@ checksums=(
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'
 	'sha256:7e105f63e4535676e15e4d613426d6af843376a09fd25674bbbf367778668ae5'
 	'sha256:5f0fbc1b0b0e8399c8a04425512168e3dd87960381e85a7cb62a41d55b054b0f'
-	'sha256:7bc355e4548add7290da2647a0ddc185f6661f96ffdf43d2aa68099be54755f9'
+	'sha256:0e7af74e69cc31296b039646aba41436657149f09c64b7083fdb529180edd50a'
 )
 
 checksums_arm64=(
@@ -80,7 +80,7 @@ checksums_arm64=(
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'
 	'sha256:7e105f63e4535676e15e4d613426d6af843376a09fd25674bbbf367778668ae5'
 	'sha256:5f0fbc1b0b0e8399c8a04425512168e3dd87960381e85a7cb62a41d55b054b0f'
-	'sha256:7bc355e4548add7290da2647a0ddc185f6661f96ffdf43d2aa68099be54755f9'
+	'sha256:0e7af74e69cc31296b039646aba41436657149f09c64b7083fdb529180edd50a'
 )
 
 scripts=(

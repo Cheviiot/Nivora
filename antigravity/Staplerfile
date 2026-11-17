@@ -3,24 +3,24 @@
 # The updater refreshes version and the full build pin together.
 name='antigravity'
 version='2.32.1'
-release=6
+release=7
 upstream_hub='2.32.1-6001966350991360'
-summary='Google Antigravity App'
-summary_ru='Приложение Google Antigravity'
+summary='Manage AI agents and projects with Google Antigravity'
+summary_ru='Работа с ИИ-агентами и проектами Google Antigravity'
 group='Development/Tools'
-desc='Official Google Antigravity desktop application for Linux.'
-desc_ru='Официальное десктопное приложение Google Antigravity для Linux.'
+desc='Google Antigravity App is a desktop application for managing AI agents, parallel tasks, and project workspaces.'
+desc_ru='Google Antigravity App — настольное приложение для работы с ИИ-агентами, параллельными задачами и проектами.'
 homepage='https://antigravity.google/download/'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 
 license=('LicenseRef-proprietary')
 
 appstream_app_id='com.google.Antigravity'
 appstream_desktop_id='antigravity.desktop'
-appstream_name='Antigravity'
+appstream_name='Google Antigravity App'
 appstream_developer='Google'
 nonfree=1
 nonfree_msg='Antigravity является проприетарным приложением Google. Использование Antigravity, учётной записи Google, сетевых функций и сервиса регулируется условиями Google.'
@@ -71,7 +71,7 @@ checksums=(
 	'sha256:fc5eb0c847c8eaf3fed166c58e6ebfb6d20fae0060dc7b22c4ebedcfd8f02aa0'
 	'sha256:a172c36f986e7396b1359563eee943b9fa4529a1e31f0eeca80d6f5a768cc611'
 	'sha256:92be9f36d5db1f3db6e7d21c14b58b1b5a7135a0f950bdf25e89f5498fc87a3b'
-	'sha256:f488827dff87761f035bde4e1267df4ecac419f828a3a4ff3f9b40bf56f8e035'
+	'sha256:f712e893d10b61a65429a8da8005cd46fa8a58f556904b6fe51b18a1e17ca367'
 )
 
 checksums_arm64=(
@@ -81,7 +81,7 @@ checksums_arm64=(
 	'sha256:fc5eb0c847c8eaf3fed166c58e6ebfb6d20fae0060dc7b22c4ebedcfd8f02aa0'
 	'sha256:a172c36f986e7396b1359563eee943b9fa4529a1e31f0eeca80d6f5a768cc611'
 	'sha256:92be9f36d5db1f3db6e7d21c14b58b1b5a7135a0f950bdf25e89f5498fc87a3b'
-	'sha256:f488827dff87761f035bde4e1267df4ecac419f828a3a4ff3f9b40bf56f8e035'
+	'sha256:f712e893d10b61a65429a8da8005cd46fa8a58f556904b6fe51b18a1e17ca367'
 )
 
 scripts=(

@@ -8,7 +8,7 @@ source "${repo_root}/.github/tools/package_updates.sh"
 
 version_is_newer 2.0.0 1.9.9
 version_is_newer 1.10.0 1.9.9
-version_is_newer release-3.6.4 release-3.6.3
+version_is_newer 150-105a 150-104a
 if version_is_newer 1.9.9 2.0.0; then
     echo 'downgrade was incorrectly accepted' >&2
     exit 1
@@ -24,14 +24,29 @@ fi
 
 echo 'OK: package updater rejects downgrades'
 
-github_latest_release() {
-	[[ "$1" == 'Cheviiot/Casement' ]]
-	printf '%s\n' 'v0.1.0'
-}
-
-require_package casement
-[[ "$(latest_version casement)" == '0.1.0' ]]
-echo 'OK: Casement updater follows the latest stable GitHub release tag'
+# Some repositories publish bare numeric tags, others prefix them with v.
+# Match ls-remote's optional ref filter so an accidental v-only lookup fails.
+(
+    fixture="$(mktemp -d)"
+    trap 'find "$fixture" -mindepth 1 -delete; rmdir "$fixture"' EXIT
+    cat >"$fixture/git" <<'EOF'
+#!/bin/bash
+set -euo pipefail
+[[ "$1" == ls-remote && "$2" == --tags && "$3" == --refs ]]
+patterns=("${@:5}")
+for ref in refs/tags/v1.9.0 refs/tags/2.0.0 refs/tags/v2.1.0-rc.1 refs/tags/archive; do
+    selected=0
+    [[ "${#patterns[@]}" -gt 0 ]] || selected=1
+    for pattern in "${patterns[@]}"; do
+        case "$ref" in $pattern) selected=1 ;; esac
+    done
+    [[ "$selected" == 1 ]] || continue
+    printf '%040d\t%s\n' 1 "$ref"
+done
+EOF
+    chmod 0755 "$fixture/git"
+    [[ "$(PATH="$fixture:$PATH" git_latest_stable_tag example/app)" == 2.0.0 ]]
+)
 
 # The desktop package follows the same stable-release selector as other apps.
 github_latest_release() {
@@ -43,12 +58,25 @@ github_latest_release() {
 }
 require_package opencode
 [[ "$(latest_version opencode)" == '2.2.7' ]]
-for removed in kimi-code unsloth; do
+for removed in kimi-code unsloth casement distroshelf github-desktop; do
     if (require_package "$removed" >/dev/null 2>&1); then
         echo "removed package was accepted: $removed" >&2
         exit 1
     fi
 done
+
+# curl emits CRLF headers; HTTP/2 has no reason phrase after the status code.
+# A successful source probe must not silently suppress a published update.
+(
+    curl() { printf '%b' "${MOCK_HTTP_HEADERS:?}"; }
+    MOCK_HTTP_HEADERS='HTTP/2 200\r\ncontent-length: 1048576\r\n\r\n' \
+        upstream_source_published 'https://example.invalid/payload'
+    if MOCK_HTTP_HEADERS='HTTP/2 404\r\n\r\n' \
+        upstream_source_published 'https://example.invalid/payload'; then
+        echo 'unpublished source was accepted' >&2
+        exit 1
+    fi
+)
 
 upstream_source_published() {
     [[ "$1" == 'https://github.com/telegramdesktop/tdesktop/releases/download/v7.4.3/td-setup-linux-x64-7.4.3.tar.xz' ]]

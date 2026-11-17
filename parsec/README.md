@@ -1,48 +1,37 @@
 <p align="center">
-  <img src="https://parsec.app/favicon.ico" width="96" height="96" alt="Parsec">
+  <img src="parsecd.png" width="72" height="72" alt="Parsec">
 </p>
 
-<h1 align="center">Parsec</h1>
+# Parsec
 
-<p align="center">
-  Клиент удалённого рабочего стола и игрового стриминга с низкой задержкой
-</p>
+Parsec передаёт изображение удалённого рабочего стола с низкой задержкой. Linux-приложение используется для подключения к доступному компьютеру-хосту, в том числе для игр.
 
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Custom-lightgrey?style=for-the-badge" alt="Лицензия"></a>
-  <img src="https://img.shields.io/badge/arch-amd64-2ea043?style=for-the-badge" alt="amd64">
-</p>
+[Официальный сайт и описание](https://parsec.app/downloads) · [Лицензия](LICENSE)
 
----
+**Платформа:** ALT Linux p11.
+
+**Архитектуры:** amd64.
 
 ## Установка
+
+Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
+затем выполните:
 
 ```bash
 sudo stplr install nivora/parsec
 ```
 
-## Возможности
+Текущая версия указана в [каталоге](../README.md#каталог).
+[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
 
-[Parsec](https://parsec.app/downloads) — проприетарный клиент удалённого
-рабочего стола и игрового стриминга с низкой задержкой.
+## Запуск
 
-## Технические детали
+Откройте приложение из меню или выполните от своего пользователя:
 
-Пакет переупаковывает официальный DEB, который upstream распространяет для
-Ubuntu 22.04 LTS Desktop — отдельного нативного ALT-релиза Parsec не
-существует. Зависимости подобраны под ALT-эквиваленты Ubuntu-библиотек, на
-которые линкуется бинарник: p11 использует `libavcodec61`, а Sisyphus —
-`libavcodec62` через release-specific overrides Stapler.
+```bash
+parsecd
+```
 
-Upstream URL не содержит номер версии и может быть заменён. Пока Parsec не
-публикует неизменяемый официальный URL, Nivora помечает его сборку как
-`source-volatile`: checksum защищает текущую загрузку, но старый рецепт может
-перестать воспроизводиться после обновления upstream. Ежедневный updater поэтому
-сравнивает fingerprint HTTP ETag даже при неизменной версии; при замене payload
-он обновляет checksum и повышает `release`.
+Возможности подключения и требования к оборудованию описаны в [официальной справке](https://support.parsec.app/).
 
----
-
-<p align="center">
-  Часть <a href="../README.md"><b>Nivora</b></a>
-</p>
+[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)

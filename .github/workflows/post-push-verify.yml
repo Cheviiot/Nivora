@@ -1,7 +1,10 @@
 name: CI · Проверка точного post-push SHA
-run-name: post-push ${{ inputs.sha }} · updater ${{ inputs.updater_run_id }} · resume ${{ inputs.resume_on_success }}
+run-name: post-push ${{ github.event_name == 'schedule' && github.sha || inputs.sha }} · updater ${{ inputs.updater_run_id }} · resume ${{ inputs.resume_on_success || github.event_name == 'schedule' }}
 
 on:
+  schedule:
+    # Daily at 04:47 Asia/Vladivostok, independently of upstream updates.
+    - cron: "47 18 * * *"
   workflow_dispatch:
     inputs:
       sha:
@@ -21,7 +24,7 @@ on:
 permissions: {}
 
 concurrency:
-  group: nivora-post-push-${{ inputs.sha }}
+  group: nivora-post-push-${{ github.event_name == 'schedule' && github.sha || inputs.sha }}
   cancel-in-progress: false
 
 defaults:
@@ -41,20 +44,20 @@ jobs:
     steps:
       - name: Проверить формат SHA
         env:
-          REQUESTED_SHA: ${{ inputs.sha }}
+          REQUESTED_SHA: ${{ github.event_name == 'schedule' && github.sha || inputs.sha }}
         run: |
           [[ "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]]
 
       - name: Получить точный опубликованный commit
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: ${{ inputs.sha }}
+          ref: ${{ github.event_name == 'schedule' && github.sha || inputs.sha }}
           fetch-depth: 2
           persist-credentials: false
 
       - name: Убедиться, что checkout точный
         env:
-          REQUESTED_SHA: ${{ inputs.sha }}
+          REQUESTED_SHA: ${{ github.event_name == 'schedule' && github.sha || inputs.sha }}
         run: |
           [[ "$(git rev-parse HEAD)" == "$REQUESTED_SHA" ]]
 
@@ -69,7 +72,7 @@ jobs:
       - name: Выбрать изменённые пакеты
         id: plan
         env:
-          RESUME_ON_SUCCESS: ${{ inputs.resume_on_success }}
+          RESUME_ON_SUCCESS: ${{ inputs.resume_on_success || github.event_name == 'schedule' }}
         run: |
           if [[ "$RESUME_ON_SUCCESS" == true ]]; then
             .github/tools/ci_plan.py --packages all \
@@ -80,13 +83,12 @@ jobs:
           fi
 
   stable:
-    name: post-push stable ALT ${{ matrix.branch }} · ${{ matrix.package }}
+    name: post-push stable ALT p11 · ${{ matrix.package }}
     needs: plan
     if: ${{ needs.plan.outputs.has_packages == 'true' }}
     strategy:
       fail-fast: false
       matrix:
-        branch: [p11, sisyphus]
         package: ${{ fromJSON(needs.plan.outputs.packages) }}
       max-parallel: 8
     runs-on: ubuntu-24.04
@@ -97,7 +99,7 @@ jobs:
       - name: Получить точный commit
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: ${{ inputs.sha }}
+          ref: ${{ github.event_name == 'schedule' && github.sha || inputs.sha }}
           persist-credentials: false
 
       - name: Подготовить инструменты
@@ -108,7 +110,7 @@ jobs:
       - name: Собрать и проверить stable v0.1.1
         env:
           NIVORA_STPLR_CHANNEL: stable
-          NIVORA_ALT_BRANCH: ${{ matrix.branch }}
+          NIVORA_ALT_BRANCH: p11
           NIVORA_LIFECYCLE_PACKAGES: ${{ matrix.package }}
         run: |
           .github/tools/clean_build.sh "${{ matrix.package }}"
@@ -124,7 +126,6 @@ jobs:
     permissions:
       contents: read
       issues: write
-      actions: write
     steps:
       - name: Получить скрипт управления
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -136,55 +137,49 @@ jobs:
       - name: Приостановить updater после сбоя
         if: >-
           ${{
-            needs.plan.result != 'success' ||
-            needs.stable.result == 'failure' ||
-            needs.stable.result == 'cancelled'
+            github.event_name != 'schedule' &&
+            (
+              needs.plan.result != 'success' ||
+              needs.stable.result == 'failure' ||
+              needs.stable.result == 'cancelled'
+            )
           }}
         env:
           GH_TOKEN: ${{ github.token }}
-          REQUESTED_SHA: ${{ inputs.sha }}
-        run: |
-          [[ "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 0
-          git fetch --no-tags origin main
-          current_main="$(git rev-parse origin/main)"
-          if git merge-base --is-ancestor "$REQUESTED_SHA" "$current_main"; then
-            .github/tools/set_updater_pause.sh true "$current_main" \
-              "post-push validation failed for ancestor ${REQUESTED_SHA}"
-          else
-            echo 'Failed SHA is not an ancestor of main; pause state was not overwritten.'
-          fi
+          REQUESTED_SHA: ${{ github.event_name == 'schedule' && github.sha || inputs.sha }}
+        run: .github/tools/reconcile_updater_pause.sh failure "$REQUESTED_SHA"
 
-      - name: Убедиться, что успешный SHA остаётся текущим main
+      - name: Сообщить о сбое ежедневной проверки
+        if: >-
+          ${{
+            github.event_name == 'schedule' &&
+            (
+              needs.plan.result != 'success' ||
+              needs.stable.result == 'failure' ||
+              needs.stable.result == 'cancelled'
+            )
+          }}
+        run: |
+          cat >>"$GITHUB_STEP_SUMMARY" <<'EOF'
+          ### Ежедневная полная проверка не прошла
+
+          Этот запуск не меняет состояние паузы updater. Ежечасная проверка
+          продолжит искать обновления, если updater не был приостановлен раньше.
+          Это позволяет обновить изменившиеся /latest/ источники и их checksums.
+          Каждый кандидат обязан пройти все проверки до публикации.
+          EOF
+
+      - name: Восстановить обновления после полной проверки текущего main
         if: >-
           ${{
             needs.plan.result == 'success' &&
-            (needs.stable.result == 'success' || needs.stable.result == 'skipped') &&
-            inputs.resume_on_success == true
+            needs.stable.result == 'success' &&
+            (inputs.resume_on_success == true || github.event_name == 'schedule')
           }}
         env:
           GH_TOKEN: ${{ github.token }}
-          REQUESTED_SHA: ${{ inputs.sha }}
-        run: |
-          [[ "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]]
-          git fetch --no-tags origin main
-          [[ "$(git rev-parse origin/main)" == "$REQUESTED_SHA" ]]
-          pause_state="$(.github/tools/get_updater_pause.sh)"
-          [[ "$(jq -r .paused <<<"$pause_state")" == true ]]
-          paused_sha="$(jq -r .sha <<<"$pause_state")"
-          [[ "$paused_sha" =~ ^[0-9a-f]{40}$ ]]
-          git merge-base --is-ancestor "$paused_sha" "$REQUESTED_SHA"
-
-      - name: Снять паузу после успешной полной проверки
-        if: >-
-          ${{
-            needs.plan.result == 'success' &&
-            (needs.stable.result == 'success' || needs.stable.result == 'skipped') &&
-            inputs.resume_on_success == true
-          }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REQUESTED_SHA: ${{ inputs.sha }}
-        run: .github/tools/set_updater_pause.sh false "$REQUESTED_SHA"
+          REQUESTED_SHA: ${{ github.event_name == 'schedule' && github.sha || inputs.sha }}
+        run: .github/tools/reconcile_updater_pause.sh success "$REQUESTED_SHA"
 
       - name: Завершить workflow ошибкой при сбое gate
         if: >-

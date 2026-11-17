@@ -4,11 +4,11 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-only</project_license>
   <name>PineconeMC</name>
-  <summary>Discover, manage, and play Minecraft instances</summary>
-  <summary xml:lang="ru">Управление установками Minecraft и модпаками</summary>
+  <summary>Minecraft launcher based on Prism Launcher</summary>
+  <summary xml:lang="ru">Лаунчер Minecraft на основе Prism Launcher</summary>
   <description>
-    <p>PineconeMC is a Prism Launcher fork with Ely.by and offline account support.</p>
-    <p xml:lang="ru">PineconeMC — форк Prism Launcher с поддержкой Ely.by и локальных аккаунтов.</p>
+    <p>PineconeMC is a Minecraft launcher based on Prism Launcher with support for mods, modpacks, and Ely.by accounts.</p>
+    <p xml:lang="ru">PineconeMC — лаунчер Minecraft на основе Prism Launcher с поддержкой модов, модпаков и учётных записей Ely.by.</p>
   </description>
   <launchable type="desktop-id">io.github.elyprismlauncher.ElyPrismLauncher.desktop</launchable>
   <url type="homepage">https://pineconemc.com/</url>

@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Fixture publishers must never write into a live updater's diagnostics directory.
 unset AUTONOMOUS_UPDATE_RESULTS_DIR
+unset NIVORA_CHECK_UPDATER_PAUSE NIVORA_FULL_REPAIR_RESULT NIVORA_VERIFIED_REPAIR_TREE NIVORA_HEARTBEAT_ONLY
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 scratch="$(mktemp -d "${TMPDIR:-/tmp}/nivora-publish-test.XXXXXX")"
@@ -37,6 +38,12 @@ new_case() {
     git -C "$dir/repo" push -q -u origin main
     cp "$repo_root/.github/tools/publish_update_commit.sh" "$dir/repo/.github/tools/"
     cp "$repo_root/.github/tools/maintenance_heartbeat.py" "$dir/repo/.github/tools/"
+    cat >"$dir/repo/.github/tools/get_updater_pause.sh" <<'PAUSE'
+#!/bin/bash
+set -euo pipefail
+printf '%s\n' "${TEST_PAUSE_STATE:?}"
+PAUSE
+    chmod +x "$dir/repo/.github/tools/get_updater_pause.sh"
     printf '%s\n' "$dir/repo"
 }
 
@@ -198,5 +205,67 @@ if invoke "$repo" "$base" >"$scratch/foreign.out" 2>"$scratch/foreign.err"; then
 fi
 [[ "$(git -C "$repo" rev-parse HEAD)" == "$base" ]]
 [[ "$(git -C "$repo" diff --cached --name-only)" == foreign.txt ]]
+
+# A pause created after detection still blocks a normal candidate publication.
+# Skipped and failed full checks are never accepted as repair proofs.
+for repair_result in skipped failure; do
+    repo="$(new_case "paused-$repair_result")"
+    base="$(git -C "$repo" rev-parse HEAD)"
+    printf 'name: demo\nversion: 2\n' >"$repo/demo/Staplerfile"
+    out="$(NIVORA_CHECK_UPDATER_PAUSE=1 NIVORA_FULL_REPAIR_RESULT="$repair_result" \
+        TEST_PAUSE_STATE="{\"paused\":true,\"sha\":\"$base\"}" invoke "$repo" "$base")"
+    assert_fields "$out" false paused-without-full-repair
+    [[ "$(git --git-dir="${repo%/repo}/remote.git" rev-parse refs/heads/main)" == "$base" ]]
+done
+
+# A full repair can publish exactly the tree verified by its read-only job.
+repo="$(new_case verified-repair)"
+base="$(git -C "$repo" rev-parse HEAD)"
+printf 'name: demo\nversion: 2\n' >"$repo/demo/Staplerfile"
+git -C "$repo" add demo/Staplerfile
+verified_tree="$(git -C "$repo" write-tree)"
+git -C "$repo" restore --staged demo/Staplerfile
+out="$(NIVORA_CHECK_UPDATER_PAUSE=1 NIVORA_FULL_REPAIR_RESULT=success \
+    NIVORA_VERIFIED_REPAIR_TREE="$verified_tree" \
+    TEST_PAUSE_STATE="{\"paused\":true,\"sha\":\"$base\"}" invoke "$repo" "$base")"
+assert_fields "$out" true update
+[[ "$(git --git-dir="${repo%/repo}/remote.git" rev-parse 'main^{tree}')" == "$verified_tree" ]]
+
+# The artifact/batch cannot change between full validation and publication.
+repo="$(new_case changed-repair-tree)"
+base="$(git -C "$repo" rev-parse HEAD)"
+verified_tree="$(git -C "$repo" rev-parse 'HEAD^{tree}')"
+printf 'name: demo\nversion: 2\n' >"$repo/demo/Staplerfile"
+if NIVORA_FULL_REPAIR_RESULT=success NIVORA_VERIFIED_REPAIR_TREE="$verified_tree" \
+    invoke "$repo" "$base" >"$scratch/changed-tree.out" 2>"$scratch/changed-tree.err"; then
+    echo 'publisher accepted a different tree from the full repair proof' >&2
+    exit 1
+fi
+[[ "$(git --git-dir="${repo%/repo}/remote.git" rev-parse refs/heads/main)" == "$base" ]]
+
+# Even a verified repair cannot clear/bypass a pause on unrelated history.
+repo="$(new_case unrelated-pause)"
+base="$(git -C "$repo" rev-parse HEAD)"
+printf 'name: demo\nversion: 2\n' >"$repo/demo/Staplerfile"
+git -C "$repo" add demo/Staplerfile
+verified_tree="$(git -C "$repo" write-tree)"
+git -C "$repo" restore --staged demo/Staplerfile
+out="$(NIVORA_CHECK_UPDATER_PAUSE=1 NIVORA_FULL_REPAIR_RESULT=success \
+    NIVORA_VERIFIED_REPAIR_TREE="$verified_tree" \
+    TEST_PAUSE_STATE='{"paused":true,"sha":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}' \
+    invoke "$repo" "$base")"
+assert_fields "$out" false pause-sha-not-ancestor
+[[ "$(git --git-dir="${repo%/repo}/remote.git" rev-parse refs/heads/main)" == "$base" ]]
+
+# Heartbeat recovery has a separate empty-commit contract and cannot smuggle
+# changed recipes past the paused-repair gate.
+repo="$(new_case dirty-heartbeat)"
+base="$(git -C "$repo" rev-parse HEAD)"
+printf 'name: demo\nversion: 2\n' >"$repo/demo/Staplerfile"
+if NIVORA_HEARTBEAT_ONLY=1 invoke "$repo" "$base" >"$scratch/heartbeat.out" 2>"$scratch/heartbeat.err"; then
+    echo 'heartbeat-only publisher accepted a recipe change' >&2
+    exit 1
+fi
+[[ "$(git --git-dir="${repo%/repo}/remote.git" rev-parse refs/heads/main)" == "$base" ]]
 
 echo 'OK: publication checks base, stages an allowlist, and preserves concurrent main updates'

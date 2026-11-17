@@ -10,28 +10,27 @@ main_repository = "https://altlinux.space/stapler/stplr.git"
 
 [images]
 alt_p11 = "registry.altlinux.org/p11/base@sha256:8024e8175572804b1b6bcfde76d464d7e12bbd09583af067e8b1386ff6b123e9"
-alt_sisyphus = "registry.altlinux.org/sisyphus/base@sha256:1a6ab67cc12cfbe2419ed8b805ae6fd75ed036f9da7211b78876d1cd0083b7ba"
 
 [expectations]
-package_count = 15
-target_count = 2
-logical_runtime_cells = 46
-declared_supported_runtime_cells = 46
-verified_runtime_cells = 30
-blocking_ci_build_cells_full_common_change = 30
-advisory_main_build_cells_full_common_change = 15
+package_count = 12
+target_count = 1
+logical_runtime_cells = 19
+declared_supported_runtime_cells = 19
+verified_runtime_cells = 12
+blocking_ci_build_cells_full_common_change = 12
+advisory_main_build_cells_full_common_change = 12
 
 [tiers]
-verified = "build, package metadata, install, safe smoke and remove all run as required gates in a disposable ALT container of that branch"
+verified = "build, package metadata, install, safe smoke and remove all run as required gates in a disposable ALT p11 container"
 partial = "declared support with explicit caveats; the cell is not a required gate"
 unsupported = "excluded from build and runtime scheduling"
 
 [ci_coverage]
-blocking_builders = ["alt-p11-x86_64", "alt-sisyphus-x86_64"]
+blocking_builders = ["alt-p11-x86_64"]
 blocking_architectures = ["amd64", "noarch"]
-lifecycle = "install, smoke and remove in a disposable container of each ALT branch"
-main_canary = "advisory-alt-sisyphus-x86_64"
-pruning = "pull requests build changed packages after full static validation; common-only PRs and main pushes with common changes build every package"
+lifecycle = "install, upgrade, smoke and remove in a disposable ALT p11 container"
+main_canary = "advisory-alt-p11-x86_64"
+pruning = "package-only changes build changed packages after full static validation; any common change builds every package on pull requests and main pushes"
 # GitHub offers no ALT runner, so every gate runs in an official ALT container
 # on an x86_64 runner. aarch64 is therefore declared but never gated: Stapler
 # builds it from the recipe on the user's own machine.
@@ -49,24 +48,12 @@ review_cadence = "nightly"
 ci_mode = "blocking-lifecycle"
 gated_architectures = ["amd64"]
 
-[[targets]]
-id = "alt-sisyphus"
-distro = "altlinux"
-release = "sisyphus"
-branch_id = "sisyphus"
-format = "rpm"
-manager = "apt-rpm"
-libc = "glibc"
-review_cadence = "nightly"
-ci_mode = "blocking-lifecycle"
-gated_architectures = ["amd64"]
-
 [[packages]]
 id = "anidesk"
 architectures = ["amd64"]
 smoke_path = "/usr/bin/anidesk"
 support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["external-service"] },
+  { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["external-service"] },
 ]
 
 [[packages]]
@@ -74,8 +61,8 @@ id = "antigravity"
 architectures = ["amd64", "arm64"]
 smoke_path = "/usr/bin/antigravity"
 support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "login-required", "external-service"] },
+  { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service"] },
+  { targets = ["alt-p11"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "login-required", "external-service"] },
 ]
 
 [[packages]]
@@ -83,15 +70,7 @@ id = "balena-etcher"
 architectures = ["amd64"]
 smoke_path = "/usr/bin/balena-etcher"
 support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["destructive-storage"] },
-]
-
-[[packages]]
-id = "casement"
-architectures = ["amd64"]
-smoke_path = "/usr/bin/casement"
-support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["gnome-wayland-host-required", "remote-session-out-of-scope"] },
+  { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["destructive-storage"] },
 ]
 
 [[packages]]
@@ -99,8 +78,8 @@ id = "chatgpt"
 architectures = ["amd64", "arm64"]
 smoke_path = "/usr/bin/chatgpt"
 support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "login-required", "external-service"] },
+  { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service"] },
+  { targets = ["alt-p11"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "login-required", "external-service"] },
 ]
 
 [[packages]]
@@ -108,25 +87,8 @@ id = "claude"
 architectures = ["amd64", "arm64"]
 smoke_path = "/usr/bin/claude-desktop"
 support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service", "vm-feature-out-of-scope"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "login-required", "external-service"] },
-]
-
-[[packages]]
-id = "distroshelf"
-architectures = ["amd64"]
-smoke_path = "/usr/bin/distroshelf"
-support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["nested-container-runtime", "alt-p11-built-payload"] },
-]
-
-[[packages]]
-id = "github-desktop"
-architectures = ["amd64", "arm64"]
-smoke_path = "/usr/bin/github-desktop"
-support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["authenticated-github-flow-out-of-scope"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "authenticated-github-flow-out-of-scope"] },
+  { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service", "vm-feature-out-of-scope"] },
+  { targets = ["alt-p11"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "login-required", "external-service"] },
 ]
 
 [[packages]]
@@ -134,8 +96,8 @@ id = "happ"
 architectures = ["amd64", "arm64"]
 smoke_path = "/usr/bin/happ"
 support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["external-network-tunnel"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "external-network-tunnel"] },
+  { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["external-network-tunnel"] },
+  { targets = ["alt-p11"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "external-network-tunnel"] },
 ]
 
 [[packages]]
@@ -143,8 +105,8 @@ id = "opencode"
 architectures = ["amd64", "arm64"]
 smoke_path = "/usr/bin/opencode-desktop"
 support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "login-required", "external-service"] },
+  { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service"] },
+  { targets = ["alt-p11"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "login-required", "external-service"] },
 ]
 
 [[packages]]
@@ -152,7 +114,7 @@ id = "parsec"
 architectures = ["amd64"]
 smoke_path = "/usr/bin/parsecd"
 support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "remote-host-out-of-scope", "gpu-path-out-of-scope"] },
+  { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "remote-host-out-of-scope", "gpu-path-out-of-scope"] },
 ]
 
 [[packages]]
@@ -160,8 +122,8 @@ id = "pineconemc"
 architectures = ["amd64", "arm64"]
 smoke_path = "/usr/bin/pineconemc"
 support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["game-runtime-out-of-scope"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "game-runtime-out-of-scope"] },
+  { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["game-runtime-out-of-scope"] },
+  { targets = ["alt-p11"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "game-runtime-out-of-scope"] },
 ]
 
 [[packages]]
@@ -169,8 +131,8 @@ id = "tailscale"
 architectures = ["amd64", "arm64"]
 smoke_path = "/usr/bin/tailscale"
 support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "network-control-plane-out-of-scope"] },
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "login-required", "network-control-plane-out-of-scope"] },
+  { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "network-control-plane-out-of-scope"] },
+  { targets = ["alt-p11"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "login-required", "network-control-plane-out-of-scope"] },
 ]
 
 [[packages]]
@@ -178,7 +140,7 @@ id = "telegram"
 architectures = ["amd64"]
 smoke_path = "/usr/bin/telegram-desktop"
 support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service"] },
+  { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service"] },
 ]
 
 [[packages]]
@@ -186,5 +148,5 @@ id = "yandex-music"
 architectures = ["amd64"]
 smoke_path = "/usr/bin/yandex-music"
 support = [
-  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service"] },
+  { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["login-required", "external-service"] },
 ]

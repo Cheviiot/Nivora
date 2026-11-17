@@ -4,12 +4,14 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>LicenseRef-proprietary</project_license>
   <name>ChatGPT</name>
-  <summary>ChatGPT by OpenAI</summary>
+  <summary>ChatGPT desktop app with integrated Codex</summary>
+  <summary xml:lang="ru">Настольное приложение ChatGPT со встроенным Codex</summary>
   <description>
-    <p>ChatGPT is an AI assistant from OpenAI.</p>
+    <p>ChatGPT is the official OpenAI desktop application for chat, files, and projects, with integrated Codex for coding tasks.</p>
+    <p xml:lang="ru">ChatGPT — официальное настольное приложение OpenAI для чата, работы с файлами и проектами, со встроенным Codex для задач разработки.</p>
   </description>
   <developer_name>OpenAI</developer_name>
-  <url type="homepage">https://developers.openai.com/codex/app</url>
+  <url type="homepage">https://learn.chatgpt.com/docs/app</url>
   <launchable type="desktop-id">chatgpt.desktop</launchable>
   <provides>
     <id>chatgpt.desktop</id>

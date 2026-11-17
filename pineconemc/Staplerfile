@@ -1,16 +1,16 @@
 name='pineconemc'
 version='11.1.2'
-release=1
-summary='Discover, manage, and play Minecraft instances'
-summary_ru='Поиск, управление и запуск сборок Minecraft'
+release=2
+summary='Minecraft launcher based on Prism Launcher'
+summary_ru='Лаунчер Minecraft на основе Prism Launcher'
 group='Games/Other'
-desc='PineconeMC is a fork of Prism Launcher, a custom launcher for Minecraft that focuses on predictability, long term stability and simplicity, with Ely.by and offline account support added.'
-desc_ru='PineconeMC — форк Prism Launcher, лаунчера Minecraft, ориентированного на предсказуемость, долговременную стабильность и простоту, с добавленной поддержкой Ely.by и offline-аккаунтов.'
+desc='PineconeMC is a Minecraft launcher based on Prism Launcher with support for mods, modpacks, and Ely.by accounts.'
+desc_ru='PineconeMC — лаунчер Minecraft на основе Prism Launcher с поддержкой модов, модпаков и учётных записей Ely.by.'
 homepage='https://pineconemc.com/'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 disable_network=1
 
 license=('GPL-3.0-only')

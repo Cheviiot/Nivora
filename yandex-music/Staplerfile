@@ -1,16 +1,16 @@
 name='yandex-music'
 version='5.127.0'
-release=1
-summary='Personal recommendations, mixes for any occasion and the latest musical releases'
-summary_ru='Персональные рекомендации, подборки на любой случай и свежие музыкальные новинки'
+release=2
+summary='Music with personalized recommendations'
+summary_ru='Музыка с персональными рекомендациями'
 group='Sound'
-desc='Personal recommendations, mixes for any occasion and the latest musical releases.'
-desc_ru='Персональные рекомендации, подборки на любой случай и свежие музыкальные новинки.'
+desc='Yandex Music is a desktop music streaming application with personalized recommendations and My Vibe. Listening requires Yandex Plus or another subscription that includes it.'
+desc_ru='Яндекс Музыка — настольное приложение для прослушивания музыки с персональными рекомендациями и «Моей волной». Для прослушивания нужна подписка Яндекс Плюс или другая подписка, которая его включает.'
 homepage='https://music.yandex.ru/download/'
 maintainer='Яндекс Музыка <music@support.yandex.ru>'
 
 architectures=('amd64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 
 license=('LicenseRef-proprietary')
 
@@ -55,7 +55,7 @@ sources=(
 checksums=(
 	'sha256:5e7fc1ea18c4fa28c649fe39df2c3a6affad4d1bf005014381569acc238e557b'
 	'sha256:52a11692975a1dfe999f8cf953522d2ddfc2bd594a3a23c2e52035eb53d2fa2d'
-	'sha256:a2a9224a456819c1d22ae864f301585ffcee67e3bcee4755253b82f3d8263167'
+	'sha256:c269939f93aa92c350789379e37d12ae47392cc8e201eb7ea16bebd9b87d3e5a'
 )
 
 scripts=(

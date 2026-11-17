@@ -16,7 +16,7 @@ set -euo pipefail
 
 package_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 postinstall="${package_dir}/postinstall.sh"
-readme="${package_dir}/README.md"
+user_guide="${package_dir}/../.github/docs/troubleshooting.md"
 
 # Look at what the hook actually runs: drop comments and the heredoc that
 # only prints the hint, so the literal inside it is not mistaken for a call.
@@ -43,11 +43,11 @@ grep -Fq 'sudo tailscale up' "$postinstall"
 grep -Fq 'sudo tailscale set --operator=$USER' "$postinstall"
 
 # And the documentation must not promise the automatic assignment again.
-if grep -q 'автоматически назначается' "$readme"; then
-    echo 'README обещает автоматическое назначение оператора' >&2
+if grep -q 'автоматически назначается' "$user_guide"; then
+    echo 'Руководство обещает автоматическое назначение оператора' >&2
     exit 1
 fi
-grep -Fq 'sudo tailscale up' "$readme"
+grep -Fq 'sudo tailscale up' "$user_guide"
 
 # Upgrades must not re-enable a unit the user switched off.
 grep -Fq 'try-restart' "$postinstall"

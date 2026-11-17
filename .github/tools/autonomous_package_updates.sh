@@ -12,31 +12,6 @@ mkdir -p "$results_dir"
 : >"${results_dir}/failed-packages"
 : >"${results_dir}/checked-packages"
 
-pin_github_desktop_source() {
-    local worktree="$1"
-    local staplerfile="${worktree}/github-desktop/Staplerfile"
-    local version resolved
-
-    version="$("$stplr_spec_command" get-field --path "$staplerfile" version)" || return
-    resolved="${GITHUB_DESKTOP_UPSTREAM_COMMIT:-}"
-    if [[ -z "$resolved" ]]; then
-        resolved="$({
-            git ls-remote https://github.com/desktop/desktop.git \
-                "refs/tags/release-${version}^{}"
-            git ls-remote https://github.com/desktop/desktop.git \
-                "refs/tags/release-${version}"
-        } | awk 'NR == 1 { print $1 }')" || return
-    fi
-    [[ "$resolved" =~ ^[0-9a-f]{40}$ ]] || return
-
-    sed -i \
-        "s/^upstream_commit='[0-9a-f]\{40\}'$/upstream_commit='${resolved}'/" \
-        "$staplerfile" || return
-    "$stplr_spec_command" update-checksums --path "$staplerfile" || return
-    EXPECTED_UPSTREAM_COMMIT="$resolved" \
-        bash "${worktree}/github-desktop/tests/test-upstream-pin.sh" || return
-}
-
 is_mutable_source_package() {
     case "$1" in
     antigravity | chatgpt | parsec) return 0 ;;
@@ -163,10 +138,6 @@ run_update_phases() {
         "$stplr_spec_command" update-package "$package" || return
     fi
     normalise_recipe_style "${worktree}/${package}/Staplerfile" || return
-    if [[ "$package" == 'github-desktop' ]]; then
-        echo pin-upstream-commit >"$phase_file" || return
-        pin_github_desktop_source "$worktree" || return
-    fi
     if is_mutable_source_package "$package"; then
         echo pin-source-fingerprint >"$phase_file" || return
         verify_mutable_source_snapshot \
@@ -178,20 +149,15 @@ run_update_phases() {
     .github/tools/sync_readme_versions.py || return
     echo static-checks >"$phase_file" || return
     .github/tools/run_checks.sh || return
-    # Both supported ALT branches must accept the update before it can reach
-    # main; a p11-only regression used to be caught no earlier than the
-    # post-push gate, after users already had the commit.
-    local alt_branch
-    for alt_branch in p11 sisyphus; do
-        echo clean-build >"$phase_file" || return
-        NIVORA_ALT_BRANCH="$alt_branch" \
-            .github/tools/clean_build.sh "$package" || return
-        echo verify-artifact >"$phase_file" || return
-        .github/tools/verify_artifacts.sh "$package" || return
-        echo test-lifecycle >"$phase_file" || return
-        NIVORA_ALT_BRANCH="$alt_branch" NIVORA_LIFECYCLE_PACKAGES="$package" \
-            .github/tools/test_package_lifecycle.sh || return
-    done
+    # Every update must pass the full ALT p11 gate before it can reach main.
+    echo clean-build >"$phase_file" || return
+    NIVORA_ALT_BRANCH=p11 \
+        .github/tools/clean_build.sh "$package" || return
+    echo verify-artifact >"$phase_file" || return
+    .github/tools/verify_artifacts.sh "$package" || return
+    echo test-lifecycle >"$phase_file" || return
+    NIVORA_ALT_BRANCH=p11 NIVORA_LIFECYCLE_PACKAGES="$package" \
+        .github/tools/test_package_lifecycle.sh || return
 }
 
 if [[ "$#" -eq 0 ]]; then

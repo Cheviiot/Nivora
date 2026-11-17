@@ -1,42 +1,37 @@
 <p align="center">
-  <img src="anidesk.png" width="96" height="96" alt="AniDesk">
+  <img src="anidesk.png" width="72" height="72" alt="AniDesk">
 </p>
 
-<h1 align="center">AniDesk</h1>
+# AniDesk
 
-<p align="center">
-  Неофициальный desktop-клиент Anixart
-</p>
+AniDesk — неофициальный настольный клиент Anixart с открытым исходным кодом. Он поддерживает учётную запись Anixart, встроенное воспроизведение видео и улучшение изображения через Anime4K.
 
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--2.0--only-blue?style=for-the-badge" alt="Лицензия"></a>
-  <img src="https://img.shields.io/badge/arch-amd64-2ea043?style=for-the-badge" alt="amd64">
-</p>
+[Официальный репозиторий](https://github.com/theDesConnet/AniDesk) · [Лицензия](LICENSE)
 
----
+**Платформа:** ALT Linux p11.
+
+**Архитектуры:** amd64.
 
 ## Установка
+
+Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
+затем выполните:
 
 ```bash
 sudo stplr install nivora/anidesk
 ```
 
-## Возможности
+Текущая версия указана в [каталоге](../README.md#каталог).
+[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
 
-AniDesk — неофициальный Electron desktop-клиент [Anixart](https://github.com/theDesConnet/AniDesk)
-с поддержкой аккаунта, встроенным видеоплеером и Anime4K-апскейлом через
-WebGPU.
+## Запуск
 
-## Технические детали
+Откройте приложение из меню или выполните от своего пользователя:
 
-Пакет собирается из официального upstream-релиза `theDesConnet/AniDesk` без
-патчей кода. Electron-песочница (`chrome-sandbox`) при установке получает
-setuid-бит `4755` только если ядро не поддерживает непривилегированные user
-namespaces — на системах с рабочим `unshare --user` используется обычный
-`0755`, и приложение запускается без setuid-обёртки.
+```bash
+anidesk
+```
 
----
+Проект находится в beta. Доступность содержимого определяется сервисом Anixart.
 
-<p align="center">
-  Часть <a href="../README.md"><b>Nivora</b></a>
-</p>
+[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)

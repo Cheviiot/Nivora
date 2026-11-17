@@ -61,7 +61,6 @@ jobs:
               --github-output "$GITHUB_OUTPUT"
           elif [[ "$EVENT_NAME" == pull_request ]]; then
             .github/tools/ci_plan.py \
-              --pull-request \
               --base "$PR_BASE_SHA" --head HEAD \
               --github-output "$GITHUB_OUTPUT"
           else
@@ -104,14 +103,13 @@ jobs:
           fi
 
   alt:
-    name: stable v0.1.1 ALT ${{ matrix.branch }} · ${{ matrix.package }}
+    name: stable v0.1.1 ALT p11 · ${{ matrix.package }}
     needs: plan
     if: ${{ needs.plan.outputs.has_packages == 'true' }}
     strategy:
       fail-fast: false
       max-parallel: 8
       matrix:
-        branch: [p11, sisyphus]
         package: ${{ fromJSON(needs.plan.outputs.packages) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 120
@@ -126,13 +124,12 @@ jobs:
         with:
           system-packages: rpm cpio sqlite3
 
-      # Build, package metadata, install, safe smoke and remove all run against
-      # the same disposable container of the branch under test. GitHub has no
-      # ALT runner, so the container is the only honest place to gate this.
+      # Build, package metadata, install, safe smoke and remove are gated in
+      # disposable ALT p11 containers. GitHub has no native ALT runner.
       - name: Собрать и проверить артефакт
         env:
           NIVORA_STPLR_CHANNEL: stable
-          NIVORA_ALT_BRANCH: ${{ matrix.branch }}
+          NIVORA_ALT_BRANCH: p11
         run: |
           .github/tools/clean_build.sh "${{ matrix.package }}"
           .github/tools/verify_artifacts.sh "${{ matrix.package }}"
@@ -140,12 +137,12 @@ jobs:
       - name: Проверить install/upgrade/remove
         env:
           NIVORA_STPLR_CHANNEL: stable
-          NIVORA_ALT_BRANCH: ${{ matrix.branch }}
+          NIVORA_ALT_BRANCH: p11
           NIVORA_LIFECYCLE_PACKAGES: ${{ matrix.package }}
         run: .github/tools/test_package_lifecycle.sh
 
   main-canary:
-    name: advisory main ALT sisyphus · ${{ matrix.package }}
+    name: advisory main ALT p11 · ${{ matrix.package }}
     needs: plan
     # Canary предупреждает о будущих несовместимостей Stapler: PR обходятся без
     # неё (каждый PR-джоб удваивал бы нагрузку), advisory-проверка остаётся на
@@ -177,7 +174,7 @@ jobs:
       - name: Собрать и проверить pinned main
         env:
           NIVORA_STPLR_CHANNEL: main
-          NIVORA_ALT_BRANCH: sisyphus
+          NIVORA_ALT_BRANCH: p11
         run: |
           .github/tools/clean_build.sh "${{ matrix.package }}"
           .github/tools/verify_artifacts.sh "${{ matrix.package }}"

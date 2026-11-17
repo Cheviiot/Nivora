@@ -13,10 +13,7 @@ on:
         default: false
         type: boolean
 
-permissions:
-  contents: write
-  issues: write
-  actions: write
+permissions: {}
 
 concurrency:
   group: nivora-autonomous-updates
@@ -37,6 +34,7 @@ jobs:
       actions: write
     outputs:
       paused: ${{ steps.pause.outputs.paused }}
+      repair_allowed: ${{ steps.pause.outputs.repair_allowed }}
     steps:
       - name: Получить репозиторий
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -54,7 +52,7 @@ jobs:
   detect:
     name: Найти обновления
     needs: pause_status
-    if: ${{ needs.pause_status.outputs.paused != 'true' || inputs.force == true }}
+    if: ${{ needs.pause_status.outputs.paused != 'true' || needs.pause_status.outputs.repair_allowed == 'true' || inputs.force == true }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -63,10 +61,6 @@ jobs:
     outputs:
       packages: ${{ steps.updates.outputs.packages }}
       has_updates: ${{ steps.updates.outputs.has_updates }}
-      github_desktop_update: ${{ steps.updates.outputs.github_desktop_update }}
-      github_desktop_version: ${{ steps.updates.outputs.github_desktop_version }}
-      distroshelf_update: ${{ steps.updates.outputs.distroshelf_update }}
-      distroshelf_version: ${{ steps.updates.outputs.distroshelf_version }}
       current_packages: ${{ steps.updates.outputs.current_packages }}
       detection_failures: ${{ steps.updates.outputs.detection_failures }}
       checked_packages: ${{ steps.updates.outputs.checked_packages }}
@@ -136,26 +130,6 @@ jobs:
             echo "Deferred candidates (automatic retry): $(jq -r 'join(", ")' <<<"$deferred_packages_json")" \
               >>"$GITHUB_STEP_SUMMARY"
           fi
-          github_desktop_update=false
-          github_desktop_version=''
-          distroshelf_update=false
-          distroshelf_version=''
-          for package in "${packages[@]}"; do
-            if [[ "$package" == github-desktop ]]; then
-              github_desktop_update=true
-              github_desktop_version="$(
-                jq -r '.["github-desktop"].latest' \
-                  <<<"$expected_updates_json"
-              )"
-            fi
-            if [[ "$package" == distroshelf ]]; then
-              distroshelf_update=true
-              distroshelf_version="$(
-                jq -r '.["distroshelf"].latest' \
-                  <<<"$expected_updates_json"
-              )"
-            fi
-          done
           {
             echo "packages=${packages_json}"
             if [[ "${#packages[@]}" -gt 0 ]]; then
@@ -163,10 +137,6 @@ jobs:
             else
               echo 'has_updates=false'
             fi
-            echo "github_desktop_update=${github_desktop_update}"
-            echo "github_desktop_version=${github_desktop_version}"
-            echo "distroshelf_update=${distroshelf_update}"
-            echo "distroshelf_version=${distroshelf_version}"
             echo "current_packages=${current_packages_json}"
             echo "detection_failures=${detection_failures_json}"
             echo "checked_packages=${checked_packages_json}"
@@ -175,34 +145,9 @@ jobs:
             echo "deferred_packages=${deferred_packages_json}"
           } >>"$GITHUB_OUTPUT"
 
-  github-desktop:
-    name: Подготовить GitHub Desktop
-    needs: detect
-    if: ${{ needs.detect.outputs.github_desktop_update == 'true' }}
-    uses: ./.github/workflows/github-desktop-linux.yml
-    with:
-      version: ${{ needs.detect.outputs.github_desktop_version }}
-      publish: true
-    permissions:
-      contents: write
-
-  distroshelf:
-    name: Подготовить DistroShelf
-    needs: detect
-    if: ${{ needs.detect.outputs.distroshelf_update == 'true' }}
-    uses: ./.github/workflows/distroshelf-linux.yml
-    with:
-      version: ${{ needs.detect.outputs.distroshelf_version }}
-      publish: true
-    permissions:
-      contents: write
-
   update:
     name: Изолированно обновить и проверить
-    needs:
-      - detect
-      - github-desktop
-      - distroshelf
+    needs: detect
     if: >-
       ${{
         !cancelled() &&
@@ -233,7 +178,6 @@ jobs:
         env:
           PACKAGES_JSON: ${{ needs.detect.outputs.packages }}
           DETECTION_FAILURES_JSON: ${{ needs.detect.outputs.detection_failures }}
-          GITHUB_DESKTOP_UPSTREAM_COMMIT: ${{ needs.github-desktop.outputs.upstream_commit }}
           UPDATE_PLAN_JSON: ${{ needs.detect.outputs.expected_updates }}
           AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
         run: |
@@ -279,9 +223,64 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  repair:
+    name: Проверить весь каталог для восстановления
+    needs: [pause_status, detect, update]
+    if: >-
+      ${{
+        !cancelled() &&
+        needs.pause_status.outputs.paused == 'true' &&
+        needs.update.result == 'success' &&
+        needs.update.outputs.successful != '[]'
+      }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    permissions:
+      contents: read
+    outputs:
+      tree: ${{ steps.full.outputs.tree }}
+    steps:
+      - name: Получить точный base кандидатов
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ needs.detect.outputs.base_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Подготовить инструменты
+        uses: ./.github/actions/setup-stplr-spec
+        with:
+          system-packages: jq rpm cpio shellcheck sqlite3
+
+      - name: Получить кандидатные diff
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: autonomous-update-diagnostics-${{ github.run_id }}
+          path: ${{ runner.temp }}/update-results
+
+      - name: Проверить объединённый набор на всём каталоге ALT p11
+        id: full
+        env:
+          EXPECTED_BASE_SHA: ${{ needs.detect.outputs.base_sha }}
+          AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
+          DETECTED_PACKAGES_JSON: ${{ needs.detect.outputs.checked_packages }}
+          EXPECTED_UPDATES_JSON: ${{ needs.detect.outputs.expected_updates }}
+        run: |
+          .github/tools/validate_paused_repair.sh 2>&1 |
+            tee "$RUNNER_TEMP/paused-repair.log"
+
+      - name: Сохранить журнал полной проверки восстановления
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: paused-repair-diagnostics-${{ github.run_id }}
+          path: ${{ runner.temp }}/paused-repair.log
+          if-no-files-found: warn
+          retention-days: 30
+
   publish:
     name: Опубликовать проверенные обновления
-    needs: [detect, github-desktop, update]
+    needs: [pause_status, detect, update, repair]
     if: ${{ !cancelled() && needs.update.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 35
@@ -332,11 +331,10 @@ jobs:
           AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
           DETECTED_PACKAGES_JSON: ${{ needs.detect.outputs.checked_packages }}
           EXPECTED_UPDATES_JSON: ${{ needs.detect.outputs.expected_updates }}
-          EXPECTED_GITHUB_DESKTOP_COMMIT: ${{ needs.github-desktop.outputs.upstream_commit }}
         run: .github/tools/validate_update_artifact.sh
 
       - name: Применить только успешные обновления
-        if: ${{ steps.publication_base.outputs.fresh == 'true' }}
+        if: ${{ steps.publication_base.outputs.fresh == 'true' && (needs.pause_status.outputs.paused != 'true' || needs.repair.result == 'success') }}
         env:
           AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
         run: |
@@ -350,13 +348,16 @@ jobs:
 
       - name: Отправить обновления прямо в main
         id: publish
-        if: ${{ steps.publication_base.outputs.fresh == 'true' }}
+        if: ${{ steps.publication_base.outputs.fresh == 'true' && (needs.pause_status.outputs.paused != 'true' || needs.repair.result == 'success') }}
         env:
           SUCCESSFUL_PACKAGES: ${{ needs.update.outputs.successful }}
           CURRENT_PACKAGES: ${{ needs.detect.outputs.current_packages }}
           AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
           GH_TOKEN: ${{ github.token }}
           EXPECTED_BASE_SHA: ${{ needs.detect.outputs.base_sha }}
+          NIVORA_CHECK_UPDATER_PAUSE: '1'
+          NIVORA_FULL_REPAIR_RESULT: ${{ needs.repair.result }}
+          NIVORA_VERIFIED_REPAIR_TREE: ${{ needs.repair.outputs.tree }}
         run: |
           {
             jq -r '.[]' <<<"$CURRENT_PACKAGES"
@@ -371,12 +372,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PUSHED_SHA: ${{ steps.publish.outputs.sha }}
+          RESUME_ON_SUCCESS: ${{ needs.repair.result == 'success' }}
         run: |
           gh workflow run post-push-verify.yml \
             --repo "$GITHUB_REPOSITORY" \
             --ref main \
             -f sha="$PUSHED_SHA" \
-            -f updater_run_id="$GITHUB_RUN_ID"
+            -f updater_run_id="$GITHUB_RUN_ID" \
+            -f resume_on_success="$RESUME_ON_SUCCESS"
 
       - name: Приостановить updater при сбое запуска post-push проверки
         if: >-
@@ -393,19 +396,40 @@ jobs:
           'не удалось запустить post-push workflow'
 
       - name: Синхронизировать постоянные отчёты о сбоях
+        id: failure_reports
         if: >-
           ${{
             always() &&
             steps.artifact_gate.outcome == 'success' &&
-            steps.publish.outcome == 'success' &&
-            steps.publish.outputs.reason != 'main-advanced'
+            (
+              (
+                steps.publish.outcome == 'success' &&
+                (steps.publish.outputs.pushed == 'true' || steps.publish.outputs.reason == 'no-changes')
+              ) ||
+              (
+                needs.pause_status.outputs.paused == 'true' &&
+                (needs.repair.result == 'failure' || needs.update.outputs.successful == '[]')
+              )
+            )
           }}
         env:
           AUTONOMOUS_UPDATE_RESULTS_DIR: ${{ runner.temp }}/update-results
           AUTONOMOUS_UPDATE_RESOLVED_FILE: ${{ runner.temp }}/update-results/resolved-packages
           GH_TOKEN: ${{ github.token }}
           UPDATE_PLAN_JSON: ${{ needs.detect.outputs.expected_updates }}
+          AUTONOMOUS_UPDATE_REPAIR_FAILED: ${{ needs.repair.result == 'failure' }}
         run: .github/tools/report_update_failures.sh
+
+      - name: Сообщить об отложенном восстановлении
+        if: ${{ always() && needs.repair.result == 'failure' && steps.failure_reports.outcome == 'success' }}
+        run: |
+          {
+            echo '## Восстановление отложено'
+            echo
+            echo 'Объединённый набор обновлений не прошёл полную проверку каталога.'
+            echo 'Изменения не опубликованы, действующая пауза сохранена.'
+            echo 'Те же кандидаты будут проверены снова через 6 часов; изменившиеся источники допускают более раннюю попытку.'
+          } >>"$GITHUB_STEP_SUMMARY"
 
       - name: Сообщить об автоматически отложенных обновлениях
         if: >-

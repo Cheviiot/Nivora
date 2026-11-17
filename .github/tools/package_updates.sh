@@ -5,11 +5,8 @@ readonly -a PACKAGES=(
     anidesk
     antigravity
     balena-etcher
-    casement
     chatgpt
     claude
-    distroshelf
-    github-desktop
     happ
     opencode
     parsec
@@ -60,8 +57,9 @@ git_latest_stable_tag() {
     for attempt in 1 2 3; do
         tag="$(
             GIT_TERMINAL_PROMPT=0 timeout 60s \
-                git ls-remote --tags --refs "https://github.com/${repository}.git" 'refs/tags/v*' |
-                awk '{sub("refs/tags/", "", $2); print $2}' |
+                git ls-remote --tags --refs "https://github.com/${repository}.git" |
+                awk '{sub("refs/tags/", "", $2); sub(/^v/, "", $2); print $2}' |
+                grep -E '^[0-9]+\.[0-9]' |
                 grep -Eiv '(^|[-_.])(alpha|beta|rc|pre|preview)([-_.0-9]|$)' |
                 sort -V |
                 tail -1
@@ -407,7 +405,7 @@ upstream_source_published() {
             --connect-timeout 30 --max-time 120 -sSIL "$url" 2>/dev/null
     )" || return 1
     status="$(
-        awk 'toupper($1) ~ /^HTTP/ { code = $2 } END { print code }' <<<"$headers"
+        awk 'toupper($1) ~ /^HTTP/ { code = $2; gsub(/\r/, "", code) } END { print code }' <<<"$headers"
     )"
     [[ "$status" =~ ^2[0-9][0-9]$ ]]
 }
@@ -431,15 +429,8 @@ latest_version() {
     anidesk) latest_anidesk ;;
     antigravity) latest_antigravity ;;
     balena-etcher) github_latest_release balena-io/etcher ;;
-    casement)
-        github_latest_release Cheviiot/Casement | sed 's/^v//'
-        ;;
     chatgpt) latest_chatgpt ;;
     claude) latest_claude_desktop ;;
-    distroshelf) github_latest_release ranfdev/DistroShelf ;;
-    github-desktop)
-        github_latest_release desktop/desktop | sed 's/^release-//'
-        ;;
     happ) github_latest_release Happ-proxy/happ-desktop ;;
     opencode) github_latest_release anomalyco/opencode ;;
     parsec) latest_parsec ;;

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="1200" height="360" role="img" aria-labelledby="title desc">
+  <title id="title">Nivora — приложения для ALT Linux p11</title>
+  <desc id="desc">Тёмно-зелёная обложка каталога с крупным названием Nivora и геометрической полкой приложений в мятных и тёплых оттенках.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#10271f"/>
+      <stop offset="1" stop-color="#17382d"/>
+    </linearGradient>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#e9f7cf"/>
+      <stop offset="1" stop-color="#bce6c0"/>
+    </linearGradient>
+    <clipPath id="cover"><rect width="1200" height="360" rx="24"/></clipPath>
+  </defs>
+  <g clip-path="url(#cover)">
+    <rect width="1200" height="360" fill="url(#background)"/>
+    <circle cx="1110" cy="60" r="284" fill="#7ea891" opacity=".06"/>
+    <circle cx="1110" cy="60" r="205" fill="none" stroke="#9abfa9" stroke-opacity=".11"/>
+    <path d="M688 0v360" stroke="#82a28d" stroke-opacity=".15"/>
+    <g font-family="Arial, Helvetica, sans-serif">
+      <text x="64" y="65" fill="#a8c8b4" font-size="16" font-weight="600" letter-spacing="4">КАТАЛОГ ПРИЛОЖЕНИЙ</text>
+      <text x="58" y="198" fill="#f0f6e7" font-size="116" font-weight="700" letter-spacing="-6">Nivora</text>
+      <text x="66" y="251" fill="#d3e4d7" font-size="27">Приложения для ALT Linux p11</text>
+      <path d="M66 304h50" stroke="#c6eeb3" stroke-width="3"/>
+      <text x="132" y="310" fill="#a8c8b4" font-size="17" letter-spacing=".4">Работа. Общение. Вдохновение.</text>
+    </g>
+    <g transform="translate(770 26) rotate(-9 150 150)">
+      <rect x="0" y="0" width="90" height="90" rx="21" fill="#294b3e" stroke="#60806b" stroke-opacity=".4"/>
+      <rect x="108" y="0" width="90" height="90" rx="21" fill="#47634b" stroke="#7e9a7d" stroke-opacity=".35"/>
+      <rect x="216" y="0" width="90" height="90" rx="21" fill="#234535" stroke="#60806b" stroke-opacity=".4"/>
+      <rect x="0" y="108" width="90" height="90" rx="21" fill="#254838" stroke="#60806b" stroke-opacity=".4"/>
+      <rect x="108" y="108" width="90" height="90" rx="21" fill="url(#tile)"/>
+      <rect x="216" y="108" width="90" height="90" rx="21" fill="#725c3f" stroke="#b39a71" stroke-opacity=".45"/>
+      <rect x="0" y="216" width="90" height="90" rx="21" fill="#395748" stroke="#60806b" stroke-opacity=".4"/>
+      <rect x="108" y="216" width="90" height="90" rx="21" fill="#234535" stroke="#60806b" stroke-opacity=".4"/>
+      <rect x="216" y="216" width="90" height="90" rx="21" fill="#294b3e" stroke="#60806b" stroke-opacity=".4"/>
+      <g fill="none" stroke="#bfdac5" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M29 30h32v24H45L34 63v-9h-5z"/>
+        <path d="m148 28-13 17 13 17m13-34 13 17-13 17"/>
+        <circle cx="261" cy="45" r="18"/><path d="M243 45h36m-18-18c-10 11-10 25 0 36 10-11 10-25 0-36Z"/>
+        <path d="M27 152h36m-18-18v36"/><circle cx="45" cy="152" r="24" opacity=".5"/>
+        <path d="m253 137 24 16-24 16z" stroke="#f2d8a7"/>
+        <path d="M29 260v-15h32v32H29v-9m8-3 8-8 9 7m-17-19v9"/>
+        <path d="M153 242v38m-19-19h38m-33-14 28 28m0-28-28 28"/>
+        <path d="M244 251h34v25h-34zM251 244h20m-10 33v7"/>
+      </g>
+      <path d="M130 177v-48h12l22 28v-28h12v48h-12l-22-28v28z" fill="#204a36"/>
+    </g>
+  </g>
+</svg>

@@ -412,88 +412,125 @@ class ReadmeTests(unittest.TestCase):
     def fixture() -> tuple[str, dict[str, dict[str, object]]]:
         metadata = {
             "alpha": {"version": "1.2.3", "architectures": ["amd64"]},
-            "beta": {"version": "4.5.6", "architectures": ["all"]},
+            "beta": {"version": "4.5.6", "architectures": ["amd64", "arm64"]},
+            "gamma": {"version": "7.0", "architectures": ["all"]},
+            "delta": {"version": "8.0", "architectures": ["amd64"]},
+            "epsilon": {"version": "9.0", "architectures": ["amd64"]},
         }
-        categories = "\n".join(
-            f'<tr><th colspan="4" align="left">{category}</th></tr>'
-            for category in VALIDATOR.EXPECTED_README_CATEGORIES
-        )
-        cards = """<tr><!-- package-card:alpha -->
-<td>Alpha</td><td><code>1.2.3</code></td><td><code>amd64</code></td>
-<td><code>nivora/alpha</code></td>
-</tr>
-<tr><!-- package-card:beta -->
-<td>Beta</td><td><code>4.5.6</code></td><td><code>all</code></td>
-<td><code>nivora/beta</code></td>
-</tr>
-"""
-        text = f"""<!-- package-count -->
-<p><strong>2 пакета</strong></p>
+        for package, values in metadata.items():
+            values["homepage"] = f"https://{package}.example/"
+        sections = []
+        groups = [("alpha", "beta"), ("gamma",), ("delta",), ("epsilon",)]
+        for category, packages in zip(VALIDATOR.EXPECTED_README_CATEGORIES, groups, strict=True):
+            cards = []
+            for package in packages:
+                values = metadata[package]
+                arches = " ".join(f"<code>{arch}</code>" for arch in values["architectures"])
+                span = 'colspan="2"' if len(packages) == 1 else 'width="50%"'
+                cards.append(f'''<td {span} valign="top">
+<!-- package-card:{package} -->
+<h3><img src="{package}/icon.svg" alt=""> <a href="{package}/README.md">{package}</a></h3>
+<p>Description. <a href="{values['homepage']}">Сайт</a></p>
+<!-- package-meta:{package} --><p><sub>Версия <code>{values['version']}</code> · {arches}</sub></p><!-- /package-meta:{package} -->
+</td>''')
+            sections.append(f"## {category}\n\n<table>\n<tr>\n" + "\n".join(cards) + "\n</tr>\n</table>")
+        text = """<!-- package-count -->
+<p><strong>5 пакетов</strong></p>
 <!-- catalog:start -->
-<table>
-<tr><th>Приложение</th><th>Версия</th><th>Архитектуры</th><th>Пакет</th></tr>
-{categories}
-{cards}</table>
-<!-- catalog:end -->
-"""
+""" + "\n\n".join(sections) + "\n<!-- catalog:end -->\n"
         return text, metadata
 
-    def test_html_package_cards_are_valid(self):
+    def test_two_column_cards_and_spanning_cards_are_valid(self):
         text, metadata = self.fixture()
-        errors = []
-        VALIDATOR.validate_readme_text(text, metadata, errors)
-        self.assertEqual(errors, [])
+        for counter in ("5 пакетов", "5 приложений"):
+            with self.subTest(counter=counter):
+                errors = []
+                VALIDATOR.validate_readme_text(text.replace("5 пакетов", counter), metadata, errors)
+                self.assertEqual(errors, [])
 
     def test_readme_regressions_are_rejected(self):
         text, metadata = self.fixture()
         cases = {
-            "wrong counter": (text.replace("2 пакета", "3 пакета"), "counter"),
+            "wrong counter": (text.replace("5 пакетов", "6 пакетов"), "counter"),
+            "duplicate counter": ("<!-- package-count -->" + text, "counter"),
             "missing card": (
                 text.replace("<!-- package-card:beta -->", ""),
                 "one package card for beta",
             ),
             "duplicate card": (
                 text.replace(
-                    "<!-- catalog:end -->",
-                    "<!-- package-card:alpha -->\n<!-- catalog:end -->",
+                    "<!-- package-card:beta -->", "<!-- package-card:alpha -->",
                 ),
                 "one package card for alpha",
+            ),
+            "unknown card": (text.replace("package-card:beta", "package-card:unknown"), "unknown package cards"),
+            "two packages in one cell": (
+                text.replace("<!-- package-card:alpha -->", "<!-- package-card:alpha --><!-- package-card:beta -->"),
+                "every card cell",
             ),
             "stale version": (
                 text.replace("<code>4.5.6</code>", "<code>4.5.5</code>"),
                 "version 4.5.6",
             ),
-            # Drop whichever category is declared last, so the case follows
-            # EXPECTED_README_CATEGORIES instead of naming one by hand.
+            "extra architecture": (
+                text.replace("<code>1.2.3</code> · <code>amd64</code>",
+                             "<code>1.2.3</code> · <code>amd64</code> <code>arm64</code>"),
+                "architectures differ",
+            ),
+            "duplicate architecture": (
+                text.replace("<code>1.2.3</code> · <code>amd64</code>",
+                             "<code>1.2.3</code> · <code>amd64</code> <code>amd64</code>"),
+                "architectures differ",
+            ),
+            "architecture moved outside metadata": (
+                text.replace("<code>4.5.6</code> · <code>amd64</code> <code>arm64</code>",
+                             "<code>4.5.6</code> · <code>amd64</code>")
+                    .replace("<!-- /package-meta:beta -->",
+                             "<!-- /package-meta:beta --><p>Also mentions <code>arm64</code>.</p>"),
+                "architectures differ",
+            ),
+            "missing metadata boundary": (text.replace("<!-- /package-meta:alpha -->", ""), "metadata"),
+            "cross-card metadata": (
+                text.replace("package-meta:alpha", "package-meta:swap")
+                    .replace("package-meta:beta", "package-meta:alpha")
+                    .replace("package-meta:swap", "package-meta:beta"),
+                "metadata block",
+            ),
+            "metadata before card marker": (
+                text.replace("<!-- package-card:alpha -->", "")
+                    .replace("<!-- /package-meta:alpha -->", "<!-- /package-meta:alpha --><!-- package-card:alpha -->"),
+                "metadata is out of order",
+            ),
+            "unexpected metadata markup": (
+                text.replace("<p><sub>Версия", '<p class="extra"><sub>Версия', 1),
+                "invalid metadata paragraph",
+            ),
+            "unknown metadata outside catalogue": (
+                text + "<!-- package-meta:unknown --><!-- /package-meta:unknown -->",
+                "metadata markers",
+            ),
+            "missing package link": (text.replace('href="alpha/README.md"', 'href="beta/README.md"'), "package README link"),
+            "wrong website": (text.replace('href="https://alpha.example/"', 'href="https://other.example/"'), "official homepage link"),
+            "missing icon": (text.replace('<img src="alpha/icon.svg" alt="">', ""), "icon is missing"),
             "missing category": (
-                text.replace(
-                    f'<tr><th colspan="4" align="left">'
-                    f'{VALIDATOR.EXPECTED_README_CATEGORIES[-1]}</th></tr>\n',
-                    "",
-                ),
-                "catalog categories",
+                text.replace(f"## {VALIDATOR.EXPECTED_README_CATEGORIES[-1]}\n", ""),
+                "category",
             ),
-            "split tables": (
-                text.replace(
-                    '<tr><!-- package-card:beta -->',
-                    '</table><table><tr><!-- package-card:beta -->',
-                ),
-                "single table",
+            "table without category": (
+                text.replace("<!-- catalog:end -->", "<table></table><!-- catalog:end -->"),
+                "each category",
             ),
-            "missing column header": (
-                text.replace("<th>Версия</th>", ""),
-                "column headers",
+            "single card without span": (
+                text.replace('<td colspan="2" valign="top">', '<td valign="top">', 1),
+                "each row needs",
             ),
             "empty row": (
-                text.replace("</table>", '<tr><td colspan="4"></td></tr></table>'),
-                "every catalogue row",
+                text.replace("</table>", '<tr></tr></table>', 1),
+                "each row needs",
             ),
-            "two packages in one row": (
-                text.replace(
-                    '</tr>\n<tr><!-- package-card:beta -->',
-                    '<!-- package-card:beta -->',
-                ),
-                "every catalogue row",
+            "empty placeholder cell": (
+                text.replace("</tr>", '<td></td></tr>', 1),
+                "every card cell",
             ),
             "duplicate category": (
                 text.replace(
@@ -501,6 +538,13 @@ class ReadmeTests(unittest.TestCase):
                     VALIDATOR.EXPECTED_README_CATEGORIES[0],
                 ),
                 "catalog categories",
+            ),
+            "missing catalogue boundary": (text.replace("<!-- catalog:end -->", ""), "boundary markers"),
+            "duplicate catalogue boundary": (text + "<!-- catalog:end -->", "boundary markers"),
+            "unbalanced card markup": (text.replace("</sub>", "", 1), "unbalanced catalogue HTML"),
+            "card marker outside catalogue": (
+                text.replace("<!-- package-card:alpha -->", "") + "<!-- package-card:alpha -->",
+                "markers must stay inside",
             ),
         }
         for name, (candidate, expected) in cases.items():
@@ -511,17 +555,13 @@ class ReadmeTests(unittest.TestCase):
 
 
 class HeroTests(unittest.TestCase):
-    def test_hero_requires_optimized_2x_png(self):
+    def test_hero_requires_valid_bounded_svg_with_the_declared_viewbox(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            asset = root / ".github/assets/readme-hero.png"
+            asset = root / ".github/assets/readme-hero.svg"
             asset.parent.mkdir(parents=True)
-            asset.write_bytes(
-                b"\x89PNG\r\n\x1a\n"
-                + b"\x00\x00\x00\x0dIHDR"
-                + (2400).to_bytes(4, "big")
-                + (800).to_bytes(4, "big")
-            )
+            valid = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360"><rect width="1200" height="360"/></svg>'
+            asset.write_bytes(valid)
             old_root = VALIDATOR.ROOT
             VALIDATOR.ROOT = root
             try:
@@ -529,10 +569,18 @@ class HeroTests(unittest.TestCase):
                 VALIDATOR.validate_readme_hero(errors)
                 self.assertEqual(errors, [])
 
-                asset.write_bytes(b"not a PNG")
-                errors = []
-                VALIDATOR.validate_readme_hero(errors)
-                self.assertEqual(len(errors), 1)
+                cases = {
+                    "malformed XML": b"not an SVG",
+                    "wrong root": b'<html xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360"/>',
+                    "wrong viewBox": valid.replace(b"1200 360", b"1200 400"),
+                    "oversized SVG": valid + b" " * (1024 * 1024),
+                }
+                for name, candidate in cases.items():
+                    with self.subTest(name=name):
+                        asset.write_bytes(candidate)
+                        errors = []
+                        VALIDATOR.validate_readme_hero(errors)
+                        self.assertEqual(len(errors), 1, errors)
             finally:
                 VALIDATOR.ROOT = old_root
 

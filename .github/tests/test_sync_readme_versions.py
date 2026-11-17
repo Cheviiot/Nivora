@@ -1,4 +1,5 @@
 import importlib.util
+import re
 import unittest
 from pathlib import Path
 
@@ -13,51 +14,97 @@ SPEC.loader.exec_module(SYNC)
 
 
 class SyncCatalogTests(unittest.TestCase):
-    def test_updates_html_card_version_and_architectures(self):
-        readme = """  <tr><!-- package-card:demo -->
-    <td><strong>Demo</strong></td>
-    <td align="right" nowrap><code>1.0.0</code></td>
-    <td nowrap><code>amd64</code></td>
-    <td nowrap><code>nivora/demo</code></td>
-  </tr>
+    @staticmethod
+    def fixture():
+        return """# Hand-authored showcase
+<!-- catalog:start -->
+## Applications
+<table><tr>
+<td width="50%" valign="top">
+<!-- package-card:demo -->
+<h3><img src="demo/icon.svg" alt=""> Demo</h3>
+<p>Original description. <a href="https://demo.example/">Website</a></p>
+<!-- package-meta:demo --><p><sub>Версия <code>1.0.0</code> · <code>amd64</code></sub></p><!-- /package-meta:demo -->
+</td>
+<td width="50%" valign="top">
+<!-- package-card:other -->
+<h3>Other</h3>
+<!-- package-meta:other -->
+  <p><sub>Версия <code>3.0.0</code> · <code>amd64</code> <code>arm64</code></sub></p>
+<!-- /package-meta:other -->
+</td>
+</tr></table>
+<!-- catalog:end -->
+Hand-authored footer.
 """
-        result = SYNC.sync_catalog(
-            readme,
-            {"demo": ("2.0.0", ["amd64", "arm64"])},
+
+    def test_updates_only_owned_blocks_and_is_idempotent(self):
+        readme = self.fixture()
+        metadata = {
+            "demo": ("2.0.0", ["amd64", "arm64"]),
+            "other": ("3.1.0", ["amd64"]),
+        }
+        result = SYNC.sync_catalog(readme, metadata)
+        self.assertIn(
+            '<!-- package-meta:demo --><p><sub>Версия <code>2.0.0</code> · '
+            '<code>amd64</code> <code>arm64</code></sub></p><!-- /package-meta:demo -->',
+            result,
         )
         self.assertIn(
-            '<td align="right" nowrap><code>2.0.0</code></td>\n'
-            '    <td nowrap><code>amd64</code> <code>arm64</code></td>',
+            '<!-- package-meta:other -->\n  <p><sub>Версия <code>3.1.0</code> · '
+            '<code>amd64</code></sub></p>\n<!-- /package-meta:other -->',
             result,
         )
         self.assertNotIn("<code>1.0.0</code>", result)
+        owned_blocks = r"(<!-- package-meta:([a-z0-9-]+) -->).*?(<!-- /package-meta:\2 -->)"
+        self.assertEqual(
+            re.sub(owned_blocks, r"\1\3", readme, flags=re.DOTALL),
+            re.sub(owned_blocks, r"\1\3", result, flags=re.DOTALL),
+        )
+        self.assertEqual(SYNC.sync_catalog(result, metadata), result)
 
-    def test_rejects_missing_duplicate_and_cross_card_commands(self):
-        valid = """  <tr><!-- package-card:demo -->
-    <td align="right" nowrap><code>1</code></td>
-    <td nowrap><code>amd64</code></td>
-    <td nowrap><code>nivora/demo</code></td>
-  </tr>
-"""
-        cases = (
-            valid.replace("<!-- package-card:demo -->", ""),
-            valid.replace(
+    def test_rejects_ambiguous_or_cross_card_ownership(self):
+        valid = self.fixture()
+        metadata = {"demo": ("2", ["amd64"]), "other": ("4", ["arm64"])}
+        cases = {
+            "missing card": valid.replace("<!-- package-card:demo -->", ""),
+            "duplicate card": valid.replace(
                 "<!-- package-card:demo -->",
                 "<!-- package-card:demo --><!-- package-card:demo -->",
             ),
-            """  <tr><!-- package-card:demo -->
-    <td align="right" nowrap><code>1</code></td>
-    <td nowrap><code>amd64</code></td>
-  </tr>
-  <tr><!-- package-card:other -->
-    <td nowrap><code>nivora/demo</code></td>
-  </tr>
-""",
-        )
-        for candidate in cases:
-            with self.subTest(candidate=candidate):
+            "unknown card": valid.replace("package-card:other", "package-card:unknown"),
+            "missing metadata": valid.replace("<!-- package-meta:demo -->", ""),
+            "duplicate metadata": valid + "<!-- package-meta:demo -->",
+            "foreign metadata ID": valid.replace("package-meta:other", "package-meta:unknown"),
+            "cross-card metadata": valid.replace("package-meta:demo", "package-meta:swap")
+                .replace("package-meta:other", "package-meta:demo")
+                .replace("package-meta:swap", "package-meta:other"),
+            "metadata before card marker": valid.replace("<!-- package-card:demo -->", "")
+                .replace("<!-- /package-meta:demo -->", "<!-- /package-meta:demo --><!-- package-card:demo -->"),
+            "unexpected metadata markup": valid.replace(
+                "<code>1.0.0</code>", "<strong><code>1.0.0</code></strong>"
+            ),
+            "missing boundary": valid.replace("<!-- catalog:end -->", ""),
+            "duplicate boundary": valid + "<!-- catalog:end -->",
+            "outside catalogue": valid.replace("<!-- catalog:start -->", "").replace(
+                "<!-- package-card:other -->", "<!-- catalog:start --><!-- package-card:other -->"
+            ),
+            "metadata after catalogue": valid.replace("<!-- catalog:end -->", "").replace(
+                "<!-- package-meta:other -->", "<!-- catalog:end --><!-- package-meta:other -->"
+            ),
+        }
+        for name, candidate in cases.items():
+            with self.subTest(name=name):
                 with self.assertRaises(RuntimeError):
-                    SYNC.sync_catalog(candidate, {"demo": ("2", ["amd64"])})
+                    SYNC.sync_catalog(candidate, metadata)
+
+    def test_rejects_invalid_recipe_architectures(self):
+        for architectures in ([], ["s390x"], ["amd64", "amd64"], ["all", "arm64"]):
+            with self.subTest(architectures=architectures):
+                with self.assertRaises(RuntimeError):
+                    SYNC.sync_catalog(self.fixture(), {
+                        "demo": ("2", architectures), "other": ("4", ["amd64"]),
+                    })
 
 
 if __name__ == "__main__":

@@ -8,6 +8,8 @@ import shlex
 import sys
 import tomllib
 import xml.etree.ElementTree as ET
+from html import escape, unescape
+from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -35,7 +37,7 @@ REQUIRED_ROOT_FILES = {
     Path("SECURITY.md"),
     Path("LICENSE"),
     Path("stapler-repo.toml"),
-    Path(".github/assets/readme-hero.png"),
+    Path(".github/assets/readme-hero.svg"),
     Path(".github/support-matrix.toml"),
     Path(".github/docs/index.md"),
     Path(".github/docs/installation.md"),
@@ -119,8 +121,8 @@ RECIPE_COMMANDS = (
     "install-systemd-user",
 )
 EXPECTED_README_CATEGORIES = (
-    "Интернет, сеть и VPN",
     "AI и разработка",
+    "Интернет, сеть и VPN",
     "Медиа и игры",
     "Системные инструменты",
 )
@@ -832,6 +834,7 @@ def validate_package(
     return {
         "name": name,
         "version": version,
+        "homepage": scalar(text, "homepage"),
         "architectures": architectures or [],
         "local_sources": sorted(
             {
@@ -860,15 +863,135 @@ def validate_unique_local_source_urls(
                 )
 
 
+class ReadmeCatalogParser(HTMLParser):
+    """Locate real card cells without tying metadata to a visual column layout."""
+
+    VOID_TAGS = {
+        "area", "base", "br", "col", "embed", "hr", "img", "input",
+        "link", "meta", "param", "source", "track", "wbr",
+    }
+
+    def __init__(self, text: str) -> None:
+        super().__init__(convert_charrefs=True)
+        self.line_offsets = [0, *(match.end() for match in re.finditer("\n", text))]
+        self.stack: list[str] = []
+        self.categories: list[str] = []
+        self.tables: list[dict] = []
+        self.pending_category = None
+        self.table = None
+        self.row = None
+        self.cell = None
+
+    def absolute_position(self) -> int:
+        line, column = self.getpos()
+        return self.line_offsets[line - 1] + column
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attributes = dict(attrs)
+        if len(attributes) != len(attrs):
+            raise ValueError("duplicate HTML attributes in catalogue")
+        parent = self.stack[-1] if self.stack else None
+        if tag == "table":
+            if self.table is not None or self.pending_category is None:
+                raise ValueError("each category must have its own table after its heading")
+            self.table = {"category": self.pending_category, "rows": []}
+            self.tables.append(self.table)
+            self.pending_category = None
+        elif tag == "tr":
+            if self.table is None or self.row is not None or parent not in {"table", "tbody"}:
+                raise ValueError("catalogue rows must belong to their category table")
+            self.row = {"cells": []}
+            self.table["rows"].append(self.row)
+        elif tag == "td":
+            if self.row is None or self.cell is not None or parent != "tr":
+                raise ValueError("package cells must belong to a catalogue row")
+            span = attributes.get("colspan", "1")
+            if span not in {"1", "2"}:
+                raise ValueError("package cells may span only one or two columns")
+            self.cell = {
+                "start": self.absolute_position() + len(self.get_starttag_text()),
+                "end": None,
+                "span": int(span),
+                "markers": [],
+                "metadata": [],
+                "links": [],
+                "icons": [],
+            }
+            self.row["cells"].append(self.cell)
+        elif tag == "th":
+            raise ValueError("category headings belong outside the package card table")
+        if self.cell is not None:
+            if tag == "a":
+                self.cell["links"].append(attributes.get("href"))
+            elif tag == "img":
+                self.cell["icons"].append(attributes.get("src"))
+        if tag not in self.VOID_TAGS:
+            self.stack.append(tag)
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.handle_starttag(tag, attrs)
+        if tag not in self.VOID_TAGS:
+            self.handle_endtag(tag)
+
+    def handle_endtag(self, tag: str) -> None:
+        if not self.stack or self.stack[-1] != tag:
+            raise ValueError(f"unbalanced catalogue HTML near </{tag}>")
+        if tag == "td":
+            self.cell["end"] = self.absolute_position()
+            self.cell = None
+        elif tag == "tr":
+            self.row = None
+        elif tag == "table":
+            self.table = None
+        self.stack.pop()
+
+    def handle_data(self, data: str) -> None:
+        if self.table is not None and self.cell is None and data.strip():
+            raise ValueError("catalogue text must belong to a package card")
+        if self.table is None and not self.stack:
+            for line in data.splitlines():
+                match = re.fullmatch(r"##[ \t]+(.+?)[ \t]*", line)
+                if match:
+                    if self.pending_category is not None:
+                        raise ValueError("category heading has no card table")
+                    self.pending_category = match.group(1)
+                    self.categories.append(match.group(1))
+
+    def handle_comment(self, data: str) -> None:
+        comment = data.strip()
+        card = re.fullmatch(r"package-card:([a-z0-9][a-z0-9-]*)", comment)
+        metadata = re.fullmatch(r"(/?)package-meta:([a-z0-9][a-z0-9-]*)", comment)
+        if card or metadata:
+            if self.cell is None:
+                raise ValueError("package markers must be inside a card cell")
+            if card:
+                self.cell["markers"].append((card.group(1), self.absolute_position()))
+            else:
+                self.cell["metadata"].append((metadata.group(1), metadata.group(2), self.absolute_position()))
+        elif comment.startswith(("package-card:", "package-meta:", "/package-meta:")):
+            raise ValueError("malformed package marker in catalogue")
+
+    def close(self) -> None:
+        super().close()
+        if self.stack:
+            raise ValueError("unclosed HTML elements in catalogue")
+        if self.pending_category is not None:
+            raise ValueError("category heading has no card table")
+
+
 def validate_readme_text(
     text: str, metadata: dict[str, dict[str, object]], errors: list[str]
 ) -> None:
     count_match = re.search(
         r"<!--\s*package-count\s*-->\s*"
-        r"<p[^>]*>\s*<strong>(\d+)\s+пакет",
+        r"<p[^>]*>\s*<strong>(\d+)\s+(?:пакет(?:а|ов)?|приложени[ейя])(?=\s|<)",
         text,
     )
-    if not count_match or int(count_match.group(1)) != len(metadata):
+    if (
+        len(re.findall(r"<!--\s*package-count\s*-->", text)) != 1
+        or not count_match
+        or int(count_match.group(1)) != len(metadata)
+    ):
         errors.append("README.md: package counter is stale")
 
     start_marker = "<!-- catalog:start -->"
@@ -883,82 +1006,103 @@ def validate_readme_text(
         return
     catalog = text[start:end]
 
-    # A shared table keeps every category on the same column grid on GitHub.
-    if len(re.findall(r"<table\b", catalog)) != 1 or catalog.count("</table>") != 1:
-        errors.append("README.md: catalog must use a single table for aligned columns")
-
-    rows = re.findall(r"<tr[^>]*>(.*?)</tr>", catalog, re.DOTALL)
-    headers = re.findall(r"<th\b[^>]*>([^<]+)</th>", rows[0]) if rows else []
-    if headers != ["Приложение", "Версия", "Архитектуры", "Пакет"]:
-        errors.append("README.md: catalog column headers are missing or out of order")
-
-    # One package per row. Two packages sharing a row are stretched to the
-    # taller one, so the shorter card ends up with dead space at the bottom.
-    # Only the column headers and category dividers may contain no package.
-    categories = []
-    for row in rows[1:]:
-        category = re.fullmatch(
-            r'\s*<th colspan="4" align="left">([^<]+)</th>\s*', row
-        )
-        if category:
-            categories.append(category.group(1))
-            continue
-        found = re.findall(r"package-card:([a-z0-9-]+)", row)
-        if len(found) != 1:
-            errors.append(
-                "README.md: every catalogue row must hold exactly one package, "
-                f"got {found or 'none'}"
-            )
-
-    if tuple(categories) != EXPECTED_README_CATEGORIES:
+    parser = ReadmeCatalogParser(catalog)
+    try:
+        parser.feed(catalog)
+        parser.close()
+    except ValueError as error:
+        errors.append(f"README.md: {error}")
+        return
+    if tuple(parser.categories) != EXPECTED_README_CATEGORIES:
         errors.append(
             "README.md: catalog categories must be exactly: "
             + ", ".join(EXPECTED_README_CATEGORIES)
         )
 
-    markers = list(
-        re.finditer(
-            r"<!--\s*package-card:([a-z0-9][a-z0-9-]*)\s*-->", catalog
-        )
-    )
-    marker_ids = [match.group(1) for match in markers]
+    cards = []
+    for table in parser.tables:
+        if not table["rows"]:
+            errors.append("README.md: category tables must contain package cards")
+        for row in table["rows"]:
+            cells = row["cells"]
+            if not (
+                (len(cells) == 2 and all(cell["span"] == 1 for cell in cells))
+                or (len(cells) == 1 and cells[0]["span"] == 2)
+            ):
+                errors.append("README.md: each row needs two cards or one card spanning both columns")
+            for cell in cells:
+                if len(cell["markers"]) != 1:
+                    errors.append("README.md: every card cell must hold exactly one package")
+                else:
+                    cards.append(cell)
+
+    marker_ids = [cell["markers"][0][0] for cell in cards]
+    all_marker_ids = re.findall(r"<!-- package-card:([a-z0-9][a-z0-9-]*) -->", text)
+    if sorted(all_marker_ids) != sorted(marker_ids):
+        errors.append("README.md: package card markers must stay inside catalogue cells")
     expected_ids = set(metadata)
-    unknown_ids = sorted(set(marker_ids) - expected_ids)
+    unknown_ids = sorted(set(all_marker_ids) - expected_ids)
     if unknown_ids:
         errors.append(
             "README.md: unknown package cards: " + ", ".join(unknown_ids)
         )
+    for prefix in ("", "/"):
+        field_ids = re.findall(
+            rf"<!-- {prefix}package-meta:([a-z0-9][a-z0-9-]*) -->", text
+        )
+        if sorted(field_ids) != sorted(expected_ids):
+            errors.append("README.md: metadata markers must match the recipe catalogue")
 
     for package, values in metadata.items():
-        occurrences = [
-            index for index, marker in enumerate(markers) if marker.group(1) == package
-        ]
+        occurrences = [cell for cell in cards if cell["markers"][0][0] == package]
         if len(occurrences) != 1:
             errors.append(f"README.md: expected one package card for {package}")
             continue
-        marker_index = occurrences[0]
-        block_start = markers[marker_index].end()
-        block_end = (
-            markers[marker_index + 1].start()
-            if marker_index + 1 < len(markers)
-            else len(catalog)
-        )
-        card = catalog[block_start:block_end]
+        cell = occurrences[0]
+        card = catalog[cell["start"]:cell["end"]]
 
-        command = f"<code>nivora/{package}</code>"
-        if card.count(command) != 1:
-            errors.append(f"README.md: expected one install command for {package}")
+        if f"{package}/README.md" not in cell["links"]:
+            errors.append(f"README.md: package README link is missing from {package} card")
+        homepage = values.get("homepage")
+        if not isinstance(homepage, str) or not any(
+            isinstance(link, str) and link.rstrip("/") == homepage.rstrip("/")
+            for link in cell["links"]
+        ):
+            errors.append(f"README.md: official homepage link is missing from {package} card")
+        if not any(cell["icons"]):
+            errors.append(f"README.md: icon is missing from {package} card")
+
+        opening = f"<!-- package-meta:{package} -->"
+        closing = f"<!-- /package-meta:{package} -->"
+        fields = cell["metadata"]
+        if (
+            len(fields) != 2
+            or [field[:2] for field in fields] != [("", package), ("/", package)]
+            or text.count(opening) != 1
+            or text.count(closing) != 1
+        ):
+            errors.append(f"README.md: expected one metadata block for {package}")
+            continue
+        metadata_start = fields[0][2] + len(opening)
+        metadata_end = fields[1][2]
+        if not cell["markers"][0][1] < fields[0][2] < metadata_end:
+            errors.append(f"README.md: metadata is out of order for {package}")
+            continue
+        match = re.fullmatch(
+            r"\s*<p><sub>Версия\s+<code>([^<\r\n]+)</code>\s*·\s*"
+            r"((?:<code>(?:amd64|arm64|all)</code>\s*)+)</sub></p>\s*",
+            catalog[metadata_start:metadata_end],
+        )
+        if not match:
+            errors.append(f"README.md: invalid metadata paragraph for {package}")
+            continue
         version = str(values["version"])
-        if card.count(f"<code>{version}</code>") != 1:
+        if unescape(match.group(1)) != version or card.count(f"<code>{escape(version)}</code>") != 1:
             errors.append(f"README.md: version {version} is missing from {package} card")
         architectures = values.get("architectures", [])
-        if isinstance(architectures, list):
-            for architecture in architectures:
-                if f"<code>{architecture}</code>" not in card:
-                    errors.append(
-                        f"README.md: architecture {architecture} is missing "
-                        f"from {package} card"
-                    )
+        declared = re.findall(r"<code>(amd64|arm64|all)</code>", match.group(2))
+        if declared != architectures:
+            errors.append(f"README.md: architectures differ from the recipe for {package}")
 
 
 def validate_readme(metadata: dict[str, dict[str, object]], errors: list[str]) -> None:
@@ -967,24 +1111,26 @@ def validate_readme(metadata: dict[str, dict[str, object]], errors: list[str]) -
 
 
 def validate_readme_hero(errors: list[str]) -> None:
-    path = ROOT / ".github/assets/readme-hero.png"
+    path = ROOT / ".github/assets/readme-hero.svg"
     if not path.is_file():
         return
     try:
-        header = path.read_bytes()[:24]
-    except OSError as error:
-        errors.append(f"README hero: cannot read PNG: {error}")
+        if path.stat().st_size > 1024 * 1024:
+            errors.append("README hero: SVG must not exceed 1 MiB")
+            return
+        root = ET.fromstring(path.read_bytes())
+    except (OSError, ET.ParseError) as error:
+        errors.append(f"README hero: cannot read SVG: {error}")
         return
-    png_signature = b"\x89PNG\r\n\x1a\n"
-    if len(header) != 24 or header[:8] != png_signature or header[12:16] != b"IHDR":
-        errors.append("README hero: asset must be a valid PNG")
+    if root.tag != "{http://www.w3.org/2000/svg}svg":
+        errors.append("README hero: asset must be a valid SVG")
         return
-    width = int.from_bytes(header[16:20], "big")
-    height = int.from_bytes(header[20:24], "big")
-    if (width, height) != (2400, 800):
-        errors.append("README hero: PNG dimensions must be exactly 2400x800")
-    if path.stat().st_size > 1024 * 1024:
-        errors.append("README hero: PNG must not exceed 1 MiB")
+    try:
+        view_box = [float(value) for value in root.get("viewBox", "").split()]
+    except ValueError:
+        view_box = []
+    if view_box != [0, 0, 1200, 360]:
+        errors.append("README hero: SVG viewBox must be 0 0 1200 360")
 
 
 def validate_updater_package_list(errors: list[str]) -> None:

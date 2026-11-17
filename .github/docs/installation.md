@@ -48,6 +48,8 @@ stplr version
 
 ## 2. Подключить Nivora
 
+Если Stapler ещё не установлен, начните с [первого шага](#1-установить-stapler).
+
 ```bash
 sudo stplr repo add nivora https://github.com/Cheviiot/Nivora.git
 sudo stplr refresh

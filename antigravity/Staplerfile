@@ -1,6 +1,6 @@
 name='antigravity'
 version='2.32.1'
-release=1
+release=2
 # Full hub release id from the download page; version alone is not enough
 # because Google pins each build under <version>-<id>/
 # shortcut: detector only bumps version=, refresh upstream_hub from the download page when updating

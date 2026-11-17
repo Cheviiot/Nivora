@@ -7,6 +7,7 @@
 - Добавлен Antigravity App 2.32.1 из официального Linux tar.gz Google (amd64 и arm64):
   установка в `/opt/antigravity`, команда `/usr/bin/antigravity`, AppStream id
   `com.google.Antigravity`. Встроенный Electron-updater отключён.
+- `release=2`: официальная иконка с antigravity.google вместо скрина лендинга.
 
 ## 2026-11-13 — OpenCode Desktop и обновление каталога
 

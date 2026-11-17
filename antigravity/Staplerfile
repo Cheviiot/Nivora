@@ -2,9 +2,9 @@
 # because Google pins each build under <version>-<id>/
 # The updater refreshes version and the full build pin together.
 name='antigravity'
-version='2.32.1'
-release=7
-upstream_hub='2.32.1-6001966350991360'
+version='2.33.0'
+release=1
+upstream_hub='2.33.0-4731201358004224'
 summary='Manage AI agents and projects with Google Antigravity'
 summary_ru='Работа с ИИ-агентами и проектами Google Antigravity'
 group='Development/Tools'
@@ -65,7 +65,7 @@ sources_arm64=(
 )
 
 checksums=(
-	'sha256:4cb2d4fea74a74f17cfe251841b900249c5ad2728b961efdbf729dafae7fe842'
+	'sha256:a73387b229c6b1f5288860731133c5b26e153340eaed96d865032cd8a8535050'
 	'sha256:957ab13288c26cc4bca3de59e1b6402a2b5c00c776245e3b1a3d3ad25ed32885'
 	'sha256:473b6dc66930847fa137b44bdf675dfaca324467319acaac45b320892d79a64a'
 	'sha256:fc5eb0c847c8eaf3fed166c58e6ebfb6d20fae0060dc7b22c4ebedcfd8f02aa0'
@@ -75,7 +75,7 @@ checksums=(
 )
 
 checksums_arm64=(
-	'sha256:473e4cf16aed6f5f289118309f104deb1650245393d0f1e9d2a40b53e73236c9'
+	'sha256:fb321bd9832403cf766e3e9719c2063cee1747a320925d3aecd4f0ce67ca6013'
 	'sha256:957ab13288c26cc4bca3de59e1b6402a2b5c00c776245e3b1a3d3ad25ed32885'
 	'sha256:473b6dc66930847fa137b44bdf675dfaca324467319acaac45b320892d79a64a'
 	'sha256:fc5eb0c847c8eaf3fed166c58e6ebfb6d20fae0060dc7b22c4ebedcfd8f02aa0'

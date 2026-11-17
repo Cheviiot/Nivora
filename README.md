@@ -35,7 +35,7 @@
       <h3><a href="antigravity/README.md">Google Antigravity App</a></h3>
       <p>ИИ-агенты Google для ваших проектов. Ведите несколько задач и разговоров параллельно.</p>
       <!-- package-meta:antigravity -->
-      <p><sub>Версия <code>2.32.1</code> · <code>amd64</code> <code>arm64</code></sub></p>
+      <p><sub>Версия <code>2.33.0</code> · <code>amd64</code> <code>arm64</code></sub></p>
       <!-- /package-meta:antigravity -->
       <p><a href="antigravity/README.md#установка"><strong>Установить →</strong></a> &nbsp;·&nbsp; <a href="https://antigravity.google/download/">Сайт</a></p>
     </td>
@@ -45,7 +45,7 @@
       <h3><a href="chatgpt/README.md">ChatGPT</a></h3>
       <p>Чат, файлы и проекты в настольном приложении OpenAI. Встроенный Codex помогает работать с кодом.</p>
       <!-- package-meta:chatgpt -->
-      <p><sub>Версия <code>26.1111.21308</code> · <code>amd64</code> <code>arm64</code></sub></p>
+      <p><sub>Версия <code>26.1111.71025</code> · <code>amd64</code> <code>arm64</code></sub></p>
       <!-- /package-meta:chatgpt -->
       <p><a href="chatgpt/README.md#установка"><strong>Установить →</strong></a> &nbsp;·&nbsp; <a href="https://learn.chatgpt.com/docs/app">Сайт</a></p>
     </td>

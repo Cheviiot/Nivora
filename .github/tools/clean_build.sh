@@ -7,6 +7,8 @@ repo_root="$(cd "${script_dir}/../.." && pwd)"
 source "${script_dir}/lib/source_cache.sh"
 # shellcheck source=.github/tools/lib/alt_branch.sh
 source "${script_dir}/lib/alt_branch.sh"
+# shellcheck source=.github/tools/lib/alt_builder.sh
+source "${script_dir}/lib/alt_builder.sh"
 cd "$repo_root"
 
 branch="$(nivora_alt_branch)"
@@ -97,30 +99,8 @@ for command in curl python3 sha256sum tar; do
     }
 done
 "${script_dir}/prepare_stplr.sh" "${builder_dir}/stplr"
-install -m 0644 "${script_dir}/lib/alt_apt_network.sh" \
-    "${builder_dir}/alt_apt_network.sh"
-
-cat >"${builder_dir}/Containerfile" <<EOF
-FROM ${image}
-COPY alt_apt_network.sh /usr/local/lib/nivora/alt_apt_network.sh
-RUN bash /usr/local/lib/nivora/alt_apt_network.sh update \
-    && bash /usr/local/lib/nivora/alt_apt_network.sh run dist-upgrade -y \
-    && bash /usr/local/lib/nivora/alt_apt_network.sh run install -y ca-certificates stplr binutils python3
-COPY stplr /usr/local/bin/stplr
-RUN chmod 0755 /usr/local/bin/stplr && /usr/local/bin/stplr version
-EOF
-
-pulled=0
-for attempt in 1 2 3; do
-    if "$engine" pull "$image"; then
-        pulled=1
-        break
-    fi
-    sleep "$((attempt * 5))"
-done
-[[ "$pulled" -eq 1 ]] || exit 1
 "$engine" volume create "$cache_volume" >/dev/null
-"$engine" build -t "$builder_image" -f "${builder_dir}/Containerfile" "$builder_dir"
+nivora_prepare_alt_builder "$engine" "$branch" "$image" "$builder_dir" "$builder_image"
 
 import_stplr_source_cache \
     "$engine" "$builder_image" "$cache_volume" "$builder_dir" "$source_cache" \

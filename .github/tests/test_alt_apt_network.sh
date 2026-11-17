@@ -43,6 +43,11 @@ while [[ "${1:-}" == --* ]]; do shift; done
 duration="$1"
 shift
 printf 'timeout=%s\n' "$duration" >>"${NIVORA_ALT_APT_TIMEOUT_LOG:?}"
+if [[ "${NIVORA_ALT_APT_TEST_CASE:-}" == deadline ]]; then
+    # Consume the small test budget as a real timed-out attempt would.
+    sleep 1
+    exit 124
+fi
 exec "$@"
 EOF
     chmod +x "${case_dir}/bin/timeout"
@@ -51,6 +56,7 @@ EOF
 set -euo pipefail
 source_list=''
 args=()
+is_update=0
 while (($#)); do
     if [[ "$1" == -o ]]; then
         option="$2"
@@ -58,6 +64,7 @@ while (($#)); do
         [[ "$option" == Dir::Etc::sourcelist=* ]] && source_list="${option#*=}"
         shift 2
     else
+        [[ "$1" != update ]] || is_update=1
         args+=("$1")
         shift
     fi
@@ -65,6 +72,30 @@ done
 printf '%s\n' "${args[@]}" >>"${NIVORA_ALT_APT_ARGS_LOG:?}"
 cat "$source_list" >>"${NIVORA_ALT_APT_SOURCE_LOG:?}"
 printf '\n---attempt---\n' >>"${NIVORA_ALT_APT_SOURCE_LOG:?}"
+if [[ "$is_update" == 1 ]]; then
+    if [[ -n "$(find "${NIVORA_ALT_APT_LISTS:?}" -mindepth 1 -type f -print -quit)" ]]; then
+        printf 'stale indexes reached apt\n' >>"${NIVORA_ALT_APT_SOURCE_LOG}.dirty"
+        exit 1
+    fi
+    [[ -d "${NIVORA_ALT_APT_LISTS}/partial" ]]
+    printf 'old release\n' >"${NIVORA_ALT_APT_LISTS}/release"
+    printf 'partial index\n' >"${NIVORA_ALT_APT_LISTS}/partial/index"
+fi
+if [[ -n "${NIVORA_ALT_APT_TEST_MISMATCH:-}" ]]; then
+    # No generic failed-to-fetch warning: these zero-exit integrity errors
+    # themselves must prevent selection of the mixed repository snapshot.
+    printf 'W: %s\n' "$NIVORA_ALT_APT_TEST_MISMATCH"
+    exit 0
+fi
+if [[ "${NIVORA_ALT_APT_TEST_CASE:-}" == recover ]]; then
+    attempt="$(grep -c '^timeout=' "${NIVORA_ALT_APT_TIMEOUT_LOG:?}")"
+    if (( attempt <= 2 )); then
+        echo 'temporary mirror failure' >&2
+        exit 1
+    fi
+    echo 'Fetched signed ALT indexes after synchronization'
+    exit 0
+fi
 if [[ "${NIVORA_ALT_APT_ALWAYS_FAIL:-0}" == 1 ]]; then
     echo 'temporary mirror failure' >&2
     exit 1
@@ -104,7 +135,7 @@ run_update() {
         NIVORA_ALT_APT_ALWAYS_FAIL="$always_fail" \
         NIVORA_ALT_APT_GPG_WARNING="$gpg_warning" \
         NIVORA_ALT_APT_ATTEMPT_TIMEOUT_SECONDS=5 \
-        NIVORA_ALT_APT_TOTAL_TIMEOUT_SECONDS=20 \
+        NIVORA_ALT_APT_TOTAL_TIMEOUT_SECONDS="${NIVORA_ALT_APT_TEST_TOTAL_TIMEOUT_SECONDS:-20}" \
         bash "$helper" update
 }
 
@@ -165,16 +196,65 @@ for failure_mode in download signature; do
         fail "${failure_mode}: disabled repository signature checks"
 done
 
+# Both official candidates fail initially. The second pass must start again
+# with the primary, preserving order and clearing every complete/partial list.
+recovery_case="${test_root}/second-pass-recovery"
+setup_case "$recovery_case" p11 p11/branch
+printf 'pre-existing index\n' >"${recovery_case}/lists/old-index"
+if ! NIVORA_ALT_APT_TEST_CASE=recover run_update "$recovery_case" \
+    >"${recovery_case}/stdout" 2>"${recovery_case}/stderr"; then
+    cat "${recovery_case}/stderr" >&2
+    fail 'temporary failure of all mirrors did not recover on the second pass'
+fi
+[[ "$(grep -c '^timeout=' "${recovery_case}/timeouts")" -eq 3 ]] ||
+    fail 'recovery did not use exactly one complete pass and the recovered primary'
+assert_contains "${recovery_case}/stderr" '(pass 2/2, attempt 3,'
+assert_contains "${recovery_case}/stderr" 'selected http://ftp.altlinux.org/pub/distributions/ALTLinux'
+[[ ! -e "${recovery_case}/sources-seen.dirty" ]] ||
+    fail 'recovery reused complete or partial indexes from a previous attempt'
+
 failure_case="${test_root}/permanent-failure"
 setup_case "$failure_case" p11 p11/branch
+# Duplicate configured URLs must not multiply attempts within either pass.
+cp "${failure_case}/apt/sources.list.d/yandex.list" \
+    "${failure_case}/apt/sources.list.d/duplicate.list"
 if run_update "$failure_case" 1 >"${failure_case}/stdout" 2>"${failure_case}/stderr"; then
     fail 'permanent mirror failure unexpectedly succeeded'
 fi
 assert_contains "${failure_case}/stderr" 'all configured mirrors failed within 20s total'
-[[ "$(grep -c '^timeout=' "${failure_case}/timeouts")" -le 4 ]] ||
-    fail 'permanent mirror failure exceeded the bounded candidate count'
+[[ "$(grep -c '^timeout=' "${failure_case}/timeouts")" -eq 4 ]] ||
+    fail 'permanent failure did not stop after two passes over unique candidates'
 [[ "$(grep -c '^rpm ' "${failure_case}/apt/sources.list.d/alt.list")" == 3 ]] ||
     fail 'permanent failure replaced the original source configuration'
+[[ -z "$(find "${failure_case}/lists" -mindepth 1 -type f -print -quit)" ]] ||
+    fail 'permanent failure left mixed indexes behind'
+
+for mismatch in 'Checksum mismatch' 'Hash mismatch' 'Hash Sum mismatch' 'Size mismatch'; do
+    mismatch_case="${test_root}/${mismatch// /-}"
+    setup_case "$mismatch_case" p11 p11/branch
+    if NIVORA_ALT_APT_TEST_MISMATCH="$mismatch" run_update "$mismatch_case" \
+        >"${mismatch_case}/stdout" 2>"${mismatch_case}/stderr"; then
+        fail "zero-exit ${mismatch} was accepted as a verified repository"
+    fi
+    [[ "$(grep -c '^timeout=' "${mismatch_case}/timeouts")" -eq 4 ]] ||
+        fail "${mismatch}: did not retry and stop within two passes"
+    ! grep -Fq 'ALT apt: selected' "${mismatch_case}/stderr" ||
+        fail "${mismatch}: selected inconsistent indexes"
+    [[ ! -e "${mismatch_case}/sources-seen.dirty" ]] ||
+        fail "${mismatch}: carried mixed indexes into a retry"
+done
+
+# The total budget applies across all mirrors and both passes. A consumed
+# one-second budget clips the first attempt and prevents any further attempt.
+deadline_case="${test_root}/deadline"
+setup_case "$deadline_case" p11 p11/branch
+if NIVORA_ALT_APT_TEST_CASE=deadline NIVORA_ALT_APT_TEST_TOTAL_TIMEOUT_SECONDS=1 \
+    run_update "$deadline_case" >"${deadline_case}/stdout" 2>"${deadline_case}/stderr"; then
+    fail 'an exhausted total deadline unexpectedly succeeded'
+fi
+[[ "$(cat "${deadline_case}/timeouts")" == 'timeout=1s' ]] ||
+    fail 'an exhausted deadline allowed another mirror or reset for a second pass'
+assert_contains "${deadline_case}/stderr" 'all configured mirrors failed within 1s total (1 attempts)'
 
 if NIVORA_ALT_APT_COMMAND_TIMEOUT_SECONDS=0 bash "$helper" run install fixture-package \
     >"${test_root}/zero-timeout.stdout" 2>"${test_root}/zero-timeout.stderr"; then
@@ -182,4 +262,4 @@ if NIVORA_ALT_APT_COMMAND_TIMEOUT_SECONDS=0 bash "$helper" run install fixture-p
 fi
 assert_contains "${test_root}/zero-timeout.stderr" 'timeouts must be positive'
 
-echo 'OK: ALT p11 apt mirror failover, architecture preservation and bounded failure'
+echo 'OK: ALT p11 apt uses two bounded mirror passes and rejects inconsistent indexes'

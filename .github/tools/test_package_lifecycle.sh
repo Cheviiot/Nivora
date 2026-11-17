@@ -9,6 +9,8 @@ repo_root="$(cd "${script_dir}/../.." && pwd)"
 source "${script_dir}/lib/source_cache.sh"
 # shellcheck source=.github/tools/lib/alt_branch.sh
 source "${script_dir}/lib/alt_branch.sh"
+# shellcheck source=.github/tools/lib/alt_builder.sh
+source "${script_dir}/lib/alt_builder.sh"
 cd "$repo_root"
 
 branch="$(nivora_alt_branch)"
@@ -117,21 +119,9 @@ install -d "${work_dir}/builder" "${work_dir}/fixtures/previous-rpm"
 
 NIVORA_STPLR_CHANNEL="${NIVORA_STPLR_CHANNEL:-stable}" \
     "${script_dir}/prepare_stplr.sh" "${work_dir}/builder/stplr"
-install -m 0644 "${script_dir}/lib/alt_apt_network.sh" \
-    "${work_dir}/builder/alt_apt_network.sh"
 chmod 0755 "$work_dir" "${work_dir}/builder"
-
-cat >"${work_dir}/builder/Containerfile" <<EOF
-FROM ${base_image}
-COPY alt_apt_network.sh /usr/local/lib/nivora/alt_apt_network.sh
-RUN bash /usr/local/lib/nivora/alt_apt_network.sh update \\
-    && bash /usr/local/lib/nivora/alt_apt_network.sh run dist-upgrade -y \\
-    && bash /usr/local/lib/nivora/alt_apt_network.sh run install -y ca-certificates stplr binutils python3
-COPY stplr /usr/local/bin/stplr
-RUN chmod 0755 /usr/local/bin/stplr && /usr/local/bin/stplr version
-EOF
-"$engine" build -t "$rpm_image" -f "${work_dir}/builder/Containerfile" \
-    "${work_dir}/builder"
+nivora_prepare_alt_builder "$engine" "$branch" "$base_image" \
+    "${work_dir}/builder" "$rpm_image"
 
 missing=()
 for package in "${packages[@]}"; do

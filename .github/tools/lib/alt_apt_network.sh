@@ -89,7 +89,7 @@ collect_source_lines() {
 update_indexes() {
     local source_dir="${apt_root}/sources.list.d"
     local source_file url candidate_url source_line remaining started
-    local tmp_dir log_file candidate_file attempt=0 active_count
+    local tmp_dir log_file candidate_file attempt=0 active_count pass per_attempt
     local -a candidate_urls=() expanded_urls=() parts
     declare -A lines_by_url=() seen_url=()
 
@@ -122,50 +122,55 @@ update_indexes() {
 
     tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/nivora-alt-apt.XXXXXX")"
     started="$SECONDS"
-    for candidate_url in "${expanded_urls[@]}"; do
-        [[ -n "${seen_url[$candidate_url]+set}" ]] && continue
-        seen_url["$candidate_url"]=1
-        remaining=$((total_timeout - (SECONDS - started)))
-        (( remaining > 0 )) || break
-        ((attempt += 1))
-        if (( remaining < attempt_timeout )); then
-            per_attempt="$remaining"
-        else
-            per_attempt="$attempt_timeout"
-        fi
+    # A mirror can briefly serve inconsistent indexes during synchronization.
+    # Retry the same official candidates once, without resetting the deadline.
+    for pass in 1 2; do
+        seen_url=()
+        for candidate_url in "${expanded_urls[@]}"; do
+            [[ -n "${seen_url[$candidate_url]+set}" ]] && continue
+            seen_url["$candidate_url"]=1
+            remaining=$((total_timeout - (SECONDS - started)))
+            (( remaining > 0 )) || break 2
+            ((attempt += 1))
+            if (( remaining < attempt_timeout )); then
+                per_attempt="$remaining"
+            else
+                per_attempt="$attempt_timeout"
+            fi
 
-        candidate_file="${tmp_dir}/sources-${attempt}.list"
-        log_file="${tmp_dir}/apt-${attempt}.log"
-        : >"$candidate_file"
-        while IFS= read -r source_line; do
-            [[ -n "$source_line" ]] || continue
-            read -r -a parts <<<"$source_line"
-            parts[2]="$candidate_url"
-            printf '%s\n' "${parts[*]}" >>"$candidate_file"
-        done <<<"${lines_by_url[$candidate_url]:-}"
+            candidate_file="${tmp_dir}/sources-${attempt}.list"
+            log_file="${tmp_dir}/apt-${attempt}.log"
+            : >"$candidate_file"
+            while IFS= read -r source_line; do
+                [[ -n "$source_line" ]] || continue
+                read -r -a parts <<<"$source_line"
+                parts[2]="$candidate_url"
+                printf '%s\n' "${parts[*]}" >>"$candidate_file"
+            done <<<"${lines_by_url[$candidate_url]:-}"
 
-        [[ -s "$candidate_file" ]] || continue
+            [[ -s "$candidate_file" ]] || continue
 
-        echo "ALT apt: update ${candidate_url} (attempt ${attempt}, ${per_attempt}s cap)" >&2
-        clean_lists
-        if "$timeout_bin" --signal=TERM --kill-after=1s "${per_attempt}s" \
-            "$apt_get_bin" \
-            -o "Dir::Etc::sourcelist=${candidate_file}" \
-            -o Dir::Etc::sourceparts=- \
-            -o "Acquire::Retries=${apt_retries}" \
-            -o "Acquire::http::Timeout=${io_timeout}" \
-            -o "Acquire::http::ConnectTimeout=${connect_timeout}" \
-            update >"$log_file" 2>&1 &&
-            ! grep -Eiq 'failed to fetch|some index files failed|signature.*(fail|error|could not|couldn.t|invalid)|no_pubkey|not signed' "$log_file"; then
-            cat "$log_file"
-            install -m 0644 "$candidate_file" "${active_source}.nivora-tmp"
-            mv -f -- "${active_source}.nivora-tmp" "$active_source"
-            echo "ALT apt: selected ${candidate_url}" >&2
-            cleanup_tmp
-            return 0
-        fi
-        cat "$log_file" >&2
-        clean_lists
+            echo "ALT apt: update ${candidate_url} (pass ${pass}/2, attempt ${attempt}, ${per_attempt}s cap)" >&2
+            clean_lists
+            if "$timeout_bin" --signal=TERM --kill-after=1s "${per_attempt}s" \
+                "$apt_get_bin" \
+                -o "Dir::Etc::sourcelist=${candidate_file}" \
+                -o Dir::Etc::sourceparts=- \
+                -o "Acquire::Retries=${apt_retries}" \
+                -o "Acquire::http::Timeout=${io_timeout}" \
+                -o "Acquire::http::ConnectTimeout=${connect_timeout}" \
+                update >"$log_file" 2>&1 &&
+                ! grep -Eiq 'failed to fetch|some index files failed|(checksum|hash([[:space:]]+sum)?|size)[[:space:]]+mismatch|signature.*(fail|error|could not|couldn.t|invalid)|no_pubkey|not signed' "$log_file"; then
+                cat "$log_file"
+                install -m 0644 "$candidate_file" "${active_source}.nivora-tmp"
+                mv -f -- "${active_source}.nivora-tmp" "$active_source"
+                echo "ALT apt: selected ${candidate_url}" >&2
+                cleanup_tmp
+                return 0
+            fi
+            cat "$log_file" >&2
+            clean_lists
+        done
     done
 
     cleanup_tmp

@@ -32,32 +32,8 @@ sudo stplr install nivora/distroshelf
 Distrobox, экспорта приложений и бинарников из контейнера на хост, а также
 просмотра логов и состояния каждого контейнера без обращения к терминалу.
 
-Текущий Nivora payload собирается в ALT p11 и динамически связан с его ABI
-(включая ICU 74). Сборка идёт именно на p11, а не на Sisyphus: у Sisyphus
-более новый glibc, и собранный там бинарник не запустится на p11.
-
-## Технические детали
-
-Upstream не публикует готовый Linux-релиз DistroShelf — только vendored
-source tarball (основной канал распространения — Flathub). Как и
-[GitHub Desktop](../github-desktop/README.md), пакет собирается CI Nivora
-из исходников на отдельном workflow
-(`.github/workflows/distroshelf-linux.yml`) и публикуется в
-[собственном релизе Nivora](https://github.com/Cheviiot/Nivora/releases/tag/distroshelf-1.5.2-linux)
-— `Staplerfile` только скачивает и переупаковывает готовый результат, как
-и любой другой пакет каталога. Никакой компиляции при установке не
-происходит.
-
-Сборка идёт в официальном контейнере ветки **ALT p11**, а не Sisyphus,
-Fedora или Ubuntu — у них более новый glibc, и собранный там бинарник
-не запускается на системах со старым glibc. ALT p11 также не публикует
-GTK4-флейвор VTE (`vte3-gtk4`) вообще, поэтому workflow собирает VTE
-0.82.1 с `-Dgtk4=true` из исходников и встраивает получившуюся
-`libvte-2.91-gtk4.so.0` прямо в пакет (`/usr/lib/distroshelf/`) вместе с
-wrapper-скриптом — это единственная bundled-библиотека, всё остальное
-(GTK4, libadwaita, glib2, liblz4) — обычные системные зависимости.
-Подробности — в
-[`.github/docs/maintenance.md`](../.github/docs/maintenance.md#сборка-в-ci-github-desktop-distroshelf).
+Nivora предоставляет готовую сборку для ALT p11: компиляция при установке
+не требуется.
 
 ---
 

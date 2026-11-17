@@ -62,8 +62,8 @@ class ParserTests(unittest.TestCase):
             VALIDATOR.expanded_architectures(["all"]), ["amd64", "arm64"]
         )
 
-    def test_only_alt_targets_are_approved(self):
-        self.assertEqual(VALIDATOR.EXPECTED_TARGETS, {"alt-p11", "alt-sisyphus"})
+    def test_only_alt_p11_target_is_approved(self):
+        self.assertEqual(VALIDATOR.EXPECTED_TARGETS, {"alt-p11"})
         self.assertNotIn("experimental", VALIDATOR.SUPPORTED_TIERS)
 
 
@@ -76,27 +76,26 @@ stable_commit = "{sha}"
 main_commit = "{sha}"
 
 [images]
-alt_p11 = "registry.example/p11@sha256:{digest}"
-alt_sisyphus = "registry.example/sisyphus@sha256:{digest}"
+alt_p11 = "registry.altlinux.org/p11/base@sha256:{digest}"
 
 [expectations]
 package_count = 1
-target_count = 2
+target_count = 1
 logical_runtime_cells = {logical}
 declared_supported_runtime_cells = {supported}
 verified_runtime_cells = {verified}
-blocking_ci_build_cells_full_common_change = 2
+blocking_ci_build_cells_full_common_change = 1
 advisory_main_build_cells_full_common_change = 1
+
+[ci_coverage]
+blocking_builders = ["alt-p11-x86_64"]
+main_canary = "advisory-alt-p11-x86_64"
 
 [[targets]]
 id = "alt-p11"
 distro = "altlinux"
-ci_mode = "blocking-lifecycle"
-gated_architectures = ["amd64"]
-
-[[targets]]
-id = "alt-sisyphus"
-distro = "altlinux"
+release = "p11"
+branch_id = "p11"
 ci_mode = "blocking-lifecycle"
 gated_architectures = ["amd64"]
 
@@ -108,7 +107,7 @@ support = [
 ]
 """
 
-    def render(self, support, logical=4, supported=4, verified=2):
+    def render(self, support, logical=2, supported=2, verified=1):
         return self.MATRIX.format(
             sha="0" * 40,
             digest="a" * 64,
@@ -147,32 +146,84 @@ support = [
 
     def test_gated_amd64_and_ungated_arm64_are_accepted(self):
         support = (
-            '  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], '
+            '  { targets = ["alt-p11"], architectures = ["amd64"], '
             'tier = "verified", caveats = [] },\n'
-            '  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["arm64"], '
+            '  { targets = ["alt-p11"], architectures = ["arm64"], '
             'tier = "partial", caveats = ["arm64-not-gated"] },'
         )
         self.assertEqual(self.run_validator(self.render(support)), [])
 
     def test_verified_is_rejected_for_an_ungated_architecture(self):
         support = (
-            '  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64", "arm64"], '
+            '  { targets = ["alt-p11"], architectures = ["amd64", "arm64"], '
             'tier = "verified", caveats = [] },'
         )
-        errors = self.run_validator(self.render(support, verified=4))
+        errors = self.run_validator(self.render(support, verified=2))
         self.assertTrue(
             any("is not gated" in error for error in errors), errors
         )
 
     def test_missing_cell_is_reported(self):
         support = (
-            '  { targets = ["alt-p11", "alt-sisyphus"], architectures = ["amd64"], '
+            '  { targets = ["alt-p11"], architectures = ["amd64"], '
             'tier = "verified", caveats = [] },'
         )
-        errors = self.run_validator(self.render(support, logical=2, supported=2))
+        errors = self.run_validator(self.render(support, logical=1, supported=1))
         self.assertTrue(
             any("must occur exactly once" in error for error in errors), errors
         )
+
+    def test_non_p11_build_targets_are_rejected(self):
+        support = (
+            '  { targets = ["alt-p11"], architectures = ["amd64"], '
+            'tier = "verified", caveats = [] },\n'
+            '  { targets = ["alt-p11"], architectures = ["arm64"], '
+            'tier = "partial", caveats = ["arm64-not-gated"] },'
+        )
+        body = self.render(support)
+        cases = {
+            "renamed target": (
+                body.replace('"alt-p11"', '"alt-sisyphus"'),
+                "only approved target is alt-p11",
+            ),
+            "target keeps old release": (
+                body.replace('release = "p11"', 'release = "sisyphus"'),
+                "release and branch_id must be p11",
+            ),
+            "target keeps old branch": (
+                body.replace('branch_id = "p11"', 'branch_id = "sisyphus"'),
+                "release and branch_id must be p11",
+            ),
+            "blocking builder": (
+                body.replace('"alt-p11-x86_64"', '"alt-sisyphus-x86_64"'),
+                "only blocking builder must be alt-p11-x86_64",
+            ),
+            "advisory builder": (
+                body.replace(
+                    '"advisory-alt-p11-x86_64"', '"advisory-alt-sisyphus-x86_64"'
+                ),
+                "canary must also target ALT p11",
+            ),
+            "image mislabeled as p11": (
+                body.replace(
+                    "registry.altlinux.org/p11/base",
+                    "registry.altlinux.org/sisyphus/base",
+                ),
+                "must be the official ALT p11 base",
+            ),
+            "extra image": (
+                body.replace(
+                    "[images]\n",
+                    '[images]\nalt_sisyphus = "registry.altlinux.org/sisyphus/base@sha256:'
+                    + "b" * 64 + '"\n',
+                ),
+                "images must contain only alt_p11",
+            ),
+        }
+        for name, (candidate, expected) in cases.items():
+            with self.subTest(name=name):
+                errors = self.run_validator(candidate)
+                self.assertTrue(any(expected in error for error in errors), errors)
 
 
 class UpdaterListTests(unittest.TestCase):
@@ -246,8 +297,9 @@ class RecipeStyleTests(unittest.TestCase):
 version={version}
 release=1
 architectures=('amd64')
-compatible_with=('altlinux')
+compatible_with=('{compatible}')
 maintainer='Demo <demo@example.invalid>'
+license=('MIT')
 provides=()
 replaces=('demo')
 conflicts=()
@@ -262,13 +314,18 @@ package() {{ :; }}
 files() {{ :; }}
 """
 
-    def validate(self, version):
+    def validate(self, version, *, compatible="altlinux_p11", extra=""):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "demo").mkdir()
             (root / "demo/Staplerfile").write_text(
-                self.RECIPE.format(version=version), encoding="utf-8"
+                self.RECIPE.format(version=version, compatible=compatible) + extra,
+                encoding="utf-8",
             )
+            update_check = root / "demo/.stapler/update-check"
+            update_check.parent.mkdir()
+            update_check.write_text("#!/bin/sh\nprintf '1.2.3\\n'\n", encoding="utf-8")
+            update_check.chmod(0o755)
             old_root = VALIDATOR.ROOT
             VALIDATOR.ROOT = root
             try:
@@ -291,6 +348,48 @@ files() {{ :; }}
         self.assertTrue(
             any("single-quoted" in error for error in errors), errors
         )
+
+    def test_broad_alt_and_other_branch_compatibility_are_rejected(self):
+        for compatible in ("altlinux", "altlinux_sisyphus", "altlinux_p10"):
+            with self.subTest(compatible=compatible):
+                errors = self.validate("'1.2.3'", compatible=compatible)
+                self.assertTrue(
+                    any(
+                        "compatible_with must be ['altlinux_p11']" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+
+    def test_single_branch_dependencies_cannot_be_hidden_in_overrides(self):
+        cases = {
+            "altlinux": True,
+            "altlinux_p11": True,
+            "altlinux_sisyphus": True,
+            "altlinux_p10": True,
+            "amd64_altlinux": True,
+            "amd64_altlinux_p11": True,
+            "arm64_altlinux_sisyphus": True,
+            "amd64": False,
+            "arm64": False,
+        }
+        for field in ("deps", "opt_deps", "build_deps"):
+            for suffix, rejected in cases.items():
+                with self.subTest(field=field, suffix=suffix):
+                    override = f"{field}_{suffix}"
+                    errors = self.validate(
+                        "'1.2.3'", extra=f"{override}=('example')\n"
+                    )
+                    self.assertEqual(
+                        any(
+                            f"{override} is redundant or unsupported" in error
+                            for error in errors
+                        ),
+                        rejected,
+                        errors,
+                    )
+                    if not rejected:
+                        self.assertEqual(errors, [])
 
 
 class LinkTests(unittest.TestCase):

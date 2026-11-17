@@ -1,6 +1,6 @@
 name='chatgpt'
 version='26.1111.21308'
-release=1
+release=2
 # SHA-256 of the final HTTP ETag for each mutable /latest/ source. The
 # autonomous detector compares these even when upstream keeps the version.
 source_fingerprint_amd64='e5e490e2fe5ba8acb26248c1e2b65d39e22fdc940ca5ed5c21133a8a4b2af7b4'
@@ -14,7 +14,7 @@ homepage='https://developers.openai.com/codex/app'
 maintainer='OpenAI <support@openai.com>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 
 license=('LicenseRef-proprietary')
 

@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="#совместимость"><img src="https://img.shields.io/badge/ALT-p11%20%C2%B7%20Sisyphus-39cfa4?style=flat-square" alt="ALT p11 и Sisyphus"></a>
+  <a href="#совместимость"><img src="https://img.shields.io/badge/ALT-p11-39cfa4?style=flat-square" alt="ALT p11"></a>
   <a href="https://stplr.dev/docs/intro/"><img src="https://img.shields.io/badge/Stapler-v0.1.1-1ab8cd?style=flat-square" alt="Stapler v0.1.1"></a>
   <a href="https://github.com/Cheviiot/Nivora/actions/workflows/package-ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Cheviiot/Nivora/package-ci.yml?branch=main&amp;style=flat-square&amp;label=CI" alt="Статус проверок репозитория"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/Рецепты-MIT-8b5cf6?style=flat-square" alt="Рецепты под лицензией MIT"></a>
@@ -26,7 +26,7 @@
 
 ## Быстрый старт
 
-Нужны **ALT Linux p11 или Sisyphus** и установленный
+Нужны **ALT Linux p11** и установленный
 [Stapler](https://stplr.dev/docs/intro/). Поддерживаемая версия Stapler — `v0.1.1`.
 
 ```bash
@@ -161,13 +161,13 @@ sudo stplr install nivora/имя-пакета
 
 ## Совместимость
 
-Nivora предназначена **только для ALT Linux**. Архитектуру выбирайте по строке
+Nivora предназначена **для ALT Linux p11**. Архитектуру выбирайте по строке
 нужного приложения в каталоге.
 
-| Архитектура | ALT p11 | ALT Sisyphus |
-|:--|:--|:--|
-| **amd64** · x86_64 | Проверки сборки и установки в CI | Проверки сборки и установки в CI |
-| **arm64** · aarch64 | Заявлена для части пакетов, без CI | Заявлена для части пакетов, без CI |
+| Архитектура | ALT p11 |
+|:--|:--|
+| **amd64** · x86_64 | Проверки сборки и установки в CI |
+| **arm64** · aarch64 | Заявлена для части пакетов, без CI |
 
 Для `amd64` также настроены проверки состава пакета, базового запуска и
 удаления. Для `arm64` Stapler собирает пакет на машине пользователя.

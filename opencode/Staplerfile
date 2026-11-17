@@ -1,6 +1,6 @@
 name='opencode'
 version='2.3.0'
-release=1
+release=2
 summary='Open source AI coding agent desktop app'
 summary_ru='Десктопное приложение AI-агента OpenCode для работы с кодом'
 group='Development/Tools'
@@ -10,7 +10,7 @@ homepage='https://opencode.ai'
 maintainer='OpenCode <hello@opencode.ai>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 disable_network=1
 
 license=('MIT')

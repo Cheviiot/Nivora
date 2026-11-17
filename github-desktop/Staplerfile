@@ -1,6 +1,6 @@
 name='github-desktop'
 version='3.6.11'
-release=1
+release=2
 # Exact commit behind the upstream release-${version} tag. Keeping it
 # separate makes a stale pin visible when version is updated.
 upstream_commit='0102f49aa6c8c554de558299f31b6129b502a2fe'
@@ -13,7 +13,7 @@ homepage='https://github.com/desktop/desktop'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 
 license=('MIT')
 

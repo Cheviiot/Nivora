@@ -178,20 +178,15 @@ run_update_phases() {
     .github/tools/sync_readme_versions.py || return
     echo static-checks >"$phase_file" || return
     .github/tools/run_checks.sh || return
-    # Both supported ALT branches must accept the update before it can reach
-    # main; a p11-only regression used to be caught no earlier than the
-    # post-push gate, after users already had the commit.
-    local alt_branch
-    for alt_branch in p11 sisyphus; do
-        echo clean-build >"$phase_file" || return
-        NIVORA_ALT_BRANCH="$alt_branch" \
-            .github/tools/clean_build.sh "$package" || return
-        echo verify-artifact >"$phase_file" || return
-        .github/tools/verify_artifacts.sh "$package" || return
-        echo test-lifecycle >"$phase_file" || return
-        NIVORA_ALT_BRANCH="$alt_branch" NIVORA_LIFECYCLE_PACKAGES="$package" \
-            .github/tools/test_package_lifecycle.sh || return
-    done
+    # Every update must pass the full ALT p11 gate before it can reach main.
+    echo clean-build >"$phase_file" || return
+    NIVORA_ALT_BRANCH=p11 \
+        .github/tools/clean_build.sh "$package" || return
+    echo verify-artifact >"$phase_file" || return
+    .github/tools/verify_artifacts.sh "$package" || return
+    echo test-lifecycle >"$phase_file" || return
+    NIVORA_ALT_BRANCH=p11 NIVORA_LIFECYCLE_PACKAGES="$package" \
+        .github/tools/test_package_lifecycle.sh || return
 }
 
 if [[ "$#" -eq 0 ]]; then

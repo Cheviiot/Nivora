@@ -53,11 +53,18 @@ printf '%s\n' \
     'fi' \
     >"$fixture/repo/.github/tools/package_updates.sh"
 chmod 0755 "$fixture/repo/.github/tools/package_updates.sh"
-for tool in sync_readme_versions.py run_checks.sh clean_build.sh verify_artifacts.sh; do
+for tool in sync_readme_versions.py run_checks.sh verify_artifacts.sh; do
     printf '#!/bin/bash\nprintf %s\\n >>"%s"\n' \
         "$tool" "$fixture/later-phases" >"$fixture/repo/.github/tools/$tool"
     chmod 0755 "$fixture/repo/.github/tools/$tool"
 done
+cat >"$fixture/repo/.github/tools/clean_build.sh" <<'EOF'
+#!/bin/bash
+set -euo pipefail
+printf '%s\t%s\n' "$NIVORA_ALT_BRANCH" "$1" >>"$BUILD_TEST_LOG"
+EOF
+chmod 0755 "$fixture/repo/.github/tools/clean_build.sh"
+export BUILD_TEST_LOG="$fixture/build.log"
 cat >"$fixture/repo/.github/tools/test_package_lifecycle.sh" <<'EOF'
 #!/bin/bash
 set -euo pipefail
@@ -208,10 +215,11 @@ UPDATE_PLAN_JSON="{\"chatgpt\":{\"current\":\"1\",\"latest\":\"2\",\"fingerprint
     "$fixture/repo/.github/tools/autonomous_package_updates.sh" chatgpt
 grep -Fxq $'chatgpt\tupdate-recipe' "$fixture/chatgpt-raced-results/failed-packages"
 test ! -s "$fixture/chatgpt-raced-results/chatgpt/failed.patch"
-for branch in p11 sisyphus; do
-    grep -Fxq "$branch"$'\tparsec' "$LIFECYCLE_TEST_LOG"
-    [[ "$(grep -Fxc "$branch"$'\tchatgpt' "$LIFECYCLE_TEST_LOG")" -eq 2 ]]
-done
+# Each successful candidate runs one build and one lifecycle gate, both on
+# p11. Failed source/fingerprint checks must not reach either gate.
+expected_gates=$'p11\tantigravity\np11\tantigravity\np11\tparsec\np11\tchatgpt\np11\tchatgpt'
+[[ "$(cat "$BUILD_TEST_LOG")" == "$expected_gates" ]]
+[[ "$(cat "$LIFECYCLE_TEST_LOG")" == "$expected_gates" ]]
 
 LIFECYCLE_TEST_EXIT=47 \
 PATH="$fixture/bin:$PATH" \

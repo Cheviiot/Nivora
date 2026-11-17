@@ -5,7 +5,7 @@
 `Vintner` удалён из каталога и матрицы поддержки до появления релиза Cork с
 готовым бинарным артефактом. Пакет Cork не добавлять, пока upstream не опубликует
 этот бинарник и его проверяемую контрольную сумму; затем заново проверить
-источник загрузки, лицензию и сценарии установки на обеих ветках ALT.
+источник загрузки, лицензию и сценарии установки на ALT p11.
 
 ## Пауза автообновлений
 
@@ -17,8 +17,8 @@
 
 Пока issue открыт, каждый плановый запуск `check-updates.yml` проверяет свежий
 SHA `main` и при необходимости сам запускает `post-push-verify.yml` с
-`resume_on_success=true`. Полная матрица проверяет все пакеты на обеих ветках
-ALT. Запущенная или ожидающая проверка того же SHA не дублируется; после
+`resume_on_success=true`. Полная матрица проверяет все пакеты на ALT p11.
+Запущенная или ожидающая проверка того же SHA не дублируется; после
 неудачи повтор для этого SHA откладывается на шесть часов, а новый SHA `main`
 можно проверить сразу. Если recovery не выполняется, preflight может
 опубликовать пустой heartbeat-коммит раз в 30 дней, чтобы GitHub не отключил
@@ -36,8 +36,11 @@ ALT. Запущенная или ожидающая проверка того ж
 
 ## Инварианты
 
-- Nivora — репозиторий **только для ALT Linux**. Поддерживаются ветки `p11` и
-  `Sisyphus`; `compatible_with` каждого рецепта равен `('altlinux')`.
+- Nivora — репозиторий **только для ALT Linux p11**.
+  `compatible_with` каждого рецепта равен `('altlinux_p11')`.
+  Это нативный идентификатор Stapler: `ALT_BRANCH_ID=p11` из
+  `/etc/os-release` участвует в проверке совместимости при чтении каталога
+  и перед сборкой. Общий `altlinux` и другие ветки validator отклоняет.
 - В репозитории ровно 15 каталогов с `Staplerfile`.
 - Репозиторий развивается строго в одной git-ветке `main` (реф в
   `stapler-repo.toml`, триггеры CI и обновления идут только через неё).
@@ -91,33 +94,16 @@ Validator принимает в каталоге пакета только эт�
 
 ## Зависимости: одна цель, один список
 
-Поскольку ALT — единственная цель, зависимости живут в базовых полях
+Поскольку ALT p11 — единственная цель, зависимости живут в базовых полях
 `deps`, `opt_deps` и `build_deps`. Полей `deps_debian`, `deps_ubuntu`,
 `deps_fedora`, `deps_arch`, `deps_opensuse` и `deps_alpine` в репозитории
 больше нет, и validator их отвергает.
 
-Ветку уточняют только там, где имя пакета реально различается. Stapler
-резолвит overrides в порядке
-
-```
-deps_<arch>_altlinux_<branch> → deps_altlinux_<branch> →
-deps_<arch>_altlinux → deps_altlinux → deps_<arch> → deps
-```
-
-и берёт **первое** совпадение целиком — override не дополняет базовый список,
-а заменяет его. Поэтому `parsec` объявляет полный набор в обеих ветках:
-
-```bash
-deps=('glibc' 'libgcc1' ... 'libvulkan1')
-deps_altlinux_p11=("${deps[@]}" 'libavcodec61')
-deps_altlinux_sisyphus=("${deps[@]}" 'libavcodec62')
-```
-
-`ALT_BRANCH_ID` из `/etc/os-release` даёт `p11`/`sisyphus`, это и есть
-`ReleaseID` в терминах Stapler.
-
-`deps_altlinux` без ветки validator отклоняет: это ровно то же самое, что
-базовый `deps`, только менее очевидно.
+Дистрибутивные и веточные overrides, включая `deps_altlinux` и
+`deps_altlinux_p11`, запрещены: при одной платформе они дублируют базовые
+поля. Например, `parsec` включает `libavcodec61` непосредственно в `deps`.
+Имена и версии системных библиотек сверяются с p11; зависимости из других
+веток не используются для исправления сборки или установки.
 
 ### Альтернативы запрещены
 
@@ -160,11 +146,10 @@ bundled-библиотеки на всю систему. `dirty` вместо э
 
 ### Как перепроверить зависимости
 
-Имена пакетов сверяются с обеими ветками:
+Имена пакетов сверяются с p11 в отдельном контейнере:
 
 ```bash
-apt-cache policy <имя>                      # p11, если host — ALT p11
-podman run --rm registry.altlinux.org/sisyphus/base \
+podman run --rm registry.altlinux.org/p11/base \
   bash -c 'apt-get update -qq && apt-cache policy <имя>'
 ```
 
@@ -174,9 +159,9 @@ SONAME из payload сверяются через `Reverse Provides`:
 apt-cache showpkg 'libgtk-3.so.0()(64bit)'
 ```
 
-Последняя полная сверка: все объявленные имена зависимостей резолвятся в своей
-ветке, все SONAME, которые `dirty` реально превращает в `Requires`,
-предоставляются пакетами ALT в обеих ветках.
+Проверка должна подтвердить, что все объявленные имена зависимостей
+и SONAME, которые `dirty` превращает в `Requires`, предоставляются пакетами
+ALT p11. Полный прогон CI проверяет установку всего каталога на этой платформе.
 
 ## Уровни поддержки Stapler
 
@@ -191,13 +176,12 @@ Pin canary меняется отдельным reviewable diff после изу
 переключать пользователей с release на development build.
 
 Для каждого изменённого пакета `package-ci.yml` собирает RPM и прогоняет
-install/smoke/remove **в обеих ветках ALT** на `x86_64`. Canary собирает тот же
-пакет на pinned `main` только в Sisyphus и остаётся advisory.
-В pull request с изменённым каталогом пакета CI собирает только затронутые
-пакеты, даже если PR также регистрирует их в `.github/`. Общие статические
-проверки при этом запускаются для всего репозитория. PR без изменений в
-каталогах пакетов и push в `main` с изменениями общих файлов сохраняют полную
-матрицу сборок.
+install/upgrade/smoke/remove **на ALT p11** на `x86_64`. Canary собирает тот же
+пакет на pinned `main` Stapler в p11 и остаётся advisory.
+Если меняются только каталоги пакетов, CI собирает затронутые пакеты.
+Изменение общей инфраструктуры запускает весь каталог и в PR, и после push
+в `main`, в том числе если тот же diff меняет отдельные рецепты. Общие
+статические проверки всегда запускаются для всего репозитория.
 
 Сверка версий всех upstream выполняется при push в `main`; в PR доступность
 и контрольные суммы источников затронутого пакета проверяет его сборка.
@@ -251,7 +235,7 @@ Stapler v0.1.1 прокидывает `preupgrade`/`postupgrade` **только*
 
 ```bash
 distrobox create --name nivora-dev \
-  --image registry.altlinux.org/alt/alt:sisyphus
+  --image registry.altlinux.org/p11/base
 distrobox enter nivora-dev
 sudo apt-get update
 sudo apt-get install git-core bash python3 shellcheck curl sqlite3 rpm-build
@@ -263,15 +247,15 @@ sudo apt-get install git-core bash python3 shellcheck curl sqlite3 rpm-build
 .github/tools/run_checks.sh
 .github/tools/package_updates.sh check-all
 .github/tools/check_source_availability.sh <package> [version]
-NIVORA_ALT_BRANCH=sisyphus .github/tools/clean_build.sh --all
+.github/tools/clean_build.sh --all
 .github/tools/verify_artifacts.sh --all
-NIVORA_ALT_BRANCH=p11 .github/tools/test_package_lifecycle.sh
+.github/tools/test_package_lifecycle.sh
 ```
 
-`NIVORA_ALT_BRANCH` (`p11` или `sisyphus`, по умолчанию `sisyphus`) выбирает
-ветку для `clean_build.sh` и `test_package_lifecycle.sh`. Образ каждой ветки
-закреплён по digest в `.github/support-matrix.toml`, общий резолвер —
-`.github/tools/lib/alt_branch.sh`.
+`clean_build.sh` и `test_package_lifecycle.sh` используют p11 по умолчанию.
+Переменная `NIVORA_ALT_BRANCH` допускает только `p11`; другое значение
+останавливает запуск до сборки. Образ p11 закреплён по digest в
+`.github/support-matrix.toml`, общий резолвер — `.github/tools/lib/alt_branch.sh`.
 
 Установка зависимостей идёт только внутри одноразового официального ALT-образа.
 `.github/tools/lib/alt_apt_network.sh` сначала пробует исходное зеркало, затем
@@ -448,7 +432,7 @@ bash antigravity/tests/test-desktop-integration.sh
 Они проверяют результат `package()`/`files()` для двух архитектур, единый
 desktop/AppStream, права sandbox, ошибочные payload и передачу аргументов.
 При наличии `stplr-spec` тест также проверяет настоящий setter и сохранение
-остального рецепта. CI проверяет RPM и lifecycle на amd64 в p11 и Sisyphus;
+остального рецепта. CI проверяет RPM и lifecycle на amd64 в p11;
 ARM64 не имеет отдельного runner. Реальный вход Google и поведение окна
 проверяются в пользовательском графическом сеансе ALT.
 
@@ -525,7 +509,7 @@ Stapler показывает `nonfree_msg` или содержимое `nonfree_
 stplr-spec update-package package
 stplr-spec verify-checksums --path package/Staplerfile
 .github/tools/run_checks.sh
-NIVORA_ALT_BRANCH=sisyphus .github/tools/clean_build.sh package
+.github/tools/clean_build.sh package
 ```
 
 Нестандартная логика обнаружения версий находится в
@@ -581,8 +565,8 @@ source URL. Это меняет ключ локального кэша Stapler �
 Фазы: `detect-version`, `prepare-worktree`, `check-sources`, `update-recipe`,
 `pin-upstream-commit`, `pin-source-fingerprint`, `sync-catalog`,
 `static-checks`, `clean-build`, `verify-artifact`, `test-lifecycle`.
-Успех пакета означает сборку, проверку RPM и install/upgrade/remove на обеих
-ветках ALT до публикации; ошибка любой из этих фаз сохраняет старую версию.
+Успех пакета означает сборку, проверку RPM и install/upgrade/remove на ALT p11
+до публикации; ошибка любой из этих фаз сохраняет старую версию.
 
 **Патч ограничен каталогом пакета**, и publish-gate принимает ровно один
 изменённый путь. Из этого следует правило: никакой общий файл не может
@@ -675,10 +659,9 @@ GitHub Release Nivora — `Staplerfile` только скачивает и пе�
 dist со всеми Cargo-крейтами внутри, без обращения к crates.io на этапе
 сборки), готового Linux-релиза нет вообще — основной канал upstream это
 Flathub. `.github/workflows/distroshelf-linux.yml` собирает пакет внутри
-официального контейнера `registry.altlinux.org/p11/base` — **не**
-Sisyphus: у Sisyphus более новый glibc, а собранный там бинарник не
-запускается на p11 (glibc 2.38). Собирать нужно на окружении с glibc не
-новее, чем у самой старой поддерживаемой цели.
+официального контейнера `registry.altlinux.org/p11/base`, чтобы результат
+использовал ABI целевой системы. Среда сборки должна предоставлять glibc
+не новее, чем доступная пользователям p11.
 
 ALT p11 не публикует GTK4-флейвор VTE (`vte3-gtk4`) вообще, а системные
 glib2/libadwaita младше версий, которые Cargo.toml DistroShelf запрашивает
@@ -706,8 +689,8 @@ glib2/libadwaita младше версий, которые Cargo.toml DistroShel
 ## Clean-build
 
 ```bash
-NIVORA_ALT_BRANCH=sisyphus .github/tools/clean_build.sh package
-NIVORA_ALT_BRANCH=p11 .github/tools/clean_build.sh --all
+.github/tools/clean_build.sh package
+.github/tools/clean_build.sh --all
 .github/tools/verify_artifacts.sh --all
 ```
 

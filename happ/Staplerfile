@@ -1,6 +1,6 @@
 name='happ'
 version='4.7.2'
-release=1
+release=2
 summary='Happ Proxy Client'
 summary_ru='Прокси-клиент Happ'
 group='Networking/Other'
@@ -10,7 +10,7 @@ homepage='https://happ.su/'
 maintainer='FlyFrog LLC <support@happ.su>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 disable_network=1
 
 license=('LicenseRef-proprietary')

@@ -1,6 +1,6 @@
 name='distroshelf'
 version='1.5.2'
-release=7
+release=8
 summary='Graphical interface for managing Distrobox containers'
 summary_ru='Графический интерфейс для управления контейнерами Distrobox'
 group='System/Configuration/Other'
@@ -10,7 +10,7 @@ homepage='https://github.com/ranfdev/DistroShelf'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 disable_network=1
 
 license=('GPL-3.0-or-later')

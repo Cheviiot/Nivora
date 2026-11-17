@@ -1,6 +1,6 @@
 name='claude'
 version='5.11492.5'
-release=1
+release=2
 summary='Desktop application for Claude.ai'
 summary_ru='Десктопное приложение для Claude.ai'
 group='Development/Tools'
@@ -10,7 +10,7 @@ homepage='https://code.claude.com/docs/en/desktop-quickstart'
 maintainer='Anthropic PBC <support@anthropic.com>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 
 license=('LicenseRef-proprietary')
 

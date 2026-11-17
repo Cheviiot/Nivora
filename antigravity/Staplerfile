@@ -3,7 +3,7 @@
 # The updater refreshes version and the full build pin together.
 name='antigravity'
 version='2.32.1'
-release=6
+release=7
 upstream_hub='2.32.1-6001966350991360'
 summary='Google Antigravity App'
 summary_ru='Приложение Google Antigravity'
@@ -14,7 +14,7 @@ homepage='https://antigravity.google/download/'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64' 'arm64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 
 license=('LicenseRef-proprietary')
 

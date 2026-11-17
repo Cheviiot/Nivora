@@ -1,6 +1,6 @@
 name='parsec'
 version='150-104a'
-release=12
+release=13
 # SHA-256 of the final HTTP ETag for the mutable versionless upstream DEB.
 source_fingerprint='1bdf98c2922f6cb3fbab46afd9a5609f6fae2b2136d3b573c6589b83b364ce37'
 summary='Simple, low-latency desktop and game streaming.'
@@ -12,7 +12,7 @@ homepage='https://parsec.app/downloads'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 disable_network=1
 
 license=('LicenseRef-proprietary')
@@ -32,12 +32,8 @@ auto_reqprov_method="dirty"
 auto_req=0
 auto_prov=0
 
-deps=('glibc' 'libgcc1' 'libstdc++6' 'libudev0' 'libssl3' 'libX11' 'libXcursor' 'libXi' 'libSM' 'libGL' 'libalsa' 'libjpeg8' 'libpng16' 'libcurl' 'libXrandr' 'libvulkan1')
-# ALT's apt-rpm requires one concrete package name. Stapler resolves
-# release-specific overrides from ALT_BRANCH_ID, so p11 and Sisyphus must
-# not share the libavcodec dependency.
-deps_altlinux_p11=("${deps[@]}" 'libavcodec61')
-deps_altlinux_sisyphus=("${deps[@]}" 'libavcodec62')
+# The supported p11 runtime provides this FFmpeg ABI under libavcodec61.
+deps=('glibc' 'libgcc1' 'libstdc++6' 'libudev0' 'libssl3' 'libX11' 'libXcursor' 'libXi' 'libSM' 'libGL' 'libalsa' 'libjpeg8' 'libpng16' 'libcurl' 'libXrandr' 'libvulkan1' 'libavcodec61')
 
 build_deps=('binutils')
 

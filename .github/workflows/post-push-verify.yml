@@ -80,13 +80,12 @@ jobs:
           fi
 
   stable:
-    name: post-push stable ALT ${{ matrix.branch }} · ${{ matrix.package }}
+    name: post-push stable ALT p11 · ${{ matrix.package }}
     needs: plan
     if: ${{ needs.plan.outputs.has_packages == 'true' }}
     strategy:
       fail-fast: false
       matrix:
-        branch: [p11, sisyphus]
         package: ${{ fromJSON(needs.plan.outputs.packages) }}
       max-parallel: 8
     runs-on: ubuntu-24.04
@@ -108,7 +107,7 @@ jobs:
       - name: Собрать и проверить stable v0.1.1
         env:
           NIVORA_STPLR_CHANNEL: stable
-          NIVORA_ALT_BRANCH: ${{ matrix.branch }}
+          NIVORA_ALT_BRANCH: p11
           NIVORA_LIFECYCLE_PACKAGES: ${{ matrix.package }}
         run: |
           .github/tools/clean_build.sh "${{ matrix.package }}"

@@ -1,16 +1,15 @@
 #!/bin/bash
-# Single source of truth for the ALT branch a build or lifecycle run targets.
-# Both branches are declared in .github/support-matrix.toml, and the container
-# image of each one is digest-pinned there.
+# Nivora targets ALT p11. Its container image is digest-pinned in
+# .github/support-matrix.toml.
 
 nivora_alt_branch() {
-    local branch="${NIVORA_ALT_BRANCH:-sisyphus}"
+    local branch="${NIVORA_ALT_BRANCH:-p11}"
     case "$branch" in
-    p11 | sisyphus)
+    p11)
         printf '%s\n' "$branch"
         ;;
     *)
-        echo "Неизвестная ветка ALT: ${branch} (ожидается p11 или sisyphus)" >&2
+        echo "Неподдерживаемая ветка ALT: ${branch} (Nivora поддерживает только ALT p11)" >&2
         return 2
         ;;
     esac
@@ -19,6 +18,10 @@ nivora_alt_branch() {
 nivora_alt_branch_image() {
     local branch="$1"
     local matrix override image
+    [[ "$branch" == p11 ]] || {
+        echo "Неподдерживаемая ветка ALT: ${branch} (Nivora поддерживает только ALT p11)" >&2
+        return 2
+    }
     matrix="$(
         cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd
     )/support-matrix.toml"

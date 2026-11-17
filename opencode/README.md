@@ -2,7 +2,7 @@
 
 Официальное [десктопное приложение OpenCode](https://opencode.ai/download)
 для работы с кодом через AI-агента. Nivora упаковывает официальный Linux DEB
-для ALT Linux p11 и Sisyphus; доступны `amd64` и `arm64`.
+для ALT Linux p11; доступны `amd64` и `arm64`.
 
 ## Установка
 

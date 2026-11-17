@@ -1,7 +1,7 @@
 name='anidesk'
 version='0.0.1-beta.7'
 debian_version='0.0.1.beta.7'
-release=11
+release=12
 summary='Unofficial desktop client of Anixart'
 summary_ru='Неофициальный десктопный клиент Anixart'
 group='Video/Players'
@@ -11,7 +11,7 @@ homepage='https://github.com/theDesConnet/AniDesk'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 
 license=('GPL-2.0-only')
 

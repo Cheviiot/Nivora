@@ -1,6 +1,6 @@
 name='yandex-music'
 version='5.127.0'
-release=1
+release=2
 summary='Personal recommendations, mixes for any occasion and the latest musical releases'
 summary_ru='Персональные рекомендации, подборки на любой случай и свежие музыкальные новинки'
 group='Sound'
@@ -10,7 +10,7 @@ homepage='https://music.yandex.ru/download/'
 maintainer='Яндекс Музыка <music@support.yandex.ru>'
 
 architectures=('amd64')
-compatible_with=('altlinux')
+compatible_with=('altlinux_p11')
 
 license=('LicenseRef-proprietary')
 

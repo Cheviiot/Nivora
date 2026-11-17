@@ -3,6 +3,7 @@ set -euo pipefail
 
 readonly -a PACKAGES=(
     anidesk
+    antigravity
     balena-etcher
     casement
     chatgpt
@@ -240,6 +241,20 @@ latest_anidesk() {
     printf '%s\n' "$version"
 }
 
+latest_antigravity() {
+    local version
+    version="$(
+        curl --retry 3 --retry-delay 2 --retry-all-errors \
+            --connect-timeout 30 --max-time 120 -fsSL \
+            'https://antigravity.google/download/' |
+            sed -n 's|.*antigravity-hub/\([0-9][0-9.]*\)-[0-9]*/linux-x64/Antigravity\.tar\.gz.*|\1|p' |
+            sort -Vu |
+            tail -1
+    )"
+    [[ -n "$version" ]] || die 'cannot determine latest Antigravity version'
+    printf '%s\n' "$version"
+}
+
 latest_claude_desktop() {
     local version
     version="$(
@@ -355,6 +370,7 @@ latest_telegram() {
 latest_version() {
     case "$1" in
     anidesk) latest_anidesk ;;
+    antigravity) latest_antigravity ;;
     balena-etcher) github_latest_release balena-io/etcher ;;
     casement)
         github_latest_release Cheviiot/Casement | sed 's/^v//'

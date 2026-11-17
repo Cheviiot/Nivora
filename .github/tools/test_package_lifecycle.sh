@@ -19,6 +19,7 @@ readonly cache_volume="nivora-lifecycle-${branch}-cache-$$"
 # package | command | persistent state marker | desktop/unit | icon | sandbox
 readonly -a lifecycle_package_catalog=(
     'anidesk|/usr/bin/anidesk|/home/nivora-test/.config/anidesk/nivora-lifecycle-state|/usr/share/applications/anidesk.desktop|/usr/share/icons/hicolor/256x256/apps/anidesk.png|/usr/lib/anidesk/chrome-sandbox'
+    'antigravity|/usr/bin/antigravity|/home/nivora-test/.config/Antigravity/nivora-lifecycle-state|/usr/share/applications/com.google.Antigravity.desktop|/usr/share/icons/hicolor/256x256/apps/com.google.Antigravity.png|/opt/antigravity/chrome-sandbox'
     'balena-etcher|/usr/bin/balena-etcher|/home/nivora-test/.config/balena-etcher/nivora-lifecycle-state|/usr/share/applications/balena-etcher.desktop|/usr/share/pixmaps/balena-etcher.png|/usr/lib/balena-etcher/chrome-sandbox'
     'casement|/usr/bin/casement|/home/nivora-test/.config/casement/nivora-lifecycle-state|/usr/share/applications/io.github.cheviiot.Casement.desktop|/usr/share/icons/hicolor/scalable/apps/io.github.cheviiot.Casement.svg|-'
     'chatgpt|/usr/bin/chatgpt|/home/nivora-test/.config/ChatGPT/nivora-lifecycle-state|/usr/share/applications/chatgpt.desktop|/usr/share/pixmaps/chatgpt.png|-'

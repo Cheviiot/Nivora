@@ -2,6 +2,12 @@
 
 В файле фиксируются значимые изменения Nivora.
 
+## 2026-11-17 — Antigravity
+
+- Добавлен Antigravity App 2.32.1 из официального Linux tar.gz Google (amd64 и arm64):
+  установка в `/opt/antigravity`, команда `/usr/bin/antigravity`, AppStream id
+  `com.google.Antigravity`. Встроенный Electron-updater отключён.
+
 ## 2026-11-13 — OpenCode Desktop и обновление каталога
 
 - Добавлен OpenCode Desktop 2.2.7 из официальных DEB для amd64 и arm64.

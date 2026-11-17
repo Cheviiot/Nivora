@@ -1,0 +1,19 @@
+Сведения о лицензии пакета Antigravity
+
+Лицензия: Proprietary.
+Исходный продукт: https://antigravity.google/download/
+Условия: https://antigravity.google/terms
+
+Нюансы пакета:
+- Пакет перепаковывает официальный Linux-архив Antigravity App из Google Cloud Storage.
+- В пакет входит десктопное Electron-приложение Antigravity.
+- Команда `antigravity` запускает основное desktop-приложение.
+- Для полноценной работы требуется учётная запись Google и доступ к сервису Antigravity.
+- Настройки, авторизация и пользовательские данные создаются приложением после запуска и не поставляются внутри пакета.
+- Встроенный Electron-updater отключён: обновления идут через Stapler.
+- Исходный продукт является проприетарным. Использование Antigravity, сетевых функций и учётной записи регулируется условиями Google.
+- Внутри upstream-архива также поставляются компоненты Electron/Chromium со своими лицензиями; их тексты устанавливаются в `/usr/share/licenses/antigravity`.
+
+Официальные условия:
+https://antigravity.google/terms
+https://policies.google.com/terms

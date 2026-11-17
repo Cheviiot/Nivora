@@ -1,6 +1,6 @@
 name='antigravity'
 version='2.32.1'
-release=2
+release=3
 # Full hub release id from the download page; version alone is not enough
 # because Google pins each build under <version>-<id>/
 # shortcut: detector only bumps version=, refresh upstream_hub from the download page when updating
@@ -62,7 +62,7 @@ sources_arm64=(
 checksums=(
 	'sha256:4cb2d4fea74a74f17cfe251841b900249c5ad2728b961efdbf729dafae7fe842'
 	'sha256:cdbcb7762287f0cd186b7268bf396d40cbd1a62397846806c2a562d17310a57a'
-	'sha256:2bf2ca9c5d2036f14e90848a1ba718155a45e151992621ab429aae9a7dcd78d6'
+	'sha256:a172c36f986e7396b1359563eee943b9fa4529a1e31f0eeca80d6f5a768cc611'
 	'sha256:92be9f36d5db1f3db6e7d21c14b58b1b5a7135a0f950bdf25e89f5498fc87a3b'
 	'sha256:d58c1fd13465fa84782d186a18ad02e0cb0e556862b4e401df552a18cd398d67'
 )
@@ -70,7 +70,7 @@ checksums=(
 checksums_arm64=(
 	'sha256:473e4cf16aed6f5f289118309f104deb1650245393d0f1e9d2a40b53e73236c9'
 	'sha256:cdbcb7762287f0cd186b7268bf396d40cbd1a62397846806c2a562d17310a57a'
-	'sha256:2bf2ca9c5d2036f14e90848a1ba718155a45e151992621ab429aae9a7dcd78d6'
+	'sha256:a172c36f986e7396b1359563eee943b9fa4529a1e31f0eeca80d6f5a768cc611'
 	'sha256:92be9f36d5db1f3db6e7d21c14b58b1b5a7135a0f950bdf25e89f5498fc87a3b'
 	'sha256:d58c1fd13465fa84782d186a18ad02e0cb0e556862b4e401df552a18cd398d67'
 )

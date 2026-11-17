@@ -38,6 +38,9 @@ sudo apt-get install git-core bash python3 shellcheck curl sqlite3 rpm-build
 
 ## Требования к пакету
 
+- README служат витриной приложений. Диагностику, инструкции по сопровождению
+  и технические подробности переработки размещайте в `.github/docs/maintenance.md`;
+  историю изменений — в `CHANGELOG.md`.
 - Имя каталога точно совпадает с `name`.
 - Версия совпадает с upstream; изменение рецепта повышает `release`.
 - Скачиваемые sources привязаны к версии и защищены SHA-256.

@@ -1,6 +1,6 @@
 #!/bin/bash
-# Stage the actual recipe against small upstream-shaped archives. No vendor
-# executable is run, and no files are installed outside the temporary root.
+# Stage the actual recipe body against small upstream-shaped archives. No
+# vendor executable is run, and no files leave the temporary installation root.
 set -euo pipefail
 
 package_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -165,7 +165,7 @@ stage() (
     declare -A scripts
     # shellcheck disable=SC1091
     source "${package_dir}/Staplerfile"
-    # These variables are consumed by the sourced package()/files() functions.
+    # These variables are consumed by the sourced recipe bodies and helpers.
     # shellcheck disable=SC2034
     srcdir="${temp_dir}/${scenario}-${architecture}/src"
     pkgdir="${temp_dir}/${scenario}-${architecture}/pkg"
@@ -196,7 +196,26 @@ stage() (
         # shellcheck disable=SC2034
         upstream_hub='0.0.0-1234'
     fi
-    package
+    # Stapler v0.1.1 decoder.runFunc executes the stored function body directly
+    # with sub.Run(ctx, fn), without a function call frame. Calling package()
+    # here hid `local` declarations that fail in the real ALT build. Strip only
+    # Bash's normalized function envelope, then run its body at top level in a
+    # separate shell; sourcing preserves the recipe's explicit return handling.
+    local package_body="${temp_dir}/${scenario}-${architecture}/package-body.sh"
+    declare -f package | sed '1,2d;$d' >"$package_body"
+    export -f install-desktop install-license
+    bash -euo pipefail -c '
+        declare -A scripts
+        # shellcheck disable=SC1090
+        source "$1"
+        srcdir=$2
+        pkgdir=$3
+        upstream_hub=$4
+        # This source is deliberately outside every shell function.
+        # shellcheck disable=SC1090
+        source "$5"
+    ' antigravity-package-body "${package_dir}/Staplerfile" \
+        "$srcdir" "$pkgdir" "$upstream_hub" "$package_body"
     files >"${temp_dir}/${scenario}-${architecture}/manifest"
 )
 

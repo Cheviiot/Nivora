@@ -99,10 +99,9 @@ package() {
 
 	# A fresh directory prevents a previous architecture/build from being
 	# selected from leftovers in srcdir. Both official tar layouts are checked.
-	local unpack_dir='' payload=''
 	unpack_dir="$(mktemp -d "${srcdir}/antigravity-unpack.XXXXXX")"
 	tar --no-same-owner --no-same-permissions -xzf Antigravity.tar.gz -C "${unpack_dir}" || return 1
-	local roots=("${unpack_dir}"/*)
+	roots=("${unpack_dir}"/*)
 	if [[ "${#roots[@]}" != 1 || ! -d "${roots[0]}" ]]; then
 		echo 'Expected one Antigravity payload directory in the archive' >&2
 		return 1

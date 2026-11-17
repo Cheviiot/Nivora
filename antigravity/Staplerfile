@@ -1,9 +1,9 @@
-name='antigravity'
-version='2.32.1'
-release=5
 # Full hub release id from the download page; version alone is not enough
 # because Google pins each build under <version>-<id>/
-# shortcut: detector only bumps version=, refresh upstream_hub from the download page when updating
+# The updater refreshes version and the full build pin together.
+name='antigravity'
+version='2.32.1'
+release=6
 upstream_hub='2.32.1-6001966350991360'
 summary='Google Antigravity App'
 summary_ru='Приложение Google Antigravity'
@@ -19,6 +19,7 @@ compatible_with=('altlinux')
 license=('LicenseRef-proprietary')
 
 appstream_app_id='com.google.Antigravity'
+appstream_desktop_id='antigravity.desktop'
 appstream_name='Antigravity'
 appstream_developer='Google'
 nonfree=1
@@ -41,11 +42,13 @@ deps=('libnotify' 'libsecret' 'libXtst' 'libXScrnSaver' 'xdg-utils' 'libuuid')
 
 opt_deps=('libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
 
-build_deps=('binutils')
+build_deps=('binutils' 'python3')
 
 sources=(
 	"https://storage.googleapis.com/antigravity-public/antigravity-hub/${upstream_hub}/linux-x64/Antigravity.tar.gz?~archive=false&~name=Antigravity.tar.gz"
-	'local:///com.google.Antigravity.desktop'
+	'local:///antigravity.desktop'
+	'local:///antigravity-launcher'
+	'local:///validate-payload.py'
 	'local:///com.google.Antigravity.png'
 	'local:///LICENSE?nivora=antigravity'
 	'local:///com.google.Antigravity.metainfo.xml?nivora=antigravity'
@@ -53,7 +56,9 @@ sources=(
 
 sources_arm64=(
 	"https://storage.googleapis.com/antigravity-public/antigravity-hub/${upstream_hub}/linux-arm/Antigravity.tar.gz?~archive=false&~name=Antigravity.tar.gz"
-	'local:///com.google.Antigravity.desktop'
+	'local:///antigravity.desktop'
+	'local:///antigravity-launcher'
+	'local:///validate-payload.py'
 	'local:///com.google.Antigravity.png'
 	'local:///LICENSE?nivora=antigravity'
 	'local:///com.google.Antigravity.metainfo.xml?nivora=antigravity'
@@ -61,18 +66,22 @@ sources_arm64=(
 
 checksums=(
 	'sha256:4cb2d4fea74a74f17cfe251841b900249c5ad2728b961efdbf729dafae7fe842'
-	'sha256:1d9764d577bce6f9b8e26a43fa168658ec97f64b63b241aa80dd4bfb00fabc87'
+	'sha256:957ab13288c26cc4bca3de59e1b6402a2b5c00c776245e3b1a3d3ad25ed32885'
+	'sha256:473b6dc66930847fa137b44bdf675dfaca324467319acaac45b320892d79a64a'
+	'sha256:fc5eb0c847c8eaf3fed166c58e6ebfb6d20fae0060dc7b22c4ebedcfd8f02aa0'
 	'sha256:a172c36f986e7396b1359563eee943b9fa4529a1e31f0eeca80d6f5a768cc611'
 	'sha256:92be9f36d5db1f3db6e7d21c14b58b1b5a7135a0f950bdf25e89f5498fc87a3b'
-	'sha256:d58c1fd13465fa84782d186a18ad02e0cb0e556862b4e401df552a18cd398d67'
+	'sha256:f488827dff87761f035bde4e1267df4ecac419f828a3a4ff3f9b40bf56f8e035'
 )
 
 checksums_arm64=(
 	'sha256:473e4cf16aed6f5f289118309f104deb1650245393d0f1e9d2a40b53e73236c9'
-	'sha256:1d9764d577bce6f9b8e26a43fa168658ec97f64b63b241aa80dd4bfb00fabc87'
+	'sha256:957ab13288c26cc4bca3de59e1b6402a2b5c00c776245e3b1a3d3ad25ed32885'
+	'sha256:473b6dc66930847fa137b44bdf675dfaca324467319acaac45b320892d79a64a'
+	'sha256:fc5eb0c847c8eaf3fed166c58e6ebfb6d20fae0060dc7b22c4ebedcfd8f02aa0'
 	'sha256:a172c36f986e7396b1359563eee943b9fa4529a1e31f0eeca80d6f5a768cc611'
 	'sha256:92be9f36d5db1f3db6e7d21c14b58b1b5a7135a0f950bdf25e89f5498fc87a3b'
-	'sha256:d58c1fd13465fa84782d186a18ad02e0cb0e556862b4e401df552a18cd398d67'
+	'sha256:f488827dff87761f035bde4e1267df4ecac419f828a3a4ff3f9b40bf56f8e035'
 )
 
 scripts=(
@@ -88,17 +97,18 @@ package() {
 		return 1
 	}
 
-	tar --no-same-owner --no-same-permissions -xzf Antigravity.tar.gz
-
-	payload=
-	if [[ -d Antigravity-x64 ]]; then
-		payload=Antigravity-x64
-	elif [[ -d Antigravity-arm64 ]]; then
-		payload=Antigravity-arm64
-	else
-		echo 'Antigravity payload directory not found' >&2
+	# A fresh directory prevents a previous architecture/build from being
+	# selected from leftovers in srcdir. Both official tar layouts are checked.
+	local unpack_dir='' payload=''
+	unpack_dir="$(mktemp -d "${srcdir}/antigravity-unpack.XXXXXX")"
+	tar --no-same-owner --no-same-permissions -xzf Antigravity.tar.gz -C "${unpack_dir}" || return 1
+	local roots=("${unpack_dir}"/*)
+	if [[ "${#roots[@]}" != 1 || ! -d "${roots[0]}" ]]; then
+		echo 'Expected one Antigravity payload directory in the archive' >&2
 		return 1
 	fi
+	payload="${roots[0]}"
+	python3 "${srcdir}/validate-payload.py" "${payload}" "${version}" || return 1
 
 	install -dm755 "${pkgdir}/opt/antigravity"
 	cp -a "${payload}/." "${pkgdir}/opt/antigravity/"
@@ -108,29 +118,17 @@ package() {
 	# Electron's own auto-updater has nothing to manage under Stapler.
 	rm -f "${pkgdir}/opt/antigravity/resources/app-update.yml"
 
-	# Fail the build if the hub pin and the shipped app version diverge.
-	grep -aFq "\"version\": \"${version}\"" \
-		"${pkgdir}/opt/antigravity/resources/app.asar" ||
-		grep -aFq "\"version\":\"${version}\"" \
-			"${pkgdir}/opt/antigravity/resources/app.asar"
+	install -Dm755 antigravity-launcher "${pkgdir}/usr/bin/antigravity"
 
-	install -dm755 "${pkgdir}/usr/bin"
-	ln -sfn /opt/antigravity/antigravity "${pkgdir}/usr/bin/antigravity"
-
-	# Full desktop (with MimeType) matches Wayland app_id "antigravity".
-	install -Dm644 com.google.Antigravity.desktop \
-		"${pkgdir}/usr/share/applications/antigravity.desktop"
-	# AppStream launchable keeps reverse-DNS id, but without MimeType —
-	# two x-scheme-handler entries make GNOME show Open With on every OAuth.
-	install-desktop com.google.Antigravity.desktop
-	sed -e '/^MimeType=/d' -i \
-		"${pkgdir}/usr/share/applications/com.google.Antigravity.desktop"
+	# Electron derives this desktop name from the unmodified productName.
+	# One entry owns the Wayland identity, menu launcher and OAuth protocol.
+	# RPM removes the old com.google.Antigravity.desktop during upgrade.
+	install-desktop antigravity.desktop
 	install -Dm644 com.google.Antigravity.png \
 		"${pkgdir}/usr/share/icons/hicolor/256x256/apps/com.google.Antigravity.png"
 
 	# The AppStream component claims this desktop id; make the build
 	# fail here rather than shipping a component nothing can launch.
-	test -f "${pkgdir}/usr/share/applications/com.google.Antigravity.desktop"
 	test -f "${pkgdir}/usr/share/applications/antigravity.desktop"
 	install -Dm644 "${srcdir}/com.google.Antigravity.metainfo.xml" \
 		"${pkgdir}/usr/share/metainfo/com.google.Antigravity.metainfo.xml"
@@ -147,7 +145,6 @@ files() {
 	files-find-desktop
 	files-find-license
 	files-find \
-		"/usr/share/applications/antigravity.desktop" \
 		"/usr/share/metainfo/com.google.Antigravity.metainfo.xml" \
 		"/usr/share/icons/hicolor/256x256/apps/com.google.Antigravity.png"
 }

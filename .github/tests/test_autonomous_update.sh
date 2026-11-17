@@ -14,6 +14,7 @@ install -d \
     "$fixture/repo/demo" \
     "$fixture/repo/parsec" \
     "$fixture/repo/chatgpt" \
+    "$fixture/repo/antigravity/.stapler" \
     "$fixture/bin" \
     "$fixture/runner"
 cp "$repo_root/.github/tools/autonomous_package_updates.sh" \
@@ -26,6 +27,21 @@ printf "name='parsec'\nversion='1'\nrelease=4\nsource_fingerprint='%s'\nchecksum
     "$fingerprint_a" >"$fixture/repo/parsec/Staplerfile"
 printf "name='chatgpt'\nversion='1'\nrelease=4\nsource_fingerprint_amd64='%s'\nsource_fingerprint_arm64='%s'\nchecksum='old'\n" \
     "$fingerprint_a" "$fingerprint_a" >"$fixture/repo/chatgpt/Staplerfile"
+printf "name='antigravity'\nversion='1.0.0'\nrelease=4\nupstream_hub='1.0.0-600'\nchecksum='old'\n" \
+    >"$fixture/repo/antigravity/Staplerfile"
+cat >"$fixture/repo/antigravity/.stapler/update-run" <<'EOF'
+#!/bin/bash
+set -euo pipefail
+[[ "$ANTIGRAVITY_EXPECTED_FINGERPRINT" == "$MUTABLE_TEST_FINGERPRINT" ]]
+release=1
+[[ "$1" != 1.0.0 ]] || release=5
+hub="$1-${ANTIGRAVITY_TEST_BUILD:-700}"
+sed -i -e "s/^version='1.0.0'$/version='$1'/" \
+    -e "s/^release=4$/release=$release/" \
+    -e "s/^upstream_hub='1.0.0-600'$/upstream_hub='$hub'/" \
+    -e "s/^checksum='old'$/checksum='new'/" antigravity/Staplerfile
+EOF
+chmod 0755 "$fixture/repo/antigravity/.stapler/update-run"
 # The variable is intentionally expanded later by the generated mock.
 # shellcheck disable=SC2016
 printf '%s\n' \
@@ -89,7 +105,11 @@ cat >"$fixture/bin/stplr-spec" <<'EOF'
 #!/bin/bash
 case "$1" in
 get-field)
-    printf '4\n'
+    if [[ "${!#}" == upstream_hub ]]; then
+        sed -n "s/^upstream_hub='\([^']*\)'$/\1/p" "$3"
+    else
+        printf '4\n'
+    fi
     ;;
 update-checksums)
     recipe=''
@@ -112,6 +132,32 @@ update-package)
 esac
 EOF
 chmod 0755 "$fixture/bin/stplr-spec"
+
+for latest in 1.0.0 2.0.0; do
+    fingerprint="$(printf '%s' "$latest-700" | sha256sum | awk '{print $1}')"
+    PATH="$fixture/bin:$PATH" \
+    STPLR_SPEC_COMMAND="$fixture/bin/stplr-spec" \
+    RUNNER_TEMP="$fixture/runner" \
+    AUTONOMOUS_UPDATE_RESULTS_DIR="$fixture/antigravity-results-$latest" \
+    MUTABLE_TEST_FINGERPRINT="$fingerprint" \
+    UPDATE_PLAN_JSON="{\"antigravity\":{\"current\":\"1.0.0\",\"latest\":\"$latest\",\"fingerprints\":{\"source_fingerprint\":\"$fingerprint\"}}}" \
+        "$fixture/repo/.github/tools/autonomous_package_updates.sh" antigravity
+    grep -Fxq antigravity "$fixture/antigravity-results-$latest/successful-packages"
+    grep -Fq "+upstream_hub='$latest-700'" \
+        "$fixture/antigravity-results-$latest/antigravity/update.patch"
+done
+
+PATH="$fixture/bin:$PATH" \
+STPLR_SPEC_COMMAND="$fixture/bin/stplr-spec" \
+RUNNER_TEMP="$fixture/runner" \
+AUTONOMOUS_UPDATE_RESULTS_DIR="$fixture/antigravity-unplanned" \
+MUTABLE_TEST_FINGERPRINT="$fingerprint" \
+ANTIGRAVITY_TEST_BUILD=701 \
+UPDATE_PLAN_JSON="{\"antigravity\":{\"current\":\"1.0.0\",\"latest\":\"2.0.0\",\"fingerprints\":{\"source_fingerprint\":\"$fingerprint\"}}}" \
+    "$fixture/repo/.github/tools/autonomous_package_updates.sh" antigravity
+grep -Fxq $'antigravity\tpin-source-fingerprint' \
+    "$fixture/antigravity-unplanned/failed-packages"
+test ! -e "$fixture/antigravity-unplanned/antigravity/update.patch"
 
 PATH="$fixture/bin:$PATH" \
 STPLR_SPEC_COMMAND="$fixture/bin/stplr-spec" \

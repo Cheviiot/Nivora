@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# This is a system installation of the tar distribution, even when started
+# from an AppImage terminal/editor or from an Electron helper process.
+unset APPIMAGE APPDIR ELECTRON_RUN_AS_NODE
+export CHROME_DESKTOP=antigravity.desktop
+
+exec /opt/antigravity/antigravity "$@"

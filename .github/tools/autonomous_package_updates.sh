@@ -39,7 +39,7 @@ pin_github_desktop_source() {
 
 is_mutable_source_package() {
     case "$1" in
-    chatgpt | parsec) return 0 ;;
+    antigravity | chatgpt | parsec) return 0 ;;
     *) return 1 ;;
     esac
 }
@@ -86,6 +86,16 @@ pin_mutable_source_fingerprints() {
     local fingerprints="$3"
     local staplerfile="${worktree}/${package}/Staplerfile"
     local field fingerprint count=0
+    if [[ "$package" == antigravity ]]; then
+        # Its immutable URL already stores the complete build identity. Verify
+        # that pin against detection rather than introducing duplicate state.
+        local hub expected
+        hub="$("$stplr_spec_command" get-field --path "$staplerfile" upstream_hub)" || return
+        [[ "$hub" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+$ ]] || return
+        expected="$(jq -er '.source_fingerprint' <<<"$fingerprints")" || return
+        [[ "$(printf '%s' "$hub" | sha256sum | awk '{print $1}')" == "$expected" ]]
+        return
+    fi
     while IFS=$'\t' read -r field fingerprint; do
         [[ "$field" =~ ^source_fingerprint(_(amd64|arm64))?$ ]] || return
         [[ "$fingerprint" =~ ^[0-9a-f]{64}$ ]] || return
@@ -117,7 +127,7 @@ run_update_phases() {
     local worktree="$1"
     local package="$2"
     local phase_file="$3"
-    local planned_current planned_latest planned_source_fingerprints
+    local planned_current planned_latest planned_source_fingerprints antigravity_fingerprint
 
     cd "$worktree" || return
     planned_current="$(planned_version "$package" current)" || return
@@ -134,7 +144,17 @@ run_update_phases() {
         verify_mutable_source_snapshot \
             "$package" "$planned_source_fingerprints" || return
     fi
-    if is_mutable_source_package "$package" &&
+    if [[ "$package" == antigravity ]]; then
+        # update-package does not run a hook when its version is unchanged.
+        # The App can be rebuilt with a new hub ID under the same version.
+        antigravity_fingerprint="$(
+            jq -er '.source_fingerprint' <<<"$planned_source_fingerprints"
+        )" || return
+        [[ "$antigravity_fingerprint" =~ ^[0-9a-f]{64}$ ]] || return
+        ANTIGRAVITY_EXPECTED_FINGERPRINT="$antigravity_fingerprint" \
+            STPLR_SPEC_COMMAND="$stplr_spec_command" \
+            "${worktree}/antigravity/.stapler/update-run" "$planned_latest" || return
+    elif is_mutable_source_package "$package" &&
         [[ "$planned_current" == "$planned_latest" ]]; then
         "$stplr_spec_command" update-checksums \
             --path "${worktree}/${package}/Staplerfile" || return

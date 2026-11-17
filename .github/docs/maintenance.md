@@ -377,14 +377,22 @@ appstream_app_id == '<id>'
 Software, а stplr-плагин добавляет только пакетную часть: версию, состояние,
 формат и происхождение. Поэтому качество карточки определяется метаданными.
 
-### component-id равен desktop-id
+### Component ID и desktop launchable
 
-`appstream_app_id` обязан совпадать с desktop-файлом, который пакет реально
-ставит: validator сверяет наличие `/usr/share/applications/<id>.desktop`, а
-менять desktop-id нельзя без отдельной миграции. Отсюда legacy-имена вида
-`chatgpt` вместо обратного DNS. `appstreamcli validate` выдаёт на
-них `cid-desktopapp-is-not-rdns` — это принятая цена за то, что id пакета не
-разъезжается с установленным ярлыком.
+`appstream_app_id` сохраняет идентичность карточки в GNOME Software.
+По умолчанию генератор связывает её с `<appstream_app_id>.desktop`.
+Если upstream задаёт другое имя для окна Wayland и обработчика протокола,
+`appstream_desktop_id` указывает basename настоящего desktop-файла.
+Validator проверяет, что `launchable` из metainfo действительно установлен
+в `/usr/share/applications/`. Создавать второй видимый ярлык ради component ID
+не требуется.
+
+Antigravity сохраняет компонент `com.google.Antigravity`, но запускает
+`antigravity.desktop` — это имя вычисляет Electron из upstream productName.
+При обновлении на release 6 RPM удаляет прежний дублирующий
+`com.google.Antigravity.desktop`; пользовательские MIME-настройки и профиль
+приложения хуки не меняют. Для старых избранных ярлыков и явно сохранённых
+ассоциаций порядок исправления описан в `antigravity/README.md`.
 
 Отдельный случай — id, который сам оканчивается на `.desktop`
 (`org.telegram.desktop`). Launchable для него — `org.telegram.desktop.desktop`,
@@ -394,7 +402,7 @@ Software, а stplr-плагин добавляет только пакетную
 
 `.github/tools/sync_appstream.py` собирает `<id>.metainfo.xml` из полей
 рецепта: `appstream_name`, `summary`, `summary_ru`, `desc`, `desc_ru`,
-`homepage`, `license` и `group` (RPM-группа отображается в категории
+`homepage`, `license`, `appstream_desktop_id` и `group` (RPM-группа отображается в категории
 freedesktop). Писать документ руками нельзя — он разойдётся с рецептом;
 `run_checks.sh` выполняет `sync_appstream.py --check` и падает при расхождении.
 

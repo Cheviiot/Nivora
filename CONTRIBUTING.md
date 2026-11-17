@@ -54,10 +54,12 @@ sudo apt-get install git-core bash python3 shellcheck curl sqlite3 rpm-build
 - `files()` описывает весь payload и не захватывает чужие пути. Путь
   desktop-файла в нём не перечисляют, если уже вызывается `files-find-desktop`:
   Stapler отвергнет сборку с `content collision`.
-- Пакет с графическим интерфейсом объявляет `appstream_app_id`, равный своему
-  desktop-id, и кладёт рядом с рецептом `<appstream_app_id>.svg` или `.png` —
-  иначе он не появится в GNOME Software. Метаданные генерирует
-  `.github/tools/sync_appstream.py`, руками их не пишут.
+- Пакет с графическим интерфейсом объявляет `appstream_app_id` и кладёт рядом
+  с рецептом `<appstream_app_id>.svg` или `.png` — иначе он не появится в
+  GNOME Software. По умолчанию launchable — `<appstream_app_id>.desktop`;
+  если upstream использует другой desktop-id, его задают через
+  `appstream_desktop_id`, сохраняя component-id и единственный ярлык.
+  Метаданные генерирует `.github/tools/sync_appstream.py`, руками их не пишут.
 - `license` — SPDX-идентификатор либо `LicenseRef-*`; для проприетарных
   условий это `LicenseRef-proprietary`.
 - В каталоге пакета нет ничего, кроме рецепта, README, LICENSE, хуков,

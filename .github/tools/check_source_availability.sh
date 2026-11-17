@@ -48,6 +48,12 @@ if [[ -n "$version" ]]; then
     [[ "$version" =~ ^[A-Za-z0-9._+~-]+$ ]] || die "invalid version: ${version}"
     "$stplr_spec_command" set-field --path "$probe_recipe" version "$version" ||
         die "cannot set probe version ${version}"
+    if [[ "$package" == antigravity ]]; then
+        hub="$("${script_dir}/package_updates.sh" antigravity-hub "$version")" ||
+            die "cannot resolve Antigravity App build for ${version}"
+        "$stplr_spec_command" set-field --path "$probe_recipe" upstream_hub "$hub" ||
+            die "cannot set probe Antigravity build ${hub}"
+    fi
 fi
 
 # Every sources array in the recipe, including per-architecture overrides.
@@ -85,7 +91,7 @@ probe_url() {
     }
 
     status="$(
-        awk 'toupper($1) ~ /^HTTP/ { code = $2 } END { print code }' <<<"$headers"
+        awk 'toupper($1) ~ /^HTTP/ { code = $2; gsub(/\r/, "", code) } END { print code }' <<<"$headers"
     )"
     [[ "$status" =~ ^2[0-9][0-9]$ ]] || {
         echo "HTTP ${status:-unknown}"

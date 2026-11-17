@@ -1,0 +1,65 @@
+#!/bin/bash
+set -euo pipefail
+
+[[ "$#" -eq 1 && "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+    echo 'usage: antigravity/.stapler/update-run <version>' >&2
+    exit 2
+}
+new_version="$1"
+package_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(cd "${package_dir}/.." && pwd)"
+staplerfile="${package_dir}/Staplerfile"
+stplr_spec_command="${STPLR_SPEC_COMMAND:-stplr-spec}"
+
+PACKAGE_UPDATES_LIB_ONLY=1
+# shellcheck source=.github/tools/package_updates.sh
+source "${repo_root}/.github/tools/package_updates.sh"
+
+hub="$(latest_antigravity_hub "$new_version")"
+fingerprint="$(printf '%s' "$hub" | sha256sum | awk '{print $1}')"
+if [[ -n "${ANTIGRAVITY_EXPECTED_FINGERPRINT:-}" &&
+    "$fingerprint" != "$ANTIGRAVITY_EXPECTED_FINGERPRINT" ]]; then
+    die 'Antigravity build changed since update detection'
+fi
+original_checksum="$(sha256sum "$staplerfile")"
+current="$("$stplr_spec_command" get-field --path "$staplerfile" version)"
+current_hub="$("$stplr_spec_command" get-field --path "$staplerfile" upstream_hub)"
+if [[ "$current" == "$new_version" && "$current_hub" == "$hub" ]]; then
+    exit 0
+fi
+release=1
+if [[ "$current" == "$new_version" ]]; then
+    release="$("$stplr_spec_command" get-field --path "$staplerfile" release)"
+    [[ "$release" =~ ^[1-9][0-9]*$ ]] || die 'invalid Antigravity release'
+    release=$((release + 1))
+else
+    version_is_newer "$new_version" "$current" ||
+        die "refusing Antigravity downgrade from ${current} to ${new_version}"
+fi
+
+# Pin only published archives. Stapler v0.1.1 itself does not reject HTTP
+# errors before calculating checksums, so check both exact URLs here.
+for arch in x64 arm; do
+    curl --retry 3 --retry-delay 2 --retry-all-errors \
+        --connect-timeout 30 --max-time 120 -fsSIL \
+        "https://storage.googleapis.com/antigravity-public/antigravity-hub/${hub}/linux-${arch}/Antigravity.tar.gz" \
+        >/dev/null
+done
+
+# Keep local:/// files resolvable from the original package directory. A
+# checksum/download failure must not leave version, hub and hashes half-updated.
+staged="$(mktemp "${package_dir}/.Staplerfile.update.XXXXXX")"
+cleanup() { rm -f -- "$staged"; }
+trap cleanup EXIT
+cp -p -- "$staplerfile" "$staged"
+"$stplr_spec_command" set-field --path "$staged" version "$new_version"
+"$stplr_spec_command" set-field --path "$staged" upstream_hub "$hub"
+"$stplr_spec_command" set-field --path "$staged" release "$release"
+sed -i -E \
+    -e "s/^version=[\"']?${new_version//./\\.}[\"']?$/version='${new_version}'/" \
+    -e "s/^upstream_hub=[\"']?${hub//./\\.}[\"']?$/upstream_hub='${hub}'/" \
+    "$staged"
+"$stplr_spec_command" update-checksums --path "$staged"
+[[ "$(sha256sum "$staplerfile")" == "$original_checksum" ]] ||
+    die 'Antigravity recipe changed while the update was being prepared'
+mv -f -- "$staged" "$staplerfile"

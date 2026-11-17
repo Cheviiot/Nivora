@@ -19,7 +19,7 @@ readonly cache_volume="nivora-lifecycle-${branch}-cache-$$"
 # package | command | persistent state marker | desktop/unit | icon | sandbox
 readonly -a lifecycle_package_catalog=(
     'anidesk|/usr/bin/anidesk|/home/nivora-test/.config/anidesk/nivora-lifecycle-state|/usr/share/applications/anidesk.desktop|/usr/share/icons/hicolor/256x256/apps/anidesk.png|/usr/lib/anidesk/chrome-sandbox'
-    'antigravity|/usr/bin/antigravity|/home/nivora-test/.config/Antigravity/nivora-lifecycle-state|/usr/share/applications/com.google.Antigravity.desktop|/usr/share/icons/hicolor/256x256/apps/com.google.Antigravity.png|/opt/antigravity/chrome-sandbox'
+    'antigravity|/usr/bin/antigravity|/home/nivora-test/.config/Antigravity/nivora-lifecycle-state|/usr/share/applications/antigravity.desktop|/usr/share/icons/hicolor/256x256/apps/com.google.Antigravity.png|/opt/antigravity/chrome-sandbox'
     'balena-etcher|/usr/bin/balena-etcher|/home/nivora-test/.config/balena-etcher/nivora-lifecycle-state|/usr/share/applications/balena-etcher.desktop|/usr/share/pixmaps/balena-etcher.png|/usr/lib/balena-etcher/chrome-sandbox'
     'casement|/usr/bin/casement|/home/nivora-test/.config/casement/nivora-lifecycle-state|/usr/share/applications/io.github.cheviiot.Casement.desktop|/usr/share/icons/hicolor/scalable/apps/io.github.cheviiot.Casement.svg|-'
     'chatgpt|/usr/bin/chatgpt|/home/nivora-test/.config/ChatGPT/nivora-lifecycle-state|/usr/share/applications/chatgpt.desktop|/usr/share/pixmaps/chatgpt.png|-'
@@ -192,9 +192,22 @@ build_previous_rpm() {
         '%install' \
         'mkdir -p %{buildroot}/usr/share/nivora-lifecycle-previous' \
         "printf 'previous fixture\\n' >%{buildroot}/usr/share/nivora-lifecycle-previous/${package}" \
-        '%files' \
-        "/usr/share/nivora-lifecycle-previous/${package}" \
         >"$spec"
+    if [[ "$package" == antigravity ]]; then
+        # Reproduce the previous two-launcher layout so the RPM transaction
+        # must remove the obsolete desktop file, not merely omit a new one.
+        cat >>"$spec" <<'EOF'
+mkdir -p %{buildroot}/usr/share/applications
+printf '[Desktop Entry]\nName=Antigravity\nType=Application\nExec=/usr/bin/antigravity\n' >%{buildroot}/usr/share/applications/com.google.Antigravity.desktop
+cp %{buildroot}/usr/share/applications/com.google.Antigravity.desktop %{buildroot}/usr/share/applications/antigravity.desktop
+EOF
+    fi
+    printf '%s\n' '%files' "/usr/share/nivora-lifecycle-previous/${package}" >>"$spec"
+    if [[ "$package" == antigravity ]]; then
+        printf '%s\n' \
+            '/usr/share/applications/com.google.Antigravity.desktop' \
+            '/usr/share/applications/antigravity.desktop' >>"$spec"
+    fi
     if ! rpmbuild \
         --define "_topdir ${topdir}" \
         --define "_tmppath ${topdir}/TMP" \
@@ -304,6 +317,10 @@ bash /usr/local/lib/nivora/alt_apt_network.sh run -qq install -y "$previous_arti
 if [[ "$previous_summary" == \
     'Previous Nivora package fixture for lifecycle tests' ]]; then
     rpm -q bc >/dev/null
+    if [[ "$package" == antigravity ]]; then
+        test -f /usr/share/applications/com.google.Antigravity.desktop
+        test -f /usr/share/applications/antigravity.desktop
+    fi
 fi
 rpm -Uvh --test --nodeps --noscripts "$artifact" >/dev/null || {
     echo "${package}: previous RPM ${previous_evr} is not strictly older than ${current_evr}" >&2
@@ -335,6 +352,12 @@ if [[ "$package" == casement ]]; then
 fi
 if [[ "$package" == opencode ]]; then
     runuser -u nivora-test -- /opt/OpenCode/resources/opencode-cli --version >/dev/null
+fi
+if [[ "$package" == antigravity ]]; then
+    test ! -e /usr/share/applications/com.google.Antigravity.desktop
+    [[ "$(find /usr/share/applications -maxdepth 1 -type f -iname '*antigravity*.desktop' | wc -l)" -eq 1 ]]
+    grep -Fxq 'MimeType=x-scheme-handler/antigravity;' /usr/share/applications/antigravity.desktop
+    grep -Fq '>antigravity.desktop</launchable>' /usr/share/metainfo/com.google.Antigravity.metainfo.xml
 fi
 
 bash /usr/local/lib/nivora/alt_apt_network.sh run -qq remove -y "$system_name"

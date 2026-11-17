@@ -92,9 +92,12 @@ def render(package: str, text: str) -> str | None:
     desc = block(text, "desc") or summary
     desc_ru = block(text, "desc_ru") or summary_ru
 
-    # Always "<id>.desktop": an id may itself end in .desktop when that is
-    # part of its reverse-DNS name, as with org.telegram.desktop.
-    launchable = f"{app_id}.desktop"
+    # Keep a stable component ID when upstream uses another desktop basename
+    # for Wayland/protocol identity. Otherwise append .desktop even when the
+    # component ID itself ends in .desktop (e.g. org.telegram.desktop).
+    launchable = scalar(text, "appstream_desktop_id") or f"{app_id}.desktop"
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*\.desktop", launchable):
+        raise ValueError(f"{package}: invalid AppStream desktop launchable {launchable!r}")
     categories = CATEGORIES.get(group, ("Utility",))
 
     lines = [

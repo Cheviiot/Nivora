@@ -11,6 +11,16 @@
 - `release=3`: checksum PNG в Staplerfile приведён к новой иконке (иначе prepare падает на dl).
 - `release=4`: `MimeType=x-scheme-handler/antigravity` и `antigravity.desktop` для Wayland app_id / OAuth `antigravity://`.
 - `release=5`: MimeType только у `antigravity.desktop` (иначе GNOME Open With с двумя Antigravity); `Exec=... -- %U`.
+- `release=6`: единый `antigravity.desktop` для меню, Wayland и OAuth;
+  прежний AppStream component ID сохранён через отдельный launchable.
+  Устранён `content collision` при сборке RPM. Launcher очищает унаследованное
+  окружение AppImage/Electron, сохраняя аргументы и sandbox.
+- Версия теперь проверяется в корневом `package.json` ASAR; проверяются также
+  архитектура ELF, точка входа и идентичность приложения. Проверки по строкам
+  заменены тестами стадирования пакета для amd64 и arm64.
+- Автообновление Antigravity связывает версию, полный upstream build ID и
+  контрольные суммы обеих архитектур; повторная сборка той же версии повышает
+  release. Неудачное обновление не оставляет частично изменённый рецепт.
 
 ## 2026-11-13 — OpenCode Desktop и обновление каталога
 

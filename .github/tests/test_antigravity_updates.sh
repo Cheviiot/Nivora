@@ -207,8 +207,9 @@ page 2.32.1-601 2.32.1-601 >"$ANTIGRAVITY_TEST_HTML"
     # Other package feeds are irrelevant to this fixture; keep the production
     # detector and fingerprint comparison for Antigravity itself.
     is_mutable_source_package() { [[ "$1" == antigravity ]]; }
-    # Called indirectly by the sourced check_package function.
-    # shellcheck disable=SC2329
+    # Called indirectly by the sourced check_package function; ShellCheck
+    # 0.9 reports these override bodies as unreachable (0.11 as unused).
+    # shellcheck disable=SC2317,SC2329
     current_version() {
         if [[ "$1" == antigravity ]]; then
             stplr-spec get-field --path "$recipe" version
@@ -216,7 +217,8 @@ page 2.32.1-601 2.32.1-601 >"$ANTIGRAVITY_TEST_HTML"
             printf '1\n'
         fi
     }
-    # shellcheck disable=SC2329
+    # Same indirect dispatch through check_package as current_version above.
+    # shellcheck disable=SC2317,SC2329
     latest_version() {
         if [[ "$1" == antigravity ]]; then
             latest_antigravity

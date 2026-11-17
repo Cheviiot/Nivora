@@ -2,7 +2,7 @@
 Name=Antigravity
 Comment=Google Antigravity App
 Comment[ru]=Приложение Google Antigravity
-Exec=/usr/bin/antigravity %U
+Exec=/usr/bin/antigravity -- %U
 Terminal=false
 Type=Application
 Icon=com.google.Antigravity

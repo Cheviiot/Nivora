@@ -9,7 +9,12 @@ staplerfile="${package_dir}/Staplerfile"
 # shows "Нет доступных приложений".
 grep -Eq '^MimeType=([^;]*;)?x-scheme-handler/antigravity(;|$)' "${desktop}"
 
-# Wayland app_id is "antigravity" (dock tooltip). GNOME looks for
-# antigravity.desktop; AppStream keeps com.google.Antigravity.desktop.
+# Chromium treats bare URLs as flags; -- keeps the deep link intact (telegram).
+grep -Eq '^Exec=.+ -- %U$' "${desktop}"
+
+# Wayland app_id is "antigravity". Ship antigravity.desktop for dock match,
+# but MimeType must stay on ONLY that basename — two handlers force GNOME
+# "Open With" every OAuth redirect and break silent token handoff.
 grep -Fq 'antigravity.desktop' "${staplerfile}"
 grep -Fq 'install-desktop com.google.Antigravity.desktop' "${staplerfile}"
+grep -Fq "sed -e '/^MimeType=/d'" "${staplerfile}"

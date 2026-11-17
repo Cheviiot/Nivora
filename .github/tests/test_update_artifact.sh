@@ -135,6 +135,59 @@ reset_good_fixture
 expect_failure wrong-expected-version run_validator '["demo"]' \
     '{"demo":{"current":"1","latest":"3","fingerprints":{}}}'
 
+# Antigravity tracks a full immutable build ID through the same fingerprint
+# plan, deriving the digest from upstream_hub instead of storing it twice.
+install -d "$fixture/repo/antigravity"
+cat >"$fixture/repo/antigravity/Staplerfile" <<'EOF'
+name='antigravity'
+version='2.32.1'
+release=5
+upstream_hub='2.32.1-600'
+sources=(
+ 'https://storage.googleapis.com/antigravity-public/antigravity-hub/${upstream_hub}/linux-x64/Antigravity.tar.gz'
+)
+checksums=(
+ 'sha256:0000000000000000000000000000000000000000000000000000000000000001'
+)
+EOF
+git -C "$fixture/repo" add antigravity/Staplerfile
+git -C "$fixture/repo" commit -qm 'fixture antigravity'
+for latest in 2.32.1 2.33.0; do
+    release=1
+    [[ "$latest" != 2.32.1 ]] || release=6
+    hub="${latest}-700"
+    fingerprint="$(printf '%s' "$hub" | sha256sum | awk '{print $1}')"
+    sed -i -e "s/^version='2.32.1'$/version='$latest'/" \
+        -e "s/^upstream_hub='2.32.1-600'$/upstream_hub='$hub'/" \
+        -e "s/^release=5$/release=$release/" \
+        -e "s/$(printf '%064d' 1)/$(printf '%064d' 2)/" \
+        "$fixture/repo/antigravity/Staplerfile"
+    reset_good_fixture
+    mv "$fixture/results/demo" "$fixture/results/antigravity"
+    printf 'antigravity\n' >"$fixture/results/checked-packages"
+    printf 'antigravity\n' >"$fixture/results/successful-packages"
+    git -C "$fixture/repo" diff --binary -- antigravity/Staplerfile \
+        >"$fixture/results/antigravity/update.patch"
+    git -C "$fixture/repo" restore -- antigravity/Staplerfile
+    expected="$(jq -cn --arg latest "$latest" --arg hash "$fingerprint" \
+        '{antigravity:{current:"2.32.1",latest:$latest,fingerprints:{source_fingerprint:$hash}}}')"
+    run_validator '["antigravity"]' "$expected" >/dev/null
+    unexpected="$(jq -c '.antigravity.fingerprints.source_fingerprint = ("a" * 64)' <<<"$expected")"
+    expect_failure unplanned-antigravity-build run_validator '["antigravity"]' "$unexpected"
+    unexpected="$(jq -c '.antigravity.fingerprints = {}' <<<"$expected")"
+    expect_failure missing-antigravity-snapshot run_validator '["antigravity"]' "$unexpected"
+
+    # A syntactically valid hub with another App version must be rejected even
+    # if its fingerprint was supplied: the requested version is part of the pin.
+    wrong_hub=9.9.9-700
+    sed -i "s/+upstream_hub='$hub'/+upstream_hub='$wrong_hub'/" \
+        "$fixture/results/antigravity/update.patch"
+    fingerprint="$(printf '%s' "$wrong_hub" | sha256sum | awk '{print $1}')"
+    unexpected="$(jq -c --arg hash "$fingerprint" \
+        '.antigravity.fingerprints.source_fingerprint = $hash' <<<"$expected")"
+    expect_failure wrong-antigravity-version run_validator '["antigravity"]' "$unexpected"
+done
+
 # Exercise every mutable-source package through both trust boundaries: plan
 # parsing and the semantic recipe diff. A newly added fingerprint must work
 # for upgrades and same-version refreshes without accepting unplanned hashes.

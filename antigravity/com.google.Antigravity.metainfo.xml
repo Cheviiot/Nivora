@@ -3,7 +3,7 @@
      Edit the Staplerfile, then rerun the generator. -->
 <component type="desktop-application">
   <id>com.google.Antigravity</id>
-  <launchable type="desktop-id">com.google.Antigravity.desktop</launchable>
+  <launchable type="desktop-id">antigravity.desktop</launchable>
   <name>Antigravity</name>
   <summary>Google Antigravity App</summary>
   <summary xml:lang="ru">Приложение Google Antigravity</summary>

@@ -129,7 +129,10 @@ version_is_newer() {
 
 is_mutable_source_package() {
     case "$1" in
-    chatgpt | parsec) return 0 ;;
+    # Antigravity has immutable archives, but the selected build can change
+    # without a version bump. Track its full hub ID through the same snapshot
+    # lane as mutable downloads, without duplicating that ID in the recipe.
+    antigravity | chatgpt | parsec) return 0 ;;
     *) return 1 ;;
     esac
 }
@@ -163,6 +166,11 @@ source_fingerprints() {
     local fingerprint
     require_package "$package"
     case "$package" in
+    antigravity)
+        fingerprint="$(latest_antigravity_hub)" || return
+        fingerprint="$(printf '%s' "$fingerprint" | sha256sum | awk '{print $1}')"
+        printf 'source_fingerprint\t%s\n' "$fingerprint"
+        ;;
     chatgpt)
         fingerprint="$(http_etag_fingerprint \
             'https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_amd64.deb')" || return
@@ -178,6 +186,20 @@ source_fingerprints() {
         ;;
     *) die "package has no mutable source fingerprint: ${package}" ;;
     esac
+}
+
+recipe_source_fingerprint() {
+    local package="$1"
+    local field="$2"
+    local hub
+    if [[ "$package" == antigravity ]]; then
+        [[ "$field" == source_fingerprint ]] || return 2
+        hub="$(stplr-spec get-field --path "${repo_root}/${package}/Staplerfile" upstream_hub)" || return 2
+        [[ "$hub" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+$ ]] || return 2
+        printf '%s' "$hub" | sha256sum | awk '{print $1}'
+    else
+        stplr-spec get-field --path "${repo_root}/${package}/Staplerfile" "$field"
+    fi
 }
 
 source_fingerprints_json() {
@@ -198,10 +220,7 @@ fingerprints_match_recipe() {
     while IFS=$'\t' read -r field fingerprint; do
         [[ "$field" =~ ^source_fingerprint(_(amd64|arm64))?$ ]] || return 2
         [[ "$fingerprint" =~ ^[0-9a-f]{64}$ ]] || return 2
-        stored="$(
-            stplr-spec get-field \
-                --path "${repo_root}/${package}/Staplerfile" "$field"
-        )" || return 2
+        stored="$(recipe_source_fingerprint "$package" "$field")" || return 2
         [[ "$stored" =~ ^[0-9a-f]{64}$ ]] || return 2
         [[ "$stored" == "$fingerprint" ]] || return 1
         count=$((count + 1))
@@ -216,10 +235,7 @@ source_fingerprint_drifted() {
     fingerprints_output="$(source_fingerprints "$package")" || return 2
     while IFS=$'\t' read -r field fingerprint; do
         [[ "$fingerprint" =~ ^[0-9a-f]{64}$ ]] || return 2
-        stored="$(
-            stplr-spec get-field \
-                --path "${repo_root}/${package}/Staplerfile" "$field"
-        )" || return 2
+        stored="$(recipe_source_fingerprint "$package" "$field")" || return 2
         [[ "$stored" =~ ^[0-9a-f]{64}$ ]] || return 2
         if [[ "$stored" != "$fingerprint" ]]; then
             drifted=0
@@ -241,18 +257,61 @@ latest_anidesk() {
     printf '%s\n' "$version"
 }
 
-latest_antigravity() {
-    local version
-    version="$(
+latest_antigravity_hub() {
+    local hub
+    hub="$(
         curl --retry 3 --retry-delay 2 --retry-all-errors \
             --connect-timeout 30 --max-time 120 -fsSL \
             'https://antigravity.google/download/' |
-            sed -n 's|.*antigravity-hub/\([0-9][0-9.]*\)-[0-9]*/linux-x64/Antigravity\.tar\.gz.*|\1|p' |
-            sort -Vu |
-            tail -1
-    )"
-    [[ -n "$version" ]] || die 'cannot determine latest Antigravity version'
-    printf '%s\n' "$version"
+            python3 -c '
+import re
+import sys
+from html.parser import HTMLParser
+from urllib.parse import urlsplit
+
+class Downloads(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.builds = {"x64": set(), "arm": set()}
+
+    def handle_starttag(self, tag, attrs):
+        if tag != "a":
+            return
+        for key, value in attrs:
+            if key != "href" or not value:
+                continue
+            url = urlsplit(value)
+            if (url.scheme, url.netloc, url.query, url.fragment) != (
+                "https", "storage.googleapis.com", "", ""
+            ):
+                continue
+            match = re.fullmatch(
+                r"/antigravity-public/antigravity-hub/"
+                r"([0-9]+\.[0-9]+\.[0-9]+-[0-9]+)/linux-(x64|arm)/Antigravity\.tar\.gz",
+                url.path,
+            )
+            if match:
+                self.builds[match[2]].add(match[1])
+
+page = Downloads()
+page.feed(sys.stdin.read())
+page.close()
+if len(page.builds["x64"]) != 1 or page.builds["x64"] != page.builds["arm"]:
+    raise SystemExit("Antigravity download page must identify one matching App build for x64 and arm64")
+print(next(iter(page.builds["x64"])))
+'
+    )" || return
+    [[ -z "${1:-}" || "${hub%-*}" == "$1" ]] || {
+        echo "package_updates: Antigravity App ${1} is not the published build (${hub})" >&2
+        return 1
+    }
+    printf '%s\n' "$hub"
+}
+
+latest_antigravity() {
+    local hub
+    hub="$(latest_antigravity_hub)" || return
+    printf '%s\n' "${hub%-*}"
 }
 
 latest_claude_desktop() {
@@ -533,8 +592,12 @@ if [[ "${PACKAGE_UPDATES_LIB_ONLY:-0}" != 1 ]]; then
             die "package has no mutable source fingerprint: $2"
         source_fingerprints "$2"
         ;;
+    antigravity-hub)
+        [[ "$#" -le 2 ]] || die 'usage: package_updates.sh antigravity-hub [version]'
+        latest_antigravity_hub "${2:-}"
+        ;;
     *)
-        die 'usage: package_updates.sh {check <package>|check-all|outdated|fingerprints <package>}'
+        die 'usage: package_updates.sh {check <package>|check-all|outdated|fingerprints <package>|antigravity-hub [version]}'
         ;;
     esac
 fi

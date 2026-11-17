@@ -120,6 +120,7 @@ safe = re.compile(r"^[0-9A-Za-z.+~_-]+$")
 fingerprint = re.compile(r"^[0-9a-f]{64}$")
 for package, versions in value.items():
     expected_keys = {
+        "antigravity": {"source_fingerprint"},
         "chatgpt": {"source_fingerprint_amd64", "source_fingerprint_arm64"},
         "parsec": {"source_fingerprint"},
     }.get(package, set())
@@ -310,6 +311,7 @@ for package in "${detected_packages[@]}"; do
             EXPECTED_FINGERPRINTS="${expected_fingerprints[$package]}" \
             EXPECTED_GITHUB_DESKTOP_COMMIT="$expected_github_desktop_commit" \
             python3 - <<'PY'
+import hashlib
 import os
 import re
 from pathlib import Path
@@ -335,6 +337,7 @@ version_value = re.compile(
     r"([0-9A-Za-z.+~_-]+))$"
 )
 commit_value = re.compile(r"^upstream_commit='([0-9a-f]{40})'$")
+hub_value = re.compile(r"^upstream_hub='([0-9]+\.[0-9]+\.[0-9]+-[0-9]+)'$")
 release_value = re.compile(r"^release=([1-9][0-9]*)$")
 fingerprint_value = re.compile(
     r"^(source_fingerprint(?:_(?:amd64|arm64))?)='([0-9a-f]{64})'$")
@@ -428,6 +431,7 @@ if candidate_releases != [expected_release]:
     raise SystemExit(f"candidate release must be {expected_release}")
 
 required_fingerprints = {
+    "antigravity": {"source_fingerprint"},
     "chatgpt": {"source_fingerprint_amd64", "source_fingerprint_arm64"},
     "parsec": {"source_fingerprint"},
 }.get(package, set())
@@ -441,6 +445,22 @@ candidate_fingerprints = {
     for line in candidate
     if (match := fingerprint_value.fullmatch(line)) is not None
 }
+if package == "antigravity":
+    if trusted_fingerprints or candidate_fingerprints:
+        raise SystemExit("Antigravity fingerprint must be derived from upstream_hub")
+
+    def hub_fingerprint(lines: list[str], version: str) -> dict[str, str]:
+        hubs = [
+            match.group(1)
+            for line in lines
+            if (match := hub_value.fullmatch(line)) is not None
+        ]
+        if len(hubs) != 1 or hubs[0].rsplit("-", 1)[0] != version:
+            raise SystemExit("Antigravity hub ID must match its recipe version")
+        return {"source_fingerprint": hashlib.sha256(hubs[0].encode()).hexdigest()}
+
+    trusted_fingerprints = hub_fingerprint(trusted, expected_current)
+    candidate_fingerprints = hub_fingerprint(candidate, expected_latest)
 if set(trusted_fingerprints) != required_fingerprints:
     raise SystemExit("trusted recipe has invalid mutable-source fingerprints")
 if set(candidate_fingerprints) != required_fingerprints:
@@ -469,6 +489,9 @@ for index, (before, after) in enumerate(zip(trusted, candidate, strict=True)):
     if version_value.fullmatch(before) and version_value.fullmatch(after):
         continue
     if release_value.fullmatch(before) and release_value.fullmatch(after):
+        continue
+    if package == "antigravity" and hub_value.fullmatch(before) and hub_value.fullmatch(after):
+        changed_fingerprint += 1
         continue
     if (
         package == "github-desktop"

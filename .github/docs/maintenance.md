@@ -377,24 +377,86 @@ appstream_app_id == '<id>'
 Software, а stplr-плагин добавляет только пакетную часть: версию, состояние,
 формат и происхождение. Поэтому качество карточки определяется метаданными.
 
-### component-id равен desktop-id
+### Component ID и desktop launchable
 
-`appstream_app_id` обязан совпадать с desktop-файлом, который пакет реально
-ставит: validator сверяет наличие `/usr/share/applications/<id>.desktop`, а
-менять desktop-id нельзя без отдельной миграции. Отсюда legacy-имена вида
-`chatgpt` вместо обратного DNS. `appstreamcli validate` выдаёт на
-них `cid-desktopapp-is-not-rdns` — это принятая цена за то, что id пакета не
-разъезжается с установленным ярлыком.
+`appstream_app_id` сохраняет идентичность карточки в GNOME Software.
+По умолчанию генератор связывает её с `<appstream_app_id>.desktop`.
+Если upstream задаёт другое имя для окна Wayland и обработчика протокола,
+`appstream_desktop_id` указывает basename настоящего desktop-файла.
+Validator проверяет, что `launchable` из metainfo действительно установлен
+в `/usr/share/applications/`. Создавать второй видимый ярлык ради component ID
+не требуется.
+
+Antigravity сохраняет компонент `com.google.Antigravity`, но запускает
+`antigravity.desktop` — это имя вычисляет Electron из upstream productName.
+При обновлении на release 6 RPM удаляет прежний дублирующий
+`com.google.Antigravity.desktop`; пользовательские MIME-настройки и профиль
+приложения хуки не меняют. Порядок исправления старых избранных ярлыков и
+сохранённых ассоциаций описан ниже, в разделе о сопровождении Antigravity.
 
 Отдельный случай — id, который сам оканчивается на `.desktop`
 (`org.telegram.desktop`). Launchable для него — `org.telegram.desktop.desktop`,
 и именно так его строят и генератор, и validator.
 
+### Сопровождение Antigravity
+
+Пакет устанавливает Antigravity **App** из официальных архивов Google для
+x64 и ARM64. Standalone Antigravity IDE — другой продукт; его версии и ссылки
+не подходят для этого рецепта. Оба архива должны иметь один полный
+`upstream_hub` вида `<version>-<build-id>`.
+
+Обновление через `.stapler/update-run` связывает версию, build ID и контрольные
+суммы обеих архитектур. Изменения сначала выполняются во временном рецепте
+рядом с исходным; он заменяет исходный только после успешной проверки источников
+и пересчёта SHA-256. Смена build ID при прежней версии повышает `release`.
+Автономный updater сверяет этот ID с fingerprint обнаруженной сборки перед
+публикацией. Неполная публикация архитектур и смена сборки во время обработки
+останавливают обновление.
+
+`validate-payload.py` проверяет ELF-архитектуру основного бинарника и sandbox,
+а также именно корневой `package.json` в ASAR: версию, имя, productName,
+desktop identity и наличие точки входа. Это сохраняет штатный профиль
+`Antigravity` и схему `antigravity://` при обновлении. Вендорский ASAR не
+переписывается.
+
+Launcher очищает `APPIMAGE`, `APPDIR` и `ELECTRON_RUN_AS_NODE`, сохраняет
+аргументы и запускает `/opt/antigravity/antigravity`. Конфигурация встроенного
+updater не устанавливается, но его код и пункты меню остаются upstream.
+Chromium sandbox сохраняет режим `4755`; `--no-sandbox` не добавляется.
+
+Для установки из release 1–5 может потребоваться заново закрепить значок:
+удалить прежний из избранного, запустить приложение из меню и закрепить
+работающее окно. Если сохранена устаревшая ассоциация ссылки входа, обычный
+пользователь может выполнить в своём графическом сеансе, без sudo:
+
+```bash
+xdg-mime default antigravity.desktop x-scheme-handler/antigravity
+xdg-mime query default x-scheme-handler/antigravity
+```
+
+Ожидаемый результат запроса — `antigravity.desktop`. Настройку браузера о
+разрешении открытия внешнего приложения это не отменяет. Root-хуки не
+редактируют пользовательские MIME-настройки, избранное и данные авторизации.
+
+Поведенческие проверки пакета:
+
+```bash
+bash antigravity/tests/test-package.sh
+bash antigravity/tests/test-desktop-integration.sh
+```
+
+Они проверяют результат `package()`/`files()` для двух архитектур, единый
+desktop/AppStream, права sandbox, ошибочные payload и передачу аргументов.
+При наличии `stplr-spec` тест также проверяет настоящий setter и сохранение
+остального рецепта. CI проверяет RPM и lifecycle на amd64 в p11 и Sisyphus;
+ARM64 не имеет отдельного runner. Реальный вход Google и поведение окна
+проверяются в пользовательском графическом сеансе ALT.
+
 ### Метаданные генерируются из рецепта
 
 `.github/tools/sync_appstream.py` собирает `<id>.metainfo.xml` из полей
 рецепта: `appstream_name`, `summary`, `summary_ru`, `desc`, `desc_ru`,
-`homepage`, `license` и `group` (RPM-группа отображается в категории
+`homepage`, `license`, `appstream_desktop_id` и `group` (RPM-группа отображается в категории
 freedesktop). Писать документ руками нельзя — он разойдётся с рецептом;
 `run_checks.sh` выполняет `sync_appstream.py --check` и падает при расхождении.
 

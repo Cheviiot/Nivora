@@ -23,9 +23,7 @@ sudo stplr install nivora/antigravity
 
 ## Возможности
 
-Переупаковка официального Linux tar.gz Antigravity App: установка в
-`/opt/antigravity`, команда `/usr/bin/antigravity`, локальные desktop и
-AppStream id `com.google.Antigravity`.
+Официальное десктопное приложение Google Antigravity для Linux.
 
 Для работы нужна учётная запись Google. Встроенный Electron-updater отключён —
 обновления идут через Stapler.

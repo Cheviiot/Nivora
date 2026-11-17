@@ -9,6 +9,7 @@
   `com.google.Antigravity`. Встроенный Electron-updater отключён.
 - `release=2`: официальная иконка с antigravity.google вместо скрина лендинга.
 - `release=3`: checksum PNG в Staplerfile приведён к новой иконке (иначе prepare падает на dl).
+- `release=4`: `MimeType=x-scheme-handler/antigravity` и `antigravity.desktop` для Wayland app_id / OAuth `antigravity://`.
 
 ## 2026-11-13 — OpenCode Desktop и обновление каталога
 

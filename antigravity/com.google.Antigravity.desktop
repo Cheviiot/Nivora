@@ -8,3 +8,4 @@ Type=Application
 Icon=com.google.Antigravity
 Categories=Development;
 StartupWMClass=Antigravity
+MimeType=x-scheme-handler/antigravity;

@@ -1,0 +1,25 @@
+Native RPM extraction regression fixture
+
+Decoded RPM SHA-256: aac8c8db9f1d9a17ccc04d426a42c019264f4ac13223b1581ed3ac89f66f3820
+Decoded size: 2019 bytes
+
+Produced with the same pinned RPM writer as Stapler 0.2.0:
+  github.com/google/rpmpack v0.7.1 replaced by
+  go.stplr.dev/rpmpack v0.0.0-20260225123040-9f1edfecb27d
+  commit 9f1edfecb27d4c8b2967f3b8c27a53755e43b632
+  module checksum h1:6QTjc4eY9qu+QcYD8CIF+rIxIYF/qbOp7wRJFW93kFM=
+  source https://altlinux.space/stapler/rpmpack
+
+Created through NewRPM, sorted AddFileStream calls, and Write; compressor
+"gzip:-1" matches Stapler's pinned nfpm rpm-lowmem default. BuildTime is Unix
+zero, name nivora-repro+stplr-default, version 1, release alt1, arch x86_64,
+license MIT. The two synthetic regular files belong to root:root, mode 0644:
+  /usr/share/applications/demo.desktop (63 bytes)
+  /usr/share/metainfo/com.example.Demo.metainfo.xml (518 bytes)
+
+The writer records ARCHIVESIZE=LONGARCHIVESIZE=581 (sum of file bodies),
+while the complete decompressed newc stream is 1016 bytes. Ubuntu 24.04
+rpm2cpio 4.18.2 consequently exits 1 with empty stderr even when output goes
+to a regular file. RPM digests pass. bsdtar extracts both files successfully.
+The native regression requires rpm and bsdtar; it deliberately does not skip
+when these declared development/CI dependencies are missing.

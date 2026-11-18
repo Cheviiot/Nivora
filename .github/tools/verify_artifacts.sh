@@ -169,12 +169,10 @@ for package in "${packages[@]}"; do
     fi
 
     if [[ "$package" == 'chatgpt' ]]; then
-        for command in cpio rpm2cpio; do
-            command -v "$command" >/dev/null 2>&1 || {
-                echo "${package}: для проверки AppArmor требуется ${command}" >&2
-                exit 2
-            }
-        done
+        command -v bsdtar >/dev/null 2>&1 || {
+            echo "${package}: для проверки AppArmor требуется bsdtar" >&2
+            exit 2
+        }
         for required_path in \
             /usr/bin/chatgpt \
             /usr/lib/chatgpt/ChatGPT \
@@ -197,11 +195,7 @@ for package in "${packages[@]}"; do
             echo "${package}: команда ChatGPT запускается не напрямую: ${chatgpt_command_target}" >&2
             exit 1
         }
-        apparmor_profile="$(
-            set +o pipefail
-            rpm2cpio "$artifact" |
-                cpio -i --quiet --to-stdout /etc/apparmor.d/chatgpt
-        )"
+        apparmor_profile="$(bsdtar -xOf "$artifact" /etc/apparmor.d/chatgpt)"
         grep -Fq 'profile chatgpt "/usr/lib/chatgpt/ChatGPT"' \
             <<<"$apparmor_profile" || {
             echo "${package}: AppArmor profile не прикреплён к packaged binary" >&2

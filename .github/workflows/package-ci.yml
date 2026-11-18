@@ -42,7 +42,7 @@ jobs:
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: jq rpm shellcheck
+          system-packages: jq rpm libarchive-tools shellcheck
 
       - name: Проверить обязательные G0–G2
         run: .github/tools/run_checks.sh
@@ -122,7 +122,7 @@ jobs:
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: rpm cpio sqlite3
+          system-packages: rpm cpio libarchive-tools sqlite3
 
       # Build, package metadata, install, safe smoke and remove are gated in
       # disposable ALT p11 containers. GitHub has no native ALT runner.
@@ -169,7 +169,7 @@ jobs:
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: rpm cpio libsystemd-dev
+          system-packages: rpm cpio libarchive-tools libsystemd-dev
 
       - name: Собрать и проверить pinned main
         env:

@@ -43,7 +43,7 @@ jobs:
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: jq rpm cpio sqlite3 shellcheck
+          system-packages: jq rpm cpio libarchive-tools sqlite3 shellcheck
 
       - name: Проверить обязательные G0–G2
         run: .github/tools/run_checks.sh

@@ -171,7 +171,7 @@ jobs:
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: jq rpm cpio shellcheck sqlite3
+          system-packages: jq rpm cpio libarchive-tools shellcheck sqlite3
 
       - name: Изолированно обновить и проверить каждый пакет
         id: isolated
@@ -250,7 +250,7 @@ jobs:
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: jq rpm cpio shellcheck sqlite3
+          system-packages: jq rpm cpio libarchive-tools shellcheck sqlite3
 
       - name: Получить кандидатные diff
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
@@ -299,7 +299,7 @@ jobs:
       - name: Подготовить инструменты публикации
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: jq shellcheck
+          system-packages: jq rpm libarchive-tools shellcheck
 
       - name: Синхронизировать доверенный base с main
         id: publication_base

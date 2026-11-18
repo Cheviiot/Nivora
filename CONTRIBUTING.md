@@ -16,7 +16,7 @@ Nivora сопровождает приложения для **ALT Linux p11**.
 distrobox create --name nivora-dev --image registry.altlinux.org/p11/base
 distrobox enter nivora-dev
 sudo apt-get update
-sudo apt-get install git-core bash python3 curl jq shellcheck sqlite3 rpm-build binutils cpio tar appstream desktop-file-utils
+sudo apt-get install git-core bash python3 curl jq shellcheck sqlite3 rpm-build binutils cpio tar bsdtar appstream desktop-file-utils
 git clone https://github.com/Cheviiot/Nivora.git
 cd Nivora
 git switch main

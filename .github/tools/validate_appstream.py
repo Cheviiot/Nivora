@@ -9,10 +9,8 @@ from __future__ import annotations
 
 import argparse
 import configparser
-import os
 import posixpath
 import re
-import selectors
 import stat
 import subprocess
 import sys
@@ -51,10 +49,10 @@ def scalar(recipe: str, field: str) -> str | None:
     return next(value.strip() for value in match.groups() if value is not None)
 
 
-def run_checked(argv: list[str]) -> str:
+def run_checked(argv: list[str], *, timeout: float = 60) -> str:
     try:
         result = subprocess.run(
-            argv, capture_output=True, text=True, errors="replace", timeout=60,
+            argv, capture_output=True, text=True, errors="replace", timeout=timeout,
         )
     except FileNotFoundError as error:
         raise ValidationError(f"required command is not installed: {argv[0]}") from error
@@ -201,66 +199,41 @@ def require_regular(entries: dict[str, PayloadEntry], path: str) -> None:
 def extraction_time_left(deadline: float) -> float:
     remaining = deadline - time.monotonic()
     if remaining <= 0:
-        raise subprocess.TimeoutExpired("RPM metadata extraction", EXTRACTION_TIMEOUT)
+        raise ValidationError("RPM metadata extraction timed out")
     return remaining
 
 
-def drain_pipe(stream, deadline: float) -> None:
-    """Consume bytes after cpio's trailer without buffering the RPM payload."""
-    descriptor = stream.fileno()
-    os.set_blocking(descriptor, False)
-    with selectors.DefaultSelector() as selector:
-        selector.register(descriptor, selectors.EVENT_READ)
-        while True:
-            if not selector.select(extraction_time_left(deadline)):
-                raise subprocess.TimeoutExpired("rpm2cpio drain", EXTRACTION_TIMEOUT)
-            try:
-                chunk = os.read(descriptor, 64 * 1024)
-            except BlockingIOError:
-                continue
-            if not chunk:
-                return
-
-
 def extract_metadata(rpm: Path, paths: tuple[str, str], destination: Path) -> None:
-    patterns = [pattern for path in paths for pattern in (path, path[1:], f".{path}")]
-    with tempfile.TemporaryFile() as producer_errors, tempfile.TemporaryFile() as consumer_errors:
-        producer = None
-        consumer = None
-        deadline = time.monotonic() + EXTRACTION_TIMEOUT
-        try:
-            producer = subprocess.Popen(
-                ["rpm2cpio", str(rpm)], stdout=subprocess.PIPE, stderr=producer_errors,
-            )
-            consumer = subprocess.Popen(
-                ["cpio", "-i", "--quiet", "--no-absolute-filenames", "--no-preserve-owner", "--make-directories", *patterns],
-                stdin=producer.stdout, stdout=subprocess.DEVNULL, stderr=consumer_errors,
-                cwd=destination,
-            )
-            assert producer.stdout is not None
-            # cpio can exit at TRAILER!!! before rpm2cpio finishes writing
-            # archive padding. Keep our read end open, then consume to EOF;
-            # closing it early turns a valid RPM into a producer EPIPE.
-            consumer_code = consumer.wait(timeout=extraction_time_left(deadline))
-            drain_pipe(producer.stdout, deadline)
-            producer_code = producer.wait(timeout=extraction_time_left(deadline))
-        except FileNotFoundError as error:
-            raise ValidationError(f"required extraction command is not installed: {error.filename}") from error
-        except subprocess.TimeoutExpired as error:
-            raise ValidationError("RPM metadata extraction timed out") from error
-        finally:
-            for process in (consumer, producer):
-                if process is not None:
-                    if process.stdout is not None:
-                        process.stdout.close()
-                    if process.poll() is None:
-                        process.kill()
-                    process.wait()
-        if producer_code != 0 or consumer_code != 0:
-            producer_errors.seek(0)
-            consumer_errors.seek(0)
-            details = (producer_errors.read() + consumer_errors.read()).decode("utf-8", errors="replace").strip()
-            raise ValidationError(f"RPM metadata extraction failed (rpm2cpio={producer_code}, cpio={consumer_code}): {details}")
+    rpm = rpm.resolve()
+    destination = destination.resolve()
+    deadline = time.monotonic() + EXTRACTION_TIMEOUT
+    # Stapler's rpmpack fork records file-body bytes as ARCHIVESIZE. RPM 4.18's
+    # rpm2cpio rejects the otherwise complete cpio stream on that size mismatch.
+    # libarchive reads it correctly, but does not verify every gzip CRC: verify
+    # the RPM digests first. Local builds are unsigned, so no GPG key is required.
+    run_checked(
+        ["rpm", "--checksig", "--nosignature", str(rpm)],
+        timeout=extraction_time_left(deadline),
+    )
+    members = run_checked(
+        ["bsdtar", "-tf", str(rpm)], timeout=extraction_time_left(deadline),
+    ).splitlines()
+    selected = []
+    for path in paths:
+        variants = {path, path[1:], f".{path}"}
+        matches = [member for member in members if member in variants]
+        if len(matches) != 1:
+            raise ValidationError(f"RPM archive must contain exactly one {path}; found {len(matches)}")
+        selected.append(matches[0])
+    # bsdtar rejects unmatched include patterns, so select the actual literal
+    # names from the archive instead of passing three alternative spellings.
+    run_checked(
+        [
+            "bsdtar", "-xf", str(rpm), "-C", str(destination),
+            "--no-same-owner", "--no-same-permissions", "--", *selected,
+        ],
+        timeout=extraction_time_left(deadline),
+    )
     for path in paths:
         extracted = destination / path[1:]
         if extracted.is_symlink() or not extracted.is_file() or not extracted.resolve().is_relative_to(destination.resolve()):

@@ -43,7 +43,10 @@ def changed_paths(base: str, head: str) -> list[str]:
     if not base or set(base) == {"0"}:
         return [".github/support-matrix.toml"]
     result = subprocess.run(
-        ["git", "diff", "--name-only", "--diff-filter=ACMRD", base, head, "--"],
+        # Treat a move as a deletion plus an addition so both package owners
+        # are checked. NUL output preserves quoted/non-ASCII/newline paths.
+        # Do not filter out type changes (for example, file -> symlink).
+        ["git", "diff", "--name-only", "--no-renames", "-z", base, head, "--"],
         cwd=ROOT,
         check=False,
         text=True,
@@ -54,7 +57,7 @@ def changed_paths(base: str, head: str) -> list[str]:
         # Force the conservative full plan when a force-push, shallow clone,
         # or unreachable event SHA makes the requested range unavailable.
         return [".github/support-matrix.toml"]
-    return [line for line in result.stdout.splitlines() if line]
+    return [line for line in result.stdout.split("\0") if line]
 
 
 def parse_requested(value: str, packages: list[str]) -> tuple[list[str], bool]:

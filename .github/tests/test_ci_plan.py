@@ -80,13 +80,74 @@ class ClassifyPathsTests(unittest.TestCase):
     @mock.patch.object(CI_PLAN.subprocess, "run")
     def test_deleted_paths_are_included_in_plan(self, run):
         run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="alpha/tests/test-smoke.sh\n", stderr=""
+            args=[], returncode=0, stdout="alpha/tests/test-smoke.sh\0", stderr=""
         )
         self.assertEqual(
             CI_PLAN.changed_paths("base", "head"),
             ["alpha/tests/test-smoke.sh"],
         )
-        self.assertIn("--diff-filter=ACMRD", run.call_args.args[0])
+        self.assertIn("--no-renames", run.call_args.args[0])
+        self.assertIn("-z", run.call_args.args[0])
+
+
+class ChangedPathsGitTests(unittest.TestCase):
+    """Use Git itself: mocks cannot reproduce rename and path-quoting rules."""
+
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.root = Path(self.directory.name)
+        self.git("init", "-q")
+        self.git("config", "user.name", "CI test")
+        self.git("config", "user.email", "ci@example.invalid")
+        self.git("config", "diff.renames", "true")
+        for package in ("alpha", "beta"):
+            (self.root / package).mkdir()
+            (self.root / package / "Staplerfile").write_text("name=" + package)
+        (self.root / "alpha/payload").write_text("fixture payload\n")
+        self.commit()
+        self.base = self.git("rev-parse", "HEAD")
+
+    def git(self, *args):
+        return subprocess.run(
+            ["git", *args], cwd=self.root, check=True,
+            capture_output=True, text=True,
+        ).stdout.strip()
+
+    def commit(self):
+        self.git("add", "-A")
+        self.git("commit", "-qm", "fixture")
+
+    def changed(self):
+        self.commit()
+        with mock.patch.object(CI_PLAN, "ROOT", self.root):
+            return CI_PLAN.changed_paths(self.base, "HEAD")
+
+    def test_move_between_packages_checks_both_owners(self):
+        (self.root / "alpha/payload").rename(self.root / "beta/payload")
+        paths = self.changed()
+        self.assertEqual(paths, ["alpha/payload", "beta/payload"])
+        self.assertEqual(
+            CI_PLAN.classify_paths(paths, ["alpha", "beta"]),
+            (["alpha", "beta"], False),
+        )
+
+    def test_move_outside_package_still_checks_source_owner(self):
+        (self.root / "alpha/payload").rename(self.root / "payload")
+        self.assertEqual(
+            CI_PLAN.classify_paths(self.changed(), ["alpha", "beta"]),
+            (["alpha"], False),
+        )
+
+    def test_type_change_is_not_filtered_out(self):
+        (self.root / "alpha/payload").unlink()
+        (self.root / "alpha/payload").symlink_to("Staplerfile")
+        self.assertEqual(self.changed(), ["alpha/payload"])
+
+    def test_unusual_path_is_preserved_without_git_quoting(self):
+        path = "alpha/данные\nfixture.txt"
+        (self.root / path).write_text("fixture")
+        self.assertEqual(self.changed(), [path])
 
 
 if __name__ == "__main__":

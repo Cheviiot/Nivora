@@ -61,6 +61,8 @@ def parse_requested(value: str, packages: list[str]) -> tuple[list[str], bool]:
     if value.strip() == "all":
         return packages, True
     requested = sorted(set(value.split()))
+    if not requested:
+        raise ValueError("package selection is empty; use 'all' or package IDs")
     unknown = sorted(set(requested) - set(packages))
     if unknown:
         raise ValueError(f"unknown package(s): {', '.join(unknown)}")
@@ -71,13 +73,13 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base", default="")
     parser.add_argument("--head", default="HEAD")
-    parser.add_argument("--packages", default="")
+    parser.add_argument("--packages")
     parser.add_argument("--github-output", type=Path)
     args = parser.parse_args()
 
     packages = package_ids()
     try:
-        if args.packages:
+        if args.packages is not None:
             selected, full = parse_requested(args.packages, packages)
             paths: list[str] = []
         else:

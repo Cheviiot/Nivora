@@ -1161,6 +1161,73 @@ def validate_updater_package_list(errors: list[str]) -> None:
             )
 
 
+def validate_lifecycle_catalog(
+    matrix_packages: dict[str, dict[str, object]], errors: list[str]
+) -> None:
+    """Keep the full lifecycle gate aligned with the recipes and support claims."""
+    path = ROOT / ".github/tools/test_package_lifecycle.sh"
+    if not path.is_file():
+        errors.append("lifecycle catalog: test_package_lifecycle.sh is missing")
+        return
+    text = path.read_text(encoding="utf-8")
+    match = re.search(
+        r"(?ms)^readonly -a lifecycle_package_catalog=\(\n(.*?)^\)$", text
+    )
+    if not match:
+        errors.append("lifecycle catalog: cannot read lifecycle_package_catalog")
+        return
+    try:
+        entries = shlex.split(match.group(1), comments=True, posix=True)
+    except ValueError as error:
+        errors.append(f"lifecycle catalog: invalid shell array: {error}")
+        return
+
+    package_ids = []
+    for entry in entries:
+        fields = entry.split("|")
+        package = fields[0]
+        package_ids.append(package)
+        if len(fields) != 6 or any(not value for value in fields):
+            errors.append(f"lifecycle catalog: {package}: expected six nonempty fields")
+            continue
+        _, command, state, expected_a, expected_b, sandbox = fields
+        for label, value in (
+            ("command", command), ("state", state),
+            ("expected_a", expected_a), ("expected_b", expected_b),
+            ("sandbox", sandbox),
+        ):
+            if value == "-" and label not in {"command", "state"}:
+                continue
+            parts = value.split("/")
+            if (
+                not value.startswith("/")
+                or any(part in {"", ".", ".."} for part in parts[1:])
+                or any(character in value for character in "\n\r\x00")
+            ):
+                errors.append(
+                    f"lifecycle catalog: {package}: {label} needs a canonical absolute path"
+                )
+        if not state.startswith(("/home/nivora-test/", "/var/lib/")):
+            errors.append(
+                f"lifecycle catalog: {package}: state must be inside the test home or /var/lib"
+            )
+        expected_command = matrix_packages.get(package, {}).get("smoke_path")
+        if command != expected_command:
+            errors.append(
+                f"lifecycle catalog: {package}: command differs from matrix smoke_path: "
+                f"{command!r} != {expected_command!r}"
+            )
+    if len(package_ids) != len(set(package_ids)):
+        errors.append("lifecycle catalog: duplicate package IDs")
+    if set(package_ids) != set(EXPECTED_PACKAGES):
+        missing = sorted(set(EXPECTED_PACKAGES) - set(package_ids))
+        extra = sorted(set(package_ids) - set(EXPECTED_PACKAGES))
+        errors.append(
+            f"lifecycle catalog: package IDs differ from repository packages; "
+            f"missing={missing}, extra={extra}"
+        )
+
+
 def validate_autonomous_update_workflow(errors: list[str]) -> None:
     path = ROOT / ".github/workflows/check-updates.yml"
     if not path.is_file():
@@ -1240,6 +1307,7 @@ def main() -> int:
     validate_readme(metadata, errors)
     validate_readme_hero(errors)
     validate_updater_package_list(errors)
+    validate_lifecycle_catalog(matrix_packages, errors)
     validate_autonomous_update_workflow(errors)
     for path in sorted([
         *ROOT.glob("*.md"),

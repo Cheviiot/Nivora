@@ -31,24 +31,31 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Выбрать пакеты
+        id: plan
+        env:
+          REQUESTED_PACKAGES: ${{ inputs.packages }}
+        run: >-
+          .github/tools/ci_plan.py
+          --packages "$REQUESTED_PACKAGES"
+          --github-output "$GITHUB_OUTPUT"
+
       - name: Подготовить инструменты
         uses: ./.github/actions/setup-stplr-spec
         with:
-          system-packages: rpm cpio sqlite3
+          system-packages: jq rpm cpio sqlite3 shellcheck
+
+      - name: Проверить обязательные G0–G2
+        run: .github/tools/run_checks.sh
 
       - name: Собрать пакеты
         env:
-          REQUESTED_PACKAGES: ${{ inputs.packages }}
+          PACKAGES_JSON: ${{ steps.plan.outputs.packages }}
+          NIVORA_STPLR_CHANNEL: stable
           NIVORA_ALT_BRANCH: p11
         run: |
-          if [[ "$REQUESTED_PACKAGES" == all ]]; then
-            .github/tools/clean_build.sh --all
-            .github/tools/verify_artifacts.sh --all
+          mapfile -t packages < <(jq -r '.[]' <<<"$PACKAGES_JSON")
+          .github/tools/clean_build.sh "${packages[@]}"
+          .github/tools/verify_artifacts.sh "${packages[@]}"
+          NIVORA_LIFECYCLE_PACKAGES="$(IFS=,; echo "${packages[*]}")" \
             .github/tools/test_package_lifecycle.sh
-          else
-            read -r -a packages <<<"$REQUESTED_PACKAGES"
-            .github/tools/clean_build.sh "${packages[@]}"
-            .github/tools/verify_artifacts.sh "${packages[@]}"
-            NIVORA_LIFECYCLE_PACKAGES="$(IFS=,; echo "${packages[*]}")" \
-              .github/tools/test_package_lifecycle.sh
-          fi

@@ -292,6 +292,78 @@ class UpdaterListTests(unittest.TestCase):
         )
 
 
+class LifecycleCatalogTests(unittest.TestCase):
+    @staticmethod
+    def entry(package):
+        return (
+            f"{package}|/usr/bin/{package}|/home/nivora-test/.config/{package}/state|"
+            f"/usr/share/applications/{package}.desktop|-|-"
+        )
+
+    def validate(self, entries):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            tools = root / ".github/tools"
+            tools.mkdir(parents=True)
+            (tools / "test_package_lifecycle.sh").write_text(
+                "readonly -a lifecycle_package_catalog=(\n"
+                + "\n".join(f"    '{entry}'" for entry in entries)
+                + "\n)\n",
+                encoding="utf-8",
+            )
+            old_root, old_packages = VALIDATOR.ROOT, VALIDATOR.EXPECTED_PACKAGES
+            VALIDATOR.ROOT = root
+            VALIDATOR.EXPECTED_PACKAGES = ("alpha", "beta")
+            try:
+                errors = []
+                VALIDATOR.validate_lifecycle_catalog(
+                    {package: {"smoke_path": f"/usr/bin/{package}"}
+                     for package in VALIDATOR.EXPECTED_PACKAGES},
+                    errors,
+                )
+                return errors
+            finally:
+                VALIDATOR.ROOT, VALIDATOR.EXPECTED_PACKAGES = old_root, old_packages
+
+    def test_matching_catalog_is_accepted(self):
+        self.assertEqual(self.validate([self.entry("alpha"), self.entry("beta")]), [])
+
+    def test_forgotten_package_cannot_skip_the_full_lifecycle_gate(self):
+        errors = self.validate([self.entry("alpha")])
+        self.assertTrue(any("missing=['beta']" in error for error in errors), errors)
+
+    def test_duplicate_package_is_rejected(self):
+        errors = self.validate([self.entry("alpha"), self.entry("beta"), self.entry("alpha")])
+        self.assertTrue(any("duplicate package IDs" in error for error in errors), errors)
+
+    def test_incomplete_and_unsafe_paths_are_rejected(self):
+        valid = self.entry("alpha")
+        cases = {
+            "missing field": (valid.rsplit("|", 1)[0], "six nonempty fields"),
+            "empty field": (valid.replace("|-|-", "||-"), "six nonempty fields"),
+            "relative path": (
+                valid.replace("/usr/share/applications/", "share/applications/"),
+                "canonical absolute path",
+            ),
+            "traversal": (
+                valid.replace(".config/alpha/state", "../../etc/test-state"),
+                "canonical absolute path",
+            ),
+            "dangerous state location": (
+                valid.replace("/home/nivora-test/.config/alpha/state", "/etc/passwd"),
+                "state must be inside",
+            ),
+            "command drift": (
+                valid.replace("/usr/bin/alpha", "/usr/bin/obsolete-command"),
+                "command differs from matrix smoke_path",
+            ),
+        }
+        for name, (entry, expected) in cases.items():
+            with self.subTest(name=name):
+                errors = self.validate([entry, self.entry("beta")])
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+
 class RecipeStyleTests(unittest.TestCase):
     RECIPE = """name='demo'
 version={version}

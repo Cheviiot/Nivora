@@ -258,6 +258,12 @@ cat >"${work_dir}/run-rpm.sh" <<'EOF'
 #!/bin/bash
 set -euo pipefail
 
+scenario="${LIFECYCLE_SCENARIO:?LIFECYCLE_SCENARIO is required}"
+case "$scenario" in
+fresh | upgrade) ;;
+*) echo "Unknown lifecycle scenario: $scenario" >&2; exit 2 ;;
+esac
+
 useradd --create-home nivora-test
 
 IFS='|' read -r package command_path state_path expected_a expected_b sandbox_path \
@@ -268,17 +274,12 @@ artifact="${artifacts[0]}"
 system_name="$(rpm -qp --queryformat '%{NAME}' "$artifact")"
 current_evr="$(rpm -qp --queryformat '%{EPOCHNUM}:%{VERSION}-%{RELEASE}' "$artifact")"
 current_arch="$(rpm -qp --queryformat '%{ARCH}' "$artifact")"
-previous_artifact="/previous/${package}.rpm"
-previous_name="$(rpm -qp --queryformat '%{NAME}' "$previous_artifact")"
-previous_evr="$(rpm -qp --queryformat '%{EPOCHNUM}:%{VERSION}-%{RELEASE}' "$previous_artifact")"
-previous_arch="$(rpm -qp --queryformat '%{ARCH}' "$previous_artifact")"
-previous_summary="$(rpm -qp --queryformat '%{SUMMARY}' "$previous_artifact")"
 native_arch="$(rpm --eval '%{_arch}')"
 
-[[ "$previous_name" == "$system_name" ]] || {
-    echo "${package}: previous RPM package identity ${previous_name} != ${system_name}" >&2
+if rpm -q "$system_name" >/dev/null 2>&1; then
+    echo "${package}: ${scenario} lifecycle needs a clean container" >&2
     exit 1
-}
+fi
 case "$current_arch" in
 "$native_arch" | noarch) ;;
 *)
@@ -286,40 +287,62 @@ case "$current_arch" in
     exit 1
     ;;
 esac
-case "$previous_arch" in
-"$native_arch" | noarch) ;;
-*)
-    echo "${package}: previous RPM architecture ${previous_arch} is incompatible with ${native_arch}" >&2
-    exit 1
-    ;;
-esac
 
-echo "==> RPM lifecycle ${package} (${NIVORA_ALT_BRANCH:-unknown})"
-if [[ "$previous_summary" == \
-    'Previous Nivora package fixture for lifecycle tests' ]]; then
-    ! rpm -q bc >/dev/null 2>&1
-fi
-bash /usr/local/lib/nivora/alt_apt_network.sh run -qq install -y "$previous_artifact"
-[[ "$(rpm -q --queryformat '%{EPOCHNUM}:%{VERSION}-%{RELEASE}' "$system_name")" == "$previous_evr" ]]
-if [[ "$previous_summary" == \
-    'Previous Nivora package fixture for lifecycle tests' ]]; then
-    rpm -q bc >/dev/null
-    if [[ "$package" == antigravity ]]; then
-        test -f /usr/share/applications/com.google.Antigravity.desktop
-        test -f /usr/share/applications/antigravity.desktop
+echo "==> RPM lifecycle ${package}: ${scenario} (ALT ${NIVORA_ALT_BRANCH:-unknown})"
+if [[ "$scenario" == upgrade ]]; then
+    previous_artifact="/previous/${package}.rpm"
+    previous_name="$(rpm -qp --queryformat '%{NAME}' "$previous_artifact")"
+    previous_evr="$(rpm -qp --queryformat '%{EPOCHNUM}:%{VERSION}-%{RELEASE}' "$previous_artifact")"
+    previous_arch="$(rpm -qp --queryformat '%{ARCH}' "$previous_artifact")"
+    previous_summary="$(rpm -qp --queryformat '%{SUMMARY}' "$previous_artifact")"
+    [[ "$previous_name" == "$system_name" ]] || {
+        echo "${package}: previous RPM package identity ${previous_name} != ${system_name}" >&2
+        exit 1
+    }
+    case "$previous_arch" in
+    "$native_arch" | noarch) ;;
+    *)
+        echo "${package}: previous RPM architecture ${previous_arch} is incompatible with ${native_arch}" >&2
+        exit 1
+        ;;
+    esac
+    if [[ "$previous_summary" == \
+        'Previous Nivora package fixture for lifecycle tests' ]]; then
+        ! rpm -q bc >/dev/null 2>&1
     fi
+    bash /usr/local/lib/nivora/alt_apt_network.sh run -qq install -y "$previous_artifact"
+    [[ "$(rpm -q --queryformat '%{EPOCHNUM}:%{VERSION}-%{RELEASE}' "$system_name")" == "$previous_evr" ]]
+    if [[ "$previous_summary" == \
+        'Previous Nivora package fixture for lifecycle tests' ]]; then
+        rpm -q bc >/dev/null
+        if [[ "$package" == antigravity ]]; then
+            test -f /usr/share/applications/com.google.Antigravity.desktop
+            test -f /usr/share/applications/antigravity.desktop
+        fi
+    fi
+    rpm -Uvh --test --nodeps --noscripts "$artifact" >/dev/null || {
+        echo "${package}: previous RPM ${previous_evr} is not strictly older than ${current_evr}" >&2
+        exit 1
+    }
 fi
-rpm -Uvh --test --nodeps --noscripts "$artifact" >/dev/null || {
-    echo "${package}: previous RPM ${previous_evr} is not strictly older than ${current_evr}" >&2
-    exit 1
-}
+
+# Existing user data must survive both the first installation and an upgrade,
+# then removal. Check its bytes, not just that a filename is still present.
 install -d "${state_path%/*}"
-printf 'keep\n' >"$state_path"
+printf 'keep:%s:%s\n' "$package" "$scenario" >"$state_path"
+state_checksum="$(sha256sum "$state_path")"
+assert_state_preserved() {
+    [[ -f "$state_path" && "$(sha256sum "$state_path")" == "$state_checksum" ]] || {
+        echo "${package}: ${scenario} lifecycle changed persistent state: ${state_path}" >&2
+        exit 1
+    }
+}
 if [[ "$state_path" == /home/nivora-test/* ]]; then
     chown -R nivora-test:nivora-test /home/nivora-test
 fi
 
 bash /usr/local/lib/nivora/alt_apt_network.sh run -qq install -y "$artifact"
+assert_state_preserved
 rpm -q "$system_name"
 [[ "$(rpm -q --queryformat '%{EPOCHNUM}:%{VERSION}-%{RELEASE}' "$system_name")" == "$current_evr" ]]
 test -x "$command_path"
@@ -340,21 +363,26 @@ if [[ "$package" == antigravity ]]; then
 fi
 
 bash /usr/local/lib/nivora/alt_apt_network.sh run -qq remove -y "$system_name"
-test -f "$state_path"
+assert_state_preserved
 ! rpm -q "$system_name"
 EOF
 
 chmod 0755 "${work_dir}/run-rpm.sh"
 
 while IFS= read -r lifecycle_entry; do
-    "$engine" run --rm --privileged \
-        -e LIFECYCLE_ENTRY="$lifecycle_entry" \
-        -e NIVORA_ALT_BRANCH="$branch" \
-        -v "${repo_root}:/repo:ro" \
-        -v "${work_dir}/fixtures/previous-rpm:/previous:ro" \
-        -v "${work_dir}/run-rpm.sh:/run-lifecycle.sh:ro" \
-        "$rpm_image" \
-        /run-lifecycle.sh
+    # Never reuse the upgrade container for a first install: dependencies and
+    # files left by the previous RPM could hide a broken clean installation.
+    for scenario in fresh upgrade; do
+        "$engine" run --rm --privileged \
+            -e LIFECYCLE_ENTRY="$lifecycle_entry" \
+            -e LIFECYCLE_SCENARIO="$scenario" \
+            -e NIVORA_ALT_BRANCH="$branch" \
+            -v "${repo_root}:/repo:ro" \
+            -v "${work_dir}/fixtures/previous-rpm:/previous:ro" \
+            -v "${work_dir}/run-rpm.sh:/run-lifecycle.sh:ro" \
+            "$rpm_image" \
+            /run-lifecycle.sh
+    done
 done <"${work_dir}/lifecycle-packages.txt"
 
 echo "OK: lifecycle ALT ${branch} проверен для ${#packages[@]} пакетов"

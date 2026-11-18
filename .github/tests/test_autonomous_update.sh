@@ -12,6 +12,7 @@ trap cleanup EXIT
 install -d \
     "$fixture/repo/.github/tools" \
     "$fixture/repo/demo" \
+    "$fixture/repo/other" \
     "$fixture/repo/parsec" \
     "$fixture/repo/chatgpt" \
     "$fixture/repo/antigravity/.stapler" \
@@ -19,7 +20,10 @@ install -d \
     "$fixture/runner"
 cp "$repo_root/.github/tools/autonomous_package_updates.sh" \
     "$fixture/repo/.github/tools/"
-printf 'name=demo\n' >"$fixture/repo/demo/Staplerfile"
+for package in demo other; do
+    printf "name='%s'\nversion='1'\nrelease=4\nchecksum='old'\n" "$package" \
+        >"$fixture/repo/$package/Staplerfile"
+done
 fingerprint_a="$(printf 'a%.0s' {1..64})"
 fingerprint_b="$(printf 'b%.0s' {1..64})"
 fingerprint_c="$(printf 'c%.0s' {1..64})"
@@ -114,6 +118,8 @@ case "$1" in
 get-field)
     if [[ "${!#}" == upstream_hub ]]; then
         sed -n "s/^upstream_hub='\([^']*\)'$/\1/p" "$3"
+    elif [[ "${!#}" == version ]]; then
+        sed -n "s/^version='\([^']*\)'$/\1/p" "$3"
     else
         printf '4\n'
     fi
@@ -130,7 +136,11 @@ update-checksums)
     sed -i "s/^checksum='old'$/checksum='new'/" "$recipe"
     ;;
 update-package)
-    sed -i -e "s/^version='1'$/version='2'/" -e 's/^release=4$/release=1/' \
+    updated_version=2
+    if [[ "$2" == demo ]]; then
+        updated_version="${DEMO_UPDATED_VERSION:-2}"
+    fi
+    sed -i -e "s/^version='1'$/version='$updated_version'/" -e 's/^release=4$/release=1/' \
         -e "s/^checksum='old'$/checksum='new'/" "$2/Staplerfile"
     ;;
 *)
@@ -245,4 +255,27 @@ grep -Fxq $'demo\tcheck-sources' "$fixture/unpublished-results/failed-packages"
 test ! -s "$fixture/unpublished-results/demo/failed.patch"
 grep -Fxq 'check-sources demo 2' "$fixture/source-gate"
 
-echo 'OK: updater fail-fast, отклоняет mutable-source race и неопубликованный источник'
+# A second upstream release can appear between detection and update-package.
+# Reject that candidate before any expensive gate, while a separate candidate
+# from the same batch still reaches publication with its planned version.
+: >"$BUILD_TEST_LOG"
+: >"$LIFECYCLE_TEST_LOG"
+DEMO_UPDATED_VERSION=3 \
+PATH="$fixture/bin:$PATH" \
+STPLR_SPEC_COMMAND="$fixture/bin/stplr-spec" \
+RUNNER_TEMP="$fixture/runner" \
+AUTONOMOUS_UPDATE_RESULTS_DIR="$fixture/version-race-results" \
+UPDATE_PLAN_JSON='{"demo":{"current":"1","latest":"2","fingerprints":{}},"other":{"current":"1","latest":"2","fingerprints":{}}}' \
+    "$fixture/repo/.github/tools/autonomous_package_updates.sh" demo other
+
+[[ "$(cat "$fixture/version-race-results/successful-packages")" == other ]]
+[[ "$(cat "$fixture/version-race-results/failed-packages")" == $'demo\tupdate-recipe' ]]
+grep -Fxq 'phase=update-recipe' "$fixture/version-race-results/demo/FAILED"
+grep -Fq 'demo planned version 2, but updater wrote 3' \
+    "$fixture/version-race-results/demo/update.log"
+test ! -e "$fixture/version-race-results/demo/update.patch"
+grep -Fq "+version='2'" "$fixture/version-race-results/other/update.patch"
+[[ "$(cat "$BUILD_TEST_LOG")" == $'p11\tother' ]]
+[[ "$(cat "$LIFECYCLE_TEST_LOG")" == $'p11\tother' ]]
+
+echo 'OK: updater isolates version races, mutable-source races and unpublished sources'

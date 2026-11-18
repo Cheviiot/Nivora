@@ -103,6 +103,7 @@ run_update_phases() {
     local package="$2"
     local phase_file="$3"
     local planned_current planned_latest planned_source_fingerprints antigravity_fingerprint
+    local updated_version
 
     cd "$worktree" || return
     planned_current="$(planned_version "$package" current)" || return
@@ -138,6 +139,16 @@ run_update_phases() {
         "$stplr_spec_command" update-package "$package" || return
     fi
     normalise_recipe_style "${worktree}/${package}/Staplerfile" || return
+    # update-package checks upstream again. A newer release appearing after
+    # detection must fail only this candidate, before builds and the shared
+    # publication gate, which is bound to the original detection plan.
+    updated_version="$("$stplr_spec_command" get-field \
+        --path "${worktree}/${package}/Staplerfile" version)" || return
+    if [[ "$updated_version" != "$planned_latest" ]]; then
+        printf 'autonomous_package_updates: %s planned version %s, but updater wrote %s; retry after detection\n' \
+            "$package" "$planned_latest" "$updated_version" >&2
+        return 1
+    fi
     if is_mutable_source_package "$package"; then
         echo pin-source-fingerprint >"$phase_file" || return
         verify_mutable_source_snapshot \

@@ -1,5 +1,7 @@
 import importlib.util
 import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -50,6 +52,20 @@ class ClassifyPathsTests(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             CI_PLAN.parse_requested("missing", self.packages)
+
+    def test_explicit_empty_selection_is_not_an_implicit_full_build(self):
+        for selection in ["", " ", "\n\t"]:
+            with self.subTest(selection=selection), tempfile.TemporaryDirectory() as directory:
+                output = Path(directory) / "github-output"
+                result = subprocess.run(
+                    [sys.executable, str(MODULE_PATH), "--packages", selection,
+                     "--github-output", str(output)],
+                    capture_output=True, text=True, check=False,
+                )
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("package selection is empty", result.stderr)
+                self.assertEqual(result.stdout, "")
+                self.assertFalse(output.exists())
 
     @mock.patch.object(CI_PLAN.subprocess, "run")
     def test_unreachable_base_forces_full_plan(self, run):

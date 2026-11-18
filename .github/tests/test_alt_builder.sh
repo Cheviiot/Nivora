@@ -134,6 +134,28 @@ assert_builds 1
 "$engine" image inspect second:lifecycle
 cmp "$scratch/build/Containerfile" "$scratch/lifecycle/Containerfile"
 
+# The base image configures plain apt-get as well as the helper's own commands.
+# In particular Stapler starts apt-get itself when installing build dependencies.
+python3 - "$scratch/build/Containerfile" <<'CHECK_APT'
+import sys
+from pathlib import Path
+
+containerfile = Path(sys.argv[1]).read_text()
+required_order = (
+    'Dir::Etc::sourcelist "/etc/apt/nivora-p11.list";',
+    'Dir::Etc::sourceparts "-";',
+    '>/etc/apt/apt.conf.d/99nivora-sources.conf',
+    'alt_apt_network.sh update',
+    'alt_apt_network.sh run dist-upgrade',
+    'alt_apt_network.sh run install',
+    'test -s /etc/apt/nivora-p11.list',
+    'apt-config shell LIST Dir::Etc::sourcelist',
+    'apt-config shell PARTS Dir::Etc::sourceparts',
+)
+positions = [containerfile.index(step) for step in required_order]
+assert positions == sorted(positions), "APT mirror setup or post-upgrade verification is out of order"
+CHECK_APT
+
 # Stable and canary must never share prepared images when their binaries differ.
 printf 'canary binary\n' >"$scratch/lifecycle/stplr"
 nivora_prepare_alt_builder "$engine" p11 "$base_image" "$scratch/lifecycle" next:canary

@@ -87,9 +87,16 @@ nivora_prepare_alt_builder() {
     cat >"${context_dir}/Containerfile" <<EOF
 FROM ${base_image}
 COPY alt_apt_network.sh /usr/local/lib/nivora/alt_apt_network.sh
+# Stapler installs build dependencies through plain apt-get in this image.
+RUN printf '%s\n' 'Dir::Etc::sourcelist "/etc/apt/nivora-p11.list";' 'Dir::Etc::sourceparts "-";' \\
+    >/etc/apt/apt.conf.d/99nivora-sources.conf
 RUN bash /usr/local/lib/nivora/alt_apt_network.sh update \\
     && bash /usr/local/lib/nivora/alt_apt_network.sh run dist-upgrade -y \\
     && bash /usr/local/lib/nivora/alt_apt_network.sh run install -y ca-certificates stplr binutils python3
+# Keep the selected sources effective after apt-conf and its dependencies were upgraded.
+RUN test -s /etc/apt/nivora-p11.list \\
+    && test "\$(apt-config shell LIST Dir::Etc::sourcelist)" = "LIST='/etc/apt/nivora-p11.list'" \\
+    && test "\$(apt-config shell PARTS Dir::Etc::sourceparts)" = "PARTS='-'"
 COPY stplr /usr/local/bin/stplr
 RUN chmod 0755 /usr/local/bin/stplr && /usr/local/bin/stplr version
 EOF

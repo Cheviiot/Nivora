@@ -3,6 +3,10 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 helper="${repo_root}/.github/tools/lib/alt_apt_network.sh"
+preferred_url='http://mirror.datacenter.by/pub/ALTLinux'
+image_url='http://ftp.altlinux.org/pub/distributions/ALTLinux'
+alternate_url='http://mirror.yandex.ru/altlinux'
+catalog=("$preferred_url" "$image_url" "$alternate_url")
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/nivora-alt-apt-test.XXXXXX")"
 cleanup_test_root() {
     find "$test_root" -mindepth 1 -delete
@@ -18,6 +22,13 @@ fail() {
 assert_contains() {
     local file="$1" pattern="$2"
     grep -Fq -- "$pattern" "$file" || fail "missing '${pattern}' in ${file}"
+}
+
+assert_mirrors() {
+    local case_dir="$1"
+    shift
+    diff -u <(printf '%s\n' "$@") "${case_dir}/sources-seen.mirrors" ||
+        fail "unexpected order or number of mirror attempts in ${case_dir##*/}"
 }
 
 setup_case() {
@@ -75,15 +86,15 @@ printf '\n---attempt---\n' >>"${NIVORA_ALT_APT_SOURCE_LOG:?}"
 if [[ "$is_update" == 0 ]]; then
     exit "${NIVORA_ALT_APT_TRANSACTION_EXIT:-0}"
 fi
-if [[ "$is_update" == 1 ]]; then
-    if [[ -n "$(find "${NIVORA_ALT_APT_LISTS:?}" -mindepth 1 -type f -print -quit)" ]]; then
-        printf 'stale indexes reached apt\n' >>"${NIVORA_ALT_APT_SOURCE_LOG}.dirty"
-        exit 1
-    fi
-    [[ -d "${NIVORA_ALT_APT_LISTS}/partial" ]]
-    printf 'old release\n' >"${NIVORA_ALT_APT_LISTS}/release"
-    printf 'partial index\n' >"${NIVORA_ALT_APT_LISTS}/partial/index"
+mirror="$(awk '$1 == "rpm" {print $3; exit}' "$source_list")"
+printf '%s\n' "$mirror" >>"${NIVORA_ALT_APT_SOURCE_LOG}.mirrors"
+if [[ -n "$(find "${NIVORA_ALT_APT_LISTS:?}" -mindepth 1 -type f -print -quit)" ]]; then
+    printf 'stale indexes reached apt\n' >>"${NIVORA_ALT_APT_SOURCE_LOG}.dirty"
+    exit 1
 fi
+[[ -d "${NIVORA_ALT_APT_LISTS}/partial" ]]
+printf 'old release\n' >"${NIVORA_ALT_APT_LISTS}/release"
+printf 'partial index\n' >"${NIVORA_ALT_APT_LISTS}/partial/index"
 if [[ -n "${NIVORA_ALT_APT_TEST_MISMATCH:-}" ]]; then
     # No generic failed-to-fetch warning: these zero-exit integrity errors
     # themselves must prevent selection of the mixed repository snapshot.
@@ -91,31 +102,32 @@ if [[ -n "${NIVORA_ALT_APT_TEST_MISMATCH:-}" ]]; then
     exit 0
 fi
 if [[ "${NIVORA_ALT_APT_TEST_CASE:-}" == recover ]]; then
-    attempt="$(grep -c '^timeout=' "${NIVORA_ALT_APT_TIMEOUT_LOG:?}")"
-    if (( attempt <= 2 )); then
-        echo 'temporary mirror failure' >&2
-        exit 1
+    # The preferred mirror recovers on its own second request, independent
+    # of the number or order of the other mirrors offered by the image.
+    if [[ "$mirror" == "$NIVORA_ALT_APT_TEST_PREFERRED" ]] &&
+        [[ "$(grep -Fxc -- "$mirror" "${NIVORA_ALT_APT_SOURCE_LOG}.mirrors")" == 2 ]]; then
+        echo 'Fetched signed ALT indexes after synchronization'
+        exit 0
     fi
-    echo 'Fetched signed ALT indexes after synchronization'
-    exit 0
+    exit 1
 fi
 if [[ "${NIVORA_ALT_APT_ALWAYS_FAIL:-0}" == 1 ]]; then
     echo 'temporary mirror failure' >&2
     exit 1
 fi
-if grep -q 'http://ftp.altlinux.org' "$source_list"; then
-    if [[ "${NIVORA_ALT_APT_GPG_WARNING:-0}" == 1 ]]; then
-        echo 'W: Signature verification failed' >&2
-        exit 0
-    fi
+if [[ "$mirror" == "${NIVORA_ALT_APT_TEST_ACCEPT:-http://mirror.yandex.ru/altlinux}" ]]; then
+    echo 'Fetched signed ALT indexes'
+    exit 0
+fi
+if [[ "${NIVORA_ALT_APT_GPG_WARNING:-0}" == 1 ]]; then
+    echo 'W: Signature verification failed' >&2
+    exit 0
+fi
+if [[ "$mirror" == 'http://ftp.altlinux.org/pub/distributions/ALTLinux' ]]; then
     # Simulate apt-rpm's exit-zero partial-index warning. The helper must still
     # reject this attempt and try another official source.
     echo 'W: Failed to fetch index from primary mirror' >&2
     echo 'W: Some index files failed to download' >&2
-    exit 0
-fi
-if grep -q 'http://mirror.yandex.ru/altlinux' "$source_list"; then
-    echo 'Fetched signed ALT indexes from mirror'
     exit 0
 fi
 echo 'temporary mirror failure' >&2
@@ -135,9 +147,10 @@ run_update() {
         NIVORA_ALT_APT_TIMEOUT_LOG="${case_dir}/timeouts" \
         NIVORA_ALT_APT_ARGS_LOG="${case_dir}/args" \
         NIVORA_ALT_APT_SOURCE_LOG="${case_dir}/sources-seen" \
+        NIVORA_ALT_APT_TEST_PREFERRED="$preferred_url" \
         NIVORA_ALT_APT_ALWAYS_FAIL="$always_fail" \
         NIVORA_ALT_APT_GPG_WARNING="$gpg_warning" \
-        NIVORA_ALT_APT_ATTEMPT_TIMEOUT_SECONDS=5 \
+        NIVORA_ALT_APT_ATTEMPT_TIMEOUT_SECONDS="${NIVORA_ALT_APT_ATTEMPT_TIMEOUT_SECONDS-5}" \
         NIVORA_ALT_APT_TOTAL_TIMEOUT_SECONDS="${NIVORA_ALT_APT_TEST_TOTAL_TIMEOUT_SECONDS:-20}" \
         bash "$helper" update
 }
@@ -157,6 +170,65 @@ run_apt_transaction() {
         bash "$helper" run install -y fixture-package
 }
 
+# Derive the preferred mirror from the active signed distributions. Preserve
+# components exactly and ignore disabled lines when building its source list.
+preferred_case="${test_root}/preferred"
+setup_case "$preferred_case" p11 p11/branch
+active="${preferred_case}/apt/sources.list.d/alt.list"
+cat >"$active" <<EOF
+rpm [p11] $image_url p11/branch/x86_64 classic debuginfo
+rpm [p11] $image_url p11/branch/x86_64-i586 classic
+rpm [p11] $image_url p11/branch/i586 classic
+rpm [p11] $image_url p11/branch/noarch classic
+#rpm [p11] $image_url p11/branch/aarch64 classic
+EOF
+cp "$active" "${preferred_case}/original-source"
+selected="${preferred_case}/apt/nivora-p11.list"
+NIVORA_ALT_APT_TEST_ACCEPT="$preferred_url" run_update "$preferred_case" \
+    >"${preferred_case}/stdout" 2>"${preferred_case}/stderr"
+assert_mirrors "$preferred_case" "$preferred_url"
+diff -u <(sed -n "/^rpm /s|$image_url|$preferred_url|p" "${preferred_case}/original-source") <(grep '^rpm ' "$selected") ||
+    fail 'preferred mirror changed signed suites or components'
+cmp "$active" "${preferred_case}/original-source" || fail 'selection overwrote image sources'
+run_apt_transaction "$preferred_case"
+assert_contains "${preferred_case}/args" "Dir::Etc::sourcelist=$selected"
+if grep -Eiq 'trusted=yes|AllowInsecure|allow-unauthenticated' "${preferred_case}/args"; then
+    fail 'preferred mirror disabled repository signature checks'
+fi
+
+# A signature warning from Minsk on a later update must fall back to the
+# original image URL without losing it after the first selection.
+NIVORA_ALT_APT_TEST_ACCEPT="$image_url" run_update "$preferred_case" 0 1 \
+    >"${preferred_case}/repeat.stdout" 2>"${preferred_case}/repeat.stderr"
+assert_mirrors "$preferred_case" "$preferred_url" "$preferred_url" "$image_url"
+diff -u <(grep '^rpm ' "${preferred_case}/original-source") <(grep '^rpm ' "$selected") || fail 'could not return to the image mirror'
+cmp "$active" "${preferred_case}/original-source" || fail 'fallback overwrote image sources'
+
+# A mirror without aarch64 or the requested branch/key must never receive a
+# synthesized subset of the active configuration.
+for reason in architecture signature suite; do
+    untouched_case="${test_root}/original-${reason}"
+    setup_case "$untouched_case" p11 p11/branch
+    active="${untouched_case}/apt/sources.list.d/alt.list"
+    case "$reason" in
+    architecture) echo "rpm [p11] $image_url p11/branch/aarch64 classic" >>"$active" ;;
+    signature)    echo "rpm [p10] $image_url p11/branch/noarch classic" >>"$active" ;;
+    suite)        echo "rpm [p11] $image_url p10/branch/noarch classic" >>"$active" ;;
+    esac
+    grep '^rpm ' "$active" >"${untouched_case}/original-rpm-lines"
+    NIVORA_ALT_APT_TEST_ACCEPT="$image_url" run_update "$untouched_case" \
+        >"${untouched_case}/stdout" 2>"${untouched_case}/stderr"
+    assert_mirrors "$untouched_case" "$image_url"
+    diff -u "${untouched_case}/original-rpm-lines" <(grep '^rpm ' "${untouched_case}/apt/nivora-p11.list") ||
+        fail "unsupported ${reason} changed the original distributions"
+done
+
+budget_case="${test_root}/mirror-budgets"
+setup_case "$budget_case" p11 p11/branch
+NIVORA_ALT_APT_ATTEMPT_TIMEOUT_SECONDS='' NIVORA_ALT_APT_TEST_TOTAL_TIMEOUT_SECONDS=210 \
+    run_update "$budget_case" >"${budget_case}/stdout" 2>"${budget_case}/stderr"
+diff -u <(printf 'timeout=%ss\n' 60 30 30) "${budget_case}/timeouts"
+
 for failure_mode in download signature; do
     case_dir="${test_root}/${failure_mode}"
     setup_case "$case_dir" p11 p11/branch
@@ -169,17 +241,12 @@ for failure_mode in download signature; do
         cat "${case_dir}/stderr" >&2
         fail "${failure_mode}: p11 did not fall back to the supplied mirror"
     fi
-    active="${case_dir}/apt/sources.list.d/alt.list"
-    [[ "$(grep -c '^rpm ' "$active")" == 3 ]] || fail "${failure_mode}: changed the source architecture count"
-    assert_contains "$active" 'rpm [p11] http://mirror.yandex.ru/altlinux p11/branch/x86_64 classic'
-    assert_contains "$active" 'rpm [p11] http://mirror.yandex.ru/altlinux p11/branch/x86_64-i586 classic'
-    assert_contains "$active" 'rpm [p11] http://mirror.yandex.ru/altlinux p11/branch/noarch classic'
-    assert_contains "${case_dir}/sources-seen" 'http://ftp.altlinux.org'
-    assert_contains "${case_dir}/sources-seen" 'http://mirror.yandex.ru/altlinux'
-    primary_http_line="$(grep -n -m1 'http://ftp.altlinux.org' "${case_dir}/sources-seen" | cut -d: -f1)"
-    mirror_http_line="$(grep -n -m1 'http://mirror.yandex.ru/altlinux' "${case_dir}/sources-seen" | cut -d: -f1)"
-    ((primary_http_line < mirror_http_line)) ||
-        fail "${failure_mode}: did not preserve primary-then-mirror ordering"
+    selected="${case_dir}/apt/nivora-p11.list"
+    [[ "$(grep -c '^rpm ' "$selected")" == 3 ]] || fail "${failure_mode}: changed the source architecture count"
+    assert_contains "$selected" 'rpm [p11] http://mirror.yandex.ru/altlinux p11/branch/x86_64 classic'
+    assert_contains "$selected" 'rpm [p11] http://mirror.yandex.ru/altlinux p11/branch/x86_64-i586 classic'
+    assert_contains "$selected" 'rpm [p11] http://mirror.yandex.ru/altlinux p11/branch/noarch classic'
+    assert_mirrors "$case_dir" "${catalog[@]}"
     ! grep -Fq 'https://' "${case_dir}/sources-seen" ||
         fail "${failure_mode}: attempted HTTPS before CA certificates were installed"
     assert_contains "${case_dir}/args" 'Acquire::Retries=0'
@@ -208,6 +275,7 @@ for command_retries in 0 4; do
     NIVORA_ALT_APT_RETRIES=7 NIVORA_ALT_APT_COMMAND_RETRIES="$command_retries" \
         run_apt_transaction "$transaction_case" \
         >"${transaction_case}/stdout" 2>"${transaction_case}/stderr"
+    assert_contains "${transaction_case}/args" "Dir::Etc::sourcelist=${transaction_case}/apt/sources.list.d/alt.list"
     [[ "$(grep '^Acquire::Retries=' "${transaction_case}/args")" == "Acquire::Retries=${command_retries}" ]] ||
         fail 'transaction retry policy inherited the index setting'
     [[ "$(cat "${transaction_case}/timeouts")" == timeout=300s ]] ||
@@ -241,8 +309,8 @@ for invalid_retries in -1 invalid 1.5; do
         fail 'invalid transaction retry setting reached apt-get'
 done
 
-# Both official candidates fail initially. The second pass must start again
-# with the primary, preserving order and clearing every complete/partial list.
+# All candidates fail initially. The second pass starts with the preferred
+# mirror again after clearing every complete and partial index.
 recovery_case="${test_root}/second-pass-recovery"
 setup_case "$recovery_case" p11 p11/branch
 printf 'pre-existing index\n' >"${recovery_case}/lists/old-index"
@@ -251,10 +319,8 @@ if ! NIVORA_ALT_APT_TEST_CASE=recover run_update "$recovery_case" \
     cat "${recovery_case}/stderr" >&2
     fail 'temporary failure of all mirrors did not recover on the second pass'
 fi
-[[ "$(grep -c '^timeout=' "${recovery_case}/timeouts")" -eq 3 ]] ||
-    fail 'recovery did not use exactly one complete pass and the recovered primary'
-assert_contains "${recovery_case}/stderr" '(pass 2/2, attempt 3,'
-assert_contains "${recovery_case}/stderr" 'selected http://ftp.altlinux.org/pub/distributions/ALTLinux'
+assert_mirrors "$recovery_case" "${catalog[@]}" "$preferred_url"
+assert_contains "${recovery_case}/stderr" "selected $preferred_url"
 [[ ! -e "${recovery_case}/sources-seen.dirty" ]] ||
     fail 'recovery reused complete or partial indexes from a previous attempt'
 
@@ -263,13 +329,17 @@ setup_case "$failure_case" p11 p11/branch
 # Duplicate configured URLs must not multiply attempts within either pass.
 cp "${failure_case}/apt/sources.list.d/yandex.list" \
     "${failure_case}/apt/sources.list.d/duplicate.list"
+# The image can already list the preferred mirror among its disabled choices.
+sed "s|$alternate_url|$preferred_url/|g" "${failure_case}/apt/sources.list.d/yandex.list" \
+    >"${failure_case}/apt/sources.list.d/preferred.list"
+cp "${failure_case}/apt/sources.list.d/alt.list" "${failure_case}/original-source"
 if run_update "$failure_case" 1 >"${failure_case}/stdout" 2>"${failure_case}/stderr"; then
     fail 'permanent mirror failure unexpectedly succeeded'
 fi
 assert_contains "${failure_case}/stderr" 'all configured mirrors failed within 20s total'
-[[ "$(grep -c '^timeout=' "${failure_case}/timeouts")" -eq 4 ]] ||
-    fail 'permanent failure did not stop after two passes over unique candidates'
-[[ "$(grep -c '^rpm ' "${failure_case}/apt/sources.list.d/alt.list")" == 3 ]] ||
+assert_mirrors "$failure_case" "${catalog[@]}" "${catalog[@]}"
+[[ ! -e "${failure_case}/apt/nivora-p11.list" ]] || fail 'permanent failure published an unverified mirror'
+cmp -s "${failure_case}/original-source" "${failure_case}/apt/sources.list.d/alt.list" ||
     fail 'permanent failure replaced the original source configuration'
 [[ -z "$(find "${failure_case}/lists" -mindepth 1 -type f -print -quit)" ]] ||
     fail 'permanent failure left mixed indexes behind'
@@ -281,8 +351,7 @@ for mismatch in 'Checksum mismatch' 'Hash mismatch' 'Hash Sum mismatch' 'Size mi
         >"${mismatch_case}/stdout" 2>"${mismatch_case}/stderr"; then
         fail "zero-exit ${mismatch} was accepted as a verified repository"
     fi
-    [[ "$(grep -c '^timeout=' "${mismatch_case}/timeouts")" -eq 4 ]] ||
-        fail "${mismatch}: did not retry and stop within two passes"
+    assert_mirrors "$mismatch_case" "${catalog[@]}" "${catalog[@]}"
     ! grep -Fq 'ALT apt: selected' "${mismatch_case}/stderr" ||
         fail "${mismatch}: selected inconsistent indexes"
     [[ ! -e "${mismatch_case}/sources-seen.dirty" ]] ||
@@ -307,4 +376,4 @@ if NIVORA_ALT_APT_COMMAND_TIMEOUT_SECONDS=0 bash "$helper" run install fixture-p
 fi
 assert_contains "${test_root}/zero-timeout.stderr" 'timeouts must be positive'
 
-echo 'OK: ALT p11 apt bounds index and archive retries without repeating RPM transactions'
+echo 'OK: ALT p11 prefers a compatible signed mirror and bounds retries without repeating RPM transactions'

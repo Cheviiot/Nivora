@@ -7,11 +7,16 @@ readonly timeout_bin="${NIVORA_ALT_APT_TIMEOUT_BIN:-timeout}"
 readonly apt_root="${NIVORA_ALT_APT_ROOT:-/etc/apt}"
 readonly apt_lists="${NIVORA_ALT_APT_LISTS:-/var/lib/apt/lists}"
 readonly active_source="${NIVORA_ALT_APT_ACTIVE_SOURCE:-${apt_root}/sources.list.d/alt.list}"
+readonly selected_source="${apt_root}/nivora-p11.list"
+# Beltelecom carries the signed x86 p11 repository in Minsk.
+readonly belarus_mirror='http://mirror.datacenter.by/pub/ALTLinux'
 readonly apt_retries="${NIVORA_ALT_APT_RETRIES:-0}"
 readonly command_retries="${NIVORA_ALT_APT_COMMAND_RETRIES:-2}"
 readonly connect_timeout="${NIVORA_ALT_APT_CONNECT_TIMEOUT_SECONDS:-10}"
 readonly io_timeout="${NIVORA_ALT_APT_IO_TIMEOUT_SECONDS:-15}"
 readonly attempt_timeout="${NIVORA_ALT_APT_ATTEMPT_TIMEOUT_SECONDS:-30}"
+# apt-rpm downloads the three x86 branch indexes serially on a cold builder.
+readonly belarus_timeout="${NIVORA_ALT_APT_ATTEMPT_TIMEOUT_SECONDS:-60}"
 readonly total_timeout="${NIVORA_ALT_APT_TOTAL_TIMEOUT_SECONDS:-210}"
 readonly command_timeout="${NIVORA_ALT_APT_COMMAND_TIMEOUT_SECONDS:-300}"
 
@@ -31,9 +36,11 @@ apt_run() {
     # apt-rpm retries transient archive downloads before the RPM transaction.
     # Keep one apt-get invocation and one deadline; never rerun package hooks
     # after a failed install, upgrade or removal.
+    local source_list="$active_source"
+    if [[ -s "$selected_source" ]]; then source_list="$selected_source"; fi
     "$timeout_bin" --signal=TERM --kill-after=1s "${command_timeout}s" \
         "$apt_get_bin" \
-        -o "Dir::Etc::sourcelist=${active_source}" \
+        -o "Dir::Etc::sourcelist=${source_list}" \
         -o Dir::Etc::sourceparts=- \
         -o "Acquire::Retries=${command_retries}" \
         -o "Acquire::http::Timeout=${io_timeout}" \
@@ -80,7 +87,14 @@ collect_source_lines() {
         [[ "${fields[1]}" =~ ^\[[^]]+\]$ ]] || continue
         [[ "${fields[2]}" =~ ^http://[^[:space:]]+$ ]] || continue
 
-        source_url="${fields[2]}"
+        source_url="${fields[2]%/}"
+        if [[ "$mode" == active ]]; then
+            active_urls["$source_url"]=1
+        elif [[ -n "${active_urls[$source_url]+set}" ]]; then
+            # A commented source must not enable extra architectures on the active URL.
+            continue
+        fi
+        fields[2]="$source_url"
         source_line="${fields[*]}"
         if [[ -z "${lines_by_url[$source_url]+set}" ]]; then
             candidate_urls+=("$source_url")
@@ -90,23 +104,34 @@ collect_source_lines() {
     done <"$list_file"
 }
 
+# Preserve every active architecture, component and signing key from the image.
+# Skip Minsk if it cannot serve the full set (in particular, aarch64).
+belarus_p11_sources() {
+    local url
+    for url in "${candidate_urls[@]}"; do
+        printf '%s' "${lines_by_url[$url]}"
+    done | awk -v mirror="$belarus_mirror" '
+        $2 != "[p11]" || $4 !~ /^p11\/branch\/(x86_64|x86_64-i586|i586|noarch)$/ { exit 1 }
+        { $3 = mirror; if (!seen[$0]++) print }
+    '
+}
+
 update_indexes() {
     local source_dir="${apt_root}/sources.list.d"
-    local source_file url candidate_url source_line remaining started
-    local tmp_dir log_file candidate_file attempt=0 active_count pass per_attempt
-    local -a candidate_urls=() expanded_urls=() parts
-    declare -A lines_by_url=() seen_url=()
+    local source_file candidate_url by_sources remaining started
+    local tmp_dir log_file candidate_file attempt=0 pass per_attempt
+    local -a candidate_urls=()
+    declare -A lines_by_url=() active_urls=() seen_url=()
 
     [[ -f "$active_source" ]] || fail "active source list is missing: ${active_source}"
     [[ -d "$source_dir" ]] || fail "source directory is missing: ${source_dir}"
     command -v "$apt_get_bin" >/dev/null 2>&1 || fail "missing ${apt_get_bin}"
     command -v "$timeout_bin" >/dev/null 2>&1 || fail "missing ${timeout_bin}"
 
-    # Prefer only active primary sources, then the image's documented
-    # alternatives (including commented entries in the primary list).
+    # Keep the image's original sources available even after a successful selection.
     collect_source_lines "$active_source" active
-    active_count="${#candidate_urls[@]}"
-    (( active_count > 0 )) || fail 'active ALT source list has no HTTP(S) RPM entries'
+    (( ${#candidate_urls[@]} > 0 )) || fail 'active ALT source list has no HTTP RPM entries'
+    by_sources="$(belarus_p11_sources)" || by_sources=''
     collect_source_lines "$active_source" commented
     shopt -s nullglob
     for source_file in "${source_dir}"/*.list; do
@@ -117,12 +142,11 @@ update_indexes() {
         collect_source_lines "${apt_root}/sources.list"
     fi
 
-    # Use HTTP repositories from the official image configuration only. Fresh
-    # ALT base images may have no CA bundle yet, so synthesizing HTTPS URLs
-    # would fail TLS before the first apt install can add ca-certificates.
-    for url in "${candidate_urls[@]}"; do
-        expanded_urls+=("$url")
-    done
+    # A clean base image can use HTTP before ca-certificates is installed.
+    if [[ -n "$by_sources" ]]; then
+        candidate_urls=("$belarus_mirror" "${candidate_urls[@]}")
+        lines_by_url["$belarus_mirror"]="$by_sources"
+    fi
 
     tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/nivora-alt-apt.XXXXXX")"
     started="$SECONDS"
@@ -130,29 +154,22 @@ update_indexes() {
     # Retry the same official candidates once, without resetting the deadline.
     for pass in 1 2; do
         seen_url=()
-        for candidate_url in "${expanded_urls[@]}"; do
+        for candidate_url in "${candidate_urls[@]}"; do
+            [[ "$candidate_url" != "$belarus_mirror" || -n "$by_sources" ]] || continue
             [[ -n "${seen_url[$candidate_url]+set}" ]] && continue
             seen_url["$candidate_url"]=1
             remaining=$((total_timeout - (SECONDS - started)))
             (( remaining > 0 )) || break 2
             ((attempt += 1))
-            if (( remaining < attempt_timeout )); then
+            per_attempt="$attempt_timeout"
+            if [[ "$candidate_url" == "$belarus_mirror" ]]; then per_attempt="$belarus_timeout"; fi
+            if (( remaining < per_attempt )); then
                 per_attempt="$remaining"
-            else
-                per_attempt="$attempt_timeout"
             fi
 
             candidate_file="${tmp_dir}/sources-${attempt}.list"
             log_file="${tmp_dir}/apt-${attempt}.log"
-            : >"$candidate_file"
-            while IFS= read -r source_line; do
-                [[ -n "$source_line" ]] || continue
-                read -r -a parts <<<"$source_line"
-                parts[2]="$candidate_url"
-                printf '%s\n' "${parts[*]}" >>"$candidate_file"
-            done <<<"${lines_by_url[$candidate_url]:-}"
-
-            [[ -s "$candidate_file" ]] || continue
+            printf '%s\n' "${lines_by_url[$candidate_url]%$'\n'}" >"$candidate_file"
 
             echo "ALT apt: update ${candidate_url} (pass ${pass}/2, attempt ${attempt}, ${per_attempt}s cap)" >&2
             clean_lists
@@ -166,8 +183,8 @@ update_indexes() {
                 update >"$log_file" 2>&1 &&
                 ! grep -Eiq 'failed to fetch|some index files failed|(checksum|hash([[:space:]]+sum)?|size)[[:space:]]+mismatch|signature.*(fail|error|could not|couldn.t|invalid)|no_pubkey|not signed' "$log_file"; then
                 cat "$log_file"
-                install -m 0644 "$candidate_file" "${active_source}.nivora-tmp"
-                mv -f -- "${active_source}.nivora-tmp" "$active_source"
+                install -m 0644 "$candidate_file" "${selected_source}.tmp"
+                mv -f -- "${selected_source}.tmp" "$selected_source"
                 echo "ALT apt: selected ${candidate_url}" >&2
                 cleanup_tmp
                 return 0

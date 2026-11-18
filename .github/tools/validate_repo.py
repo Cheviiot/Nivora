@@ -535,8 +535,21 @@ def load_support_matrix(errors: list[str]) -> dict[str, object]:
                 "with an exact SHA-256 digest"
             )
     stapler = matrix.get("stapler", {})
-    if stapler.get("stable_version") != "0.1.1":
-        errors.append("support matrix: stable Stapler must remain v0.1.1")
+    stable_version = stapler.get("stable_version")
+    if stable_version != "0.2.0":
+        errors.append("support matrix: stable Stapler must be v0.2.0 from ALT p11")
+    for architecture in ("x86_64", "aarch64"):
+        prefix = f"stable_linux_{architecture}"
+        expected_url = (
+            "https://altlinux.space/stapler/stplr/releases/download/"
+            f"v{stable_version}/stplr-{stable_version}-linux-{architecture}.tar.gz"
+        )
+        if stapler.get(f"{prefix}_url") != expected_url:
+            errors.append(
+                f"support matrix: {prefix}_url must match the official stable release"
+            )
+        if not re.fullmatch(r"[0-9a-f]{64}", str(stapler.get(f"{prefix}_sha256", ""))):
+            errors.append(f"support matrix: {prefix}_sha256 must be an exact SHA-256")
     if not re.fullmatch(r"[0-9a-f]{40}", str(stapler.get("stable_commit", ""))):
         errors.append("support matrix: stable Stapler source commit must be exact")
     if not re.fullmatch(r"[0-9a-f]{40}", str(stapler.get("main_commit", ""))):

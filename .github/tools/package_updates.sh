@@ -76,19 +76,38 @@ git_latest_stable_tag() {
 
 github_latest_release() {
     local repository="$1"
-    local tag=''
-    tag="$(
-        github_json "https://api.github.com/repos/${repository}/releases?per_page=30" |
+    local tag='' releases release_count
+    if releases="$(github_json "https://api.github.com/repos/${repository}/releases?per_page=30")" &&
+        release_count="$(jq -er '
+            if type == "array" and all(.[];
+                type == "object" and
+                (.draft | type) == "boolean" and
+                (.prerelease | type) == "boolean" and
+                (.tag_name | type) == "string")
+            then length else error("invalid release response") end
+        ' <<<"$releases" 2>/dev/null)"; then
+        tag="$(
             jq -r '
                 .[]
                 | select(.draft == false and .prerelease == false)
                 | .tag_name
-                | select(test("[0-9]+\\.[0-9]"))
+                | sub("^v"; "")
+                | select(test("^[0-9]+\\.[0-9]"))
                 | select(test("(?:^|[-_.])(alpha|beta|rc|pre|preview)(?:[-_.0-9]|$)"; "i") | not)
-            ' 2>/dev/null |
+            ' <<<"$releases" |
             sort -V |
             tail -1
-    )" || tag=''
+        )" || return
+        # A valid release response is authoritative about draft/prerelease
+        # flags, including numeric tags without an -rc suffix. Do not undo
+        # that decision through ls-remote. An empty release list still permits
+        # projects which publish tags only; an unavailable/malformed API does
+        # not disable the existing bounded tag fallback either.
+        if [[ -z "$tag" && "$release_count" -gt 0 ]]; then
+            echo "package_updates: no eligible stable release among the first 30 releases for ${repository}" >&2
+            return 1
+        fi
+    fi
 
     if [[ -z "$tag" ]]; then
         tag="$(git_latest_stable_tag "$repository")" || tag=''
@@ -144,16 +163,23 @@ http_etag_fingerprint() {
     )" || return
     etag="$(
         awk '
+            toupper($1) ~ /^HTTP\// {
+                status = $2
+                gsub(/\r/, "", status)
+                value = ""
+            }
             tolower($1) == "etag:" {
                 value = $2
                 gsub(/\r/, "", value)
                 gsub(/"/, "", value)
             }
-            END { if (value != "") print value }
+            END {
+                if (status !~ /^2[0-9][0-9]$/ || value == "") exit 1
+                print value
+            }
         ' <<<"$headers"
-    )"
-    [[ -n "$etag" ]] || {
-        echo "package_updates: upstream did not return ETag for ${url}" >&2
+    )" || {
+        echo "package_updates: upstream did not return a successful final response with ETag for ${url}" >&2
         return 1
     }
     printf '%s' "$etag" | sha256sum | awk '{print $1}'

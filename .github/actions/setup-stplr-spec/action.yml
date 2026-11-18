@@ -13,8 +13,12 @@ runs:
     - name: Установить Go
       uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5
       with:
-        go-version: 1.26.5
+        go-version: 1.27.4
         cache: false
+
+    - name: Использовать только закреплённый Go
+      shell: bash
+      run: echo 'GOTOOLCHAIN=local' >>"$GITHUB_ENV"
 
     - name: Установить системные инструменты
       if: ${{ inputs.system-packages != '' }}
@@ -32,7 +36,7 @@ runs:
       continue-on-error: true
       with:
         path: ${{ runner.temp }}/nivora-stplr-spec-bin
-        key: nivora-stplr-spec-${{ runner.os }}-${{ runner.arch }}-ubuntu-24.04-go1.26.5-utils-c6ddbb5e4e5637d97bb7b2587729178d715c6c52-${{ hashFiles('.github/actions/setup-stplr-spec/action.yml', '.github/tools/prepare_stplr_spec.sh', '.github/tools/lib/pinned_git_checkout.sh') }}
+        key: nivora-stplr-spec-${{ runner.os }}-${{ runner.arch }}-ubuntu-24.04-go1.27.4-utils-c6ddbb5e4e5637d97bb7b2587729178d715c6c52-${{ hashFiles('.github/actions/setup-stplr-spec/action.yml', '.github/tools/prepare_stplr_spec.sh', '.github/tools/lib/pinned_git_checkout.sh') }}
 
     - name: Добавить каталог stplr-spec в PATH
       shell: bash
@@ -57,4 +61,4 @@ runs:
       continue-on-error: true
       with:
         path: ${{ runner.temp }}/nivora-stplr-spec-bin
-        key: nivora-stplr-spec-${{ runner.os }}-${{ runner.arch }}-ubuntu-24.04-go1.26.5-utils-c6ddbb5e4e5637d97bb7b2587729178d715c6c52-${{ hashFiles('.github/actions/setup-stplr-spec/action.yml', '.github/tools/prepare_stplr_spec.sh', '.github/tools/lib/pinned_git_checkout.sh') }}
+        key: nivora-stplr-spec-${{ runner.os }}-${{ runner.arch }}-ubuntu-24.04-go1.27.4-utils-c6ddbb5e4e5637d97bb7b2587729178d715c6c52-${{ hashFiles('.github/actions/setup-stplr-spec/action.yml', '.github/tools/prepare_stplr_spec.sh', '.github/tools/lib/pinned_git_checkout.sh') }}

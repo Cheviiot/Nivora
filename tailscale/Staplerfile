@@ -1,6 +1,6 @@
 name='tailscale'
 version='1.104.7'
-release=2
+release=3
 summary='Private networking with WireGuard encryption'
 summary_ru='Частная сеть между устройствами с шифрованием WireGuard'
 group='Networking/Other'
@@ -88,8 +88,10 @@ files() {
 	files-find-binary
 	files-find-systemd
 	files-find-license
+	# Stapler matches backup before normalizing paths returned by files().
+	# files-find emits ./etc/..., so use the same canonical path as backup.
+	printf '%s\n' '/etc/default/tailscaled'
 	files-find \
 		"/usr/sbin/tailscaled" \
-		"/etc/default/tailscaled" \
 		"/var/cache/tailscale"
 }

@@ -103,7 +103,7 @@ jobs:
           fi
 
   alt:
-    name: stable v0.1.1 ALT p11 · ${{ matrix.package }}
+    name: stable v0.2.0 ALT p11 · ${{ matrix.package }}
     needs: plan
     if: ${{ needs.plan.outputs.has_packages == 'true' }}
     strategy:
@@ -182,5 +182,5 @@ jobs:
       - name: Отметить advisory-результат
         if: ${{ always() }}
         run: >-
-          echo 'Pinned Stapler main canary is advisory; stable v0.1.1 remains the gate.'
+          echo 'Pinned Stapler main canary is advisory; stable v0.2.0 remains the gate.'
           >>"$GITHUB_STEP_SUMMARY"

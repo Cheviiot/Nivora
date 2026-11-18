@@ -155,6 +155,8 @@ if grep -q 'restore-keys:' "$action_file"; then
 fi
 grep -Fq 'runner.os' "$action_file"
 grep -Fq 'runner.arch' "$action_file"
-grep -Fq "ubuntu-24.04-go1.26.5-utils-c6ddbb5e4e5637d97bb7b2587729178d715c6c52-\${{ hashFiles" "$action_file"
+grep -Fq "ubuntu-24.04-go1.27.4-utils-c6ddbb5e4e5637d97bb7b2587729178d715c6c52-\${{ hashFiles" "$action_file"
+grep -Fq "go-version: 1.27.4" "$action_file"
+grep -Fq "echo 'GOTOOLCHAIN=local' >>\"\$GITHUB_ENV\"" "$action_file"
 
 echo 'OK: pinned source checkout retries transient failure, rejects bad SHA, and spec setup uses mocked Go'

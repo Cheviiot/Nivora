@@ -71,8 +71,12 @@ class SupportMatrixTests(unittest.TestCase):
     MATRIX = """schema_version = 2
 
 [stapler]
-stable_version = "0.1.1"
+stable_version = "0.2.0"
 stable_commit = "{sha}"
+stable_linux_x86_64_url = "https://altlinux.space/stapler/stplr/releases/download/v0.2.0/stplr-0.2.0-linux-x86_64.tar.gz"
+stable_linux_x86_64_sha256 = "{digest}"
+stable_linux_aarch64_url = "https://altlinux.space/stapler/stplr/releases/download/v0.2.0/stplr-0.2.0-linux-aarch64.tar.gz"
+stable_linux_aarch64_sha256 = "{digest}"
 main_commit = "{sha}"
 
 [images]
@@ -162,6 +166,38 @@ support = [
         self.assertTrue(
             any("is not gated" in error for error in errors), errors
         )
+
+    def test_stable_assets_require_release_architecture_and_checksum(self):
+        support = (
+            '  { targets = ["alt-p11"], architectures = ["amd64"], '
+            'tier = "verified", caveats = [] },\n'
+            '  { targets = ["alt-p11"], architectures = ["arm64"], '
+            'tier = "partial", caveats = ["arm64-not-gated"] },'
+        )
+        body = self.render(support)
+        cases = {
+            "old stable": (
+                body.replace('stable_version = "0.2.0"', 'stable_version = "0.1.1"'),
+                "stable Stapler must be v0.2.0",
+            ),
+            "wrong x86 archive": (
+                body.replace("stplr-0.2.0-linux-x86_64.tar.gz", "stplr-0.2.0-linux-aarch64.tar.gz"),
+                "stable_linux_x86_64_url must match",
+            ),
+            "unpinned ARM checksum": (
+                body.replace('stable_linux_aarch64_sha256 = "' + "a" * 64 + '"',
+                             'stable_linux_aarch64_sha256 = "SKIP"'),
+                "stable_linux_aarch64_sha256 must be an exact SHA-256",
+            ),
+            "missing x86 checksum": (
+                body.replace('stable_linux_x86_64_sha256 = "' + "a" * 64 + '"\n', ""),
+                "stable_linux_x86_64_sha256 must be an exact SHA-256",
+            ),
+        }
+        for name, (candidate, expected) in cases.items():
+            with self.subTest(name=name):
+                errors = self.run_validator(candidate)
+                self.assertTrue(any(expected in error for error in errors), errors)
 
     def test_missing_cell_is_reported(self):
         support = (

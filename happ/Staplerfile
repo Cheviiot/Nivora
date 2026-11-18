@@ -1,6 +1,6 @@
 name='happ'
 version='4.7.2'
-release=2
+release=3
 summary='Graphical proxy client based on Xray'
 summary_ru='Графический прокси-клиент на основе Xray'
 group='Networking/Other'
@@ -85,6 +85,7 @@ checksums_arm64=(
 
 scripts=(
 	['postinstall']='postinstall.sh'
+	['preremove']='preremove.sh'
 	['postremove']='postremove.sh'
 )
 

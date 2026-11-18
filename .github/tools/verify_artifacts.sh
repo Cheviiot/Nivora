@@ -208,6 +208,19 @@ for package in "${packages[@]}"; do
         }
     fi
 
+    if [[ "$package" == tailscale ]]; then
+        config_flags="$(
+            rpm -qp --queryformat '[%{FILEFLAGS}\t%{FILENAMES}\n]' "$artifact" |
+                awk -F '\t' '$2 == "/etc/default/tailscaled" {print $1}'
+        )"
+        # RPMFILE_CONFIG=1 and RPMFILE_NOREPLACE=16. Inspect the actual RPM;
+        # a backup= declaration alone does not prove the packager set them.
+        if [[ ! "$config_flags" =~ ^[0-9]+$ ]] || (( (config_flags & 17) != 17 )); then
+            echo "${package}: /etc/default/tailscaled must have RPM config+noreplace flags" >&2
+            exit 1
+        fi
+    fi
+
     # --dump separates columns with spaces, including spaces inside filenames.
     # Put the filename last so read preserves it, and query metadata explicitly.
     file_metadata="$(

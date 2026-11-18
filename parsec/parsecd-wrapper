@@ -2,10 +2,6 @@
 set -euo pipefail
 
 real_binary="${PARSEC_BINARY:-/usr/lib/parsec/parsecd}"
-parsec_home="${PARSEC_CONFIG_HOME:-${HOME}/.parsec}"
-config_txt="${parsec_home}/config.txt"
-config_json="${parsec_home}/config.json"
-json_notice='See https://parsec.app/config for documentation and example. JSON must be valid before saving or file be will be erased.'
 
 immersive_enabled() {
     case "${PARSEC_NIVORA_IMMERSIVE:-1}" in
@@ -14,113 +10,149 @@ immersive_enabled() {
     esac
 }
 
-# Fallback for the legacy plain-text config. Like the JSON path, it seeds the
-# key once and leaves an existing user value untouched.
-set_config_txt_immersive() {
-    local existing
-    mkdir -p "${parsec_home}"
-    touch "${config_txt}"
+immersive_enabled || exec "${real_binary}" "$@"
+for arg in "$@"; do
+    # An explicit launch option must not also change the saved default.
+    if [[ "${arg}" == *client_immersive=* ]]; then
+        exec "${real_binary}" "$@"
+    fi
+done
 
-    existing="$(
-        sed -n -E 's/^[[:space:]]*client_immersive[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' \
-            "${config_txt}" | tail -1
-    )"
-    if [[ -n "$existing" ]]; then
-        printf '%s\n' "$existing"
-        return 0
+parsec_home="${PARSEC_CONFIG_HOME:-${HOME}/.parsec}"
+config_txt="${parsec_home}/config.txt"
+config_json="${parsec_home}/config.json"
+json_notice='See https://parsec.app/config for documentation and example. JSON must be valid before saving or file be will be erased.'
+
+# Keep a legacy profile in its original format. Read the last assignment,
+# including an unfamiliar value, before deciding whether a default is needed.
+set_config_txt_immersive() {
+    local line value='' found=0
+    if [[ -e "$config_txt" || -L "$config_txt" ]]; then
+        [[ -f "$config_txt" && -r "$config_txt" ]] || return 3
+        while IFS= read -r line || [[ -n "$line" ]]; do
+            if [[ "$line" =~ ^[[:space:]]*client_immersive[[:space:]]*=(.*)$ ]]; then
+                found=1
+                value="${BASH_REMATCH[1]}"
+            fi
+        done <"$config_txt" || return 3
+        if [[ "$found" -eq 1 ]]; then
+            if [[ "$value" =~ ^[[:space:]]*([+-]?[0-9]+)[[:space:]]*(#.*)?$ ]]; then
+                printf '%s\n' "${BASH_REMATCH[1]}"
+                return 0
+            fi
+            return 3
+        fi
+        # Read a chosen value through a symlink, but never rewrite its target.
+        [[ ! -L "$config_txt" ]] || return 3
     fi
-    if grep -Eq '^[[:space:]]*client_immersive[[:space:]]*=' "${config_txt}"; then
-        # Present but not a number: it is still the user's choice.
-        return 3
-    fi
-    printf '\nclient_immersive=2\n' >>"${config_txt}"
+    umask 077
+    mkdir -p "${parsec_home}" || return 3
+    printf '\nclient_immersive=2\n' >>"${config_txt}" || return 3
     printf '2\n'
 }
 
+# 0 returns a value, 3 leaves all settings to Parsec, 4 selects the TXT path.
+# An unreadable JSON must never be treated as permission to fall back to TXT.
 set_config_json_immersive() {
-    command -v python3 >/dev/null 2>&1 || return 1
+    if ! command -v python3 >/dev/null 2>&1; then
+        # We cannot establish that an existing JSON profile has no choice.
+        # In particular, do not create TXT=2 and override an unread JSON=0.
+        [[ ! -e "$config_json" && ! -L "$config_json" ]] || return 3
+        return 4
+    fi
 
-    mkdir -p "${parsec_home}"
-    python3 - "${config_json}" "${json_notice}" <<'PY'
+    python3 - "${config_json}" "${config_txt}" "${json_notice}" <<'PY'
 import json
+import os
+import re
+import stat
 import sys
+import tempfile
 from pathlib import Path
 
 MISSING = object()
 
 path = Path(sys.argv[1])
-notice = sys.argv[2]
-data = [notice, {}]
+legacy = Path(sys.argv[2])
+notice = sys.argv[3]
+temporary = None
 
-if path.exists() and path.stat().st_size:
-    try:
-        with path.open(encoding="utf-8") as fh:
-            data = json.load(fh)
-    except json.JSONDecodeError:
-        raise SystemExit(2)
+try:
+    original = None
+    mode = 0o600
+    if path.exists() or path.is_symlink():
+        original = path.read_bytes()
+        mode = stat.S_IMODE(path.stat().st_mode)
+        data = json.loads(original)
+    else:
+        data = [notice, {}]
 
-if isinstance(data, dict):
-    settings = data
-elif isinstance(data, list):
-    while len(data) < 2:
-        data.append({})
-    if not isinstance(data[0], str):
-        data[0] = notice
-    if not isinstance(data[1], dict):
-        data[1] = {}
-    settings = data[1]
-else:
-    data = [notice, {}]
-    settings = data[1]
-
-# client_immersive is a user-visible setting. Seed it once, when Parsec has
-# no opinion of its own yet, and never overrule a value the user chose --
-# including values this wrapper does not use itself.
-current = settings.get("client_immersive", MISSING)
-value = current
-if isinstance(current, dict):
-    value = current.get("value", MISSING)
-
-if value is MISSING:
-    immersive_value = 2
-    settings["client_immersive"] = {"value": immersive_value}
-    # Only a real change justifies rewriting the user's file; otherwise the
-    # wrapper would reorder and reformat it on every single launch.
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    with tmp.open("w", encoding="utf-8") as fh:
-        json.dump(data, fh, ensure_ascii=False, indent=2, sort_keys=True)
-        fh.write("\n")
-    tmp.replace(path)
-else:
-    try:
-        immersive_value = int(value)
-    except (TypeError, ValueError):
-        # Unparseable, but still the user's; leave the file alone and let
-        # Parsec read its own configuration without a command-line override.
+    if isinstance(data, dict):
+        settings = data
+    elif (isinstance(data, list) and len(data) == 2
+          and isinstance(data[0], str) and isinstance(data[1], dict)):
+        settings = data[1]
+    else:
+        # An unfamiliar valid JSON shape is not an empty configuration.
         raise SystemExit(3)
 
-print(immersive_value)
+    current = settings.get("client_immersive", MISSING)
+    if current is not MISSING:
+        value = current.get("value", MISSING) if isinstance(current, dict) else current
+        if type(value) is int:
+            print(value)
+        elif isinstance(value, str) and re.fullmatch(r"[+-]?[0-9]+", value.strip()):
+            print(int(value.strip()))
+        else:
+            # Unknown values belong to the user, including incomplete objects.
+            raise SystemExit(3)
+        raise SystemExit(0)
+
+    if legacy.exists() or legacy.is_symlink():
+        # The legacy profile can still contain the user's setting. Use it
+        # directly; migrating unrelated settings is Parsec's responsibility.
+        raise SystemExit(4)
+    if path.is_symlink():
+        raise SystemExit(3)
+
+    settings["client_immersive"] = {"value": 2}
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    # A predictable config.json.tmp can belong to another launch or Parsec.
+    # Use a private temporary file and retain the original access mode.
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", dir=path.parent,
+        prefix=".config.json.", suffix=".tmp", delete=False,
+    ) as stream:
+        temporary = Path(stream.name)
+        os.fchmod(stream.fileno(), mode)
+        json.dump(data, stream, ensure_ascii=False, indent=2, sort_keys=True)
+        stream.write("\n")
+
+    if original is None:
+        # Linking creates the new file exclusively; a concurrent launch must
+        # not lose the profile it has just written in the meantime.
+        os.link(temporary, path)
+    else:
+        if path.is_symlink() or path.read_bytes() != original:
+            raise SystemExit(3)
+        temporary.replace(path)
+    print(2)
+except (OSError, ValueError, UnicodeError):
+    # A read/write error must not prevent launch or authorise a second format.
+    raise SystemExit(3)
+finally:
+    if temporary is not None:
+        temporary.unlink(missing_ok=True)
 PY
 }
 
-immersive_enabled || exec "${real_binary}" "$@"
-
 immersive_status=0
 immersive_value="$(set_config_json_immersive)" || immersive_status=$?
-if [[ "$immersive_status" -ne 0 ]]; then
-    # Exit 3 means the user already has a setting this wrapper will not touch,
-    # so Parsec is started without any command-line override at all.
-    [[ "$immersive_status" -eq 3 ]] && exec "${real_binary}" "$@"
+if [[ "$immersive_status" -eq 4 ]]; then
     immersive_status=0
     immersive_value="$(set_config_txt_immersive)" || immersive_status=$?
-    [[ "$immersive_status" -eq 0 ]] || exec "${real_binary}" "$@"
 fi
-
-for arg in "$@"; do
-    if [[ "${arg}" == *client_immersive=* ]]; then
-        exec "${real_binary}" "$@"
-    fi
-done
+[[ "$immersive_status" -eq 0 ]] || exec "${real_binary}" "$@"
 
 if (($# == 0)); then
     exec "${real_binary}" "client_immersive=${immersive_value}"

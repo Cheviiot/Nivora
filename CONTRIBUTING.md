@@ -24,15 +24,16 @@ git pull --ff-only
 ```
 
 Нужны Python 3.11 или новее и `stplr-spec`. В CI используются ShellCheck 0.9.0,
-Go 1.26.5 и закреплённая версия утилит Stapler:
+Go 1.27.4 и закреплённая версия утилит Stapler:
 [setup-stplr-spec](.github/actions/setup-stplr-spec/action.yml).
+`GOTOOLCHAIN=local` запрещает автоматическую загрузку другой версии Go.
 
 Если совместимый Go установлен в контейнере, собрать локальный `stplr-spec`
 можно так:
 
 ```bash
 mkdir -p .cache/bin
-STPLR_UTILS_COMMIT=c6ddbb5e4e5637d97bb7b2587729178d715c6c52 \
+GOTOOLCHAIN=local STPLR_UTILS_COMMIT=c6ddbb5e4e5637d97bb7b2587729178d715c6c52 \
   .github/tools/prepare_stplr_spec.sh \
   "$PWD/.cache/bin/stplr-spec" \
   https://altlinux.space/stapler/stplr-utils.git
@@ -93,8 +94,10 @@ NIVORA_LIFECYCLE_PACKAGES=telegram .github/tools/test_package_lifecycle.sh
 .github/tools/test_package_lifecycle.sh
 ```
 
-Обязательный прогон использует Stapler v0.1.1 на p11.
-Дополнительный прогон с закреплённым commit будущего Stapler служит ранним
+Обязательный прогон использует Stapler v0.2.0 на p11.
+Для stable используются официальные архивы x86_64 и aarch64 с закреплёнными
+SHA-256; наличие ARM-архива не добавляет нативную ARM-проверку в CI.
+Дополнительный прогон с закреплённым commit upstream `main` служит ранним
 предупреждением. Его pin в [матрице](.github/support-matrix.toml)
 не означает отдельную рабочую ветку Nivora.
 

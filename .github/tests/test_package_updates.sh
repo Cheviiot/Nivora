@@ -48,6 +48,53 @@ EOF
     [[ "$(PATH="$fixture:$PATH" git_latest_stable_tag example/app)" == 2.0.0 ]]
 )
 
+# The API's release flags are authoritative when it returns releases. A bare
+# numeric prerelease tag must not bypass them through the Git fallback.
+(
+    fixture="$(mktemp -d)"
+    trap 'find "$fixture" -mindepth 1 -delete; rmdir "$fixture"' EXIT
+    github_json() {
+        printf '%s\n' "$MOCK_RELEASES"
+        return "${MOCK_API_EXIT:-0}"
+    }
+    git_latest_stable_tag() {
+        printf 'fallback\n' >>"$fixture/fallback-calls"
+        printf '9.0.0\n'
+    }
+    MOCK_RELEASES='[
+        {"draft":false,"prerelease":false,"tag_name":"v1.9.0"},
+        {"draft":false,"prerelease":false,"tag_name":"2.0.0"},
+        {"draft":false,"prerelease":true,"tag_name":"v3.0.0"},
+        {"draft":true,"prerelease":false,"tag_name":"v4.0.0"},
+        {"draft":false,"prerelease":false,"tag_name":"v5.0.0-rc.1"}
+    ]'
+    [[ "$(github_latest_release example/app)" == 2.0.0 ]]
+    [[ ! -e "$fixture/fallback-calls" ]]
+
+    for MOCK_RELEASES in \
+        '[{"draft":false,"prerelease":true,"tag_name":"v2.0.0"}]' \
+        '[{"draft":true,"prerelease":false,"tag_name":"v2.0.0"}]' \
+        '[{"draft":false,"prerelease":false,"tag_name":"v2.0.0-rc.1"}]' \
+        "$(jq -cn '[range(1;31) | {draft:false, prerelease:true, tag_name:("v2.0." + tostring)}]')"; do
+        if github_latest_release example/app >"$fixture/output" 2>"$fixture/error"; then
+            echo 'API-rejected releases were promoted through the Git fallback' >&2
+            exit 1
+        fi
+        [[ ! -s "$fixture/output" && ! -e "$fixture/fallback-calls" ]]
+        grep -Fq 'no eligible stable release among the first 30 releases' "$fixture/error"
+    done
+
+    # Preserve tag-only repositories and the existing API outage/malformed
+    # response fallback. No HTTP calls or live repositories are used here.
+    for MOCK_RELEASES in '[]' '{' '{"message":"rate limited"}' \
+        '[{"draft":false,"tag_name":"v2.0.0"}]'; do
+        [[ "$(github_latest_release example/app)" == 9.0.0 ]]
+    done
+    MOCK_RELEASES='[{"draft":false,"prerelease":true,"tag_name":"v2.0.0"}]'
+    [[ "$(MOCK_API_EXIT=22 github_latest_release example/app)" == 9.0.0 ]]
+    [[ "$(wc -l <"$fixture/fallback-calls")" -eq 5 ]]
+)
+
 # The desktop package follows the same stable-release selector as other apps.
 github_latest_release() {
     case "$1" in
@@ -68,12 +115,34 @@ done
 # curl emits CRLF headers; HTTP/2 has no reason phrase after the status code.
 # A successful source probe must not silently suppress a published update.
 (
-    curl() { printf '%b' "${MOCK_HTTP_HEADERS:?}"; }
+    curl() {
+        printf '%b' "${MOCK_HTTP_HEADERS:?}"
+        return "${MOCK_CURL_EXIT:-0}"
+    }
     MOCK_HTTP_HEADERS='HTTP/2 200\r\ncontent-length: 1048576\r\n\r\n' \
         upstream_source_published 'https://example.invalid/payload'
     if MOCK_HTTP_HEADERS='HTTP/2 404\r\n\r\n' \
         upstream_source_published 'https://example.invalid/payload'; then
         echo 'unpublished source was accepted' >&2
+        exit 1
+    fi
+
+    expected_fingerprint="$(printf 'payload-tag' | sha256sum | awk '{print $1}')"
+    MOCK_HTTP_HEADERS='HTTP/2 302\r\netag: "redirect-tag"\r\n\r\nHTTP/2 200\r\netag: "payload-tag"\r\n\r\n'
+    [[ "$(http_etag_fingerprint https://example.invalid/latest)" == "$expected_fingerprint" ]]
+    for MOCK_HTTP_HEADERS in \
+        'HTTP/2 302\r\netag: "redirect-tag"\r\n\r\nHTTP/2 200\r\n\r\n' \
+        'HTTP/2 200\r\netag: "prior-tag"\r\n\r\nHTTP/2 404\r\netag: "error-tag"\r\n\r\n' \
+        'etag: "orphan-tag"\r\n\r\n' \
+        'HTTP/2 invalid\r\netag: "payload-tag"\r\n\r\n'; do
+        if http_etag_fingerprint https://example.invalid/latest >/dev/null 2>&1; then
+            echo 'fingerprint accepted metadata without a successful final response ETag' >&2
+            exit 1
+        fi
+    done
+    MOCK_HTTP_HEADERS='HTTP/2 200\r\netag: "payload-tag"\r\n\r\n'
+    if MOCK_CURL_EXIT=22 http_etag_fingerprint https://example.invalid/latest >/dev/null 2>&1; then
+        echo 'fingerprint accepted a failed HTTP request' >&2
         exit 1
     fi
 )

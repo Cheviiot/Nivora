@@ -1,11 +1,13 @@
 schema_version = 2
 
 [stapler]
-stable_version = "0.1.1"
-stable_commit = "b5e293f6442f3cba1eeeea4b53c3c0e0bc2ae3e1"
-stable_linux_x86_64_url = "https://altlinux.space/stapler/stplr/releases/download/v0.1.1/stplr-0.1.1-linux-x86_64.tar.gz"
-stable_linux_x86_64_sha256 = "b1ec1e98c04ab928377d0cef1706e3dc62171b9e256f4bf36a219addc53117b8"
-main_commit = "9df2b9284d3a37cdc418cef2e77781bac3b8dc3e"
+stable_version = "0.2.0"
+stable_commit = "69df887a66978340bc1d3b954b772fb2ffc89212"
+stable_linux_x86_64_url = "https://altlinux.space/stapler/stplr/releases/download/v0.2.0/stplr-0.2.0-linux-x86_64.tar.gz"
+stable_linux_x86_64_sha256 = "3db6f1de25dcb82300d81e8d2c9628709a8aea4f77b33977a0718066f0abba30"
+stable_linux_aarch64_url = "https://altlinux.space/stapler/stplr/releases/download/v0.2.0/stplr-0.2.0-linux-aarch64.tar.gz"
+stable_linux_aarch64_sha256 = "de6ed57d487f6b12630ea1410362b6596f79b6f2bec3d3da8df07324907d872b"
+main_commit = "541a2415aa9d54745ede93840efb69891a710d78"
 main_repository = "https://altlinux.space/stapler/stplr.git"
 
 [images]

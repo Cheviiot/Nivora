@@ -27,6 +27,8 @@ root = Path(os.environ["FIXTURE_ROOT"])
 database = root / "rpm-state.json"
 state = json.loads(database.read_text())
 role, *args = sys.argv[1:]
+package = os.environ["TEST_PACKAGE"]
+config = root / "etc/default/tailscaled"
 
 def trace(message):
     with (root / "transactions").open("a") as stream:
@@ -45,8 +47,11 @@ if role == "rpm":
         artifact = Path(args[-1])
         assert artifact.is_file(), artifact
         previous = artifact.parent.name == "previous"
+        if args[2] == '[%{FILEFLAGS}\\t%{FILENAMES}\\n]':
+            print(os.environ["TEST_PREVIOUS_CONFIG_FLAGS"] + "\t" + str(config))
+            sys.exit(0)
         values = {
-            "%{NAME}": "demo+stplr-default",
+            "%{NAME}": package + "+stplr-default",
             "%{EPOCHNUM}:%{VERSION}-%{RELEASE}": evr("previous" if previous else "current"),
             "%{ARCH}": "noarch" if previous else "x86_64",
             "%{SUMMARY}": "Previous Nivora package fixture for lifecycle tests",
@@ -70,6 +75,9 @@ elif role == "apt":
             assert state["installed"] is None
             state.update(installed="previous", bc=True)
             trace("install previous")
+            if package == "tailscale":
+                config.parent.mkdir(parents=True)
+                config.write_text('PORT="41641"\nFLAGS=""\n')
         else:
             kind = "fresh" if state["installed"] is None else "upgrade"
             trace("install current " + kind)
@@ -81,6 +89,9 @@ elif role == "apt":
             command.chmod(0o755)
             if os.environ["TEST_MUTATE_STAGE"] == "install":
                 (root / "user-data/state").write_text("overwritten on install\n")
+            if package == "tailscale" and (kind == "fresh" or os.environ["TEST_CONFIG_MUTATE_STAGE"] == "install"):
+                config.parent.mkdir(parents=True, exist_ok=True)
+                config.write_text('PORT="41641"\nFLAGS=""\n')
     elif "remove" in args:
         assert state["installed"] == "current"
         trace("remove current")
@@ -88,6 +99,15 @@ elif role == "apt":
         (root / "command").unlink()
         if os.environ["TEST_MUTATE_STAGE"] == "remove":
             (root / "user-data/state").write_text("overwritten on remove\n")
+        if package == "tailscale":
+            mode = os.environ["TEST_CONFIG_REMOVE"]
+            if mode == "delete":
+                config.unlink()
+            elif mode != "keep":
+                saved = config.with_suffix(".rpmsave")
+                config.rename(saved)
+                if mode == "corrupt":
+                    saved.write_text("overwritten on remove\n")
     else:
         raise AssertionError(args)
     save()
@@ -97,15 +117,16 @@ else:
 
 
 class PackageLifecycleTests(unittest.TestCase):
-    def run_scenario(self, scenario, *, fail_fresh=False, mutate_stage=""):
+    def run_scenario(self, scenario, *, fail_fresh=False, mutate_stage="", package="demo",
+                     config_mutate_stage="", config_remove="rpmsave", previous_config_flags="0"):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "bin").mkdir()
-            (root / "repo/demo").mkdir(parents=True)
-            (root / "repo/demo/current.rpm").touch()
+            (root / "repo" / package).mkdir(parents=True)
+            (root / "repo" / package / "current.rpm").touch()
             if scenario == "upgrade":
                 (root / "previous").mkdir()
-                (root / "previous/demo.rpm").touch()
+                (root / "previous" / f"{package}.rpm").touch()
             (root / "rpm-state.json").write_text(
                 json.dumps({"installed": None, "bc": False}), encoding="utf-8"
             )
@@ -125,6 +146,7 @@ class PackageLifecycleTests(unittest.TestCase):
             script.write_text(
                 CONTAINER_SCRIPT.replace("/repo/", f"{root}/repo/")
                 .replace("/previous/", f"{root}/previous/")
+                .replace("/etc/default/tailscaled", str(root / "etc/default/tailscaled"))
                 .replace("/usr/local/lib/nivora/alt_apt_network.sh", str(root / "bin/apt.sh")),
                 encoding="utf-8",
             )
@@ -132,11 +154,15 @@ class PackageLifecycleTests(unittest.TestCase):
                 "PATH": f"{root}/bin:{os.environ['PATH']}",
                 "BASH_ENV": "/dev/null",
                 "FIXTURE_ROOT": str(root),
-                "LIFECYCLE_ENTRY": f"demo|{root}/command|{root}/user-data/state|-|-|-",
+                "LIFECYCLE_ENTRY": f"{package}|{root}/command|{root}/user-data/state|-|-|-",
                 "LIFECYCLE_SCENARIO": scenario,
                 "NIVORA_ALT_BRANCH": "p11",
                 "TEST_FAIL_FRESH": "1" if fail_fresh else "0",
                 "TEST_MUTATE_STAGE": mutate_stage,
+                "TEST_PACKAGE": package,
+                "TEST_CONFIG_MUTATE_STAGE": config_mutate_stage,
+                "TEST_CONFIG_REMOVE": config_remove,
+                "TEST_PREVIOUS_CONFIG_FLAGS": previous_config_flags,
             }
             result = subprocess.run(
                 ["bash", str(script)], env=environment, text=True, capture_output=True
@@ -170,6 +196,39 @@ class PackageLifecycleTests(unittest.TestCase):
                     result, _ = self.run_scenario(scenario, mutate_stage=stage)
                     self.assertNotEqual(result.returncode, 0)
                     self.assertIn("changed persistent state", result.stderr)
+
+    def test_tailscale_settings_survive_install_or_upgrade_and_removal(self):
+        for scenario in ("fresh", "upgrade"):
+            for config_remove in ("rpmsave", "keep"):
+                with self.subTest(scenario=scenario, removal=config_remove):
+                    result, _ = self.run_scenario(
+                        scenario, package="tailscale", config_remove=config_remove,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_tailscale_upgrade_detects_overwritten_old_ordinary_config(self):
+        result, transactions = self.run_scenario(
+            "upgrade", package="tailscale", config_mutate_stage="install",
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("lost configured tailscaled settings", result.stderr)
+        self.assertEqual(transactions, ["install previous", "test upgrade", "install current upgrade"])
+
+    def test_tailscale_removal_must_preserve_configured_bytes(self):
+        for scenario in ("fresh", "upgrade"):
+            for mode in ("delete", "corrupt"):
+                with self.subTest(scenario=scenario, removal=mode):
+                    result, _ = self.run_scenario(scenario, package="tailscale", config_remove=mode)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn("lost configured tailscaled settings", result.stderr)
+
+    def test_tailscale_previous_fixture_cannot_mask_migration_with_config_flags(self):
+        result, transactions = self.run_scenario(
+            "upgrade", package="tailscale", previous_config_flags="17",
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("previous fixture must own ordinary", result.stderr)
+        self.assertEqual(transactions, [])
 
     def test_each_package_gets_two_disposable_containers(self):
         loop = SOURCE[SOURCE.index("while IFS= read -r lifecycle_entry; do\n"):]

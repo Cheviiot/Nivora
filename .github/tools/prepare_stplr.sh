@@ -23,66 +23,47 @@ case "$channel" in
 stable)
     version="$(read_matrix stable_version)"
     case "$(uname -m)" in
-    x86_64)
-        url="$(read_matrix stable_linux_x86_64_url)"
-        expected="$(read_matrix stable_linux_x86_64_sha256)"
-        cache_dir="${NIVORA_STPLR_CACHE_DIR:-${XDG_CACHE_HOME:-${HOME}/.cache}/nivora/stplr}"
-        archive="${cache_dir}/stplr-${version}-linux-x86_64.tar.gz"
-        install -d -m0755 "$cache_dir"
-        download=''
-        cleanup_archive() {
-            [[ -z "$download" ]] || rm -f -- "$download"
-        }
-        trap cleanup_archive EXIT
-        actual=''
-        if [[ -f "$archive" ]]; then
-            actual="$(sha256sum "$archive")"
-            actual="${actual%% *}"
-        fi
-        if [[ "$actual" != "$expected" ]]; then
-            download="$(mktemp "${cache_dir}/.stplr-${version}.XXXXXX")"
-            curl -fL --retry 3 --retry-all-errors --connect-timeout 20 --max-time 300 \
-                -o "$download" "$url"
-            actual="$(sha256sum "$download")"
-            actual="${actual%% *}"
-            [[ "$actual" == "$expected" ]] || {
-                echo "stplr v${version}: SHA-256 mismatch: ${actual}" >&2
-                exit 1
-            }
-            chmod 0644 "$download"
-            mv -f -- "$download" "$archive"
-            download=''
-        fi
-        tar -xOf "$archive" stplr >"$target"
-        ;;
-    aarch64 | arm64)
-        for command in git go; do
-            command -v "$command" >/dev/null 2>&1 || {
-                echo "Pinned stable stplr ARM build requires ${command}" >&2
-                exit 2
-            }
-        done
-        repository="$(read_matrix main_repository)"
-        commit="$(read_matrix stable_commit)"
-        checkout="$(mktemp -d)"
-        cleanup_checkout() {
-            find "$checkout" -mindepth 1 -delete
-            rmdir "$checkout"
-        }
-        trap cleanup_checkout EXIT
-        pinned_git_checkout "$repository" "$commit" "$checkout"
-        (
-            cd "$checkout"
-            go build -trimpath \
-                -ldflags="-X go.stplr.dev/stplr/internal/config.Version=v${version}" \
-                -o "$target" ./cmd/stplr
-        )
-        ;;
+    x86_64) architecture=x86_64 ;;
+    aarch64 | arm64) architecture=aarch64 ;;
     *)
         echo "Unsupported architecture for pinned stable stplr: $(uname -m)" >&2
         exit 2
         ;;
     esac
+    url="$(read_matrix "stable_linux_${architecture}_url")"
+    expected="$(read_matrix "stable_linux_${architecture}_sha256")"
+    [[ "$expected" =~ ^[0-9a-f]{64}$ ]] || {
+        echo "stplr v${version}: invalid pinned SHA-256 for ${architecture}" >&2
+        exit 2
+    }
+    cache_dir="${NIVORA_STPLR_CACHE_DIR:-${XDG_CACHE_HOME:-${HOME}/.cache}/nivora/stplr}"
+    archive="${cache_dir}/stplr-${version}-linux-${architecture}.tar.gz"
+    install -d -m0755 "$cache_dir"
+    download=''
+    cleanup_archive() {
+        [[ -z "$download" ]] || rm -f -- "$download"
+    }
+    trap cleanup_archive EXIT
+    actual=''
+    if [[ -f "$archive" ]]; then
+        actual="$(sha256sum "$archive")"
+        actual="${actual%% *}"
+    fi
+    if [[ "$actual" != "$expected" ]]; then
+        download="$(mktemp "${cache_dir}/.stplr-${version}.XXXXXX")"
+        curl -fL --retry 3 --retry-all-errors --connect-timeout 20 --max-time 300 \
+            -o "$download" "$url"
+        actual="$(sha256sum "$download")"
+        actual="${actual%% *}"
+        [[ "$actual" == "$expected" ]] || {
+            echo "stplr v${version}: SHA-256 mismatch: ${actual}" >&2
+            exit 1
+        }
+        chmod 0644 "$download"
+        mv -f -- "$download" "$archive"
+        download=''
+    fi
+    tar -xOf "$archive" stplr >"$target"
     ;;
 main)
     for command in git go; do

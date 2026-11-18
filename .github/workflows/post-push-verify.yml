@@ -107,7 +107,7 @@ jobs:
         with:
           system-packages: rpm cpio sqlite3
 
-      - name: Собрать и проверить stable v0.1.1
+      - name: Собрать и проверить stable v0.2.0
         env:
           NIVORA_STPLR_CHANNEL: stable
           NIVORA_ALT_BRANCH: p11

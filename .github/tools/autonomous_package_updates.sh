@@ -109,7 +109,7 @@ run_update_phases() {
     planned_current="$(planned_version "$package" current)" || return
     planned_latest="$(planned_version "$package" latest)" || return
     # stplr-spec pins a checksum over whatever the server returns, including an
-    # error page, because Stapler v0.1.1 never checks the HTTP status. Confirm
+    # error page, because Stapler v0.2.0 never checks the HTTP status. Confirm
     # the payload is really published before letting it near the recipe.
     echo check-sources >"$phase_file" || return
     .github/tools/check_source_availability.sh "$package" "$planned_latest" ||

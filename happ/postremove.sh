@@ -11,15 +11,10 @@ optional_refresh() {
     fi
 }
 
-unit=/usr/lib/systemd/system/happd.service
-if [[ ! -e "$unit" ]] && command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
-    if systemctl is-active --quiet happd.service; then
-        systemctl stop happd.service
-    fi
-    if systemctl is-enabled --quiet happd.service; then
-        systemctl disable happd.service
-    fi
-    systemctl daemon-reload
+# The unit is already gone after final removal. Disabling it belongs to
+# %preun, where systemd can still resolve and remove its enablement links.
+if command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
+    optional_refresh "unit-файлы" systemctl daemon-reload
 fi
 
 if command -v update-mime-database &>/dev/null; then

@@ -2,7 +2,7 @@
 # Verify that every remote source of a recipe is actually published before the
 # updater is allowed to pin a checksum over it.
 #
-# Stapler v0.1.1 does not look at the HTTP status code at all: pkg/dl/file.go
+# Stapler v0.2.0 does not look at the HTTP status code at all: pkg/dl/file.go
 # hands res.Body straight to the writer, so a 404 page is stored as the source
 # and stplr-spec update-checksums happily pins its SHA-256. The recipe then
 # looks perfectly valid and only fails later, during the build, if package()
@@ -97,7 +97,7 @@ probe_url() {
     }
 
     status="$(
-        awk 'toupper($1) ~ /^HTTP/ { code = $2; gsub(/\r/, "", code) } END { print code }' <<<"$headers"
+        awk 'toupper($1) ~ /^HTTP\// { code = $2; gsub(/\r/, "", code) } END { print code }' <<<"$headers"
     )"
     [[ "$status" =~ ^2[0-9][0-9]$ ]] || {
         echo "HTTP ${status:-unknown}"
@@ -106,13 +106,24 @@ probe_url() {
 
     length="$(
         awk '
+            toupper($1) ~ /^HTTP\// { value = "" }
             tolower($1) == "content-length:" { value = $2; gsub(/\r/, "", value) }
             END { if (value != "") print value }
         ' <<<"$headers"
     )"
-    if [[ -n "$length" && "$length" -lt "$MIN_SOURCE_BYTES" ]]; then
-        echo "only ${length} bytes"
-        return 1
+    if [[ -n "$length" ]]; then
+        [[ "$length" =~ ^[0-9]+$ ]] || {
+            echo "invalid Content-Length"
+            return 1
+        }
+        # Decimal comparison avoids Bash treating leading zeroes as octal or
+        # overflowing on a large upstream size. Only the small lower bound
+        # matters here; the actual checksum is verified in a later gate.
+        if awk -v size="$length" -v minimum="$MIN_SOURCE_BYTES" \
+            'BEGIN { exit !(size + 0 < minimum + 0) }'; then
+            echo "only ${length} bytes"
+            return 1
+        fi
     fi
 
     return 0
@@ -123,9 +134,11 @@ checked=0
 declare -A seen=()
 
 for field in "${source_fields[@]}"; do
-    read -ra urls <<<"$(
+    source_output="$(
         "$stplr_spec_command" get-field --path "$probe_recipe" "$field"
     )" || die "${package}: cannot read ${field}"
+    read -ra urls <<<"$source_output"
+    [[ "${#urls[@]}" -gt 0 ]] || die "${package}: ${field} is empty"
 
     for source in "${urls[@]}"; do
         [[ "$source" == local://* ]] && continue

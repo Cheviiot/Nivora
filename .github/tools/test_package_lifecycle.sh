@@ -27,7 +27,7 @@ readonly -a lifecycle_package_catalog=(
     'claude|/usr/bin/claude-desktop|/home/nivora-test/.config/Claude/nivora-lifecycle-state|/usr/share/applications/com.anthropic.Claude.desktop|/usr/share/icons/hicolor/128x128/apps/claude-desktop.png|/usr/lib/claude-desktop/chrome-sandbox'
     'happ|/usr/bin/happ|/home/nivora-test/.config/happ/nivora-lifecycle-state|/usr/share/applications/Happ.desktop|/usr/lib/systemd/system/happd.service|-'
     'opencode|/usr/bin/opencode-desktop|/home/nivora-test/.config/opencode/nivora-lifecycle-state|/usr/share/applications/ai.opencode.desktop.desktop|/usr/share/icons/hicolor/128x128/apps/ai.opencode.png|/opt/OpenCode/chrome-sandbox'
-    'parsec|/usr/bin/parsecd|/home/nivora-test/.config/parsec/nivora-lifecycle-state|/usr/share/applications/parsecd.desktop|/usr/share/icons/hicolor/256x256/apps/parsecd.png|-'
+    'parsec|/usr/bin/parsecd|/home/nivora-test/.parsec/nivora-lifecycle-state|/usr/share/applications/parsecd.desktop|/usr/share/icons/hicolor/256x256/apps/parsecd.png|-'
     'pineconemc|/usr/bin/pineconemc|/home/nivora-test/.config/pineconemc/nivora-lifecycle-state|/usr/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop|/usr/share/icons/hicolor/scalable/apps/io.github.elyprismlauncher.ElyPrismLauncher.svg|-'
     'tailscale|/usr/bin/tailscale|/var/lib/tailscale/nivora-lifecycle-state|/usr/lib/systemd/system/tailscaled.service|-|-'
     'telegram|/usr/bin/telegram-desktop|/home/nivora-test/.config/telegram-desktop/nivora-lifecycle-state|/usr/share/applications/org.telegram.desktop.desktop|/usr/share/icons/hicolor/256x256/apps/org.telegram.desktop.png|-'
@@ -189,11 +189,23 @@ printf '[Desktop Entry]\nName=Antigravity\nType=Application\nExec=/usr/bin/antig
 cp %{buildroot}/usr/share/applications/com.google.Antigravity.desktop %{buildroot}/usr/share/applications/antigravity.desktop
 EOF
     fi
+    if [[ "$package" == tailscale ]]; then
+        # Match the old RPM, which owned this file without config/noreplace.
+        # The upgrade must preserve edits even when the predecessor did not
+        # mark its defaults as configuration.
+        cat >>"$spec" <<'EOF'
+mkdir -p %{buildroot}/etc/default
+printf 'PORT="41641"\nFLAGS=""\n' >%{buildroot}/etc/default/tailscaled
+EOF
+    fi
     printf '%s\n' '%files' "/usr/share/nivora-lifecycle-previous/${package}" >>"$spec"
     if [[ "$package" == antigravity ]]; then
         printf '%s\n' \
             '/usr/share/applications/com.google.Antigravity.desktop' \
             '/usr/share/applications/antigravity.desktop' >>"$spec"
+    fi
+    if [[ "$package" == tailscale ]]; then
+        printf '%s\n' '/etc/default/tailscaled' >>"$spec"
     fi
     if ! rpmbuild \
         --define "_topdir ${topdir}" \
@@ -309,6 +321,16 @@ if [[ "$scenario" == upgrade ]]; then
     if [[ "$previous_summary" == \
         'Previous Nivora package fixture for lifecycle tests' ]]; then
         ! rpm -q bc >/dev/null 2>&1
+        if [[ "$package" == tailscale ]]; then
+            previous_config_flags="$(
+                rpm -qp --queryformat '[%{FILEFLAGS}\t%{FILENAMES}\n]' "$previous_artifact" |
+                    awk -F '\t' '$2 == "/etc/default/tailscaled" {print $1}'
+            )"
+            [[ "$previous_config_flags" == 0 ]] || {
+                echo 'tailscale: previous fixture must own ordinary /etc/default/tailscaled' >&2
+                exit 1
+            }
+        fi
     fi
     bash /usr/local/lib/nivora/alt_apt_network.sh run -qq install -y "$previous_artifact"
     [[ "$(rpm -q --queryformat '%{EPOCHNUM}:%{VERSION}-%{RELEASE}' "$system_name")" == "$previous_evr" ]]
@@ -324,6 +346,28 @@ if [[ "$scenario" == upgrade ]]; then
         echo "${package}: previous RPM ${previous_evr} is not strictly older than ${current_evr}" >&2
         exit 1
     }
+fi
+
+tailscale_config=/etc/default/tailscaled
+config_checksum=''
+configure_tailscale() {
+    test -f "$tailscale_config"
+    printf '# Nivora lifecycle settings: %s\nPORT="41642"\nFLAGS=""\n' "$scenario" \
+        >"$tailscale_config"
+    config_checksum="$(sha256sum <"$tailscale_config")"
+}
+assert_tailscale_config() {
+    local candidate
+    for candidate in "$@"; do
+        if [[ -f "$candidate" && "$(sha256sum <"$candidate")" == "$config_checksum" ]]; then
+            return 0
+        fi
+    done
+    echo "tailscale: ${scenario} lifecycle lost configured tailscaled settings" >&2
+    exit 1
+}
+if [[ "$package" == tailscale && "$scenario" == upgrade ]]; then
+    configure_tailscale
 fi
 
 # Existing user data must survive both the first installation and an upgrade,
@@ -343,6 +387,12 @@ fi
 
 bash /usr/local/lib/nivora/alt_apt_network.sh run -qq install -y "$artifact"
 assert_state_preserved
+if [[ "$package" == tailscale ]]; then
+    if [[ "$scenario" == fresh ]]; then
+        configure_tailscale
+    fi
+    assert_tailscale_config "$tailscale_config"
+fi
 rpm -q "$system_name"
 [[ "$(rpm -q --queryformat '%{EPOCHNUM}:%{VERSION}-%{RELEASE}' "$system_name")" == "$current_evr" ]]
 test -x "$command_path"
@@ -364,6 +414,9 @@ fi
 
 bash /usr/local/lib/nivora/alt_apt_network.sh run -qq remove -y "$system_name"
 assert_state_preserved
+if [[ "$package" == tailscale ]]; then
+    assert_tailscale_config "$tailscale_config" "${tailscale_config}.rpmsave"
+fi
 ! rpm -q "$system_name"
 EOF
 

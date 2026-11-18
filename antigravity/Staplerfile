@@ -1,47 +1,41 @@
-# Full hub release id from the download page; version alone is not enough
-# because Google pins each build under <version>-<id>/
-# The updater refreshes version and the full build pin together.
 name='antigravity'
 version='2.33.0'
-release=3
+release=4
 upstream_hub='2.33.0-4731201358004224'
+
 summary='Manage AI agents and projects with Google Antigravity'
 summary_ru='Работа с ИИ-агентами и проектами Google Antigravity'
-group='Development/Tools'
 desc='Google Antigravity App is a desktop application for managing AI agents, parallel tasks, and project workspaces.'
 desc_ru='Google Antigravity App — настольное приложение для работы с ИИ-агентами, параллельными задачами и проектами.'
+group='Development/Tools'
 homepage='https://antigravity.google/download/'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
-architectures=('amd64' 'arm64')
-compatible_with=('altlinux_p11')
-
 license=('LicenseRef-proprietary')
+nonfree=1
+nonfree_msg='Google Antigravity — проприетарное приложение. Google публикует условия для Antigravity по ссылке ниже.'
+nonfree_url='https://antigravity.google/terms'
 
 appstream_app_id='com.google.Antigravity'
 appstream_desktop_id='antigravity.desktop'
 appstream_name='Google Antigravity App'
 appstream_developer='Google'
-nonfree=1
-nonfree_msg='Google Antigravity — проприетарное приложение. Google публикует условия для Antigravity по ссылке ниже.'
-nonfree_url='https://antigravity.google/terms'
+
+architectures=('amd64' 'arm64')
+compatible_with=('altlinux_p11')
+disable_network=1
 
 provides=()
 replaces=('antigravity')
 conflicts=()
 
-auto_reqprov_method="dirty"
+auto_reqprov_method='dirty'
 auto_req=1
 auto_prov=0
-disable_network=1
 
-# auto_req covers DT_NEEDED of the main Electron binary. The rest stays
-# explicit because Chromium loads it via dlopen / subprocess, same pattern
-# as other Electron packages in this catalog.
+# Chromium loads these libraries at runtime and calls xdg-utils for desktop integration.
 deps=('libnotify' 'libsecret' 'libXtst' 'libXScrnSaver' 'xdg-utils' 'libuuid')
-
 opt_deps=('libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
-
 build_deps=('binutils' 'python3')
 
 sources=(
@@ -53,17 +47,6 @@ sources=(
 	'local:///LICENSE?nivora=antigravity'
 	'local:///com.google.Antigravity.metainfo.xml?nivora=antigravity'
 )
-
-sources_arm64=(
-	"https://storage.googleapis.com/antigravity-public/antigravity-hub/${upstream_hub}/linux-arm/Antigravity.tar.gz?~archive=false&~name=Antigravity.tar.gz"
-	'local:///antigravity.desktop'
-	'local:///antigravity-launcher'
-	'local:///validate-payload.py'
-	'local:///com.google.Antigravity.png'
-	'local:///LICENSE?nivora=antigravity'
-	'local:///com.google.Antigravity.metainfo.xml?nivora=antigravity'
-)
-
 checksums=(
 	'sha256:a73387b229c6b1f5288860731133c5b26e153340eaed96d865032cd8a8535050'
 	'sha256:957ab13288c26cc4bca3de59e1b6402a2b5c00c776245e3b1a3d3ad25ed32885'
@@ -74,6 +57,15 @@ checksums=(
 	'sha256:c6dafe87410cdf6ab0dfe59fc3c6602307b7ee2e4710d19470d40798355ee403'
 )
 
+sources_arm64=(
+	"https://storage.googleapis.com/antigravity-public/antigravity-hub/${upstream_hub}/linux-arm/Antigravity.tar.gz?~archive=false&~name=Antigravity.tar.gz"
+	'local:///antigravity.desktop'
+	'local:///antigravity-launcher'
+	'local:///validate-payload.py'
+	'local:///com.google.Antigravity.png'
+	'local:///LICENSE?nivora=antigravity'
+	'local:///com.google.Antigravity.metainfo.xml?nivora=antigravity'
+)
 checksums_arm64=(
 	'sha256:fb321bd9832403cf766e3e9719c2063cee1747a320925d3aecd4f0ce67ca6013'
 	'sha256:957ab13288c26cc4bca3de59e1b6402a2b5c00c776245e3b1a3d3ad25ed32885'
@@ -90,52 +82,40 @@ scripts=(
 )
 
 package() {
-	cd "${srcdir}"
-
+	# Google's download path includes the build ID as well as the version.
 	[[ "${upstream_hub}" == "${version}-"* ]] || {
 		echo "upstream_hub=${upstream_hub} does not start with version=${version}-" >&2
 		return 1
 	}
 
-	# A fresh directory prevents a previous architecture/build from being
-	# selected from leftovers in srcdir. Both official tar layouts are checked.
-	unpack_dir="$(mktemp -d "${srcdir}/antigravity-unpack.XXXXXX")"
-	tar --no-same-owner --no-same-permissions -xzf Antigravity.tar.gz -C "${unpack_dir}" || return 1
+	unpack_dir="$(mktemp -d "${srcdir}/antigravity-unpack.XXXXXX")" || return 1
+	tar --no-same-owner --no-same-permissions -xzf "${srcdir}/Antigravity.tar.gz" -C "${unpack_dir}" || return 1
 	roots=("${unpack_dir}"/*)
 	if [[ "${#roots[@]}" != 1 || ! -d "${roots[0]}" ]]; then
 		echo 'Expected one Antigravity payload directory in the archive' >&2
 		return 1
 	fi
-	payload="${roots[0]}"
-	python3 "${srcdir}/validate-payload.py" "${payload}" "${version}" || return 1
+	python3 "${srcdir}/validate-payload.py" "${roots[0]}" "${version}" || return 1
 
-	install -dm755 "${pkgdir}/opt/antigravity"
-	cp -a "${payload}/." "${pkgdir}/opt/antigravity/"
-	chmod 755 "${pkgdir}/opt/antigravity/antigravity"
-	chmod 4755 "${pkgdir}/opt/antigravity/chrome-sandbox"
+	app_dir="${pkgdir}/opt/antigravity"
+	install -dm755 "${pkgdir}/opt"
+	mv -T "${roots[0]}" "${app_dir}" || return 1
+	chmod 755 "${app_dir}/antigravity"
+	chmod 4755 "${app_dir}/chrome-sandbox"
+	# Stapler manages updates for this installation.
+	rm -f "${app_dir}/resources/app-update.yml"
 
-	# Electron's own auto-updater has nothing to manage under Stapler.
-	rm -f "${pkgdir}/opt/antigravity/resources/app-update.yml"
-
-	install -Dm755 antigravity-launcher "${pkgdir}/usr/bin/antigravity"
-
-	# Electron derives this desktop name from the unmodified productName.
-	# One entry owns the Wayland identity, menu launcher and OAuth protocol.
-	# RPM removes the old com.google.Antigravity.desktop during upgrade.
-	install-desktop antigravity.desktop
-	install -Dm644 com.google.Antigravity.png \
+	# Electron uses the desktop ID for window matching and the OAuth callback.
+	install -Dm755 "${srcdir}/antigravity-launcher" "${pkgdir}/usr/bin/antigravity"
+	install -Dm644 "${srcdir}/antigravity.desktop" "${pkgdir}/usr/share/applications/antigravity.desktop"
+	install -Dm644 "${srcdir}/com.google.Antigravity.png" \
 		"${pkgdir}/usr/share/icons/hicolor/256x256/apps/com.google.Antigravity.png"
-
-	# The AppStream component claims this desktop id; make the build
-	# fail here rather than shipping a component nothing can launch.
-	test -f "${pkgdir}/usr/share/applications/antigravity.desktop"
 	install -Dm644 "${srcdir}/com.google.Antigravity.metainfo.xml" \
 		"${pkgdir}/usr/share/metainfo/com.google.Antigravity.metainfo.xml"
-	install-license LICENSE "antigravity/LICENSE.nivora"
-	install -Dm644 "${pkgdir}/opt/antigravity/LICENSES.chromium.html" \
-		"${pkgdir}/usr/share/licenses/antigravity/LICENSES.chromium.html"
-	install -Dm644 "${pkgdir}/opt/antigravity/LICENSE.electron.txt" \
-		"${pkgdir}/usr/share/licenses/antigravity/LICENSE.electron.txt"
+
+	install-license "${srcdir}/LICENSE" "antigravity/LICENSE.nivora"
+	install-license "${app_dir}/LICENSES.chromium.html" "antigravity/LICENSES.chromium.html"
+	install-license "${app_dir}/LICENSE.electron.txt" "antigravity/LICENSE.electron.txt"
 }
 
 files() {

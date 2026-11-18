@@ -1,27 +1,27 @@
 name='tailscale'
 version='1.104.7'
-release=4
+release=5
+
 summary='Private networking with WireGuard encryption'
 summary_ru='Частная сеть между устройствами с шифрованием WireGuard'
-group='Networking/Other'
 desc='Tailscale connects devices in a private network using WireGuard encryption.'
 desc_ru='Tailscale объединяет устройства в частную сеть с шифрованием WireGuard.'
+group='Networking/Other'
 homepage='https://tailscale.com'
 maintainer='Tailscale Inc <info@tailscale.com>'
+
+license=('BSD-3-Clause')
 
 architectures=('amd64' 'arm64')
 compatible_with=('altlinux_p11')
 disable_network=1
 
-license=('BSD-3-Clause')
-
 provides=()
 replaces=('tailscale')
 conflicts=()
-
 backup=('/etc/default/tailscaled')
 
-auto_reqprov_method="dirty"
+auto_reqprov_method='dirty'
 auto_req=0
 auto_prov=0
 
@@ -29,13 +29,7 @@ deps=('iptables' 'iproute2' 'ca-certificates')
 
 sources=(
 	"https://pkgs.tailscale.com/stable/tailscale_${version}_amd64.tgz?~archive=false&~name=tailscale.tgz"
-	"local:///tailscale-purge-data"
-	'local:///LICENSE?nivora=tailscale'
-)
-
-sources_arm64=(
-	"https://pkgs.tailscale.com/stable/tailscale_${version}_arm64.tgz?~archive=false&~name=tailscale.tgz"
-	"local:///tailscale-purge-data"
+	'local:///tailscale-purge-data'
 	'local:///LICENSE?nivora=tailscale'
 )
 
@@ -43,6 +37,12 @@ checksums=(
 	'sha256:e56693ff74a64f2591b7e819c280635a100aae1ddfb0ef058fcd052b7cd8d16c'
 	'sha256:fc0e166481e2f97c21dca773ad4bfe673842268935ce1628c14b96af98e70555'
 	'sha256:3c7a7d6d7f09890d5e682901acaeb12bda9542fc6450a709c9dc296a91e726a5'
+)
+
+sources_arm64=(
+	"https://pkgs.tailscale.com/stable/tailscale_${version}_arm64.tgz?~archive=false&~name=tailscale.tgz"
+	'local:///tailscale-purge-data'
+	'local:///LICENSE?nivora=tailscale'
 )
 
 checksums_arm64=(
@@ -58,38 +58,28 @@ scripts=(
 )
 
 package() {
-	cd "${srcdir}"
+	payload="tailscale_${version}_${ARCH}"
+	tar --no-same-owner --no-same-permissions -xzf tailscale.tgz "${payload}"
 
-	tar -xzf tailscale.tgz
-	src="$(find "${srcdir}" -maxdepth 1 -type d -name "tailscale_${version}_*" | head -1)"
+	install-binary "${payload}/tailscale"
+	install-binary tailscale-purge-data
+	install -Dm755 "${payload}/tailscaled" "${pkgdir}/usr/sbin/tailscaled"
 
-	install-binary "${src}/tailscale"
-	install-binary "${srcdir}/tailscale-purge-data"
-	install -Dm755 "${src}/tailscaled" "${pkgdir}/usr/sbin/tailscaled"
+	install-systemd "${payload}/systemd/tailscaled.service"
+	install-systemd "${payload}/systemd/tailscale-wait-online.service"
+	install-systemd "${payload}/systemd/tailscale-online.target"
+	install-config "${payload}/systemd/tailscaled.defaults" 'default/tailscaled'
 
-	# Upstream ships three units, not one. tailscale-wait-online.service and
-	# tailscale-online.target are what lets another unit order itself behind a
-	# working Tailscale link (After=tailscale-online.target); without them that
-	# integration is simply unavailable.
-	install-systemd "${src}/systemd/tailscaled.service"
-	install-systemd "${src}/systemd/tailscale-wait-online.service"
-	install-systemd "${src}/systemd/tailscale-online.target"
-	install-config "${src}/systemd/tailscaled.defaults" "default/tailscaled"
-
-	# tailscaled.service declares CacheDirectory=tailscale, so systemd creates
-	# the directory at runtime. The upstream RPM still owns it, which is what
-	# makes removing the package take it away again.
+	# Keep the systemd CacheDirectory owned by the RPM.
 	install -dm755 "${pkgdir}/var/cache/tailscale"
-
-	install-license "${srcdir}/LICENSE" "tailscale/LICENSE.nivora"
+	install-license LICENSE 'tailscale/LICENSE.nivora'
 }
 
 files() {
 	files-find-binary
 	files-find-systemd
 	files-find-license
-	# Stapler matches backup before normalizing paths returned by files().
-	# files-find emits ./etc/..., so use the same canonical path as backup.
+	# Stapler matches backup literally, before normalizing ./etc to /etc.
 	printf '%s\n' '/etc/default/tailscaled'
 	files-find \
 		"/usr/sbin/tailscaled" \

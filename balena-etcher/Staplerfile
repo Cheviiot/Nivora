@@ -1,51 +1,39 @@
 name='balena-etcher'
 version='2.1.9'
-release=4
+release=5
+
 summary='Write OS images to USB drives and SD cards'
 summary_ru='Запись образов систем на USB-накопители и SD-карты'
-group='System/Configuration/Hardware'
 desc='balenaEtcher writes operating system images to USB drives and SD cards and validates the written data.'
 desc_ru='balenaEtcher записывает образы операционных систем на USB-накопители и SD-карты и проверяет записанные данные.'
+group='System/Configuration/Hardware'
 homepage='https://etcher.balena.io/'
 maintainer='Balena Ltd. <hello@balena.io>'
-
-architectures=('amd64')
-compatible_with=('altlinux_p11')
 
 license=('Apache-2.0')
 
 appstream_app_id='balena-etcher'
 appstream_name='balenaEtcher'
 
+architectures=('amd64')
+compatible_with=('altlinux_p11')
+disable_network=1
+
 provides=()
 replaces=('balena-etcher')
 conflicts=()
 
-# auto_req covers the real DT_NEEDED (readelf -d confirmed across the main
-# binary, resources/etcher-util, and the bundled libEGL/libGLESv2/
-# libvk_swiftshader/native-module files: gtk3, nss, at-spi2, gbm, xcb,
-# alsa, atk, cairo, cups, dbus, expat, glib2, nspr, pango, X11 stack,
-# glibc/libstdc++). The rest stays explicit: xdg-utils is a subprocess
-# tool, libnotify/libXtst/libXScrnSaver are dlopen'd by Chromium like the
-# rest of the catalog's Electron packages, and polkit/fontconfig/
-# libfreetype/libgdk-pixbuf/liblzma/libXcursor/libXi/libXrender never show
-# up in any binary's DT_NEEDED either - unlike the confirmed-dlopen'd
-# libraries there's no direct evidence for *why*, so they stay explicit
-# out of caution instead of being dropped on an assumption.
-auto_reqprov_method="dirty"
+auto_reqprov_method='dirty'
 auto_req=1
 auto_prov=0
-disable_network=1
 
+# Etcher uses polkit for disk access. Keep dynamically loaded desktop libraries explicit.
 deps=(
 	'libnotify' 'libXtst' 'xdg-utils' 'fontconfig' 'libfreetype'
 	'libgdk-pixbuf' 'liblzma' 'libXcursor' 'libXi' 'libXrender'
 	'libXScrnSaver' 'polkit'
 )
-
-# ALT's apt-rpm cannot express an alternative in a dependency at all, and
-# opt_deps never reach the built RPM anyway, so each agent is listed on its
-# own line instead of a pseudo-alternative string that nothing can parse.
+# ALT lists desktop-specific polkit agents as individual optional packages.
 opt_deps=(
 	'polkit-gnome'
 	'polkit-kde-agent'
@@ -53,7 +41,6 @@ opt_deps=(
 	'xfce-polkit'
 	'gvfs'
 )
-
 build_deps=('binutils')
 
 sources=(
@@ -61,7 +48,6 @@ sources=(
 	"https://raw.githubusercontent.com/balena-io/etcher/v${version}/LICENSE?~archive=false&~name=LICENSE"
 	'local:///balena-etcher.metainfo.xml?nivora=balena-etcher'
 )
-
 checksums=(
 	'sha256:7e0d0e0986e5d0f3d9c03a4c0004f9891235150e0da99fa0bc332d8c03f1a4c0'
 	'sha256:39445b459f86621683f9731fb6a7d070819dc379840e8ef52f62bb1c68942291'
@@ -74,54 +60,31 @@ scripts=(
 )
 
 package() {
-	cd "${srcdir}"
+	unpack_dir="$(mktemp -d "${srcdir}/etcher-unpack.XXXXXX")" || return 1
+	cd "${unpack_dir}" || return 1
+	ar x "${srcdir}/balena-etcher.deb" || return 1
+	tar -xf data.tar.* || return 1
 
-	mkdir -p "${srcdir}/extracted"
-	ar x balena-etcher.deb
-	tar -xf data.tar.* -C "${srcdir}/extracted"
+	app_dir="${pkgdir}/usr/lib/balena-etcher"
+	install -dm755 "${pkgdir}/usr/lib" "${pkgdir}/usr/bin"
+	mv -T usr/lib/balena-etcher "${app_dir}" || return 1
+	chmod 4755 "${app_dir}/chrome-sandbox"
+	chmod 755 "${app_dir}/balena-etcher" "${app_dir}/resources/etcher-util"
+	# Upstream's balenaEtcher symlink points to its CI workspace.
+	ln -sfn balena-etcher "${app_dir}/balenaEtcher"
+	ln -sfn ../lib/balena-etcher/balena-etcher "${pkgdir}/usr/bin/balena-etcher"
 
-	install -dm755 "${pkgdir}/usr/lib"
-	cp -a "${srcdir}/extracted/usr/lib/balena-etcher" "${pkgdir}/usr/lib/"
-	chmod 4755 "${pkgdir}/usr/lib/balena-etcher/chrome-sandbox"
-	chmod 0755 \
-		"${pkgdir}/usr/lib/balena-etcher/balena-etcher" \
-		"${pkgdir}/usr/lib/balena-etcher/resources/etcher-util"
-
-	# Upstream's own "balenaEtcher" symlink points at a GitHub Actions build
-	# path that doesn't exist on the installed system; keep the name other
-	# tooling might expect, but retarget it to the local binary.
-	ln -sfn balena-etcher "${pkgdir}/usr/lib/balena-etcher/balenaEtcher"
-	install -dm755 "${pkgdir}/usr/bin"
-	ln -sfn ../lib/balena-etcher/balena-etcher \
-		"${pkgdir}/usr/bin/balena-etcher"
-
-	# Upstream's .desktop ships no StartupWMClass at all, but the real
-	# window's WM_CLASS (confirmed with xprop against a real running
-	# instance) is "balenaEtcher" (camelCase), not "balena-etcher" like
-	# Icon= - without this line the desktop shell can't match the running
-	# window back to this .desktop entry, so the taskbar/dock shows no
-	# icon even though the launcher icon works fine.
-	sed -i '/^\[Desktop Entry\]$/a StartupWMClass=balenaEtcher' \
-		"${srcdir}/extracted/usr/share/applications/balena-etcher.desktop"
-	install -Dm644 \
-		"${srcdir}/extracted/usr/share/applications/balena-etcher.desktop" \
-		"${pkgdir}/usr/share/applications/balena-etcher.desktop"
-	install -Dm644 \
-		"${srcdir}/extracted/usr/share/pixmaps/balena-etcher.png" \
-		"${pkgdir}/usr/share/pixmaps/balena-etcher.png"
-
-	# The AppStream component claims this desktop id; make the build
-	# fail here rather than shipping a component nothing can launch.
-	test -f "${pkgdir}/usr/share/applications/balena-etcher.desktop"
+	# Match the case-sensitive WM_CLASS used by the running window.
+	desktop_file="${pkgdir}/usr/share/applications/balena-etcher.desktop"
+	install -Dm644 usr/share/applications/balena-etcher.desktop "${desktop_file}"
+	sed -i '/^\[Desktop Entry\]$/a StartupWMClass=balenaEtcher' "${desktop_file}"
+	install -Dm644 usr/share/pixmaps/balena-etcher.png "${pkgdir}/usr/share/pixmaps/balena-etcher.png"
 	install -Dm644 "${srcdir}/balena-etcher.metainfo.xml" \
 		"${pkgdir}/usr/share/metainfo/balena-etcher.metainfo.xml"
-	install-license LICENSE "balena-etcher/LICENSE"
-	install-license \
-		"${srcdir}/extracted/usr/share/doc/balena-etcher/copyright" \
-		"balena-etcher/copyright"
-	install-license \
-		"${srcdir}/extracted/usr/lib/balena-etcher/LICENSES.chromium.html" \
-		"balena-etcher/LICENSES.chromium.html"
+
+	install-license "${srcdir}/LICENSE" "balena-etcher/LICENSE"
+	install-license "${unpack_dir}/usr/share/doc/balena-etcher/copyright" "balena-etcher/copyright"
+	install-license "${app_dir}/LICENSES.chromium.html" "balena-etcher/LICENSES.chromium.html"
 }
 
 files() {

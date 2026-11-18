@@ -1,49 +1,52 @@
 name='parsec'
 version='150-104a'
-release=16
-# SHA-256 of the final HTTP ETag for the mutable versionless upstream DEB.
+release=17
+# SHA-256 of the final HTTP ETag for the versionless upstream DEB.
 source_fingerprint='1bdf98c2922f6cb3fbab46afd9a5609f6fae2b2136d3b573c6589b83b364ce37'
+
 summary='Low-latency client for remote desktops and games'
 summary_ru='Клиент удалённого рабочего стола и игр с низкой задержкой'
-group='Networking/Remote access'
 desc='Parsec is a client for connecting to remote computers and streaming their desktop or games with low latency.'
 desc_ru='Parsec — клиент для подключения к удалённым компьютерам и трансляции их рабочего стола или игр с низкой задержкой.'
+group='Networking/Remote access'
 homepage='https://parsec.app/downloads'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
+
+license=('LicenseRef-proprietary')
+nonfree=1
+nonfree_msg='Parsec — проприетарное приложение. Условия Unity для Parsec приведены по ссылке ниже.'
+nonfree_url='https://parsec.app/terms'
+
+appstream_app_id='parsecd'
+appstream_name='Parsec'
+appstream_developer='Parsec Cloud, Inc.'
 
 architectures=('amd64')
 compatible_with=('altlinux_p11')
 disable_network=1
 
-license=('LicenseRef-proprietary')
-
-appstream_app_id='parsecd'
-appstream_name='Parsec'
-appstream_developer='Parsec Cloud, Inc.'
-nonfree=1
-nonfree_msg='Parsec — проприетарное приложение. Условия Unity для Parsec приведены по ссылке ниже.'
-nonfree_url='https://parsec.app/terms'
-
 provides=()
 replaces=('parsec')
 conflicts=()
 
-auto_reqprov_method="dirty"
+auto_reqprov_method='dirty'
 auto_req=0
 auto_prov=0
 
-# The supported p11 runtime provides this FFmpeg ABI under libavcodec61.
-deps=('glibc' 'libgcc1' 'libstdc++6' 'libudev0' 'libssl3' 'libX11' 'libXcursor' 'libXi' 'libSM' 'libGL' 'libalsa' 'libjpeg8' 'libpng16' 'libcurl' 'libXrandr' 'libvulkan1' 'libavcodec61')
-
+# ALT p11 ships the FFmpeg ABI used by Parsec in libavcodec61.
+deps=(
+	'glibc' 'libgcc1' 'libstdc++6' 'libudev0' 'libssl3'
+	'libX11' 'libXcursor' 'libXi' 'libSM' 'libGL' 'libalsa'
+	'libjpeg8' 'libpng16' 'libcurl' 'libXrandr' 'libvulkan1' 'libavcodec61'
+)
 build_deps=('binutils')
 
 sources=(
-	"https://builds.parsec.app/package/parsec-linux.deb?~archive=false&~name=parsec.deb"
-	"local:///parsecd-wrapper"
+	'https://builds.parsec.app/package/parsec-linux.deb?~archive=false&~name=parsec.deb'
+	'local:///parsecd-wrapper'
 	'local:///LICENSE?nivora=parsec'
 	'local:///parsecd.metainfo.xml?nivora=parsec'
 )
-
 checksums=(
 	'sha256:c8a4407713d72dcb1c59f082977e81e1b9e8ffd679d0666882cde4c8a0821dd2'
 	'sha256:c3c6f25bac90d87414d38f248f5b94f7cefd468b48d100f669b6ddc52c094a1d'
@@ -57,27 +60,25 @@ scripts=(
 )
 
 package() {
-	cd "${srcdir}"
+	unpack_dir="$(mktemp -d "${srcdir}/parsec.XXXXXX")" || return 1
+	cd "${unpack_dir}" || return 1
+	ar x "${srcdir}/parsec.deb" || return 1
+	tar -xf data.tar.* || return 1
 
-	mkdir -p "${srcdir}/extracted"
-	ar x parsec.deb
-	tar -xf data.tar.* -C "${srcdir}/extracted"
+	install -Dm755 usr/bin/parsecd "${pkgdir}/usr/lib/parsec/parsecd"
+	install -Dm755 "${srcdir}/parsecd-wrapper" "${pkgdir}/usr/bin/parsecd"
+	install -dm755 "${pkgdir}/usr/share"
+	mv usr/share/parsec "${pkgdir}/usr/share/"
 
-	install -Dm755 "${srcdir}/extracted/usr/bin/parsecd" "${pkgdir}/usr/lib/parsec/parsecd"
-	install -Dm755 parsecd-wrapper "${pkgdir}/usr/bin/parsecd"
-	install -Dm644 "${srcdir}/extracted/usr/share/applications/parsecd.desktop" "${pkgdir}/usr/share/applications/parsecd.desktop"
-	sed -i 's/^Categories=.*/Categories=Network;RemoteAccess;/' \
-		"${pkgdir}/usr/share/applications/parsecd.desktop"
-	install -Dm644 "${srcdir}/extracted/usr/share/icons/hicolor/256x256/apps/parsecd.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/parsecd.png"
-
-	mkdir -p "${pkgdir}/usr/share/parsec"
-	cp -a "${srcdir}/extracted/usr/share/parsec/." "${pkgdir}/usr/share/parsec/"
-	# The AppStream component claims this desktop id; make the build
-	# fail here rather than shipping a component nothing can launch.
-	test -f "${pkgdir}/usr/share/applications/parsecd.desktop"
+	desktop_file="${pkgdir}/usr/share/applications/parsecd.desktop"
+	install -Dm644 usr/share/applications/parsecd.desktop "${desktop_file}"
+	sed -i 's/^Categories=.*/Categories=Network;RemoteAccess;/' "${desktop_file}"
+	install -Dm644 usr/share/icons/hicolor/256x256/apps/parsecd.png \
+		"${pkgdir}/usr/share/icons/hicolor/256x256/apps/parsecd.png"
 	install -Dm644 "${srcdir}/parsecd.metainfo.xml" \
 		"${pkgdir}/usr/share/metainfo/parsecd.metainfo.xml"
-	install-license "${srcdir}/LICENSE" "parsec/LICENSE.nivora"
+
+	install-license "${srcdir}/LICENSE" 'parsec/LICENSE.nivora'
 }
 
 files() {

@@ -1,75 +1,60 @@
 name='chatgpt'
 version='26.1111.71025'
-release=3
-# SHA-256 of the final HTTP ETag for each mutable /latest/ source. The
-# autonomous detector compares these even when upstream keeps the version.
+release=4
 source_fingerprint_amd64='f88d561e0a997fd72d602708b0cf6d29b2a6a3ffa6454437980afded2880d78f'
 source_fingerprint_arm64='a4638b15c4cc3980fc295816838aa92a7d8a7a5dd9778ac07be90fc510ddd08d'
+
 summary='ChatGPT desktop app with integrated Codex'
 summary_ru='Настольное приложение ChatGPT со встроенным Codex'
-group='Development/Tools'
 desc='ChatGPT is the official OpenAI desktop application for chat, files, and projects, with integrated Codex for coding tasks.'
 desc_ru='ChatGPT — официальное настольное приложение OpenAI для чата, работы с файлами и проектами, со встроенным Codex для задач разработки.'
+group='Development/Tools'
 homepage='https://learn.chatgpt.com/docs/app'
 maintainer='OpenAI <support@openai.com>'
 
-architectures=('amd64' 'arm64')
-compatible_with=('altlinux_p11')
-
 license=('LicenseRef-proprietary')
-
-appstream_app_id='com.openai.chatgpt'
 nonfree=1
 nonfree_msg='ChatGPT — проприетарное приложение OpenAI. По ссылке указаны условия для личных аккаунтов и приведены ссылки на условия для других регионов и организаций.'
 nonfree_url='https://openai.com/policies/terms-of-use/'
+
+appstream_app_id='com.openai.chatgpt'
+
+architectures=('amd64' 'arm64')
+compatible_with=('altlinux_p11')
+disable_network=1
 
 provides=('codex')
 replaces=('chatgpt' 'codex')
 conflicts=('codex')
 
-auto_reqprov_method="dirty"
+auto_reqprov_method='dirty'
 auto_req=1
 auto_prov=0
-disable_network=1
 
-# auto_req covers the real DT_NEEDED (readelf -d confirmed against the
-# installed ChatGPT binary). The rest stays explicit: xz-utils and the
-# trash-integration alternative are subprocess tools, xdg-utils likewise,
-# and libnotify/libsecret-equivalent/libXtst/libXScrnSaver are dlopen'd by
-# Chromium's Linux integration layer, same pattern as every other Electron
-# package in this catalog. mesa-vulkan-drivers is resolved by the Vulkan
-# ICD loader at runtime, not the dynamic linker. libusb is kept explicit
-# even though device-kit-oai's native addons (node-hid, serialport) do
-# link it directly, since USB device access is easy to silently break and
-# not worth the risk of relying purely on auto_req's soname resolution.
-# bubblewrap даёт /usr/bin/bwrap: встроенный codex строит из него песочницу для
-# команд, которые запускает агент («error building bubblewrap command» без него).
-# Линковщик этого не видит — bwrap вызывается подпроцессом, имена bwrap и
-# bubblewrap лежат в строках /usr/lib/chatgpt/resources/codex.
+# Codex calls bubblewrap. Electron also uses the keyring, desktop, GPU and USB services.
 deps=('libnotify' 'libsecret' 'libXtst' 'libXScrnSaver' 'xdg-utils' 'gvfs' 'mesa-dri-drivers' 'libusb' 'xz' 'bubblewrap')
-
 opt_deps=('git' 'gnome-keyring')
-
 build_deps=('binutils')
 
+# The updater tracks each /latest/ archive by its HTTP ETag fingerprint.
 sources=(
 	"https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_amd64.deb?nivora=${source_fingerprint_amd64}&~archive=false&~name=chatgpt.deb"
 	'local:///com.openai.chatgpt.png'
 	'local:///LICENSE?nivora=chatgpt'
 	'local:///com.openai.chatgpt.metainfo.xml?nivora=chatgpt'
 )
-sources_arm64=(
-	"https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_arm64.deb?nivora=${source_fingerprint_arm64}&~archive=false&~name=chatgpt.deb"
-	'local:///com.openai.chatgpt.png'
-	'local:///LICENSE?nivora=chatgpt'
-	'local:///com.openai.chatgpt.metainfo.xml?nivora=chatgpt'
-)
-
 checksums=(
 	'sha256:8197424cbcea3a7c0d445a544eaa6b99df8b8ef8b1d182e2b743f702753c7a70'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
 	'sha256:6544c190e00521350d272715fd8e5d359cf080f37be089c45c9a76e9c78e4d8b'
 	'sha256:5cb8f6d48aa4668285d2d2645ec34d6b2e54894937cbe8fee329ea36608a71a5'
+)
+
+sources_arm64=(
+	"https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_arm64.deb?nivora=${source_fingerprint_arm64}&~archive=false&~name=chatgpt.deb"
+	'local:///com.openai.chatgpt.png'
+	'local:///LICENSE?nivora=chatgpt'
+	'local:///com.openai.chatgpt.metainfo.xml?nivora=chatgpt'
 )
 checksums_arm64=(
 	'sha256:55d861fb4c8d1b54033e4d4178f344f0b9247352bf80290420f44d15dec4a2ba'
@@ -85,76 +70,39 @@ scripts=(
 )
 
 package() {
-	cd "${srcdir}"
+	unpack_dir="$(mktemp -d "${srcdir}/chatgpt-unpack.XXXXXX")" || return 1
+	cd "${unpack_dir}" || return 1
+	ar x "${srcdir}/chatgpt.deb" || return 1
+	tar -xf data.tar.* || return 1
 
-	mkdir -p "${srcdir}/extracted"
-	ar x chatgpt.deb
-	tar -xf data.tar.* -C "${srcdir}/extracted"
-
-	# Keep the upstream executable path: the shipped AppArmor profile grants
-	# user namespaces specifically to /usr/lib/chatgpt/ChatGPT.
-	install -dm755 "${pkgdir}/usr/lib"
-	cp -a "${srcdir}/extracted/usr/lib/chatgpt" "${pkgdir}/usr/lib/chatgpt"
+	# The upstream AppArmor profile grants user namespaces to this exact executable.
+	grep -Fq '"/usr/lib/chatgpt/ChatGPT"' etc/apparmor.d/chatgpt || return 1
+	install -Dm644 etc/apparmor.d/chatgpt "${pkgdir}/etc/apparmor.d/chatgpt"
+	app_dir="${pkgdir}/usr/lib/chatgpt"
+	install -dm755 "${pkgdir}/usr/lib" "${pkgdir}/usr/bin"
+	mv -T usr/lib/chatgpt "${app_dir}" || return 1
 	chmod 755 \
-		"${pkgdir}/usr/lib/chatgpt/ChatGPT" \
-		"${pkgdir}/usr/lib/chatgpt/codex-launcher" \
-		"${pkgdir}/usr/lib/chatgpt/browser_crashpad_handler"
-
-	# musl-linked native addon variants (node-hid, serialport) are dead
-	# weight on ALT's glibc - Node's own platform detection picks the
-	# glibc build at runtime, but rpm's dependency scanner would otherwise
-	# read their musl-style unversioned libc.so NEEDED entry and turn it
-	# into an unsatisfiable Requires during RPM dependency scanning.
-	find "${pkgdir}/usr/lib/chatgpt" -type f \
-		\( -name '*.musl.node' -o -path '*-musl/*.node' \) -delete
-
-	# libqt5_shim.so/libqt6_shim.so are bundled but referenced nowhere in
-	# the payload (confirmed: no string reference in the main binary, no
-	# hit anywhere under grep -r across the whole extracted tree) - each
-	# links a full Qt5 or Qt6 runtime, which auto_req would otherwise turn
-	# into a hard Requires forcing every user, including plain GTK/GNOME
-	# desktops, to install two entire parallel Qt toolkits for a feature
-	# nothing in this build actually exercises.
-	rm -f \
-		"${pkgdir}/usr/lib/chatgpt/libqt5_shim.so" \
-		"${pkgdir}/usr/lib/chatgpt/libqt6_shim.so"
-
-	install -dm755 "${pkgdir}/usr/bin"
+		"${app_dir}/ChatGPT" \
+		"${app_dir}/codex-launcher" \
+		"${app_dir}/browser_crashpad_handler"
 	ln -sfn /usr/lib/chatgpt/ChatGPT "${pkgdir}/usr/bin/chatgpt"
 
-	# Upstream's .desktop ships no StartupWMClass at all, but the real
-	# window's WM_CLASS (confirmed with xprop against a real running
-	# instance) is "Chatgpt", not "chatgpt" like Icon= - without this line
-	# the desktop shell can't match the running window back to this
-	# .desktop entry, so the taskbar/dock shows no icon even though the
-	# launcher icon works fine.
+	# The p11 glibc runtime cannot load musl addons. Unused Qt shims pull both Qt runtimes into the RPM.
+	find "${app_dir}" -type f \( -name '*.musl.node' -o -path '*-musl/*.node' \) -delete
+	rm -f "${app_dir}/libqt5_shim.so" "${app_dir}/libqt6_shim.so"
+
+	desktop_file="${pkgdir}/usr/share/applications/chatgpt.desktop"
+	install -Dm644 usr/share/applications/chatgpt.desktop "${desktop_file}"
 	sed -i \
 		-e '/^\[Desktop Entry\]$/a StartupWMClass=Chatgpt' \
 		-e '0,/^Exec=/{s|^Exec=.*|Exec=/usr/bin/chatgpt %U|}' \
-		"${srcdir}/extracted/usr/share/applications/chatgpt.desktop"
-	install-desktop "${srcdir}/extracted/usr/share/applications/chatgpt.desktop"
-
-	install -Dm644 com.openai.chatgpt.png "${pkgdir}/usr/share/pixmaps/chatgpt.png"
-
-	# Ships its own AppArmor profile granting unprivileged userns instead of
-	# a setuid chrome-sandbox helper (there isn't one in this build). Fail the
-	# build if upstream changes the profile path without the recipe following it.
-	grep -Fq '"/usr/lib/chatgpt/ChatGPT"' \
-		"${srcdir}/extracted/etc/apparmor.d/chatgpt"
-	install -Dm644 "${srcdir}/extracted/etc/apparmor.d/chatgpt" \
-		"${pkgdir}/etc/apparmor.d/chatgpt"
-
-	# The AppStream component claims this desktop id; make the build
-	# fail here rather than shipping a component nothing can launch.
-	test -f "${pkgdir}/usr/share/applications/chatgpt.desktop"
-	# Install the same curated, localized document that Stapler exposes to
-	# GNOME Software; preserve the upstream component and desktop identities.
-	install -Dm644 \
-		"${srcdir}/com.openai.chatgpt.metainfo.xml" \
+		"${desktop_file}"
+	install -Dm644 "${srcdir}/com.openai.chatgpt.png" "${pkgdir}/usr/share/pixmaps/chatgpt.png"
+	install -Dm644 "${srcdir}/com.openai.chatgpt.metainfo.xml" \
 		"${pkgdir}/usr/share/metainfo/com.openai.chatgpt.metainfo.xml"
-	install-license LICENSE "chatgpt/LICENSE.nivora"
-	install -Dm644 "${srcdir}/extracted/usr/lib/chatgpt/LICENSES.chromium.html" \
-		"${pkgdir}/usr/share/licenses/chatgpt/LICENSES.chromium.html"
+
+	install-license "${srcdir}/LICENSE" "chatgpt/LICENSE.nivora"
+	install-license "${app_dir}/LICENSES.chromium.html" "chatgpt/LICENSES.chromium.html"
 }
 
 files() {

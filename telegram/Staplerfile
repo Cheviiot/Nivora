@@ -1,17 +1,14 @@
 name='telegram'
 version='7.4.4'
-release=4
+release=5
+
 summary='Desktop messaging with chat synchronization'
 summary_ru='Настольный мессенджер с синхронизацией переписки'
-group='Networking/Instant messaging'
 desc='Telegram Desktop is the official desktop messaging application for Telegram, with chats synchronized across devices.'
 desc_ru='Telegram Desktop — официальное настольное приложение Telegram с синхронизацией переписки между устройствами.'
+group='Networking/Instant messaging'
 homepage='https://desktop.telegram.org/'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
-
-architectures=('amd64')
-compatible_with=('altlinux_p11')
-disable_network=1
 
 license=('GPL-3.0-only')
 
@@ -22,26 +19,29 @@ appstream_screenshot='https://raw.githubusercontent.com/telegramdesktop/tdesktop
 appstream_screenshot_caption='Chats and a group conversation'
 appstream_screenshot_caption_ru='Список чатов и групповая переписка'
 
+architectures=('amd64')
+compatible_with=('altlinux_p11')
+disable_network=1
+
 provides=('telegram-desktop')
 replaces=('telegram' 'telegram-desktop')
 conflicts=('telegram-desktop')
 
-# auto_req covers the real DT_NEEDED of the Telegram binary (readelf -d
-# confirmed: glibc, glib2/gobject/gio, libfontconfig1, libfreetype - a much
-# shorter list than the old explicit one, since harfbuzz/libpng/pcre2/
-# brotli/bz2/blkid/mount/selinux/ffi/expat/graphite2/zlib/X11 never show
-# up directly, only (presumably) transitively via fontconfig/freetype/
-# glib2's own dependency chains, or dlopen'd for optional Wayland/X11
-# backend selection in X11's case. No direct evidence either way for any
-# of them, so they stay explicit out of caution. icon-theme-hicolor is
-# pure data, not a library, and stays explicit too.
+# ELF scanning covers linked libraries. Keep the p11 graphics dependencies explicit.
 auto_reqprov_method='dirty'
 auto_req=1
 auto_prov=0
 
-deps=('libharfbuzz' 'libpng16' 'libpcre2' 'libbrotlicommon' 'libbrotlidec' 'bzlib' 'libblkid' 'libmount' 'libselinux' 'libffi8' 'libexpat' 'libgraphite2' 'zlib' 'libX11' 'icon-theme-hicolor')
+deps=(
+	'libharfbuzz' 'libpng16' 'libpcre2' 'libbrotlicommon' 'libbrotlidec'
+	'bzlib' 'libblkid' 'libmount' 'libselinux' 'libffi8'
+	'libexpat' 'libgraphite2' 'zlib' 'libX11' 'icon-theme-hicolor'
+)
 
-opt_deps=('xdg-utils' 'libappindicator-gtk3' 'ca-certificates' 'libalsa' 'libGL' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk' 'pipewire')
+opt_deps=(
+	'xdg-utils' 'libappindicator-gtk3' 'ca-certificates' 'libalsa'
+	'libGL' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk' 'pipewire'
+)
 
 sources=(
 	"https://github.com/telegramdesktop/tdesktop/releases/download/v${version}/td-setup-linux-x64-${version}.tar.xz?~archive=false&~name=tsetup.tar.xz"
@@ -65,38 +65,23 @@ scripts=(
 )
 
 package() {
-	cd "${srcdir}"
+	executable='/opt/telegram-desktop/Telegram'
+	install -dm755 "${pkgdir}/opt/telegram-desktop" "${pkgdir}/usr/bin"
+	tar -xJOf tsetup.tar.xz Telegram/Telegram > "${pkgdir}${executable}"
+	chmod 0755 "${pkgdir}${executable}"
+	ln -sfn "${executable}" "${pkgdir}/usr/bin/telegram-desktop"
 
-	tar --no-same-owner --no-same-permissions -xJf tsetup.tar.xz
-
-	install -dm755 "${pkgdir}/opt/telegram-desktop"
-	install -Dm755 "Telegram/Telegram" "${pkgdir}/opt/telegram-desktop/Telegram"
-
-	install -dm755 "${pkgdir}/usr/bin"
-	ln -sfn /opt/telegram-desktop/Telegram "${pkgdir}/usr/bin/telegram-desktop"
-
-	# Telegram's Launcher::ComputeExternalUpdater() (SourceFiles/core/
-	# launcher.cpp) looks for a file under <exe-dir>/externalupdater.d/ listing
-	# its own binary path, and calls SetUpdaterDisabledAtStartup() if found —
-	# the documented way for packagers to opt out of self-updates. It also
-	# stops Telegram writing a shadow desktop/D-Bus file on launch and pins
-	# desktopFileName() (the Wayland app_id) to "org.telegram.desktop" instead
-	# of a per-install-path hash, which is what was breaking the taskbar icon.
-	install -Dm644 /dev/stdin \
-		"${pkgdir}/opt/telegram-desktop/externalupdater.d/nivora" <<'EOF'
-/opt/telegram-desktop/Telegram
-EOF
+	# Register the packaged executable with Telegram's external updater interface.
+	# This also keeps its Wayland app ID aligned with our desktop entry.
+	install -Dm644 /dev/stdin "${pkgdir}/opt/telegram-desktop/externalupdater.d/nivora" <<< "${executable}"
 
 	install-desktop org.telegram.desktop.desktop
+	test -f "${pkgdir}/usr/share/applications/org.telegram.desktop.desktop"
 	install -Dm644 org.telegram.desktop.png \
 		"${pkgdir}/usr/share/icons/hicolor/256x256/apps/org.telegram.desktop.png"
-
-	# The AppStream component claims this desktop id; make the build
-	# fail here rather than shipping a component nothing can launch.
-	test -f "${pkgdir}/usr/share/applications/org.telegram.desktop.desktop"
-	install -Dm644 "${srcdir}/org.telegram.desktop.metainfo.xml" \
+	install -Dm644 org.telegram.desktop.metainfo.xml \
 		"${pkgdir}/usr/share/metainfo/org.telegram.desktop.metainfo.xml"
-	install-license LICENSE "telegram/LICENSE.nivora"
+	install-license LICENSE 'telegram/LICENSE.nivora'
 }
 
 files() {

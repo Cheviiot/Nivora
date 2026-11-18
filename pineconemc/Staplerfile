@@ -1,40 +1,34 @@
 name='pineconemc'
 version='11.1.2'
-release=4
+release=5
+
 summary='Minecraft launcher based on Prism Launcher'
 summary_ru='Лаунчер Minecraft на основе Prism Launcher'
-group='Games/Other'
 desc='PineconeMC is a Minecraft launcher based on Prism Launcher with support for mods, modpacks, and Ely.by accounts.'
 desc_ru='PineconeMC — лаунчер Minecraft на основе Prism Launcher с поддержкой модов, модпаков и учётных записей Ely.by.'
+group='Games/Other'
 homepage='https://elyprismlauncher.github.io/'
 maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
+
+license=('GPL-3.0-only')
+
+appstream_app_id='io.github.elyprismlauncher.ElyPrismLauncher'
+appstream_name='PineconeMC'
+appstream_developer='ElyPrismLauncher'
 
 architectures=('amd64' 'arm64')
 compatible_with=('altlinux_p11')
 disable_network=1
 
-license=('GPL-3.0-only')
-
 provides=()
 replaces=('pineconemc')
 conflicts=()
 
-# PineconeMC's own binary (opt/pineconemc/shared/bin/elyprismlauncher — the
-# statically-linked file at opt/pineconemc/bin/elyprismlauncher is just a
-# "sharun"-style bootstrap loader with no dynamic deps of its own, see
-# maintenance.md) is Qt6, not GTK3: readelf -d confirmed it and its bundled
-# Qt XCB platform plugin need Qt6/X11/GL/zlib, none of which overlap with
-# most of the old explicit list. libgtk+3/libICE/libnss/libSM/libdbus/
-# libdrm never show up anywhere in the payload's DT_NEEDED — this recipe's
-# deps_* arrays look like they were copied from one of the catalog's GTK3
-# Electron packages rather than researched for this Qt6 app. auto_req
-# replaces the whole guess with what's actually linked; ca-certificates
-# (data) and xdg-utils (subprocess) are the only genuinely non-ELF items
-# left to keep explicit.
 auto_reqprov_method='dirty'
 auto_req=1
 auto_prov=0
 
+# The Qt plugin libraries are detected from ELF. These tools and data are loaded at runtime.
 deps=('ca-certificates' 'xdg-utils')
 
 sources=(
@@ -42,19 +36,17 @@ sources=(
 	'local:///LICENSE?nivora=pineconemc'
 	'local:///io.github.elyprismlauncher.ElyPrismLauncher.metainfo.xml?nivora=pineconemc'
 )
-
-sources_arm64=(
-	"https://github.com/ElyPrismLauncher/Launcher/releases/download/${version}/PineconeMC-Linux-aarch64-Qt6-Portable-${version}.tar.gz?~archive=false&~name=pineconemc.tar.gz"
-	'local:///LICENSE?nivora=pineconemc'
-	'local:///io.github.elyprismlauncher.ElyPrismLauncher.metainfo.xml?nivora=pineconemc'
-)
-
 checksums=(
 	'sha256:72ebc0b4409527ddd1924c599f7b1d9e7e2c5bcae82c4e964b4b96884512bfde'
 	'sha256:e9741bcf631e9fe2a1b9c244e3bed9f07bebff6e7320b86a9152533ee941af7e'
 	'sha256:8141cb3544152ef285bbf0c334b3a55c66a18b7ccd1d3230178d665947907722'
 )
 
+sources_arm64=(
+	"https://github.com/ElyPrismLauncher/Launcher/releases/download/${version}/PineconeMC-Linux-aarch64-Qt6-Portable-${version}.tar.gz?~archive=false&~name=pineconemc.tar.gz"
+	'local:///LICENSE?nivora=pineconemc'
+	'local:///io.github.elyprismlauncher.ElyPrismLauncher.metainfo.xml?nivora=pineconemc'
+)
 checksums_arm64=(
 	'sha256:e09470029dd1dc40dfdd84dfec0fab41b0ab755f2529cb0f370333065d9cd462'
 	'sha256:e9741bcf631e9fe2a1b9c244e3bed9f07bebff6e7320b86a9152533ee941af7e'
@@ -66,44 +58,31 @@ scripts=(
 	['postremove']='postremove.sh'
 )
 
-appstream_app_id='io.github.elyprismlauncher.ElyPrismLauncher'
-appstream_name='PineconeMC'
-appstream_developer='ElyPrismLauncher'
-
 package() {
-	cd "${srcdir}"
+	payload="${pkgdir}/opt/pineconemc"
+	install -dm755 "${payload}" "${pkgdir}/usr/bin"
+	tar --no-same-owner --no-same-permissions -xzf "${srcdir}/pineconemc.tar.gz" -C "${payload}" || return 1
 
-	mkdir -p "${pkgdir}/opt/pineconemc"
-	tar --no-same-owner --no-same-permissions -xzf pineconemc.tar.gz -C "${pkgdir}/opt/pineconemc"
-	rm -f "${pkgdir}/opt/pineconemc/portable.txt"
-
-	chmod 755 "${pkgdir}/opt/pineconemc/bin/elyprismlauncher"
-	# Upstream enables its updater solely when this helper exists. A failing
-	# replacement still triggers background checks and user-visible errors, so
-	# packaged installs remove the helper altogether and upgrades stay with Stapler.
-	rm -f "${pkgdir}/opt/pineconemc/bin/elyprismlauncher_updater"
-
-	mkdir -p "${pkgdir}/usr/bin"
+	# The portable flag redirects user data into /opt. The helper enables upstream updates.
+	rm -f "${payload}/portable.txt" "${payload}/bin/elyprismlauncher_updater"
+	chmod 755 "${payload}/bin/elyprismlauncher"
 	ln -sf /opt/pineconemc/bin/elyprismlauncher "${pkgdir}/usr/bin/elyprismlauncher"
 	ln -sf /opt/pineconemc/bin/elyprismlauncher "${pkgdir}/usr/bin/pineconemc"
 
-	install -Dm644 "${pkgdir}/opt/pineconemc/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop" \
-		"${pkgdir}/usr/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop"
-	sed -i 's/^Categories=.*/Categories=Game;/' \
-		"${pkgdir}/usr/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop"
-	# The portable archive retains Prism Launcher's descriptions and links.
-	# Install the same verified PineconeMC metadata used by the catalog and
-	# remove the inherited copy from the bundled /opt tree.
-	install -Dm644 "${srcdir}/io.github.elyprismlauncher.ElyPrismLauncher.metainfo.xml" \
-		"${pkgdir}/usr/share/metainfo/io.github.elyprismlauncher.ElyPrismLauncher.metainfo.xml"
-	rm -f "${pkgdir}/opt/pineconemc/share/metainfo/io.github.elyprismlauncher.ElyPrismLauncher.metainfo.xml"
-	install -Dm644 "${pkgdir}/opt/pineconemc/share/mime/packages/io.github.elyprismlauncher.ElyPrismLauncher.xml" \
-		"${pkgdir}/usr/share/mime/packages/io.github.elyprismlauncher.ElyPrismLauncher.xml"
-	install -Dm644 "${pkgdir}/opt/pineconemc/share/man/man6/elyprismlauncher.6" \
+	desktop_file="${pkgdir}/usr/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop"
+	install -Dm644 "${payload}/share/applications/${appstream_app_id}.desktop" "${desktop_file}"
+	sed -i 's/^Categories=.*/Categories=Game;/' "${desktop_file}"
+	cp -a "${payload}/share/icons" "${pkgdir}/usr/share/icons"
+	install -Dm644 "${payload}/share/mime/packages/${appstream_app_id}.xml" \
+		"${pkgdir}/usr/share/mime/packages/${appstream_app_id}.xml"
+	install -Dm644 "${payload}/share/man/man6/elyprismlauncher.6" \
 		"${pkgdir}/usr/share/man/man6/elyprismlauncher.6"
 
-	cp -a "${pkgdir}/opt/pineconemc/share/icons" "${pkgdir}/usr/share/icons"
-	install-license "${srcdir}/LICENSE" "pineconemc/LICENSE.nivora"
+	# The portable archive still describes Prism Launcher. Ship the PineconeMC catalog entry.
+	rm -f "${payload}/share/metainfo/${appstream_app_id}.metainfo.xml"
+	install -Dm644 "${srcdir}/${appstream_app_id}.metainfo.xml" \
+		"${pkgdir}/usr/share/metainfo/io.github.elyprismlauncher.ElyPrismLauncher.metainfo.xml"
+	install-license "${srcdir}/LICENSE" 'pineconemc/LICENSE.nivora'
 }
 
 files() {

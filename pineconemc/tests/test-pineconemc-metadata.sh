@@ -19,7 +19,8 @@ mkdir -p "${archive_root}/bin" \
     "${archive_root}/share/icons/hicolor/scalable/apps" "$srcdir" "$pkgdir"
 
 printf '#!/bin/sh\nexit 0\n' >"${archive_root}/bin/elyprismlauncher"
-touch "${archive_root}/bin/elyprismlauncher_updater" "${archive_root}/portable.txt"
+install -m755 "${archive_root}/bin/elyprismlauncher" "${archive_root}/bin/elyprismlauncher_updater"
+touch "${archive_root}/portable.txt"
 cat >"${archive_root}/share/applications/${component_id}.desktop" <<'EOF'
 [Desktop Entry]
 Type=Application
@@ -74,6 +75,15 @@ install-license() {
 }
 package
 
+# Both aliases must launch the bundled binary, with upgrades owned by Stapler.
+test -x "${pkgdir}/opt/pineconemc/bin/elyprismlauncher"
+for path in portable.txt bin/elyprismlauncher_updater; do
+    [[ ! -e "${pkgdir}/opt/pineconemc/${path}" && ! -L "${pkgdir}/opt/pineconemc/${path}" ]]
+done
+for command in elyprismlauncher pineconemc; do
+    [[ "$(readlink "${pkgdir}/usr/bin/${command}")" == /opt/pineconemc/bin/elyprismlauncher ]]
+done
+
 python3 - "$package_dir" "$pkgdir" <<'PY'
 import sys
 import xml.etree.ElementTree as ET
@@ -114,4 +124,4 @@ assert "Categories=Game;\n" in desktop
 assert (payload / "usr/share/icons/hicolor/scalable/apps" / f"{component_id}.svg").is_file()
 PY
 
-echo 'OK: PineconeMC metadata sources cover both architectures and replace inherited Prism identity'
+echo 'OK: PineconeMC ships its catalog identity, launcher aliases and no portable updater'

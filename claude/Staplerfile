@@ -1,63 +1,46 @@
 name='claude'
 version='5.11492.5'
-release=4
+release=5
+
 summary='Claude desktop app with Chat, Cowork, and Claude Code'
 summary_ru='Настольное приложение Claude с чатом, Cowork и Claude Code'
-group='Development/Tools'
 desc='Claude is the official Anthropic desktop application for chat, Cowork tasks, and software development with Claude Code.'
 desc_ru='Claude — официальное настольное приложение Anthropic для чата, задач Cowork и разработки с Claude Code.'
+group='Development/Tools'
 homepage='https://code.claude.com/docs/en/desktop-linux'
 maintainer='Anthropic PBC <support@anthropic.com>'
 
-architectures=('amd64' 'arm64')
-compatible_with=('altlinux_p11')
-
 license=('LicenseRef-proprietary')
-
-appstream_app_id='com.anthropic.Claude'
-appstream_name='Claude'
 nonfree=1
 nonfree_msg='Claude Desktop — проприетарное приложение Anthropic. Для личного аккаунта действуют потребительские условия Anthropic. В документе также указаны условия для коммерческих продуктов.'
 nonfree_url='https://www.anthropic.com/legal/consumer-terms'
+
+appstream_app_id='com.anthropic.Claude'
+appstream_name='Claude'
+
+architectures=('amd64' 'arm64')
+compatible_with=('altlinux_p11')
+disable_network=1
 
 provides=()
 replaces=('claude' 'claude-desktop')
 conflicts=()
 
-auto_reqprov_method="dirty"
+auto_reqprov_method='dirty'
 auto_req=1
 auto_prov=0
-disable_network=1
 
-# auto_req covers everything readelf -d confirms as real DT_NEEDED of the
-# installed claude-desktop binary (gtk3, nss, at-spi2, gbm, xcb, glibc, ...).
-# The rest stays explicit because it never shows up in that scan: xdg-utils
-# and xdg-desktop-portal(-gtk) are a subprocess tool and a D-Bus portal
-# service, not linked libraries; libnotify/libsecret/libXtst/libuuid are
-# all loaded by Chromium's Linux integration layer via dlopen() rather than
-# linked, so the app runs without them but loses notifications, keyring
-# integration and global input handling - keep them hard deps for the real
-# functionality, not the silently degraded fallback.
+# Chromium loads these libraries dynamically and uses the desktop portals over D-Bus.
 deps=('libnotify' 'xdg-utils' 'libsecret' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
-
 opt_deps=('libalsa' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'qemu-system-x86' 'virtiofsd')
-
 build_deps=('binutils' 'python3')
 
 sources=(
 	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_amd64.deb?~archive=false&~name=claude-desktop.deb"
-	"local:///claude-tray-orange.png"
+	'local:///claude-tray-orange.png'
 	'local:///LICENSE?nivora=claude'
 	'local:///com.anthropic.Claude.metainfo.xml?nivora=claude'
 )
-
-sources_arm64=(
-	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_arm64.deb?~archive=false&~name=claude-desktop.deb"
-	"local:///claude-tray-orange.png"
-	'local:///LICENSE?nivora=claude'
-	'local:///com.anthropic.Claude.metainfo.xml?nivora=claude'
-)
-
 checksums=(
 	'sha256:b96208b207e450b740f7dbe304f6077fed80e7f3d37ddd545991c4e8201564cf'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
@@ -65,6 +48,12 @@ checksums=(
 	'sha256:86cafacaf7f5df2b5efa46b18aa43e62581ee315b162f7a526703e0203645980'
 )
 
+sources_arm64=(
+	"https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_${version}_arm64.deb?~archive=false&~name=claude-desktop.deb"
+	'local:///claude-tray-orange.png'
+	'local:///LICENSE?nivora=claude'
+	'local:///com.anthropic.Claude.metainfo.xml?nivora=claude'
+)
 checksums_arm64=(
 	'sha256:fe6cd8a70f96b96eb4e6b647300cfaee6aaff4ce133a0fbbe11c2cdb775f5a6a'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
@@ -78,59 +67,40 @@ scripts=(
 )
 
 package() {
-	cd "${srcdir}"
+	unpack_dir="$(mktemp -d "${srcdir}/claude-unpack.XXXXXX")" || return 1
+	cd "${unpack_dir}" || return 1
+	ar x "${srcdir}/claude-desktop.deb" || return 1
+	tar -xf data.tar.* || return 1
 
-	mkdir -p "${srcdir}/extracted"
-	ar x claude-desktop.deb
-	tar -xf data.tar.* -C "${srcdir}/extracted"
-
-	install -dm755 "${pkgdir}/usr/lib"
-	cp -a "${srcdir}/extracted/usr/lib/claude-desktop" "${pkgdir}/usr/lib/"
-	chmod 4755 "${pkgdir}/usr/lib/claude-desktop/chrome-sandbox"
+	app_dir="${pkgdir}/usr/lib/claude-desktop"
+	install -dm755 "${pkgdir}/usr/lib" "${pkgdir}/usr/bin"
+	mv -T usr/lib/claude-desktop "${app_dir}" || return 1
+	chmod 4755 "${app_dir}/chrome-sandbox"
 	chmod 755 \
-		"${pkgdir}/usr/lib/claude-desktop/claude-desktop" \
-		"${pkgdir}/usr/lib/claude-desktop/resources/chrome-native-host" \
-		"${pkgdir}/usr/lib/claude-desktop/resources/cowork-linux-helper" \
-		"${pkgdir}/usr/lib/claude-desktop/resources/virtiofsd"
-
-	# Keeps Claude's own tray glyph shape, only recolors it.
+		"${app_dir}/claude-desktop" \
+		"${app_dir}/resources/chrome-native-host" \
+		"${app_dir}/resources/cowork-linux-helper" \
+		"${app_dir}/resources/virtiofsd"
+	ln -sfn /usr/lib/claude-desktop/claude-desktop "${pkgdir}/usr/bin/claude-desktop"
 	for icon_name in TrayIconLinux.png TrayIconLinux-Dark.png; do
-		install -Dm644 "${srcdir}/claude-tray-orange.png" \
-			"${pkgdir}/usr/lib/claude-desktop/resources/${icon_name}"
+		install -Dm644 "${srcdir}/claude-tray-orange.png" "${app_dir}/resources/${icon_name}"
 	done
 
 	install -dm755 "${pkgdir}/usr/share"
-	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"
-	cp -a "${srcdir}/extracted/usr/share/icons" "${pkgdir}/usr/share/"
-
-	desktop_file="$(find "${pkgdir}/usr/share/applications" -maxdepth 1 -type f -name "*.desktop" | head -1)"
-	[[ -n "${desktop_file}" ]] || {
-		echo "Claude desktop file not found" >&2
-		return 1
-	}
+	cp -a usr/share/applications usr/share/icons "${pkgdir}/usr/share/"
 	sed -i \
 		-e '0,/^Name=/{s/^Name=.*/Name=Claude\nName[ru]=Claude/}' \
 		-e 's/^Categories=.*/Categories=Development;/' \
-		"${desktop_file}"
-
-	install -dm755 "${pkgdir}/usr/bin"
-	ln -sfn /usr/lib/claude-desktop/claude-desktop "${pkgdir}/usr/bin/claude-desktop"
-
-	install -dm755 "${pkgdir}/usr/share/licenses/claude"
-	# The AppStream component claims this desktop id; make the build
-	# fail here rather than shipping a component nothing can launch.
-	test -f "${pkgdir}/usr/share/applications/com.anthropic.Claude.desktop"
+		"${pkgdir}/usr/share/applications/com.anthropic.Claude.desktop" || return 1
 	install -Dm644 "${srcdir}/com.anthropic.Claude.metainfo.xml" \
 		"${pkgdir}/usr/share/metainfo/com.anthropic.Claude.metainfo.xml"
+
 	install-license "${srcdir}/LICENSE" "claude/LICENSE.nivora"
-	install -Dm644 "${srcdir}/extracted/usr/share/doc/claude-desktop/copyright" \
-		"${pkgdir}/usr/share/licenses/claude/copyright"
-	install -Dm644 "${srcdir}/extracted/usr/lib/claude-desktop/LICENSES.chromium.html" \
-		"${pkgdir}/usr/share/licenses/claude/LICENSES.chromium.html"
-	install -Dm644 "${srcdir}/extracted/usr/lib/claude-desktop/resources/virtiofsd.LICENSE-APACHE" \
-		"${pkgdir}/usr/share/licenses/claude/virtiofsd.LICENSE-APACHE"
-	install -Dm644 "${srcdir}/extracted/usr/lib/claude-desktop/resources/virtiofsd.LICENSE-BSD-3-Clause" \
-		"${pkgdir}/usr/share/licenses/claude/virtiofsd.LICENSE-BSD-3-Clause"
+	install-license "${unpack_dir}/usr/share/doc/claude-desktop/copyright" "claude/copyright"
+	install-license "${app_dir}/LICENSES.chromium.html" "claude/LICENSES.chromium.html"
+	for license_file in virtiofsd.LICENSE-APACHE virtiofsd.LICENSE-BSD-3-Clause; do
+		install-license "${app_dir}/resources/${license_file}" "claude/${license_file}"
+	done
 }
 
 files() {

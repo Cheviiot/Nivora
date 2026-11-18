@@ -1,49 +1,38 @@
 name='yandex-music'
 version='5.127.0'
-release=4
+release=5
+
 summary='Music with personalized recommendations'
 summary_ru='Музыка с персональными рекомендациями'
-group='Sound'
 desc='Yandex Music is a desktop music streaming application with personalized recommendations and My Vibe. Listening requires Yandex Plus or another subscription that includes it.'
 desc_ru='Яндекс Музыка — настольное приложение для прослушивания музыки с персональными рекомендациями и «Моей волной». Для прослушивания нужна подписка Яндекс Плюс или другая подписка, которая его включает.'
+group='Sound'
 homepage='https://music.yandex.ru/download/'
 maintainer='Яндекс Музыка <music@support.yandex.ru>'
 
-architectures=('amd64')
-compatible_with=('altlinux_p11')
-
 license=('LicenseRef-proprietary')
-
-appstream_app_id='yandexmusic'
-appstream_name='Яндекс Музыка'
 nonfree=1
 nonfree_msg='Яндекс Музыка — проприетарное приложение. Ссылка ведёт на лицензионное соглашение со страницы загрузки Яндекс Музыки.'
 nonfree_url='https://yandex.ru/legal/music_mobile_agreement/'
+
+appstream_app_id='yandexmusic'
+appstream_name='Яндекс Музыка'
+
+architectures=('amd64')
+compatible_with=('altlinux_p11')
+disable_network=1
 
 provides=()
 replaces=('yandex-music')
 conflicts=()
 
-# ALT's own /usr/lib/rpm/find-requires would also emit set-version requires
-# for the bundled Electron libraries, which only resolve if the package also
-# advertises them through find-provides. The dirty finder instead subtracts
-# every SONAME the payload ships itself, which is the one combination that
-# keeps auto_prov disabled and still yields correct requires.
-auto_reqprov_method="dirty"
+auto_reqprov_method='dirty'
 auto_req=1
 auto_prov=0
-disable_network=1
 
-# Starts with upstream's DEB Depends and includes every direct DT_NEEDED
-# observed in the packaged Electron binary. The extra desktop-integration
-# libraries are loaded dynamically and therefore cannot be inferred from ELF.
-deps=(
-	'libnotify' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libuuid'
-	'libsecret'
-)
-
+# Electron loads these at runtime or starts them as subprocesses.
+deps=('libnotify' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libuuid' 'libsecret')
 opt_deps=('libappindicator-gtk3')
-
 build_deps=('binutils')
 
 sources=(
@@ -51,7 +40,6 @@ sources=(
 	'local:///LICENSE?nivora=yandex-music'
 	'local:///yandexmusic.metainfo.xml?nivora=yandex-music'
 )
-
 checksums=(
 	'sha256:5e7fc1ea18c4fa28c649fe39df2c3a6affad4d1bf005014381569acc238e557b'
 	'sha256:487360caa13863693763b1323906fbc835ffcf6bad90318191133e0fcab19883'
@@ -64,39 +52,29 @@ scripts=(
 )
 
 package() {
-	cd "${srcdir}"
+	unpack_dir="$(mktemp -d "${srcdir}/yandex-music.XXXXXX")" || return 1
+	cd "${unpack_dir}" || return 1
+	ar x "${srcdir}/yandex-music.deb" || return 1
+	tar -xf data.tar.* || return 1
 
-	mkdir -p "${srcdir}/extracted"
-	ar x yandex-music.deb
-	tar -xf data.tar.* -C "${srcdir}/extracted"
+	payload="${pkgdir}/opt/YandexMusic"
+	install -dm755 "${pkgdir}/opt" "${pkgdir}/usr/bin" "${pkgdir}/usr/share"
+	mv -T 'opt/Яндекс Музыка' "${payload}"
+	chmod 4755 "${payload}/chrome-sandbox"
+	chmod 755 "${payload}/yandexmusic"
+	# Stapler manages the installed version.
+	rm -f "${payload}/resources/app-update.yml"
+	ln -sfn /opt/YandexMusic/yandexmusic "${pkgdir}/usr/bin/yandex-music"
 
-	install -dm755 "${pkgdir}/opt"
-	cp -a "${srcdir}/extracted/opt/Яндекс Музыка" "${pkgdir}/opt/YandexMusic"
-	chmod 4755 "${pkgdir}/opt/YandexMusic/chrome-sandbox"
-	chmod 755 "${pkgdir}/opt/YandexMusic/yandexmusic"
-
-	# Electron's own auto-updater has nothing to manage under Stapler.
-	rm -f "${pkgdir}/opt/YandexMusic/resources/app-update.yml"
-
-	install -dm755 "${pkgdir}/usr/bin"
-	ln -sfn "/opt/YandexMusic/yandexmusic" "${pkgdir}/usr/bin/yandex-music"
-
-	install -dm755 "${pkgdir}/usr/share"
-	cp -a "${srcdir}/extracted/usr/share/applications" "${pkgdir}/usr/share/"
-	cp -a "${srcdir}/extracted/usr/share/icons" "${pkgdir}/usr/share/"
+	mv usr/share/applications usr/share/icons "${pkgdir}/usr/share/"
 	sed -i 's|Exec="/opt/Яндекс Музыка/yandexmusic" %U|Exec=/usr/bin/yandex-music %U|' \
 		"${pkgdir}/usr/share/applications/yandexmusic.desktop"
-
-	# The AppStream component claims this desktop id; make the build
-	# fail here rather than shipping a component nothing can launch.
-	test -f "${pkgdir}/usr/share/applications/yandexmusic.desktop"
 	install -Dm644 "${srcdir}/yandexmusic.metainfo.xml" \
 		"${pkgdir}/usr/share/metainfo/yandexmusic.metainfo.xml"
-	install-license LICENSE "yandex-music/LICENSE.nivora"
-	install -Dm644 "${srcdir}/extracted/opt/Яндекс Музыка/LICENSES.chromium.html" \
-		"${pkgdir}/usr/share/licenses/yandex-music/LICENSES.chromium.html"
-	install -Dm644 "${srcdir}/extracted/opt/Яндекс Музыка/LICENSE.electron.txt" \
-		"${pkgdir}/usr/share/licenses/yandex-music/LICENSE.electron.txt"
+
+	install-license "${srcdir}/LICENSE" 'yandex-music/LICENSE.nivora'
+	install-license "${payload}/LICENSES.chromium.html" 'yandex-music/LICENSES.chromium.html'
+	install-license "${payload}/LICENSE.electron.txt" 'yandex-music/LICENSE.electron.txt'
 }
 
 files() {

@@ -1,34 +1,34 @@
 name='opencode'
 version='2.3.2'
-release=3
+release=4
+
 summary='Open source desktop AI agent for software development'
 summary_ru='Открытый настольный ИИ-агент для разработки'
-group='Development/Tools'
 desc='OpenCode is an open source coding agent with a desktop interface, parallel sessions, and support for multiple model providers.'
 desc_ru='OpenCode — открытый ИИ-агент для разработки с настольным интерфейсом, параллельными сессиями и поддержкой разных провайдеров моделей.'
+group='Development/Tools'
 homepage='https://opencode.ai'
 maintainer='OpenCode <hello@opencode.ai>'
+
+license=('MIT')
+
+appstream_app_id='ai.opencode.desktop'
+appstream_name='OpenCode'
+appstream_developer='Anomaly Innovations Inc.'
 
 architectures=('amd64' 'arm64')
 compatible_with=('altlinux_p11')
 disable_network=1
 
-license=('MIT')
-appstream_app_id='ai.opencode.desktop'
-appstream_name='OpenCode'
-appstream_developer='Anomaly Innovations Inc.'
-
 provides=()
 replaces=('opencode')
 conflicts=()
 
-# RPM scans the ELF payload for its linked libraries. Bundled musl addons are
-# removed below because they cannot load on ALT's glibc runtime.
-auto_reqprov_method="dirty"
+auto_reqprov_method='dirty'
 auto_req=1
 auto_prov=0
 
-# Electron loads these through dlopen or invokes them as subprocesses.
+# Electron loads these at runtime or starts them as subprocesses.
 deps=('libnotify' 'libXScrnSaver' 'libXtst' 'xdg-utils' 'libuuid' 'libsecret')
 opt_deps=('libappindicator-gtk3' 'gnome-keyring' 'git')
 build_deps=('binutils')
@@ -39,14 +39,6 @@ sources=(
 	'local:///ai.opencode.desktop.png'
 	'local:///ai.opencode.desktop.metainfo.xml?nivora=opencode'
 )
-
-sources_arm64=(
-	"https://github.com/anomalyco/opencode/releases/download/v${version}/opencode-desktop-linux-arm64.deb?~archive=false&~name=opencode.deb"
-	'local:///LICENSE?nivora=opencode'
-	'local:///ai.opencode.desktop.png'
-	'local:///ai.opencode.desktop.metainfo.xml?nivora=opencode'
-)
-
 checksums=(
 	'sha256:ed7000e2e1fd9b98f4367118e6d1eebef3baa9a4b02d6c6090f397dfaa787b17'
 	'sha256:625f0f619133f89bbbb2abe37369613dfa1885eba1e50d02170deb62bb42cb6b'
@@ -54,6 +46,12 @@ checksums=(
 	'sha256:9a1bf1901fdaf853430d3015b33dc268f58c7303ddbae2e5aa67e8daedc7e16a'
 )
 
+sources_arm64=(
+	"https://github.com/anomalyco/opencode/releases/download/v${version}/opencode-desktop-linux-arm64.deb?~archive=false&~name=opencode.deb"
+	'local:///LICENSE?nivora=opencode'
+	'local:///ai.opencode.desktop.png'
+	'local:///ai.opencode.desktop.metainfo.xml?nivora=opencode'
+)
 checksums_arm64=(
 	'sha256:d8db8aba49772c4db8788fa3020f71958450c85cf6a80943ab32f8ee675d81d3'
 	'sha256:625f0f619133f89bbbb2abe37369613dfa1885eba1e50d02170deb62bb42cb6b'
@@ -67,40 +65,35 @@ scripts=(
 )
 
 package() {
-	cd "${srcdir}"
-	mkdir -p extracted
-	ar x opencode.deb
-	tar -xf data.tar.* -C extracted
+	unpack_dir="$(mktemp -d "${srcdir}/opencode.XXXXXX")" || return 1
+	cd "${unpack_dir}" || return 1
+	ar x "${srcdir}/opencode.deb" || return 1
+	tar -xf data.tar.* || return 1
 
-	install -dm755 "${pkgdir}/opt"
-	cp -a extracted/opt/OpenCode "${pkgdir}/opt/"
-	chmod 4755 "${pkgdir}/opt/OpenCode/chrome-sandbox"
-	test -x "${pkgdir}/opt/OpenCode/ai.opencode"
-	test -x "${pkgdir}/opt/OpenCode/resources/opencode-cli"
+	payload="${pkgdir}/opt/OpenCode"
+	install -dm755 "${pkgdir}/opt" "${pkgdir}/usr/bin"
+	mv -T opt/OpenCode "${payload}"
+	chmod 4755 "${payload}/chrome-sandbox"
+	test -x "${payload}/ai.opencode"
+	test -x "${payload}/resources/opencode-cli"
+	ln -sfn /opt/OpenCode/ai.opencode "${pkgdir}/usr/bin/opencode-desktop"
 
-	# The glibc variants remain; musl variants produce an unsatisfiable
-	# libc.so Requires on ALT despite never being loaded there.
-	find "${pkgdir}/opt/OpenCode" -type f \
+	# Only glibc addons can load on p11. The musl variants add a spurious libc.so dependency.
+	find "${payload}" -type f \
 		\( -name '*.musl.node' -o -path '*-musl/*.node' \) -delete
 
-	install -Dm644 \
-		extracted/usr/share/applications/ai.opencode.desktop.desktop \
+	install -Dm644 usr/share/applications/ai.opencode.desktop.desktop \
 		"${pkgdir}/usr/share/applications/ai.opencode.desktop.desktop"
 	install -dm755 "${pkgdir}/usr/share/icons"
-	cp -a extracted/usr/share/icons/hicolor "${pkgdir}/usr/share/icons/"
-	install -Dm644 ai.opencode.desktop.png \
+	mv usr/share/icons/hicolor "${pkgdir}/usr/share/icons/"
+	install -Dm644 "${srcdir}/ai.opencode.desktop.png" \
 		"${pkgdir}/usr/share/icons/hicolor/128x128/apps/ai.opencode.desktop.png"
-	install -Dm644 ai.opencode.desktop.metainfo.xml \
+	install -Dm644 "${srcdir}/ai.opencode.desktop.metainfo.xml" \
 		"${pkgdir}/usr/share/metainfo/ai.opencode.desktop.metainfo.xml"
 
-	install -dm755 "${pkgdir}/usr/bin"
-	ln -sfn /opt/OpenCode/ai.opencode \
-		"${pkgdir}/usr/bin/opencode-desktop"
-	install-license LICENSE "opencode/LICENSE.nivora"
-	install -Dm644 "${pkgdir}/opt/OpenCode/LICENSE.electron.txt" \
-		"${pkgdir}/usr/share/licenses/opencode/LICENSE.electron.txt"
-	install -Dm644 "${pkgdir}/opt/OpenCode/LICENSES.chromium.html" \
-		"${pkgdir}/usr/share/licenses/opencode/LICENSES.chromium.html"
+	install-license "${srcdir}/LICENSE" 'opencode/LICENSE.nivora'
+	install-license "${payload}/LICENSE.electron.txt" 'opencode/LICENSE.electron.txt'
+	install-license "${payload}/LICENSES.chromium.html" 'opencode/LICENSES.chromium.html'
 }
 
 files() {

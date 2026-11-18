@@ -45,7 +45,7 @@
       <h3><a href="chatgpt/README.md">ChatGPT</a></h3>
       <p>Чат, файлы и проекты в настольном приложении OpenAI. Встроенный Codex помогает работать с кодом.</p>
       <!-- package-meta:chatgpt -->
-      <p><sub>Версия <code>26.1111.71025</code> · <code>amd64</code> <code>arm64</code></sub></p>
+      <p><sub>Версия <code>26.1111.71704</code> · <code>amd64</code> <code>arm64</code></sub></p>
       <!-- /package-meta:chatgpt -->
       <p><a href="chatgpt/README.md#установка"><strong>Установить →</strong></a> &nbsp;·&nbsp; <a href="https://learn.chatgpt.com/docs/app">Сайт</a></p>
     </td>

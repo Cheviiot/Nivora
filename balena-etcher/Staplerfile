@@ -1,6 +1,6 @@
 name='balena-etcher'
 version='2.1.9'
-release=5
+release=6
 
 summary='Write OS images to USB drives and SD cards'
 summary_ru='Запись образов систем на USB-накопители и SD-карты'
@@ -32,14 +32,6 @@ deps=(
 	'libnotify' 'libXtst' 'xdg-utils' 'fontconfig' 'libfreetype'
 	'libgdk-pixbuf' 'liblzma' 'libXcursor' 'libXi' 'libXrender'
 	'libXScrnSaver' 'polkit'
-)
-# ALT lists desktop-specific polkit agents as individual optional packages.
-opt_deps=(
-	'polkit-gnome'
-	'polkit-kde-agent'
-	'lxqt-policykit'
-	'xfce-polkit'
-	'gvfs'
 )
 build_deps=('binutils')
 

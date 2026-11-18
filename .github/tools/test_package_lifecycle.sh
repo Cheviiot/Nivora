@@ -471,6 +471,8 @@ PY
     if [[ "$scenario" == fresh ]]; then
         # Include the candidate working tree, including an autonomous recipe
         # update not committed yet. A clone of HEAD would test stale data.
+        # Git belongs to this CI fixture, not to the plugin's runtime deps.
+        bash /usr/local/lib/nivora/alt_apt_network.sh run -qq install -y git-core
         python3 - <<'PY'
 from pathlib import Path
 import shutil

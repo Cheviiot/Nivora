@@ -9,18 +9,22 @@ from __future__ import annotations
 
 import argparse
 import configparser
+import os
 import posixpath
 import re
+import selectors
 import stat
 import subprocess
 import sys
 import tempfile
+import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[2]
 XML_LANG = "{http://www.w3.org/XML/1998/namespace}lang"
+EXTRACTION_TIMEOUT = 180
 # Preserve existing desktop identities without exempting new IDs or other
 # validator warnings. The package name must also match the existing entry.
 LEGACY_IDS = {
@@ -194,11 +198,36 @@ def require_regular(entries: dict[str, PayloadEntry], path: str) -> None:
         raise ValidationError(f"RPM lacks required regular file {path}")
 
 
+def extraction_time_left(deadline: float) -> float:
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise subprocess.TimeoutExpired("RPM metadata extraction", EXTRACTION_TIMEOUT)
+    return remaining
+
+
+def drain_pipe(stream, deadline: float) -> None:
+    """Consume bytes after cpio's trailer without buffering the RPM payload."""
+    descriptor = stream.fileno()
+    os.set_blocking(descriptor, False)
+    with selectors.DefaultSelector() as selector:
+        selector.register(descriptor, selectors.EVENT_READ)
+        while True:
+            if not selector.select(extraction_time_left(deadline)):
+                raise subprocess.TimeoutExpired("rpm2cpio drain", EXTRACTION_TIMEOUT)
+            try:
+                chunk = os.read(descriptor, 64 * 1024)
+            except BlockingIOError:
+                continue
+            if not chunk:
+                return
+
+
 def extract_metadata(rpm: Path, paths: tuple[str, str], destination: Path) -> None:
     patterns = [pattern for path in paths for pattern in (path, path[1:], f".{path}")]
     with tempfile.TemporaryFile() as producer_errors, tempfile.TemporaryFile() as consumer_errors:
         producer = None
         consumer = None
+        deadline = time.monotonic() + EXTRACTION_TIMEOUT
         try:
             producer = subprocess.Popen(
                 ["rpm2cpio", str(rpm)], stdout=subprocess.PIPE, stderr=producer_errors,
@@ -209,9 +238,12 @@ def extract_metadata(rpm: Path, paths: tuple[str, str], destination: Path) -> No
                 cwd=destination,
             )
             assert producer.stdout is not None
-            producer.stdout.close()
-            consumer_code = consumer.wait(timeout=180)
-            producer_code = producer.wait(timeout=30)
+            # cpio can exit at TRAILER!!! before rpm2cpio finishes writing
+            # archive padding. Keep our read end open, then consume to EOF;
+            # closing it early turns a valid RPM into a producer EPIPE.
+            consumer_code = consumer.wait(timeout=extraction_time_left(deadline))
+            drain_pipe(producer.stdout, deadline)
+            producer_code = producer.wait(timeout=extraction_time_left(deadline))
         except FileNotFoundError as error:
             raise ValidationError(f"required extraction command is not installed: {error.filename}") from error
         except subprocess.TimeoutExpired as error:

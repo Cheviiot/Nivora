@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -29,6 +30,67 @@ def metadata_xml(component_id="com.example.Demo", desktop="demo.desktop"):
   <url type="homepage">https://example.com/</url>
   <launchable type="desktop-id">{desktop}</launchable>
 </component>"""
+
+
+def cpio_member(name, data=b"", mode=0o100644):
+    filename = name.encode("utf-8") + b"\0"
+    fields = (1, mode, 0, 0, 1, 0, len(data), 0, 0, 0, 0, len(filename), 0)
+    header = b"070701" + b"".join(f"{value:08x}".encode("ascii") for value in fields)
+    prefix = header + filename
+    return prefix + b"\0" * (-len(prefix) % 4) + data + b"\0" * (-len(data) % 4)
+
+
+PADDING_PRODUCER = """#!/usr/bin/env python3
+import fcntl
+import os
+import sys
+import time
+from pathlib import Path
+
+Path(os.environ["TEST_PRODUCER_PID"]).write_text(str(os.getpid()))
+with open(os.environ["TEST_CPIO_ARCHIVE"], "rb") as archive:
+    sys.stdout.buffer.write(archive.read())
+# Ensure the unread padding exceeds this actual pipe's capacity. A consumer
+# which stops at TRAILER!!! cannot accept it all before exiting.
+remaining = max(2 * fcntl.fcntl(1, fcntl.F_GETPIPE_SZ), 2 * 1024 * 1024)
+while remaining:
+    block = bytes(min(64 * 1024, remaining))
+    sys.stdout.buffer.write(block)
+    remaining -= len(block)
+sys.stdout.buffer.flush()
+if os.environ.get("TEST_PRODUCER_HOLD") == "1":
+    time.sleep(30)
+raise SystemExit(int(os.environ.get("TEST_PRODUCER_STATUS", "0")))
+"""
+
+
+EARLY_CPIO_CONSUMER = """#!/usr/bin/env python3
+import sys
+from pathlib import Path
+
+def read_exact(size):
+    value = sys.stdin.buffer.read(size)
+    if len(value) != size:
+        raise SystemExit("truncated newc fixture")
+    return value
+
+while True:
+    header = read_exact(110)
+    if header[:6] != b"070701":
+        raise SystemExit("invalid newc fixture")
+    fields = [int(header[offset:offset + 8], 16) for offset in range(6, 110, 8)]
+    size, name_size = fields[6], fields[11]
+    name = read_exact(name_size)[:-1].decode()
+    read_exact(-(110 + name_size) % 4)
+    if name == "TRAILER!!!":
+        break
+    contents = read_exact(size)
+    read_exact(-size % 4)
+    path = Path(name)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(contents)
+# Deliberately do not read the trailing padding, just like GNU cpio.
+"""
 
 
 class AppStreamTests(unittest.TestCase):
@@ -277,6 +339,56 @@ homepage='https://example.com/'
             }):
                 with self.assertRaises(CHECK.ValidationError):
                     CHECK.extract_metadata(self.rpm, (self.metainfo_path, self.desktop_path), self.root)
+
+    def padding_pipeline(self):
+        archive = self.root / "metadata.cpio"
+        contents = (
+            cpio_member(f".{self.metainfo_path}", self.payload_xml.encode())
+            + cpio_member(f".{self.desktop_path}", self.desktop.encode())
+            + cpio_member("TRAILER!!!", mode=0)
+        )
+        archive.write_bytes(contents + bytes(-len(contents) % 512))
+        commands = self.root / "bin"
+        commands.mkdir()
+        for name, script in (("rpm2cpio", PADDING_PRODUCER), ("cpio", EARLY_CPIO_CONSUMER)):
+            command = commands / name
+            command.write_text(script, encoding="utf-8")
+            command.chmod(0o755)
+        destination = self.root / "extracted"
+        destination.mkdir()
+        return destination, {
+            "PATH": f"{commands}:{os.environ['PATH']}",
+            "TEST_CPIO_ARCHIVE": str(archive),
+            "TEST_PRODUCER_PID": str(self.root / "producer.pid"),
+            "TEST_PRODUCER_STATUS": "0",
+            "TEST_PRODUCER_HOLD": "0",
+        }
+
+    def test_extraction_drains_padding_after_consumer_exits_at_valid_trailer(self):
+        destination, environment = self.padding_pipeline()
+        with mock.patch.dict(os.environ, environment):
+            CHECK.extract_metadata(self.rpm, (self.metainfo_path, self.desktop_path), destination)
+        self.assertEqual((destination / self.metainfo_path[1:]).read_text(), self.payload_xml)
+        self.assertEqual((destination / self.desktop_path[1:]).read_text(), self.desktop)
+
+    def test_genuine_producer_failure_after_valid_archive_and_padding_is_rejected(self):
+        destination, environment = self.padding_pipeline()
+        environment["TEST_PRODUCER_STATUS"] = "42"
+        with mock.patch.dict(os.environ, environment):
+            with self.assertRaisesRegex(CHECK.ValidationError, "rpm2cpio=42, cpio=0"):
+                CHECK.extract_metadata(self.rpm, (self.metainfo_path, self.desktop_path), destination)
+
+    def test_padding_drain_deadline_terminates_a_producer_that_keeps_pipe_open(self):
+        destination, environment = self.padding_pipeline()
+        environment["TEST_PRODUCER_HOLD"] = "1"
+        started = time.monotonic()
+        with mock.patch.dict(os.environ, environment), mock.patch.object(CHECK, "EXTRACTION_TIMEOUT", 1):
+            with self.assertRaisesRegex(CHECK.ValidationError, "timed out"):
+                CHECK.extract_metadata(self.rpm, (self.metainfo_path, self.desktop_path), destination)
+        self.assertLess(time.monotonic() - started, 5)
+        producer_pid = int(Path(environment["TEST_PRODUCER_PID"]).read_text())
+        with self.assertRaises(ProcessLookupError):
+            os.kill(producer_pid, 0)
 
 
 if __name__ == "__main__":

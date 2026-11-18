@@ -41,6 +41,44 @@ rpm -q 'telegram+stplr-nivora'
 подлинности репозиториев. При изменении upstream-архива автоматика должна проверить
 новый источник и собрать пакет заново.
 
+### Ошибка UID/GID при сборке
+
+Если Stapler v0.2.0 завершает подготовку песочницы с
+`writing uid_map: ... operation not permitted` внутри rootless Podman,
+проверьте контекст контейнерного движка. Ошибка возникает до выполнения
+`package()` и может затрагивать разные рецепты.
+
+В v0.2.0 [upstream #422](https://altlinux.space/stapler/stplr/pulls/422)
+расширил отображение UID/GID с одного пользователя на его subordinate ranges.
+Диапазоны из `/etc/subuid` и `/etc/subgid` внутри p11-контейнера могут не входить
+в набор ID, доступный внешнему rootless-контейнеру. Ядро отклоняет такое
+вложенное отображение; `--privileged` не расширяет права пользователя,
+запустившего rootless Podman. Эти ограничения описаны в
+[руководстве Podman](https://docs.podman.io/en/stable/markdown/podman-run.1.html).
+
+Для stable-прогона выберите рабочий rootful Docker:
+
+```bash
+docker info
+export NIVORA_CONTAINER_ENGINE=docker
+.github/tools/clean_build.sh telegram
+```
+
+[Rootless Docker](https://docs.docker.com/engine/security/rootless/)
+также использует внешний user namespace и не является
+заменой rootful daemon для этого сценария. Для Podman запускайте сборку
+в подготовленной root-сессии согласно
+[инструкции разработчика](../../CONTRIBUTING.md#контейнерный-движок).
+Выбор движка применяется к подготовке образа, томам, сборке и lifecycle;
+повышение прав только последнего `run` смешивает разные контексты хранения.
+
+В закреплённом canary `541a2415…` исправление
+[upstream #521](https://altlinux.space/stapler/stplr/pulls/521)
+учитывает `/proc/self/uid_map` и `/proc/self/gid_map` внешнего namespace.
+Это исправление ещё не входит в обязательный stable v0.2.0.
+Nivora сохраняет вложенную песочницу Stapler и `disable_network=1` рецептов;
+для смены движка отключать их или менять системные `sysctl` не требуется.
+
 ## Приложение не запускается
 
 Запустите команду из карточки приложения в терминале от обычного пользователя.

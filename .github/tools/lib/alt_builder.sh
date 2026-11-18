@@ -2,6 +2,38 @@
 # Prepare a clean ALT build environment. GitHub jobs may reuse this image;
 # each build and lifecycle transaction still starts a fresh container.
 
+nivora_alt_container_engine() {
+    local selected="${NIVORA_CONTAINER_ENGINE:-}"
+    case "$selected" in
+    '')
+        # Stapler 0.2.0 needs UID/GID ranges unavailable inside the hosted
+        # runner's rootless Podman namespace. Use its Docker daemon for CI;
+        # retain the existing Podman-first choice for local installations.
+        if [[ "${GITHUB_ACTIONS:-}" == true ]]; then
+            selected=docker
+        elif command -v podman >/dev/null 2>&1; then
+            selected=podman
+        else
+            selected=docker
+        fi
+        ;;
+    docker | podman) ;;
+    *)
+        echo 'ALT builder: NIVORA_CONTAINER_ENGINE must be docker or podman' >&2
+        return 1
+        ;;
+    esac
+    command -v "$selected" >/dev/null 2>&1 || {
+        echo "ALT builder: selected container engine ${selected} is not installed" >&2
+        return 1
+    }
+    if ! timeout --signal=TERM --kill-after=1s 30s "$selected" info >/dev/null 2>&1; then
+        echo "ALT builder: selected container engine ${selected} is unavailable; check its service and access permissions" >&2
+        return 1
+    fi
+    printf '%s\n' "$selected"
+}
+
 nivora_prepare_alt_builder() {
     local engine="$1" branch="$2" base_image="$3" context_dir="$4" image_tag="$5"
     local helper_dir cache_key cache_tag='' pulled=0 attempt

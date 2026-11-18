@@ -83,14 +83,7 @@ case "${NIVORA_LIFECYCLE_PLAN_ONLY:-0}" in
     ;;
 esac
 
-if command -v podman >/dev/null 2>&1; then
-    engine=podman
-elif command -v docker >/dev/null 2>&1; then
-    engine=docker
-else
-    echo 'Для lifecycle-теста требуется Podman или Docker' >&2
-    exit 2
-fi
+engine="$(nivora_alt_container_engine)" || exit 2
 
 for command in curl find git rpm rpmbuild sha256sum sqlite3 stplr-spec tar; do
     command -v "$command" >/dev/null 2>&1 || {

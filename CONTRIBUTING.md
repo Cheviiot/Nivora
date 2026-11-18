@@ -47,6 +47,34 @@ export PATH="$PWD/.cache/bin:$PATH"
 доступен в [GitHub Actions](https://github.com/Cheviiot/Nivora/actions/workflows/clean-build.yml)
 на ветке `main`.
 
+### Контейнерный движок
+
+`NIVORA_CONTAINER_ENGINE=docker` или `NIVORA_CONTAINER_ENGINE=podman` явно
+выбирает движок для сборки и lifecycle. Без этой переменной GitHub Actions
+использует Docker; локально выбирается установленный Podman, а при его
+отсутствии — Docker. Выбранный движок должен успешно выполнять `info`.
+При ошибке доступа скрипт останавливается: автоматического `sudo` или
+перехода к другому движку нет.
+
+Для поддерживаемого прогона stable Stapler v0.2.0 нужен **rootful** движок:
+Docker с системным daemon либо Podman, запущенный от root. Rootless-контейнер
+может не предоставить диапазоны UID/GID, которые требует вложенная песочница.
+Причина и upstream-исправление описаны в
+[диагностике](.github/docs/troubleshooting.md#ошибка-uidgid-при-сборке).
+
+Например, для доступного rootful Docker перед проверками выполните:
+
+```bash
+docker info
+export NIVORA_CONTAINER_ENGINE=docker
+```
+
+Сохраняйте этот выбор для сборки и последующего lifecycle. Для локального
+Podman используйте подготовленную root-сессию с доступными `stplr-spec`
+и остальными инструментами; выберите `NIVORA_CONTAINER_ENGINE=podman`
+и проверьте `podman info` в этой же сессии. Rootful и rootless Podman имеют
+[раздельные хранилища образов и томов](https://docs.podman.io/en/stable/markdown/podman.1.html#root-value).
+
 ## Работа с изменением
 
 1. Синхронизируйте `main` и изучите текущие изменения.

@@ -43,6 +43,75 @@ chmod +x "$scratch/engine"
 
 # shellcheck source=.github/tools/lib/alt_builder.sh
 source "$scratch/lib/alt_builder.sh"
+
+# Exercise selection with an isolated PATH so the runner's own installed
+# engines cannot accidentally satisfy missing-engine or fallback cases.
+selection_bin="$scratch/selection-bin"
+mkdir -p "$selection_bin"
+export NIVORA_ENGINE_TEST_LOG="$scratch/selection.log"
+for candidate in docker podman; do
+    cat >"$selection_bin/$candidate" <<'EOF'
+#!/bin/bash
+set -euo pipefail
+name="${0##*/}"
+printf '%s %s\n' "$name" "$*" >>"$NIVORA_ENGINE_TEST_LOG"
+[[ "$*" == info ]]
+exit "${NIVORA_ENGINE_TEST_EXIT:-0}"
+EOF
+    chmod 0755 "$selection_bin/$candidate"
+done
+cat >"$selection_bin/timeout" <<'EOF'
+#!/bin/bash
+set -euo pipefail
+[[ "$1" == --signal=TERM && "$2" == --kill-after=1s && "$3" == 30s ]]
+shift 3
+exec "$@"
+EOF
+chmod 0755 "$selection_bin/timeout"
+
+: >"$NIVORA_ENGINE_TEST_LOG"
+[[ "$(PATH="$selection_bin" GITHUB_ACTIONS=true NIVORA_CONTAINER_ENGINE='' nivora_alt_container_engine)" == docker ]]
+[[ "$(cat "$NIVORA_ENGINE_TEST_LOG")" == 'docker info' ]]
+: >"$NIVORA_ENGINE_TEST_LOG"
+[[ "$(PATH="$selection_bin" GITHUB_ACTIONS=false NIVORA_CONTAINER_ENGINE='' nivora_alt_container_engine)" == podman ]]
+[[ "$(cat "$NIVORA_ENGINE_TEST_LOG")" == 'podman info' ]]
+: >"$NIVORA_ENGINE_TEST_LOG"
+[[ "$(PATH="$selection_bin" GITHUB_ACTIONS=true NIVORA_CONTAINER_ENGINE=podman nivora_alt_container_engine)" == podman ]]
+[[ "$(cat "$NIVORA_ENGINE_TEST_LOG")" == 'podman info' ]]
+
+mv "$selection_bin/docker" "$selection_bin/docker.disabled"
+: >"$NIVORA_ENGINE_TEST_LOG"
+if PATH="$selection_bin" GITHUB_ACTIONS=false NIVORA_CONTAINER_ENGINE=docker \
+    nivora_alt_container_engine >"$scratch/selection.out" 2>"$scratch/selection.err"; then
+    echo 'FAIL: missing explicit Docker silently fell back to Podman' >&2
+    exit 1
+fi
+[[ ! -s "$NIVORA_ENGINE_TEST_LOG" && ! -s "$scratch/selection.out" ]]
+grep -Fq 'docker is not installed' "$scratch/selection.err"
+mv "$selection_bin/docker.disabled" "$selection_bin/docker"
+
+for requested in docker ''; do
+    : >"$NIVORA_ENGINE_TEST_LOG"
+    if PATH="$selection_bin" GITHUB_ACTIONS=true NIVORA_CONTAINER_ENGINE="$requested" \
+        NIVORA_ENGINE_TEST_EXIT=23 nivora_alt_container_engine \
+        >"$scratch/selection.out" 2>"$scratch/selection.err"; then
+        echo 'FAIL: inaccessible selected Docker was accepted' >&2
+        exit 1
+    fi
+    [[ "$(cat "$NIVORA_ENGINE_TEST_LOG")" == 'docker info' ]]
+    [[ ! -s "$scratch/selection.out" ]]
+    grep -Fq 'docker is unavailable' "$scratch/selection.err"
+done
+
+: >"$NIVORA_ENGINE_TEST_LOG"
+if PATH="$selection_bin" GITHUB_ACTIONS=true NIVORA_CONTAINER_ENGINE='sudo podman' \
+    nivora_alt_container_engine >"$scratch/selection.out" 2>"$scratch/selection.err"; then
+    echo 'FAIL: unsupported container-engine override was accepted' >&2
+    exit 1
+fi
+[[ ! -s "$NIVORA_ENGINE_TEST_LOG" && ! -s "$scratch/selection.out" ]]
+grep -Fq 'must be docker or podman' "$scratch/selection.err"
+
 export GITHUB_ACTIONS=true GITHUB_RUN_ID=1234 GITHUB_RUN_ATTEMPT=1
 export GITHUB_JOB=stable GITHUB_REPOSITORY=fixture/catalog
 base_image="alt-p11@sha256:$(printf 'a%.0s' {1..64})"
@@ -104,4 +173,4 @@ export NIVORA_BUILDER_TEST_FAIL=0
 nivora_prepare_alt_builder "$engine" p11 "$base_image" "$scratch/lifecycle" retry:build
 assert_builds 11
 
-echo 'OK: ALT builder reuse, isolated inputs/job attempts, local cleanup and failed preparation'
+echo 'OK: ALT engine selection, bounded availability, builder reuse and isolated job attempts'

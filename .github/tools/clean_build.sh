@@ -53,14 +53,7 @@ for package in "${packages[@]}"; do
     }
 done
 
-if command -v podman >/dev/null 2>&1; then
-    engine=podman
-elif command -v docker >/dev/null 2>&1; then
-    engine=docker
-else
-    echo 'clean-build requires stplr-spec with clean-build, Podman or Docker' >&2
-    exit 2
-fi
+engine="$(nivora_alt_container_engine)" || exit 2
 
 image="$(nivora_alt_branch_image "$branch")"
 readonly image

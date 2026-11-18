@@ -147,7 +147,7 @@
       <!-- package-meta:pineconemc -->
       <p><sub>Версия <code>11.1.2</code> · <code>amd64</code> <code>arm64</code></sub></p>
       <!-- /package-meta:pineconemc -->
-      <p><a href="pineconemc/README.md#установка"><strong>Установить →</strong></a> &nbsp;·&nbsp; <a href="https://pineconemc.com/">Сайт</a></p>
+      <p><a href="pineconemc/README.md#установка"><strong>Установить →</strong></a> &nbsp;·&nbsp; <a href="https://elyprismlauncher.github.io/">Сайт</a></p>
     </td>
     <td width="50%" valign="top">
       <!-- package-card:yandex-music -->

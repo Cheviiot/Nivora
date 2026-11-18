@@ -38,5 +38,34 @@ class DesktopIdentityTests(unittest.TestCase):
                     self.document("com.example.App", invalid)
 
 
+class MetadataSemanticsTests(unittest.TestCase):
+    RECIPE = "name='example'\nappstream_app_id='com.example.App'\n"
+
+    def test_unassessed_age_rating_stays_unknown(self):
+        doc = ET.fromstring(SYNC.render("example", self.RECIPE))
+        self.assertIsNone(doc.find("content_rating"))
+
+    def test_official_screenshot_preserves_localized_captions(self):
+        recipe = self.RECIPE + (
+            "appstream_screenshot='https://example.com/ui.png'\n"
+            "appstream_screenshot_caption='Chats & groups'\n"
+            "appstream_screenshot_caption_ru='Чаты и группы'\n"
+        )
+        doc = ET.fromstring(SYNC.render("example", recipe))
+        shot = doc.find("screenshots/screenshot")
+        self.assertEqual(shot.get("type"), "default")
+        self.assertEqual(shot.findtext("caption"), "Chats & groups")
+        self.assertEqual(shot.findall("caption")[1].text, "Чаты и группы")
+        self.assertEqual(shot.findtext("image"), "https://example.com/ui.png")
+        self.assertIsNone(doc.find("releases"))
+
+    def test_screenshot_requires_https_and_caption(self):
+        for url in ("file:///tmp/image.png", "http://example.com/image.png", "https://u:p@example.com/image.png"):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                SYNC.render("example", self.RECIPE + f"appstream_screenshot='{url}'\n")
+        with self.assertRaises(ValueError):
+            SYNC.render("example", self.RECIPE + "appstream_screenshot='https://example.com/ui.png'\n")
+
+
 if __name__ == "__main__":
     unittest.main()

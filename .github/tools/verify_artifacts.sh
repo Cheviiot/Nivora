@@ -83,10 +83,11 @@ for package in "${packages[@]}"; do
         exit 1
     fi
 
-    IFS='|' read -r rpm_name rpm_epoch rpm_version rpm_release rpm_arch < <(
+    rpm_identity="$(
         rpm -qp --queryformat '%{NAME}|%{EPOCHNUM}|%{VERSION}|%{RELEASE}|%{ARCH}\n' \
             "$artifact"
-    )
+    )"
+    IFS='|' read -r rpm_name rpm_epoch rpm_version rpm_release rpm_arch <<<"$rpm_identity"
     expected_nevra="${expected_name}-${expected_epoch}:${recipe_version}-${expected_release}.${expected_arch}"
     actual_nevra="${rpm_name}-${rpm_epoch}:${rpm_version}-${rpm_release}.${rpm_arch}"
     [[ "$actual_nevra" == "$expected_nevra" ]] || {
@@ -94,7 +95,8 @@ for package in "${packages[@]}"; do
         exit 1
     }
 
-    mapfile -t payload < <(rpm -qlp "$artifact")
+    payload_listing="$(rpm -qlp "$artifact")"
+    mapfile -t payload <<<"$payload_listing"
     contains_path "/usr/share/licenses/${package_name}/*" || {
         echo "${package}: отсутствует лицензия в собственном namespace" >&2
         exit 1
@@ -105,6 +107,9 @@ for package in "${packages[@]}"; do
     }
 
     recipe="$(<"${package}/Staplerfile")"
+    if grep -Eq '^appstream_app_id=' <<<"$recipe"; then
+        python3 "${script_dir}/validate_appstream.py" --rpm "$artifact" "$package"
+    fi
     if [[ "$recipe" == *'files-find-binary'* ]]; then
         contains_path '/usr/bin/*' || contains_path '/usr/sbin/*' || {
             echo "${package}: files-find-binary не добавил исполняемые файлы" >&2

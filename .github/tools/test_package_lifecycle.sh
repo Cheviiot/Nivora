@@ -25,6 +25,7 @@ readonly -a lifecycle_package_catalog=(
     'balena-etcher|/usr/bin/balena-etcher|/home/nivora-test/.config/balena-etcher/nivora-lifecycle-state|/usr/share/applications/balena-etcher.desktop|/usr/share/pixmaps/balena-etcher.png|/usr/lib/balena-etcher/chrome-sandbox'
     'chatgpt|/usr/bin/chatgpt|/home/nivora-test/.config/ChatGPT/nivora-lifecycle-state|/usr/share/applications/chatgpt.desktop|/usr/share/pixmaps/chatgpt.png|-'
     'claude|/usr/bin/claude-desktop|/home/nivora-test/.config/Claude/nivora-lifecycle-state|/usr/share/applications/com.anthropic.Claude.desktop|/usr/share/icons/hicolor/128x128/apps/claude-desktop.png|/usr/lib/claude-desktop/chrome-sandbox'
+    'gnome-software-plugin-stplr|/usr/libexec/gnome-software-plugin-stplr/stplr-install|/home/nivora-test/.cache/gnome-software/nivora-lifecycle-state|-|-|-'
     'happ|/usr/bin/happ|/home/nivora-test/.config/happ/nivora-lifecycle-state|/usr/share/applications/Happ.desktop|/usr/lib/systemd/system/happd.service|-'
     'opencode|/usr/bin/opencode-desktop|/home/nivora-test/.config/opencode/nivora-lifecycle-state|/usr/share/applications/ai.opencode.desktop.desktop|/usr/share/icons/hicolor/128x128/apps/ai.opencode.png|/opt/OpenCode/chrome-sandbox'
     'parsec|/usr/bin/parsecd|/home/nivora-test/.parsec/nivora-lifecycle-state|/usr/share/applications/parsecd.desktop|/usr/share/icons/hicolor/256x256/apps/parsecd.png|-'
@@ -265,7 +266,7 @@ while IFS='|' read -r package _; do
         "$(rpm -qp --queryformat '%{VERSION}' "${rpms[0]}")" \
         "$(rpm -qp --queryformat '%{RELEASE}' "${rpms[0]}")"
 
-    rpm -qp --provides "${rpms[0]}" | grep -Fxq "$package"
+    rpm -qp --provides "${rpms[0]}" | grep -Eq "^${package}( = [0-9].*)?$"
     rpm -qp --obsoletes "${rpms[0]}" | grep -Fxq "$package"
     rpm -qp --conflicts "${rpms[0]}" | grep -Fxq "$package"
 done <"${work_dir}/lifecycle-packages.txt"
@@ -276,7 +277,7 @@ set -euo pipefail
 
 scenario="${LIFECYCLE_SCENARIO:?LIFECYCLE_SCENARIO is required}"
 case "$scenario" in
-fresh | upgrade) ;;
+fresh | upgrade | distro-upgrade) ;;
 *) echo "Unknown lifecycle scenario: $scenario" >&2; exit 2 ;;
 esac
 
@@ -305,6 +306,14 @@ case "$current_arch" in
 esac
 
 echo "==> RPM lifecycle ${package}: ${scenario} (ALT ${NIVORA_ALT_BRANCH:-unknown})"
+if [[ "$scenario" == distro-upgrade ]]; then
+    [[ "$package" == gnome-software-plugin-stplr ]]
+    # Exercise replacement of the real distribution RPM as well as an older
+    # Nivora RPM. Both install the same GNOME Software plugin path.
+    bash /usr/local/lib/nivora/alt_apt_network.sh run -qq install -y "$package"
+    rpm -q "$package"
+    [[ "$system_name" != "$package" ]]
+fi
 if [[ "$scenario" == upgrade ]]; then
     previous_artifact="/previous/${package}.rpm"
     previous_name="$(rpm -qp --queryformat '%{NAME}' "$previous_artifact")"
@@ -415,6 +424,98 @@ if [[ "$package" == antigravity ]]; then
     grep -Fxq 'MimeType=x-scheme-handler/antigravity;' /usr/share/applications/antigravity.desktop
     grep -Fq '>antigravity.desktop</launchable>' /usr/share/metainfo/com.google.Antigravity.metainfo.xml
 fi
+if [[ "$package" == gnome-software-plugin-stplr ]]; then
+    bash -n "$command_path"
+    python3 - <<'PY'
+import ctypes
+import glob
+import os
+import re
+import subprocess
+
+plugins = glob.glob('/usr/lib64/gnome-software/plugins-*/libgs_plugin_stplr.so')
+assert len(plugins) == 1, f'duplicate/missing Stapler plugin: {plugins}'
+path = plugins[0]
+match = re.fullmatch(r'/usr/lib64/gnome-software/plugins-([0-9]+)/libgs_plugin_stplr.so', path)
+assert match
+# GNOME Software loads its private library before opening plugins. Reproduce
+# that host without starting a graphical session or invoking package actions.
+host = ctypes.CDLL(
+    f'/usr/lib64/gnome-software/libgnomesoftware.so.{match[1]}',
+    mode=os.RTLD_NOW | os.RTLD_GLOBAL,
+)
+plugin = ctypes.CDLL(path, mode=os.RTLD_NOW | os.RTLD_LOCAL)
+plugin.gs_plugin_query_type.restype = ctypes.c_size_t
+plugin_type = plugin.gs_plugin_query_type()
+gobject = ctypes.CDLL('libgobject-2.0.so.0')
+gobject.g_type_name.argtypes = [ctypes.c_size_t]
+gobject.g_type_name.restype = ctypes.c_char_p
+gobject.g_type_class_ref.argtypes = [ctypes.c_size_t]
+gobject.g_type_class_ref.restype = ctypes.c_void_p
+gobject.g_type_class_unref.argtypes = [ctypes.c_void_p]
+assert gobject.g_type_name(plugin_type) == b'GsPluginStplr'
+plugin_class = gobject.g_type_class_ref(plugin_type)
+assert plugin_class, 'GNOME Software plugin class could not initialize'
+gobject.g_type_class_unref(plugin_class)
+owner = subprocess.check_output(['rpm', '-qf', '--queryformat', '%{NAME}', path], text=True)
+assert owner != 'gnome-software-plugin-stplr', f'distribution plugin still owns {path}'
+for helper in ('install', 'remove', 'refresh', 'repo-disable', 'repo-enable'):
+    helper_path = f'/usr/libexec/gnome-software-plugin-stplr/stplr-{helper}'
+    helper_owner = subprocess.check_output(['rpm', '-qf', '--queryformat', '%{NAME}', helper_path], text=True)
+    assert helper_owner == owner, f'{helper_path} belongs to another package'
+print(f'OK: native GNOME Software plugin loaded: {path} ({owner})')
+PY
+    if [[ "$scenario" == distro-upgrade ]]; then
+        ! rpm -qa --queryformat '%{NAME}\n' | grep -Fxq "$package"
+    fi
+    if [[ "$scenario" == fresh ]]; then
+        # Include the candidate working tree, including an autonomous recipe
+        # update not committed yet. A clone of HEAD would test stale data.
+        python3 - <<'PY'
+from pathlib import Path
+import shutil
+import subprocess
+
+source = Path('/repo')
+target = Path('/tmp/nivora-catalog')
+target.mkdir()
+files = subprocess.check_output([
+    'git', '-c', 'safe.directory=/repo', '-C', '/repo', 'ls-files',
+    '-z', '--cached', '--others', '--exclude-standard',
+]).decode().split('\0')
+for filename in filter(None, files):
+    original = source / filename
+    if not original.is_file():
+        continue
+    destination = target / filename
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(original, destination)
+subprocess.run(['git', '-C', str(target), 'init', '-q', '--initial-branch=main'], check=True)
+subprocess.run(['git', '-C', str(target), 'add', '.'], check=True)
+subprocess.run([
+    'git', '-C', str(target), '-c', 'user.name=Nivora CI',
+    '-c', 'user.email=ci@example.invalid', 'commit', '-qm', 'catalog fixture',
+], check=True)
+PY
+        # This shell runs only in the disposable lifecycle container. Disable
+        # default repositories and all network access during the catalog check.
+        rm -f /usr/lib/stplr/repos.d/*.toml /etc/stplr/repos.d/*.toml \
+            /etc/stplr/repo-overrides.d/*.toml
+        install -d /etc/stplr
+        cat >/etc/stplr/stplr.toml <<'CONFIG'
+autoPull = false
+useRootCmd = false
+[[repo]]
+name = "nivora"
+url = "file:///tmp/nivora-catalog"
+ref = "main"
+CONFIG
+        STPLR_AUTO_PULL=false unshare --net -- bash -euc '
+            stplr -i=false refresh
+            python3 /repo/.github/tools/check_gnome_catalog.py --repository /repo
+        '
+    fi
+fi
 
 bash /usr/local/lib/nivora/alt_apt_network.sh run -qq remove -y "$system_name"
 assert_state_preserved
@@ -422,6 +523,10 @@ if [[ "$package" == tailscale ]]; then
     assert_tailscale_config "$tailscale_config" "${tailscale_config}.rpmsave"
 fi
 ! rpm -q "$system_name"
+if [[ "$package" == gnome-software-plugin-stplr ]]; then
+    test ! -e "$command_path"
+    ! find /usr/lib64/gnome-software -name libgs_plugin_stplr.so -print | grep -q .
+fi
 EOF
 
 chmod 0755 "${work_dir}/run-rpm.sh"
@@ -429,7 +534,11 @@ chmod 0755 "${work_dir}/run-rpm.sh"
 while IFS= read -r lifecycle_entry; do
     # Never reuse the upgrade container for a first install: dependencies and
     # files left by the previous RPM could hide a broken clean installation.
-    for scenario in fresh upgrade; do
+    scenarios=(fresh upgrade)
+    if [[ "${lifecycle_entry%%|*}" == gnome-software-plugin-stplr ]]; then
+        scenarios+=(distro-upgrade)
+    fi
+    for scenario in "${scenarios[@]}"; do
         "$engine" run --rm --privileged \
             -e LIFECYCLE_ENTRY="$lifecycle_entry" \
             -e LIFECYCLE_SCENARIO="$scenario" \

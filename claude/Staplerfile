@@ -1,6 +1,6 @@
 name='claude'
 version='5.11492.5'
-release=2
+release=3
 summary='Claude desktop app with Chat, Cowork, and Claude Code'
 summary_ru='Настольное приложение Claude с чатом, Cowork и Claude Code'
 group='Development/Tools'
@@ -62,14 +62,14 @@ checksums=(
 	'sha256:b96208b207e450b740f7dbe304f6077fed80e7f3d37ddd545991c4e8201564cf'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
 	'sha256:6f00d3f569c70728e382a749ee0242c86823d08f8c6f9dfcff178311831e5ccf'
-	'sha256:eb838e25c203190690a5ce084f37531f88429d3c5f07c59f287d75f639dabc45'
+	'sha256:86cafacaf7f5df2b5efa46b18aa43e62581ee315b162f7a526703e0203645980'
 )
 
 checksums_arm64=(
 	'sha256:fe6cd8a70f96b96eb4e6b647300cfaee6aaff4ce133a0fbbe11c2cdb775f5a6a'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
 	'sha256:6f00d3f569c70728e382a749ee0242c86823d08f8c6f9dfcff178311831e5ccf'
-	'sha256:eb838e25c203190690a5ce084f37531f88429d3c5f07c59f287d75f639dabc45'
+	'sha256:86cafacaf7f5df2b5efa46b18aa43e62581ee315b162f7a526703e0203645980'
 )
 
 scripts=(

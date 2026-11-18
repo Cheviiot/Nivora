@@ -4,8 +4,8 @@
 The GNOME Software plugin for Stapler matches an application to a package with
 `appstream_app_id == '<id>'` and looks for its icon at
 `/var/cache/stplr/repo/<repo>/<package>/<id>.{svg,png}` — that is, next to the
-Staplerfile. Without the ID nothing matches at all, so every GUI package needs
-one, together with the metainfo document that describes it.
+Staplerfile. Every GUI package needs this stable identity and the metainfo
+document that describes it. Service packages have no desktop component.
 
 Writing those documents by hand would let them drift from the recipe, which
 already carries the name, both summaries, both descriptions, the homepage and
@@ -149,9 +149,34 @@ def render(package: str, text: str) -> str | None:
     for category in categories:
         lines.append(f"    <category>{escape(category)}</category>")
     lines.append("  </categories>")
-    # Nivora cannot vouch for what a repackaged application shows, so the
-    # rating states the one thing that is always true of these packages.
-    lines.append('  <content_rating type="oars-1.1"/>')
+    screenshot = scalar(text, "appstream_screenshot")
+    if screenshot:
+        screenshot_url = urlsplit(screenshot)
+        if (
+            screenshot_url.scheme != "https"
+            or not screenshot_url.hostname
+            or screenshot_url.username is not None
+            or screenshot_url.password is not None
+        ):
+            raise ValueError(f"{package}: AppStream screenshot must use a public HTTPS URL")
+        caption = scalar(text, "appstream_screenshot_caption")
+        caption_ru = scalar(text, "appstream_screenshot_caption_ru")
+        if not caption:
+            raise ValueError(f"{package}: AppStream screenshot needs an English caption")
+        lines.extend([
+            "  <screenshots>",
+            '    <screenshot type="default">',
+            f"      <caption>{escape(caption)}</caption>",
+        ])
+        if caption_ru:
+            lines.append(f'      <caption xml:lang="ru">{escape(caption_ru)}</caption>')
+        lines.extend([
+            f'      <image type="source">{escape(screenshot)}</image>',
+            "    </screenshot>",
+            "  </screenshots>",
+        ])
+    # An empty OARS element asserts an assessed, unrestricted age rating.
+    # No rating means unknown; leave it absent without an upstream assessment.
     lines.append("</component>")
     return "\n".join(lines) + "\n"
 

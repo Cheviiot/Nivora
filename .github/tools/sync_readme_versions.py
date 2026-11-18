@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import re
 import shlex
+import tomllib
 from html import escape
 from pathlib import Path
 
@@ -14,6 +15,29 @@ CARD_METADATA_RE = re.compile(
     r'(?P<leading>\s*)<p><sub>Версия\s+<code>[^<\r\n]+</code>\s*·\s*'
     r'(?:<code>(?:amd64|arm64|all)</code>\s*)+</sub></p>(?P<trailing>\s*)'
 )
+
+
+def showcase_packages(root: Path) -> list[str]:
+    """Keep service packages maintained without placing them on the app shelf."""
+    with (root / ".github/support-matrix.toml").open("rb") as stream:
+        packages = tomllib.load(stream).get("packages", [])
+    discovered = {path.parent.name for path in root.glob("*/Staplerfile")}
+    declared: set[str] = set()
+    visible: list[str] = []
+    for package in packages:
+        if not isinstance(package, dict) or not isinstance(package.get("id"), str):
+            raise RuntimeError("support matrix has an invalid package entry")
+        package_id = package["id"]
+        if package_id in declared:
+            raise RuntimeError(f"support matrix repeats {package_id}")
+        declared.add(package_id)
+        if not isinstance(package.get("showcase", True), bool):
+            raise RuntimeError(f"{package_id}: showcase must be a boolean")
+        if package.get("showcase", True):
+            visible.append(package_id)
+    if declared != discovered:
+        raise RuntimeError("support matrix packages do not match the recipe catalogue")
+    return sorted(visible)
 
 
 def package_metadata(package: str) -> tuple[str, list[str]]:
@@ -113,7 +137,7 @@ def sync_catalog(
 
 
 def main() -> None:
-    package_dirs = sorted(path.parent.name for path in ROOT.glob("*/Staplerfile"))
+    package_dirs = showcase_packages(ROOT)
     metadata = {package: package_metadata(package) for package in package_dirs}
     text = sync_catalog(README.read_text(encoding="utf-8"), metadata)
     README.write_text(text, encoding="utf-8")

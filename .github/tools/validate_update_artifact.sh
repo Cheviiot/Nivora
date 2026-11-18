@@ -120,6 +120,7 @@ for package, versions in value.items():
     expected_keys = {
         "antigravity": {"source_fingerprint"},
         "chatgpt": {"source_fingerprint_amd64", "source_fingerprint_arm64"},
+        "gnome-software-plugin-stplr": {"source_fingerprint"},
         "parsec": {"source_fingerprint"},
     }.get(package, set())
     if (
@@ -337,6 +338,7 @@ debian_version_value = re.compile(
     r"([0-9A-Za-z.+~_-]+))$"
 )
 hub_value = re.compile(r"^upstream_hub='([0-9]+\.[0-9]+\.[0-9]+-[0-9]+)'$")
+commit_value = re.compile(r"^upstream_commit='([0-9a-f]{40})'$")
 release_value = re.compile(r"^release=([1-9][0-9]*)$")
 fingerprint_value = re.compile(
     r"^(source_fingerprint(?:_(?:amd64|arm64))?)='([0-9a-f]{64})'$")
@@ -432,6 +434,7 @@ if candidate_releases != [expected_release]:
 required_fingerprints = {
     "antigravity": {"source_fingerprint"},
     "chatgpt": {"source_fingerprint_amd64", "source_fingerprint_arm64"},
+    "gnome-software-plugin-stplr": {"source_fingerprint"},
     "parsec": {"source_fingerprint"},
 }.get(package, set())
 trusted_fingerprints = {
@@ -460,6 +463,20 @@ if package == "antigravity":
 
     trusted_fingerprints = hub_fingerprint(trusted, expected_current)
     candidate_fingerprints = hub_fingerprint(candidate, expected_latest)
+if package == "gnome-software-plugin-stplr":
+    for label, lines, fingerprints in (
+        ("trusted", trusted, trusted_fingerprints),
+        ("candidate", candidate, candidate_fingerprints),
+    ):
+        commits = [
+            match.group(1)
+            for line in lines
+            if (match := commit_value.fullmatch(line)) is not None
+        ]
+        if len(commits) != 1 or fingerprints != {
+            "source_fingerprint": hashlib.sha256(commits[0].encode()).hexdigest()
+        }:
+            raise SystemExit(f"{label} plugin fingerprint must bind its pinned commit")
 if set(trusted_fingerprints) != required_fingerprints:
     raise SystemExit("trusted recipe has invalid mutable-source fingerprints")
 if set(candidate_fingerprints) != required_fingerprints:
@@ -492,6 +509,9 @@ for index, (before, after) in enumerate(zip(trusted, candidate, strict=True)):
     if release_value.fullmatch(before) and release_value.fullmatch(after):
         continue
     if package == "antigravity" and hub_value.fullmatch(before) and hub_value.fullmatch(after):
+        changed_fingerprint += 1
+        continue
+    if package == "gnome-software-plugin-stplr" and commit_value.fullmatch(before) and commit_value.fullmatch(after):
         changed_fingerprint += 1
         continue
     if (

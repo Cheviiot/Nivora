@@ -284,4 +284,54 @@ for package in chatgpt parsec; do
     done
 done
 
+# The plugin snapshot digest binds the exact source commit as well as version.
+package=gnome-software-plugin-stplr
+commit_a="$(printf 'a%.0s' {1..40})"
+commit_b="$(printf 'b%.0s' {1..40})"
+fingerprint_a="$(printf '%s' "$commit_a" | sha256sum | awk '{print $1}')"
+fingerprint_b="$(printf '%s' "$commit_b" | sha256sum | awk '{print $1}')"
+install -d "$fixture/repo/$package"
+cat >"$fixture/repo/$package/Staplerfile" <<EOF
+name='$package'
+version='0.3.0.git20260525192209'
+release=5
+upstream_commit='$commit_a'
+source_fingerprint='$fingerprint_a'
+sources=(
+ 'https://example.invalid/archive/\${upstream_commit}.tar.gz'
+)
+checksums=(
+ 'sha256:$(printf '%064d' 1)'
+)
+EOF
+git -C "$fixture/repo" add "$package/Staplerfile"
+git -C "$fixture/repo" commit -qm 'fixture plugin'
+for latest in 0.3.0.git20260525192209 0.3.0.git20260526192209; do
+    release=1
+    [[ "$latest" != 0.3.0.git20260525192209 ]] || release=6
+    sed -i -e "s/^version='0.3.0.git20260525192209'$/version='$latest'/" \
+        -e "s/^release=5$/release=$release/" \
+        -e "s/$commit_a/$commit_b/" \
+        -e "s/$fingerprint_a/$fingerprint_b/" \
+        -e "s/$(printf '%064d' 1)/$(printf '%064d' 2)/" \
+        "$fixture/repo/$package/Staplerfile"
+    reset_good_fixture
+    mv "$fixture/results/demo" "$fixture/results/$package"
+    printf '%s\n' "$package" >"$fixture/results/checked-packages"
+    printf '%s\n' "$package" >"$fixture/results/successful-packages"
+    git -C "$fixture/repo" diff --binary -- "$package/Staplerfile" \
+        >"$fixture/results/$package/update.patch"
+    git -C "$fixture/repo" restore -- "$package/Staplerfile"
+    detected="$(jq -cn --arg package "$package" '[$package]')"
+    expected="$(jq -cn --arg package "$package" --arg latest "$latest" --arg fingerprint "$fingerprint_b" \
+        '{($package):{current:"0.3.0.git20260525192209",latest:$latest,fingerprints:{source_fingerprint:$fingerprint}}}')"
+    run_validator "$detected" "$expected" >/dev/null
+    unexpected="$(jq '.[] .fingerprints.source_fingerprint = ("c" * 64)' <<<"$expected")"
+    expect_failure unplanned-plugin-commit run_validator "$detected" "$unexpected"
+    # A forged commit cannot hide behind a valid planned digest field.
+    sed -i "s/^+upstream_commit='$commit_b'$/+upstream_commit='$(printf 'c%.0s' {1..40})'/" \
+        "$fixture/results/$package/update.patch"
+    expect_failure forged-plugin-commit run_validator "$detected" "$expected"
+done
+
 echo 'OK: строгая проверка update artifact отклоняет подмену и неполные результаты'

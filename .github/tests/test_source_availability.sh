@@ -35,7 +35,11 @@ grep -Fxq -- "$url" <<<"$SOURCE_PROBE_EXPECTED_URL" || {
     exit 1
 }
 printf '%s\n' "$url" >>"$SOURCE_PROBE_REQUESTS"
-printf '%b' "$SOURCE_PROBE_HEADERS"
+if [[ "${SOURCE_PROBE_GET_HEADERS:-}" != '' && " $* " == *' --range '* ]]; then
+    printf '%b' "$SOURCE_PROBE_GET_HEADERS"
+else
+    printf '%b' "$SOURCE_PROBE_HEADERS"
+fi
 exit "${SOURCE_PROBE_CURL_EXIT:-0}"
 EOF
 chmod 0755 "$fixture/bin/curl"
@@ -135,4 +139,59 @@ for mode in fail partial empty whitespace; do
     [[ "$(cat "$SOURCE_PROBE_REQUESTS")" == https://example.invalid/amd64 ]]
 done
 
-echo 'OK: source probes validate requested filenames, final HTTP metadata and every architecture'
+# Snapshot sources use the candidate commit, never the previous recipe pin.
+plugin=gnome-software-plugin-stplr
+install -d "$fixture/repo/$plugin/.stapler"
+cat >"$fixture/repo/$plugin/Staplerfile" <<'EOF'
+name='gnome-software-plugin-stplr'
+version='0.3.0.git20260525192209'
+upstream_commit='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+sources=(
+ "https://altlinux.space/api/v1/repos/stapler/gnome-software-plugin-stplr/archive/${upstream_commit}.tar.gz?~archive=false&~name=source.tar.gz"
+)
+EOF
+cat >"$fixture/repo/$plugin/.stapler/update-run" <<'EOF'
+#!/bin/bash
+[[ "$1" == --snapshot ]] || exit 2
+printf '%s\n' '{"version":"0.3.0.git20260526192209","commit":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","created":"2026-05-26T19:22:09Z"}'
+EOF
+chmod 0755 "$fixture/repo/$plugin/.stapler/update-run"
+cp "$fixture/repo/$plugin/Staplerfile" "$fixture/plugin-before"
+SOURCE_PROBE_EXPECTED_URL='https://altlinux.space/api/v1/repos/stapler/gnome-software-plugin-stplr/archive/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.tar.gz'
+: >"$SOURCE_PROBE_REQUESTS"
+"$probe" "$plugin" 0.3.0.git20260526192209 >/dev/null
+[[ "$(cat "$SOURCE_PROBE_REQUESTS")" == "$SOURCE_PROBE_EXPECTED_URL" ]]
+cmp "$fixture/plugin-before" "$fixture/repo/$plugin/Staplerfile"
+: >"$SOURCE_PROBE_REQUESTS"
+if "$probe" "$plugin" 0.3.0.git20260527192209 >"$fixture/failure.log" 2>&1; then
+    echo 'source probe accepted plugin snapshot drift' >&2
+    exit 1
+fi
+test ! -s "$SOURCE_PROBE_REQUESTS"
+cmp "$fixture/plugin-before" "$fixture/repo/$plugin/Staplerfile"
+
+# The immutable Forgejo archive supports GET while rejecting HEAD. Other
+# errors, failed downloads and undersized GET responses remain failures.
+SOURCE_PROBE_HEADERS='HTTP/2 405\r\n\r\n'
+export SOURCE_PROBE_GET_HEADERS='HTTP/2 200\r\ncontent-length: 38962\r\n\r\n'
+: >"$SOURCE_PROBE_REQUESTS"
+"$probe" "$plugin" 0.3.0.git20260526192209 >/dev/null
+[[ "$(wc -l <"$SOURCE_PROBE_REQUESTS")" -eq 2 ]]
+for response in 'HTTP/2 404\r\n\r\n' 'HTTP/2 200\r\ncontent-length: 64\r\n\r\n'; do
+    SOURCE_PROBE_GET_HEADERS="$response"
+    if "$probe" "$plugin" 0.3.0.git20260526192209 >"$fixture/failure.log" 2>&1; then
+        echo 'plugin GET fallback accepted a missing or undersized source' >&2
+        exit 1
+    fi
+done
+SOURCE_PROBE_HEADERS='HTTP/2 403\r\n\r\n'
+SOURCE_PROBE_GET_HEADERS='HTTP/2 200\r\ncontent-length: 38962\r\n\r\n'
+: >"$SOURCE_PROBE_REQUESTS"
+if "$probe" "$plugin" 0.3.0.git20260526192209 >"$fixture/failure.log" 2>&1; then
+    echo 'plugin probe bypassed a non-method HTTP rejection' >&2
+    exit 1
+fi
+[[ "$(wc -l <"$SOURCE_PROBE_REQUESTS")" -eq 1 ]]
+cmp "$fixture/plugin-before" "$fixture/repo/$plugin/Staplerfile"
+
+echo 'OK: source probes validate requested filenames, pinned snapshots, final HTTP metadata and every architecture'

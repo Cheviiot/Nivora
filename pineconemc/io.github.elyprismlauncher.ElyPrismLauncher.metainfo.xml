@@ -10,6 +10,21 @@
     <p>PineconeMC is a Minecraft launcher based on Prism Launcher with support for mods, modpacks, and Ely.by accounts.</p>
     <p xml:lang="ru">PineconeMC — лаунчер Minecraft на основе Prism Launcher с поддержкой модов, модпаков и учётных записей Ely.by.</p>
   </description>
+  <developer id="io.github.elyprismlauncher">
+    <name>ElyPrismLauncher</name>
+  </developer>
   <launchable type="desktop-id">io.github.elyprismlauncher.ElyPrismLauncher.desktop</launchable>
-  <url type="homepage">https://pineconemc.com/</url>
+  <url type="homepage">https://elyprismlauncher.github.io/</url>
+  <url type="bugtracker">https://github.com/ElyPrismLauncher/Launcher/issues</url>
+  <url type="vcs-browser">https://github.com/ElyPrismLauncher/Launcher</url>
+  <categories>
+    <category>Game</category>
+  </categories>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Minecraft instances and modpacks</caption>
+      <caption xml:lang="ru">Сборки Minecraft и модпаки</caption>
+      <image type="source" width="960" height="640">https://raw.githubusercontent.com/ElyPrismLauncher/elyprismlauncher.github.io/6f848e647bd36351b71095575cd01f127789697e/assets/png/screenshot.png</image>
+    </screenshot>
+  </screenshots>
 </component>

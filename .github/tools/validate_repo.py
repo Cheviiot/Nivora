@@ -21,6 +21,7 @@ EXPECTED_PACKAGES = (
     "balena-etcher",
     "chatgpt",
     "claude",
+    "gnome-software-plugin-stplr",
     "happ",
     "opencode",
     "parsec",
@@ -41,6 +42,7 @@ REQUIRED_ROOT_FILES = {
     Path(".github/support-matrix.toml"),
     Path(".github/docs/index.md"),
     Path(".github/docs/installation.md"),
+    Path(".github/docs/gnome-software.md"),
     Path(".github/docs/package-guide.md"),
     Path(".github/docs/troubleshooting.md"),
     Path(".github/docs/maintenance.md"),
@@ -396,6 +398,8 @@ def load_support_matrix(errors: list[str]) -> dict[str, object]:
             errors.append("support matrix: every package entry must be a table")
             continue
         package_id = package.get("id", "<unknown>")
+        if not isinstance(package.get("showcase", True), bool):
+            errors.append(f"support matrix: {package_id}: showcase must be a boolean")
         architectures = package.get("architectures")
         if not isinstance(architectures, list) or not architectures:
             errors.append(f"support matrix: {package_id}: architectures are missing")
@@ -610,6 +614,7 @@ def validate_package(
 
     expected_fingerprint_fields = {
         "chatgpt": {"source_fingerprint_amd64", "source_fingerprint_arm64"},
+        "gnome-software-plugin-stplr": {"source_fingerprint"},
         "parsec": {"source_fingerprint"},
     }.get(package, set())
     declared_fingerprint_fields = re.findall(
@@ -626,6 +631,12 @@ def validate_package(
         value = scalar(text, field)
         if value is None or not re.fullmatch(r"[0-9a-f]{64}", value):
             errors.append(f"G1 {package}: {field} must be a SHA-256 value")
+    if package == "gnome-software-plugin-stplr":
+        commit = scalar(text, "upstream_commit") or ""
+        if not re.fullmatch(r"[0-9a-f]{40}", commit):
+            errors.append(f"G1 {package}: upstream_commit must pin a full commit SHA")
+        elif scalar(text, "source_fingerprint") != hashlib.sha256(commit.encode()).hexdigest():
+            errors.append(f"G1 {package}: source_fingerprint must bind upstream_commit")
     if not architectures:
         errors.append(f"{package}: architectures are missing")
     elif any(item not in {"amd64", "arm64", "all"} for item in architectures):
@@ -634,6 +645,11 @@ def validate_package(
     aliases = APPROVED_TRANSITION_ALIASES.get(package, [])
     expected_provides = aliases if package in {"chatgpt", "telegram"} else []
     expected_conflicts = expected_provides
+    if package == "gnome-software-plugin-stplr":
+        # A service plugin replaces the distribution's identically located
+        # library and satisfies dependencies on its versioned capability.
+        expected_provides = ["gnome-software-plugin-stplr = ${version}"]
+        expected_conflicts = [package]
     if provides != expected_provides:
         errors.append(
             f"G0 {package}: provides must be {expected_provides}, got {provides}"
@@ -1317,7 +1333,11 @@ def main() -> int:
         )
 
     validate_unique_local_source_urls(metadata, errors)
-    validate_readme(metadata, errors)
+    showcase = {
+        package: values for package, values in metadata.items()
+        if matrix_packages.get(package, {}).get("showcase", True) is not False
+    }
+    validate_readme(showcase, errors)
     validate_readme_hero(errors)
     validate_updater_package_list(errors)
     validate_lifecycle_catalog(matrix_packages, errors)

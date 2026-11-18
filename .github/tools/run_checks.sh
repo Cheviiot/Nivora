@@ -60,6 +60,7 @@ python3 .github/tools/validate_repo.py
 # The AppStream sidecars are generated from the recipes; a hand edit to
 # either side has to be reconciled, not silently shipped.
 python3 .github/tools/sync_appstream.py --check
+python3 .github/tools/validate_appstream.py --all
 
 for staplerfile in */Staplerfile; do
     stplr-spec get-field --path "$staplerfile" name >/dev/null

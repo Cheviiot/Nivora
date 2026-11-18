@@ -1,0 +1,152 @@
+#!/bin/bash
+set -euo pipefail
+
+package_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+exec python3 - "$package_dir" "$@" <<'PY'
+import hashlib
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+from urllib.request import Request, urlopen
+
+PACKAGE_DIR = Path(sys.argv[1])
+API = "https://altlinux.space/api/v1/repos/stapler/gnome-software-plugin-stplr"
+
+
+def fetch_json(path):
+    request = Request(API + path, headers={
+        "Accept": "application/json", "User-Agent": "Nivora-plugin-updater",
+    })
+    with urlopen(request, timeout=30) as response:
+        return json.load(response)
+
+
+def snapshot():
+    tags = fetch_json("/tags?limit=100")
+    if not isinstance(tags, list) or not tags:
+        raise ValueError("upstream did not return a nonempty tag list")
+    versions = []
+    for tag in tags:
+        if not isinstance(tag, dict) or not isinstance(tag.get("name"), str):
+            raise ValueError("upstream returned a malformed tag")
+        match = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)", tag["name"])
+        if match:
+            versions.append(tuple(map(int, match.groups())))
+    if not versions:
+        raise ValueError("no stable numeric tag among the first 100 upstream tags")
+    head = fetch_json("/git/commits/main")
+    if not isinstance(head, dict) or not re.fullmatch(r"[0-9a-f]{40}", str(head.get("sha", ""))):
+        raise ValueError("upstream did not return a full commit SHA")
+    try:
+        created = datetime.fromisoformat(head["commit"]["committer"]["date"].replace("Z", "+00:00"))
+    except (KeyError, TypeError, AttributeError, ValueError) as error:
+        raise ValueError("upstream returned an invalid commit timestamp") from error
+    if created.tzinfo is None:
+        raise ValueError("upstream commit timestamp has no timezone")
+    created = created.astimezone(timezone.utc)
+    version = ".".join(map(str, max(versions))) + created.strftime(".git%Y%m%d%H%M%S")
+    return {"version": version, "commit": head["sha"], "created": created.isoformat().replace("+00:00", "Z")}
+
+
+def fingerprint(candidate):
+    return hashlib.sha256(candidate["commit"].encode("ascii")).hexdigest()
+
+
+def version_key(version):
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)\.git(\d{14})", version)
+    if not match:
+        raise ValueError("plugin version must contain a numeric tag and UTC commit timestamp")
+    return tuple(map(int, match.groups()))
+
+
+def update(version):
+    expected = os.environ.get("STPLR_PLUGIN_EXPECTED_FINGERPRINT", "")
+    if not re.fullmatch(r"[0-9a-f]{64}", expected):
+        raise ValueError("STPLR_PLUGIN_EXPECTED_FINGERPRINT must bind the trusted discovery plan")
+    candidate = snapshot()
+    if candidate["version"] != version or fingerprint(candidate) != expected:
+        raise ValueError("upstream commit/version changed after discovery; retry with a fresh plan")
+
+    recipe = PACKAGE_DIR / "Staplerfile"
+    original = recipe.read_bytes()
+    tool = os.environ.get("STPLR_SPEC_COMMAND", "stplr-spec")
+
+    def read_field(field):
+        return subprocess.run(
+            [tool, "get-field", "--path", str(recipe), field],
+            check=True, text=True, capture_output=True,
+        ).stdout.strip()
+
+    old_version = read_field("version")
+    release = 1
+    if old_version == version:
+        if read_field("upstream_commit") == candidate["commit"] and read_field("source_fingerprint") == expected:
+            return
+        old_release = read_field("release")
+        if not re.fullmatch(r"[1-9][0-9]*", old_release):
+            raise ValueError("current recipe release is invalid")
+        release = int(old_release) + 1
+    elif version_key(version) <= version_key(old_version):
+        raise ValueError(f"refusing plugin downgrade from {old_version} to {version}")
+
+    # Keep the real recipe intact if any field operation or checksum download
+    # fails. A sibling file keeps local source paths relative to this package.
+    descriptor, temporary = tempfile.mkstemp(prefix=".Staplerfile-", dir=PACKAGE_DIR)
+    os.close(descriptor)
+    temporary = Path(temporary)
+    try:
+        shutil.copy2(recipe, temporary)
+        for field, value in (
+            ("version", version), ("release", str(release)),
+            ("upstream_commit", candidate["commit"]), ("source_fingerprint", expected),
+        ):
+            subprocess.run([tool, "set-field", "--path", str(temporary), field, value], check=True)
+        subprocess.run([tool, "update-checksums", "--path", str(temporary)], check=True)
+        # stplr-spec emits bare scalar assignments. The shared publication
+        # validator deliberately accepts only canonical, quoted source pins.
+        text = temporary.read_text()
+        for field, value in (
+            ("version", f"'{version}'"), ("release", str(release)),
+            ("upstream_commit", f"'{candidate['commit']}'"),
+            ("source_fingerprint", f"'{expected}'"),
+        ):
+            text, count = re.subn(rf"^{field}=.*$", f"{field}={value}", text, flags=re.M)
+            if count != 1:
+                raise ValueError(f"staged recipe must contain exactly one {field}")
+        temporary.write_text(text)
+        if recipe.read_bytes() != original:
+            raise ValueError("plugin recipe changed while the update was being prepared")
+        os.replace(temporary, recipe)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def main(arguments):
+    if len(arguments) != 1:
+        raise ValueError("usage: update-run {--latest|--snapshot|--fingerprints|VERSION}")
+    command = arguments[0]
+    if command in ("--latest", "--snapshot", "--fingerprints"):
+        candidate = snapshot()
+        if command == "--latest":
+            print(candidate["version"])
+        elif command == "--snapshot":
+            print(json.dumps(candidate, separators=(",", ":")))
+        else:
+            print("source_fingerprint\t" + fingerprint(candidate))
+    else:
+        update(command)
+
+
+if __name__ == "__main__":
+    try:
+        main(sys.argv[2:])
+    except (OSError, ValueError, subprocess.CalledProcessError) as error:
+        print(f"gnome-software-plugin-stplr updater: {error}", file=sys.stderr)
+        raise SystemExit(1)
+PY

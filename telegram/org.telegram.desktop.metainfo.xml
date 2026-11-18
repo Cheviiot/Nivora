@@ -21,5 +21,11 @@
     <category>Network</category>
     <category>InstantMessaging</category>
   </categories>
-  <content_rating type="oars-1.1"/>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Chats and a group conversation</caption>
+      <caption xml:lang="ru">Список чатов и групповая переписка</caption>
+      <image type="source">https://raw.githubusercontent.com/telegramdesktop/tdesktop/bf4f714036f21c750d535dab199c811b3f9bfdd4/docs/assets/preview.png</image>
+    </screenshot>
+  </screenshots>
 </component>

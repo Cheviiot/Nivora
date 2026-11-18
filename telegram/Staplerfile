@@ -1,6 +1,6 @@
 name='telegram'
 version='7.4.4'
-release=2
+release=3
 summary='Desktop messaging with chat synchronization'
 summary_ru='Настольный мессенджер с синхронизацией переписки'
 group='Networking/Instant messaging'
@@ -18,6 +18,9 @@ license=('GPL-3.0-only')
 appstream_app_id='org.telegram.desktop'
 appstream_name='Telegram Desktop'
 appstream_developer='Telegram FZ-LLC'
+appstream_screenshot='https://raw.githubusercontent.com/telegramdesktop/tdesktop/bf4f714036f21c750d535dab199c811b3f9bfdd4/docs/assets/preview.png'
+appstream_screenshot_caption='Chats and a group conversation'
+appstream_screenshot_caption_ru='Список чатов и групповая переписка'
 
 provides=('telegram-desktop')
 replaces=('telegram' 'telegram-desktop')
@@ -53,7 +56,7 @@ checksums=(
 	'sha256:8ceb3f6aea1003f84f1b5757cd857f8237b294bb18456e5e0e54d96e6fff04ba'
 	'sha256:3fb1400c7dc9bbc3b5cb3ffedcbf4a9b09c53e28b57a7ff33a8a6b9048864090'
 	'sha256:f3ad1b5ecdc1c9e5ab3719a0b084a3e0b4fc87ad424fbf81043df9637be3d1f5'
-	'sha256:7fff4d8fa76df9c165f20a22924be113c632880fbce97abecb2516699554626b'
+	'sha256:d063477b48ee673b566658405c792a46cce76c9050f30bec7e936dddc41ebbc5'
 )
 
 scripts=(

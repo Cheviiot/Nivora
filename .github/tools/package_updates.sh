@@ -7,6 +7,7 @@ readonly -a PACKAGES=(
     balena-etcher
     chatgpt
     claude
+    gnome-software-plugin-stplr
     happ
     opencode
     parsec
@@ -149,7 +150,7 @@ is_mutable_source_package() {
     # Antigravity has immutable archives, but the selected build can change
     # without a version bump. Track its full hub ID through the same snapshot
     # lane as mutable downloads, without duplicating that ID in the recipe.
-    antigravity | chatgpt | parsec) return 0 ;;
+    antigravity | chatgpt | gnome-software-plugin-stplr | parsec) return 0 ;;
     *) return 1 ;;
     esac
 }
@@ -202,6 +203,9 @@ source_fingerprints() {
         fingerprint="$(http_etag_fingerprint \
             'https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_arm64.deb')" || return
         printf 'source_fingerprint_arm64\t%s\n' "$fingerprint"
+        ;;
+    gnome-software-plugin-stplr)
+        "${repo_root}/${package}/.stapler/update-run" --fingerprints
         ;;
     parsec)
         fingerprint="$(http_etag_fingerprint \
@@ -457,6 +461,7 @@ latest_version() {
     balena-etcher) github_latest_release balena-io/etcher ;;
     chatgpt) latest_chatgpt ;;
     claude) latest_claude_desktop ;;
+    gnome-software-plugin-stplr) "${repo_root}/$1/.stapler/update-run" --latest ;;
     happ) github_latest_release Happ-proxy/happ-desktop ;;
     opencode) github_latest_release anomalyco/opencode ;;
     parsec) latest_parsec ;;

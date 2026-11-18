@@ -1,5 +1,6 @@
 import importlib.util
 import re
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -105,6 +106,45 @@ Hand-authored footer.
                     SYNC.sync_catalog(self.fixture(), {
                         "demo": ("2", architectures), "other": ("4", ["amd64"]),
                     })
+
+
+class ShowcaseSelectionTests(unittest.TestCase):
+    def fixture(self, root, extra="showcase = false"):
+        (root / ".github").mkdir()
+        for name in ("app", "service"):
+            (root / name).mkdir()
+            (root / name / "Staplerfile").write_text("name='fixture'\n")
+        (root / ".github/support-matrix.toml").write_text(
+            '[[packages]]\nid = "app"\n\n[[packages]]\nid = "service"\n' + extra + '\n'
+        )
+
+    def test_service_package_is_excluded_only_from_showcase(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.fixture(root)
+            self.assertEqual(SYNC.showcase_packages(root), ["app"])
+            self.assertTrue((root / "service/Staplerfile").is_file())
+
+    def test_existing_packages_remain_visible_by_default(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.fixture(root, "")
+            self.assertEqual(SYNC.showcase_packages(root), ["app", "service"])
+
+    def test_invalid_flag_and_missing_matrix_package_are_rejected(self):
+        for extra in ('showcase = "false"', 'showcase = 0'):
+            with self.subTest(extra=extra), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.fixture(root, extra)
+                with self.assertRaisesRegex(RuntimeError, "showcase must be a boolean"):
+                    SYNC.showcase_packages(root)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.fixture(root)
+            (root / "unlisted").mkdir()
+            (root / "unlisted/Staplerfile").touch()
+            with self.assertRaisesRegex(RuntimeError, "do not match"):
+                SYNC.showcase_packages(root)
 
 
 if __name__ == "__main__":

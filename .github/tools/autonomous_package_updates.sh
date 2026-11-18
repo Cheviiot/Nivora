@@ -14,7 +14,7 @@ mkdir -p "$results_dir"
 
 is_mutable_source_package() {
     case "$1" in
-    antigravity | chatgpt | parsec) return 0 ;;
+    antigravity | chatgpt | gnome-software-plugin-stplr | parsec) return 0 ;;
     *) return 1 ;;
     esac
 }
@@ -102,7 +102,7 @@ run_update_phases() {
     local worktree="$1"
     local package="$2"
     local phase_file="$3"
-    local planned_current planned_latest planned_source_fingerprints antigravity_fingerprint
+    local planned_current planned_latest planned_source_fingerprints source_fingerprint
     local updated_version
 
     cd "$worktree" || return
@@ -123,13 +123,21 @@ run_update_phases() {
     if [[ "$package" == antigravity ]]; then
         # update-package does not run a hook when its version is unchanged.
         # The App can be rebuilt with a new hub ID under the same version.
-        antigravity_fingerprint="$(
+        source_fingerprint="$(
             jq -er '.source_fingerprint' <<<"$planned_source_fingerprints"
         )" || return
-        [[ "$antigravity_fingerprint" =~ ^[0-9a-f]{64}$ ]] || return
-        ANTIGRAVITY_EXPECTED_FINGERPRINT="$antigravity_fingerprint" \
+        [[ "$source_fingerprint" =~ ^[0-9a-f]{64}$ ]] || return
+        ANTIGRAVITY_EXPECTED_FINGERPRINT="$source_fingerprint" \
             STPLR_SPEC_COMMAND="$stplr_spec_command" \
             "${worktree}/antigravity/.stapler/update-run" "$planned_latest" || return
+    elif [[ "$package" == gnome-software-plugin-stplr ]]; then
+        source_fingerprint="$(
+            jq -er '.source_fingerprint' <<<"$planned_source_fingerprints"
+        )" || return
+        [[ "$source_fingerprint" =~ ^[0-9a-f]{64}$ ]] || return
+        STPLR_PLUGIN_EXPECTED_FINGERPRINT="$source_fingerprint" \
+            STPLR_SPEC_COMMAND="$stplr_spec_command" \
+            "${worktree}/${package}/.stapler/update-run" "$planned_latest" || return
     elif is_mutable_source_package "$package" &&
         [[ "$planned_current" == "$planned_latest" ]]; then
         "$stplr_spec_command" update-checksums \

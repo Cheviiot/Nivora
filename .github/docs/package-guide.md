@@ -145,6 +145,7 @@ upstream. Если исходный фрагмент изменился, сбо�
 ```bash
 python3 .github/tools/sync_appstream.py
 python3 .github/tools/sync_appstream.py --check
+python3 .github/tools/validate_appstream.py --all
 python3 .github/tools/sync_readme_versions.py
 ```
 
@@ -152,6 +153,17 @@ AppStream-генератор обслуживает sidecars со своей о�
 Существующие ручные метаданные сохраняют свои component-id, launchable и
 лицензию; при изменении описания проверяйте их отдельно.
 Если metainfo входит в `local:///` sources, измените также его SHA-256.
+Установленный RPM должен содержать ту же идентичность приложения, desktop ID,
+название, разработчика и homepage. `verify_artifacts.sh` извлекает реальные
+metainfo и desktop-файл, запускает `appstreamcli` и `desktop-file-validate`,
+проверяет наличие иконки в payload.
+
+Не добавляйте пустой `<content_rating>` для неизвестного рейтинга: пустой
+OARS означает проведённую оценку без возрастных ограничений. Для официального
+снимка генератор принимает `appstream_screenshot`,
+`appstream_screenshot_caption` и необязательную русскую подпись
+`appstream_screenshot_caption_ru`. Используйте HTTPS и, где возможно,
+закреплённую ссылку на asset upstream; даты релизов не выводите из даты упаковки.
 
 Главный README — витрина с четырьмя категориями и отдельной HTML-таблицей
 для каждой. В строке находятся две карточки; если в категории осталось
@@ -174,6 +186,11 @@ AppStream-генератор обслуживает sidecars со своей о�
 проверяет [validate_repo.py](../tools/validate_repo.py).
 В `README.md` внутри каталога пакета номер версии повторно не фиксируется.
 
+Служебные пакеты отмечаются `showcase = false` в матрице поддержки.
+Они проходят сборку, lifecycle и автоматическое обновление вместе с остальными,
+но не получают карточку, маркеры версии и место в счётчике главного README.
+Так сопровождается [плагин GNOME Software](gnome-software.md).
+
 ## Подключение к автоматическому обслуживанию
 
 При добавлении или удалении пакета согласуйте все места, в которых задан
@@ -187,7 +204,7 @@ AppStream-генератор обслуживает sidecars со своей о�
 | [package_updates.sh](../tools/package_updates.sh) и `.stapler/update-check` пакета | Массив `PACKAGES`, обнаружение версии и поддерживаемая точка вызова |
 | [test_package_lifecycle.sh](../tools/test_package_lifecycle.sh) | Запись `lifecycle_package_catalog`: команда, профиль, ярлык или служба, иконка и sandbox |
 | [verify_artifacts.sh](../tools/verify_artifacts.sh) | Проверки ожидаемого содержимого, зависимостей и прав собранного RPM |
-| [Главная витрина](../../README.md) и документация | Карточка, счётчик, архитектуры, особенности упаковки и границы проверки |
+| [Главная витрина](../../README.md) и документация | Карточка и счётчик для приложений; для служебного пакета — `showcase = false` и отдельная документация |
 
 [Планировщик CI](../tools/ci_plan.py) читает список пакетов из матрицы
 поддержки. Отдельный перечень приложений в каждом workflow создавать не нужно.

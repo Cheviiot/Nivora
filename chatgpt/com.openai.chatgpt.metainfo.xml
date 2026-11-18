@@ -10,7 +10,9 @@
     <p>ChatGPT is the official OpenAI desktop application for chat, files, and projects, with integrated Codex for coding tasks.</p>
     <p xml:lang="ru">ChatGPT — официальное настольное приложение OpenAI для чата, работы с файлами и проектами, со встроенным Codex для задач разработки.</p>
   </description>
-  <developer_name>OpenAI</developer_name>
+  <developer id="com.openai">
+    <name>OpenAI</name>
+  </developer>
   <url type="homepage">https://learn.chatgpt.com/docs/app</url>
   <launchable type="desktop-id">chatgpt.desktop</launchable>
   <provides>

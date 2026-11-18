@@ -1,7 +1,7 @@
 name='anidesk'
 version='0.0.1-beta.7'
 debian_version='0.0.1.beta.7'
-release=12
+release=13
 summary='Unofficial desktop client for Anixart'
 summary_ru='Неофициальный настольный клиент Anixart'
 group='Video/Players'
@@ -57,7 +57,7 @@ checksums=(
 	'sha256:6d7791424bd7db712b121f7e66206289b1d31eb2a8ea998d9aeced2c7075dfe8'
 	'sha256:f58b9f720bd63ff49053f949dd3f0a738afc2aa2cee57fedbd2b73440c123721'
 	'sha256:892e6b268f44a850a102cc6367fec45853fe3556840d44a6106f08487553e6c4'
-	'sha256:0a6a49abbf41cb3fdd0f05f23cdbb321b3b92cf155ec0a50a5f510489407ad05'
+	'sha256:55919822fdba837e19f9010e00c6e4aa9f4d1a3e6826a8049d13cfaa942bf239'
 )
 
 scripts=(

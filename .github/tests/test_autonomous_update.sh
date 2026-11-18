@@ -16,6 +16,7 @@ install -d \
     "$fixture/repo/parsec" \
     "$fixture/repo/chatgpt" \
     "$fixture/repo/antigravity/.stapler" \
+    "$fixture/repo/gnome-software-plugin-stplr/.stapler" \
     "$fixture/bin" \
     "$fixture/runner"
 cp "$repo_root/.github/tools/autonomous_package_updates.sh" \
@@ -46,6 +47,21 @@ sed -i -e "s/^version='1.0.0'$/version='$1'/" \
     -e "s/^checksum='old'$/checksum='new'/" antigravity/Staplerfile
 EOF
 chmod 0755 "$fixture/repo/antigravity/.stapler/update-run"
+printf "name='gnome-software-plugin-stplr'\nversion='0.3.0.git20260525192209'\nrelease=4\nupstream_commit='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'\nsource_fingerprint='%s'\nchecksum='old'\n" \
+    "$fingerprint_a" >"$fixture/repo/gnome-software-plugin-stplr/Staplerfile"
+cat >"$fixture/repo/gnome-software-plugin-stplr/.stapler/update-run" <<'EOF'
+#!/bin/bash
+set -euo pipefail
+[[ "$STPLR_PLUGIN_EXPECTED_FINGERPRINT" == "$MUTABLE_TEST_FINGERPRINT" ]]
+release=1
+[[ "$1" != 0.3.0.git20260525192209 ]] || release=5
+sed -i -e "s/^version='0.3.0.git20260525192209'$/version='$1'/" \
+    -e "s/^release=4$/release=$release/" \
+    -e "s/^upstream_commit='.*'$/upstream_commit='bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'/" \
+    -e "s/^source_fingerprint='.*'$/source_fingerprint='$STPLR_PLUGIN_EXPECTED_FINGERPRINT'/" \
+    -e "s/^checksum='old'$/checksum='new'/" gnome-software-plugin-stplr/Staplerfile
+EOF
+chmod 0755 "$fixture/repo/gnome-software-plugin-stplr/.stapler/update-run"
 # The variable is intentionally expanded later by the generated mock.
 # shellcheck disable=SC2016
 printf '%s\n' \
@@ -150,6 +166,19 @@ esac
 EOF
 chmod 0755 "$fixture/bin/stplr-spec"
 
+for latest in 0.3.0.git20260525192209 0.3.0.git20260526192209; do
+    PATH="$fixture/bin:$PATH" \
+    STPLR_SPEC_COMMAND="$fixture/bin/stplr-spec" \
+    RUNNER_TEMP="$fixture/runner" \
+    AUTONOMOUS_UPDATE_RESULTS_DIR="$fixture/plugin-results-$latest" \
+    MUTABLE_TEST_FINGERPRINT="$fingerprint_b" \
+    UPDATE_PLAN_JSON="{\"gnome-software-plugin-stplr\":{\"current\":\"0.3.0.git20260525192209\",\"latest\":\"$latest\",\"fingerprints\":{\"source_fingerprint\":\"$fingerprint_b\"}}}" \
+        "$fixture/repo/.github/tools/autonomous_package_updates.sh" gnome-software-plugin-stplr
+    grep -Fxq gnome-software-plugin-stplr "$fixture/plugin-results-$latest/successful-packages"
+    grep -Fq "+upstream_commit='bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'" \
+        "$fixture/plugin-results-$latest/gnome-software-plugin-stplr/update.patch"
+done
+
 for latest in 1.0.0 2.0.0; do
     fingerprint="$(printf '%s' "$latest-700" | sha256sum | awk '{print $1}')"
     PATH="$fixture/bin:$PATH" \
@@ -227,7 +256,7 @@ grep -Fxq $'chatgpt\tupdate-recipe' "$fixture/chatgpt-raced-results/failed-packa
 test ! -s "$fixture/chatgpt-raced-results/chatgpt/failed.patch"
 # Each successful candidate runs one build and one lifecycle gate, both on
 # p11. Failed source/fingerprint checks must not reach either gate.
-expected_gates=$'p11\tantigravity\np11\tantigravity\np11\tparsec\np11\tchatgpt\np11\tchatgpt'
+expected_gates=$'p11\tgnome-software-plugin-stplr\np11\tgnome-software-plugin-stplr\np11\tantigravity\np11\tantigravity\np11\tparsec\np11\tchatgpt\np11\tchatgpt'
 [[ "$(cat "$BUILD_TEST_LOG")" == "$expected_gates" ]]
 [[ "$(cat "$LIFECYCLE_TEST_LOG")" == "$expected_gates" ]]
 

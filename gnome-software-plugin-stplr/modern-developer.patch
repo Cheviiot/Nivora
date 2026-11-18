@@ -1,0 +1,92 @@
+--- a/src/stplr.vala
++++ b/src/stplr.vala
+@@ -474,7 +474,15 @@
+                     if (raw_desc != "")
+                         info.description = format_appstream_string (raw_desc);
+
+-                    info.developer_name = get_localized_field (as_obj, "developer_name");
++                    // AppStream 1.0 uses developer.name; retain support for
++                    // older metadata still exposed as developer_name.
++                    if (as_obj.has_member ("developer")) {
++                        var developer_node = as_obj.get_member ("developer");
++                        if (developer_node.get_node_type () == Json.NodeType.OBJECT)
++                            info.developer_name = get_localized_field (developer_node.get_object (), "name");
++                    }
++                    if (info.developer_name == "")
++                        info.developer_name = get_localized_field (as_obj, "developer_name");
+
+                     if (as_obj.has_member ("launchable")) {
+                         var launchable_node = as_obj.get_member ("launchable");
+--- a/src/tests/test-stplr.vala
++++ b/src/tests/test-stplr.vala
+@@ -155,6 +155,60 @@
+     }
+ }
+
++void test_parse_info_json_modern_developer () {
++    var json = """[{"repository":"nivora","name":"anidesk","appstream":{
++        "developer":{"id":"io.github.thedesconnet","name":{"C":"Modern Developer"}},
++        "developer_name":{"C":"Legacy Developer"}
++    }}]""";
++    try {
++        var result = Stplr.parse_info_json (json);
++        assert_cmpstr (result[0].developer_name, CompareOperator.EQ, "Modern Developer");
++    } catch (Error e) {
++        assert_not_reached ();
++    }
++}
++
++void test_parse_info_json_localized_developer () {
++    string? previous_language = Environment.get_variable ("LANGUAGE");
++    Environment.set_variable ("LANGUAGE", "ru", true);
++    var json = """[{"repository":"nivora","name":"anidesk","appstream":{
++        "developer":{"id":"io.github.thedesconnet","name":{"C":"Developer","ru":"Разработчик"}}
++    }}]""";
++    try {
++        var result = Stplr.parse_info_json (json);
++        assert_cmpstr (result[0].developer_name, CompareOperator.EQ, "Разработчик");
++    } catch (Error e) {
++        assert_not_reached ();
++    }
++    if (previous_language == null)
++        Environment.unset_variable ("LANGUAGE");
++    else
++        Environment.set_variable ("LANGUAGE", previous_language, true);
++}
++
++void test_parse_info_json_developer_fallback () {
++    string[] inputs = {
++        """[{"repository":"nivora","name":"chatgpt","appstream":{
++            "developer_name":{"C":"Legacy Developer"}
++        }}]""",
++        """[{"repository":"nivora","name":"chatgpt","appstream":{
++            "developer":{"id":"com.example","name":{}},
++            "developer_name":{"C":"Legacy Developer"}
++        }}]""",
++        """[{"repository":"nivora","name":"chatgpt","appstream":{
++            "developer":null,"developer_name":{"C":"Legacy Developer"}
++        }}]"""
++    };
++    foreach (var json in inputs) {
++        try {
++            var result = Stplr.parse_info_json (json);
++            assert_cmpstr (result[0].developer_name, CompareOperator.EQ, "Legacy Developer");
++        } catch (Error e) {
++            assert_not_reached ();
++        }
++    }
++}
++
+ void main (string[] args) {
+     Test.init (ref args);
+
+@@ -168,6 +222,9 @@
+     Test.add_func ("/stplr/description/malformed_xml_fallback", test_format_description_malformed_xml_fallback);
+
+     Test.add_func ("/stplr/info/basic", test_parse_info_json_basic);
++    Test.add_func ("/stplr/info/modern_developer", test_parse_info_json_modern_developer);
++    Test.add_func ("/stplr/info/localized_developer", test_parse_info_json_localized_developer);
++    Test.add_func ("/stplr/info/developer_fallback", test_parse_info_json_developer_fallback);
+     Test.add_func ("/stplr/info/no_appstream", test_parse_info_json_no_appstream);
+     Test.add_func ("/stplr/info/screenshots", test_parse_info_json_screenshots);
+     Test.add_func ("/stplr/info/multiple", test_parse_info_json_multiple);

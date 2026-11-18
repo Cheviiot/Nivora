@@ -1,6 +1,6 @@
 name='chatgpt'
 version='26.1111.71025'
-release=1
+release=2
 # SHA-256 of the final HTTP ETag for each mutable /latest/ source. The
 # autonomous detector compares these even when upstream keeps the version.
 source_fingerprint_amd64='f88d561e0a997fd72d602708b0cf6d29b2a6a3ffa6454437980afded2880d78f'
@@ -56,22 +56,26 @@ sources=(
 	"https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_amd64.deb?nivora=${source_fingerprint_amd64}&~archive=false&~name=chatgpt.deb"
 	'local:///com.openai.chatgpt.png'
 	'local:///LICENSE?nivora=chatgpt'
+	'local:///com.openai.chatgpt.metainfo.xml?nivora=chatgpt'
 )
 sources_arm64=(
 	"https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_arm64.deb?nivora=${source_fingerprint_arm64}&~archive=false&~name=chatgpt.deb"
 	'local:///com.openai.chatgpt.png'
 	'local:///LICENSE?nivora=chatgpt'
+	'local:///com.openai.chatgpt.metainfo.xml?nivora=chatgpt'
 )
 
 checksums=(
 	'sha256:8197424cbcea3a7c0d445a544eaa6b99df8b8ef8b1d182e2b743f702753c7a70'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
 	'sha256:ae0362ccf70609d206eeb12e0497cb8fbb6ce6a5b5ea15efbb634d276ad4e32b'
+	'sha256:5cb8f6d48aa4668285d2d2645ec34d6b2e54894937cbe8fee329ea36608a71a5'
 )
 checksums_arm64=(
 	'sha256:55d861fb4c8d1b54033e4d4178f344f0b9247352bf80290420f44d15dec4a2ba'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
 	'sha256:ae0362ccf70609d206eeb12e0497cb8fbb6ce6a5b5ea15efbb634d276ad4e32b'
+	'sha256:5cb8f6d48aa4668285d2d2645ec34d6b2e54894937cbe8fee329ea36608a71a5'
 )
 
 scripts=(
@@ -143,11 +147,10 @@ package() {
 	# The AppStream component claims this desktop id; make the build
 	# fail here rather than shipping a component nothing can launch.
 	test -f "${pkgdir}/usr/share/applications/chatgpt.desktop"
-	# Upstream ships its own AppStream document, with component id
-	# com.openai.chatgpt launching chatgpt.desktop. It is installed as-is
-	# rather than replaced by a generated one.
+	# Install the same curated, localized document that Stapler exposes to
+	# GNOME Software; preserve the upstream component and desktop identities.
 	install -Dm644 \
-		"${srcdir}/extracted/usr/share/metainfo/com.openai.chatgpt.metainfo.xml" \
+		"${srcdir}/com.openai.chatgpt.metainfo.xml" \
 		"${pkgdir}/usr/share/metainfo/com.openai.chatgpt.metainfo.xml"
 	install-license LICENSE "chatgpt/LICENSE.nivora"
 	install -Dm644 "${srcdir}/extracted/usr/lib/chatgpt/LICENSES.chromium.html" \

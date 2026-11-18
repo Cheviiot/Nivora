@@ -14,6 +14,7 @@
 | [balenaEtcher](../../balena-etcher/Staplerfile) | Официальный DEB. Сохраняются штатные sandbox и polkit-механизмы; реальные накопители в CI не перезаписываются. |
 | [ChatGPT](../../chatgpt/Staplerfile) | Официальные DEB OpenAI по изменяемым адресам. У каждой архитектуры отдельный ETag fingerprint. AppArmor-профиль связан с `/usr/lib/chatgpt/ChatGPT`; встроенному Codex нужен `bubblewrap`. Musl-варианты нативных модулей не включаются в glibc-пакет. |
 | [Claude](../../claude/Staplerfile) | Официальный stable APT-источник Anthropic. Команда `claude-desktop` сохраняет отдельное имя от Claude Code CLI. Штатный Electron sandbox остаётся включённым; Cowork/VM не входит в контейнерную гарантию. |
+| [Плагин GNOME Software](../../gnome-software-plugin-stplr/Staplerfile) | Закреплённый commit upstream, нативная Meson/Vala-сборка против p11 и тесты парсера. Современные AppStream developer-данные поддерживаются локальным патчем. RPM заменяет штатный плагин; на главной витрине пакет скрыт. |
 | [Happ](../../happ/Staplerfile) | Официальный upstream DEB и служба `happd` для TUN/VPN. Wrapper использует XDG Desktop Portal для системной темы; исправление tray проверяет ожидаемые бинарные маркеры. |
 | [OpenCode](../../opencode/Staplerfile) | Официальный Desktop DEB. Сохраняется канонический desktop entry, CLI внутри поставки проходит безопасный `--version` smoke от обычного пользователя. |
 | [Parsec](../../parsec/Staplerfile) | Официальный изменяемый DEB с ETag fingerprint. Зависимости `libjpeg8` и `libavcodec61` подобраны для p11; Linux-приложение используется как клиент подключения. |
@@ -32,6 +33,25 @@ Updater проверяет fingerprint и все обычные сборочны
 Для Antigravity обе архитектуры должны принадлежать одному полному hub ID.
 Для ChatGPT fingerprint каждой архитектуры проверяется отдельно.
 Обнаруженное изменение во время подготовки кандидата прекращает эту попытку.
+
+Плагин GNOME Software использует immutable-архив по полному commit.
+Кандидатный fingerprint равен SHA-256 этого commit; доверенный план обнаружения,
+update hook и проверка публикуемого diff должны совпасть. Дата и время commit
+в версии позволяют различать несколько снимков за сутки. Повторный commit
+с той же временной меткой обрабатывается как новая редакция `release`.
+
+## Метаданные графических приложений
+
+Карточка Stapler и установленный metainfo согласованы по идентичности,
+desktop ID, разработчику, названию и homepage. ChatGPT и PineconeMC устанавливают
+локальные сопровождаемые sidecars с русскими описаниями; эти файлы входят в
+контрольные суммы обеих архитектур. У PineconeMC также удаляется оставшаяся
+в portable-архиве копия метаданных Prism Launcher под `/opt`.
+
+Отсутствие подтверждённого возрастного рейтинга остаётся неизвестным значением.
+Снимки интерфейса Telegram и PineconeMC ссылаются на официальные assets,
+закреплённые commit. Проверки native AppStream и связки метаданных с реальным
+RPM описаны в [руководстве по пакетам](package-guide.md#appstream-и-readme).
 
 ## Parsec: передача системных сочетаний клавиш
 

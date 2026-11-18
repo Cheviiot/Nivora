@@ -60,6 +60,15 @@ if [[ -n "$version" ]]; then
         "$stplr_spec_command" set-field --path "$probe_recipe" upstream_hub "$hub" ||
             die "cannot set probe Antigravity build ${hub}"
     fi
+    if [[ "$package" == gnome-software-plugin-stplr ]]; then
+        snapshot="$("${repo_root}/${package}/.stapler/update-run" --snapshot)" ||
+            die 'cannot resolve GNOME Software plugin snapshot'
+        commit="$(jq -er --arg version "$version" \
+            'select(.version == $version) | .commit | select(test("^[0-9a-f]{40}$"))' \
+            <<<"$snapshot")" || die 'plugin snapshot changed after detection'
+        "$stplr_spec_command" set-field --path "$probe_recipe" upstream_commit "$commit" ||
+            die 'cannot set probe plugin commit'
+    fi
 fi
 
 # Every sources array in the recipe, including per-architecture overrides.
@@ -99,6 +108,23 @@ probe_url() {
     status="$(
         awk 'toupper($1) ~ /^HTTP\// { code = $2; gsub(/\r/, "", code) } END { print code }' <<<"$headers"
     )"
+    # Forgejo's immutable archive API permits GET but returns 405 for HEAD.
+    # Limit this fallback to the plugin's pinned archive endpoint; every other
+    # HTTP error and source retains the ordinary failure policy.
+    if [[ "$status" == 405 && "$package" == gnome-software-plugin-stplr &&
+        "$url" =~ ^https://altlinux\.space/api/v1/repos/stapler/gnome-software-plugin-stplr/archive/[0-9a-f]{40}\.tar\.gz$ ]]; then
+        headers="$(
+            curl --retry 3 --retry-delay 2 --retry-all-errors \
+                --connect-timeout 30 --max-time 120 -sSL \
+                --range 0-1023 --dump-header - --output /dev/null "$url" 2>/dev/null
+        )" || {
+            echo 'unreachable archive'
+            return 1
+        }
+        status="$(
+            awk 'toupper($1) ~ /^HTTP\// { code = $2; gsub(/\r/, "", code) } END { print code }' <<<"$headers"
+        )"
+    fi
     [[ "$status" =~ ^2[0-9][0-9]$ ]] || {
         echo "HTTP ${status:-unknown}"
         return 1

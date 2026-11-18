@@ -21,14 +21,13 @@ runs:
       run: echo 'GOTOOLCHAIN=local' >>"$GITHUB_ENV"
 
     - name: Установить системные инструменты
-      if: ${{ inputs.system-packages != '' }}
       shell: bash
       env:
         SYSTEM_PACKAGES: ${{ inputs.system-packages }}
       run: |
         sudo apt-get update
         read -r -a packages <<<"$SYSTEM_PACKAGES"
-        sudo apt-get install -y "${packages[@]}"
+        sudo apt-get install -y appstream desktop-file-utils "${packages[@]}"
 
     - name: Восстановить доверенный stplr-spec из cache
       id: stplr-spec-cache

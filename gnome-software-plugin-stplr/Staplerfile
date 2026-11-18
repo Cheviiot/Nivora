@@ -1,0 +1,82 @@
+name='gnome-software-plugin-stplr'
+version='0.3.0.git20260525192209'
+release=1
+upstream_commit='777b48ffee5f84b411154355e35b68e2347fa0ff'
+source_fingerprint='8ba8b6a70526cc70dcf5ab0d8798c7a79be18cb50e70e29491ed4826bc3c405a'
+summary='Stapler integration for GNOME Software'
+summary_ru='Интеграция Stapler с GNOME Software'
+desc='GNOME Software plugin for discovering, installing, updating, removing, and launching applications from Stapler repositories.'
+desc_ru='Плагин GNOME Software для поиска, установки, обновления, удаления и запуска приложений из репозиториев Stapler.'
+homepage='https://altlinux.space/stapler/gnome-software-plugin-stplr'
+maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
+group='Graphical desktop/GNOME'
+license=('GPL-3.0-or-later')
+
+architectures=('amd64' 'arm64')
+compatible_with=('altlinux_p11')
+disable_network=1
+
+# The Stapler RPM has a repository suffix. Replace the distribution package
+# explicitly so only one plugin owns its .so, helpers and Polkit action.
+provides=("gnome-software-plugin-stplr = ${version}")
+replaces=('gnome-software-plugin-stplr')
+conflicts=('gnome-software-plugin-stplr')
+deps=('stplr >= 0.2.0' 'gnome-software' 'polkit')
+
+# ELF requires bind the plugin to the actual libgnomesoftware SONAME, rather
+# than accepting a future incompatible GNOME Software ABI by package name.
+auto_reqprov_method="dirty"
+auto_req=1
+auto_prov=0
+build_deps=(
+	'gcc' 'binutils' 'meson' 'ninja-build' 'vala' 'pkg-config' 'patch'
+	'gettext-tools' 'gnome-software' 'libpolkit-devel'
+	'pkgconfig(gnome-software)' 'pkgconfig(gee-0.8)' 'pkgconfig(json-glib-1.0)'
+)
+
+sources=(
+	"https://altlinux.space/api/v1/repos/stapler/gnome-software-plugin-stplr/archive/${upstream_commit}.tar.gz?~archive=false&~name=gnome-software-plugin-stplr.tar.gz"
+	'local:///modern-developer.patch'
+)
+checksums=(
+	'sha256:0dee7a97015461fb4e2f23475f2f92cab4e740cd9b37c864f18bc4e9c529812e'
+	'sha256:3a7b7702bcd2d9cfc2f85a1f2c829b8212739aafad6c99016ce5cfbe1d51d9a7'
+)
+
+package() {
+	[[ "${upstream_commit}" =~ ^[0-9a-f]{40}$ ]] || return 1
+	unpack_dir="$(mktemp -d "${srcdir}/plugin-source.XXXXXX")" || return 1
+	tar --no-same-owner --no-same-permissions -xzf \
+		"${srcdir}/gnome-software-plugin-stplr.tar.gz" -C "${unpack_dir}" || return 1
+	cd "${unpack_dir}/gnome-software-plugin-stplr" || return 1
+	patch --batch --forward -p1 <"${srcdir}/modern-developer.patch" || return 1
+
+	# Upstream Meson falls back to ABI 23 if detection fails. A distributable
+	# plugin must instead match the native p11 development/runtime libraries.
+	plugin_api="$(bash scripts/detect-gs-plugin-api-version.sh)" || return 1
+	[[ "${plugin_api}" =~ ^[0-9]+$ ]] || return 1
+	meson setup build \
+		--prefix=/usr --libdir=lib64 --buildtype=release --wrap-mode=nodownload \
+		-Dtests=true -Dstplr_path=/usr/bin/stplr || return 1
+	meson compile -C build || return 1
+	meson test -C build --print-errorlogs || return 1
+	DESTDIR="${pkgdir}" meson install -C build --no-rebuild || return 1
+
+	plugin="${pkgdir}/usr/lib64/gnome-software/plugins-${plugin_api}/libgs_plugin_stplr.so"
+	test -f "${plugin}" || return 1
+	readelf -d "${plugin}" | grep -Fq "[libgnomesoftware.so.${plugin_api}]" || return 1
+	for helper in stplr-install stplr-remove stplr-refresh stplr-repo-disable stplr-repo-enable; do
+		test -x "${pkgdir}/usr/libexec/gnome-software-plugin-stplr/${helper}" || return 1
+		bash -n "${pkgdir}/usr/libexec/gnome-software-plugin-stplr/${helper}" || return 1
+	done
+	install-license LICENSE "gnome-software-plugin-stplr/LICENSE.upstream"
+}
+
+files() {
+	files-find \
+		"/usr/lib64/gnome-software/plugins-*/libgs_plugin_stplr.so" \
+		"/usr/libexec/gnome-software-plugin-stplr/*" \
+		"/usr/share/locale/*/LC_MESSAGES/gnome-software-plugin-stplr.mo" \
+		"/usr/share/polkit-1/actions/dev.stplr.gnome-software-plugin-stplr.policy"
+	files-find-license
+}

@@ -25,10 +25,14 @@ cat >"$fixture/bin/rpm" <<'EOF'
 set -euo pipefail
 package="${TEST_PACKAGE:-demo}"
 case "$*" in
-*'--queryformat %{NAME}'*) echo "${package}+stplr-default|0|1|alt1|x86_64" ;;
+*'--queryformat %{NAME}'*)
+    echo "${package}+stplr-default|0|1|alt1|x86_64"
+    [[ "${TEST_IDENTITY_FAILURE:-0}" != 1 ]] || exit 42
+    ;;
 *'-qlp'*)
     printf '%s\n' '/opt/Demo App/demo' "/usr/bin/$package" "/usr/share/licenses/$package/LICENSE"
     [[ -z "${TEST_UNIT_PATH:-}" ]] || printf '%s\n' "$TEST_UNIT_PATH"
+    [[ "${TEST_PAYLOAD_FAILURE:-0}" != 1 ]] || exit 42
     ;;
 *'--queryformat [%{FILEFLAGS}'*)
     [[ "${TEST_CONFIG_METADATA_FAILURE:-0}" != 1 ]] || exit 42
@@ -69,6 +73,8 @@ TEST_FILE_GROUP=users expect_failure 'non-root group'
 TEST_BINARY_MODE=100644 expect_failure 'non-executable command'
 TEST_BINARY_MODE=104755 expect_failure 'setuid command'
 TEST_METADATA_FAILURE=1 expect_failure 'RPM metadata query failure'
+TEST_IDENTITY_FAILURE=1 expect_failure 'RPM identity query fails after printing plausible values'
+TEST_PAYLOAD_FAILURE=1 expect_failure 'RPM payload query fails after printing plausible paths'
 
 printf 'files() {\n    files-find-systemd-user\n}\n' >"$fixture/repo/demo/Staplerfile"
 TEST_UNIT_PATH=/usr/lib/systemd/user/demo.service verify
@@ -92,4 +98,21 @@ done
 TEST_PACKAGE=tailscale TEST_CONFIG_PRESENT=0 expect_failure 'missing tailscaled defaults metadata'
 TEST_PACKAGE=tailscale TEST_CONFIG_METADATA_FAILURE=1 expect_failure 'RPM file flags query failure'
 
-echo 'OK: RPM metadata validates ownership, modes, unit scopes and Tailscale config+noreplace flags'
+# The graphical-package gate runs against the actual artifact, while CLI-only
+# packages above do not require graphical metadata or native desktop validators.
+cat >"$fixture/repo/.github/tools/validate_appstream.py" <<'PY'
+import os
+import sys
+from pathlib import Path
+
+assert sys.argv[1:] == ["--rpm", "demo/demo.rpm", "demo"], sys.argv
+Path(os.environ["TEST_APPSTREAM_MARKER"]).write_text("called", encoding="utf-8")
+raise SystemExit(int(os.environ.get("TEST_APPSTREAM_FAILURE", "0")))
+PY
+printf "appstream_app_id='com.example.Demo'\n" >"$fixture/repo/demo/Staplerfile"
+export TEST_APPSTREAM_MARKER="$fixture/appstream-called"
+verify
+[[ -f "$TEST_APPSTREAM_MARKER" ]]
+TEST_APPSTREAM_FAILURE=1 expect_failure 'native AppStream or desktop payload gate failure'
+
+echo 'OK: RPM metadata validates query status, ownership, modes, unit scopes, config flags and desktop integration'

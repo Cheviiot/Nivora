@@ -1,6 +1,6 @@
 name='balena-etcher'
 version='2.1.9'
-release=2
+release=3
 summary='Write OS images to USB drives and SD cards'
 summary_ru='Запись образов систем на USB-накопители и SD-карты'
 group='System/Configuration/Hardware'
@@ -65,7 +65,7 @@ sources=(
 checksums=(
 	'sha256:7e0d0e0986e5d0f3d9c03a4c0004f9891235150e0da99fa0bc332d8c03f1a4c0'
 	'sha256:39445b459f86621683f9731fb6a7d070819dc379840e8ef52f62bb1c68942291'
-	'sha256:c29f715213f3617b229e75f2e44ea000bf18984e29d3a4ea2747ef5ce291aadc'
+	'sha256:3fecd7734f1aa2cf6ffddb2a47963c1556fe8cdf9cb7288803da1377f4908e49'
 )
 
 scripts=(

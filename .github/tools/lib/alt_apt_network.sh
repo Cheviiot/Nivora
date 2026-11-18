@@ -8,6 +8,7 @@ readonly apt_root="${NIVORA_ALT_APT_ROOT:-/etc/apt}"
 readonly apt_lists="${NIVORA_ALT_APT_LISTS:-/var/lib/apt/lists}"
 readonly active_source="${NIVORA_ALT_APT_ACTIVE_SOURCE:-${apt_root}/sources.list.d/alt.list}"
 readonly apt_retries="${NIVORA_ALT_APT_RETRIES:-0}"
+readonly command_retries="${NIVORA_ALT_APT_COMMAND_RETRIES:-2}"
 readonly connect_timeout="${NIVORA_ALT_APT_CONNECT_TIMEOUT_SECONDS:-10}"
 readonly io_timeout="${NIVORA_ALT_APT_IO_TIMEOUT_SECONDS:-15}"
 readonly attempt_timeout="${NIVORA_ALT_APT_ATTEMPT_TIMEOUT_SECONDS:-30}"
@@ -19,7 +20,7 @@ fail() {
     exit 1
 }
 
-for value_name in apt_retries connect_timeout io_timeout attempt_timeout total_timeout command_timeout; do
+for value_name in apt_retries command_retries connect_timeout io_timeout attempt_timeout total_timeout command_timeout; do
     value="${!value_name}"
     [[ "$value" =~ ^[0-9]+$ ]] || fail "${value_name} must be a non-negative integer"
 done
@@ -27,11 +28,14 @@ done
     fail 'timeouts must be positive'
 
 apt_run() {
+    # apt-rpm retries transient archive downloads before the RPM transaction.
+    # Keep one apt-get invocation and one deadline; never rerun package hooks
+    # after a failed install, upgrade or removal.
     "$timeout_bin" --signal=TERM --kill-after=1s "${command_timeout}s" \
         "$apt_get_bin" \
         -o "Dir::Etc::sourcelist=${active_source}" \
         -o Dir::Etc::sourceparts=- \
-        -o "Acquire::Retries=${apt_retries}" \
+        -o "Acquire::Retries=${command_retries}" \
         -o "Acquire::http::Timeout=${io_timeout}" \
         -o "Acquire::http::ConnectTimeout=${connect_timeout}" \
         "$@"

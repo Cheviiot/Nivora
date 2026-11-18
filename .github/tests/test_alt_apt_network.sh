@@ -72,6 +72,9 @@ done
 printf '%s\n' "${args[@]}" >>"${NIVORA_ALT_APT_ARGS_LOG:?}"
 cat "$source_list" >>"${NIVORA_ALT_APT_SOURCE_LOG:?}"
 printf '\n---attempt---\n' >>"${NIVORA_ALT_APT_SOURCE_LOG:?}"
+if [[ "$is_update" == 0 ]]; then
+    exit "${NIVORA_ALT_APT_TRANSACTION_EXIT:-0}"
+fi
 if [[ "$is_update" == 1 ]]; then
     if [[ -n "$(find "${NIVORA_ALT_APT_LISTS:?}" -mindepth 1 -type f -print -quit)" ]]; then
         printf 'stale indexes reached apt\n' >>"${NIVORA_ALT_APT_SOURCE_LOG}.dirty"
@@ -190,10 +193,52 @@ for failure_mode in download signature; do
         }
         assert_contains "${case_dir}/timeouts" 'timeout=300s'
         assert_contains "${case_dir}/args" 'Dir::Etc::sourceparts=-'
+        assert_contains "${case_dir}/args" 'Acquire::Retries=2'
         assert_contains "${case_dir}/args" 'install'
     fi
     ! grep -Eiq 'trusted=yes|AllowInsecure|allow-unauthenticated' "${case_dir}/args" ||
         fail "${failure_mode}: disabled repository signature checks"
+done
+
+# Download retry policy is independent from index retries and stays within a
+# single apt-get transaction and its original 300-second deadline.
+for command_retries in 0 4; do
+    transaction_case="${test_root}/transaction-retries-${command_retries}"
+    setup_case "$transaction_case" p11 p11/branch
+    NIVORA_ALT_APT_RETRIES=7 NIVORA_ALT_APT_COMMAND_RETRIES="$command_retries" \
+        run_apt_transaction "$transaction_case" \
+        >"${transaction_case}/stdout" 2>"${transaction_case}/stderr"
+    [[ "$(grep '^Acquire::Retries=' "${transaction_case}/args")" == "Acquire::Retries=${command_retries}" ]] ||
+        fail 'transaction retry policy inherited the index setting'
+    [[ "$(cat "${transaction_case}/timeouts")" == timeout=300s ]] ||
+        fail 'transaction retries reset or changed the command deadline'
+done
+
+# A nonzero apt-get result may already include a failed RPM scriptlet. The
+# helper must preserve its exit status and must not repeat the transaction.
+transaction_failure="${test_root}/transaction-failure"
+setup_case "$transaction_failure" p11 p11/branch
+status=0
+NIVORA_ALT_APT_TRANSACTION_EXIT=100 run_apt_transaction "$transaction_failure" \
+    >"${transaction_failure}/stdout" 2>"${transaction_failure}/stderr" || status=$?
+[[ "$status" == 100 ]] || fail 'failed transaction exit status was not preserved'
+[[ "$(grep -c '^install$' "${transaction_failure}/args")" == 1 ]] ||
+    fail 'failed apt transaction was repeated'
+[[ "$(cat "${transaction_failure}/timeouts")" == timeout=300s ]] ||
+    fail 'failed apt transaction received another timeout budget'
+assert_contains "${transaction_failure}/args" 'Acquire::Retries=2'
+
+for invalid_retries in -1 invalid 1.5; do
+    invalid_case="${test_root}/invalid-command-retries-${invalid_retries}"
+    setup_case "$invalid_case" p11 p11/branch
+    if NIVORA_ALT_APT_COMMAND_RETRIES="$invalid_retries" \
+        run_apt_transaction "$invalid_case" \
+        >"${invalid_case}/stdout" 2>"${invalid_case}/stderr"; then
+        fail 'invalid transaction retry setting was accepted'
+    fi
+    assert_contains "${invalid_case}/stderr" 'command_retries must be a non-negative integer'
+    [[ ! -e "${invalid_case}/args" && ! -e "${invalid_case}/timeouts" ]] ||
+        fail 'invalid transaction retry setting reached apt-get'
 done
 
 # Both official candidates fail initially. The second pass must start again
@@ -262,4 +307,4 @@ if NIVORA_ALT_APT_COMMAND_TIMEOUT_SECONDS=0 bash "$helper" run install fixture-p
 fi
 assert_contains "${test_root}/zero-timeout.stderr" 'timeouts must be positive'
 
-echo 'OK: ALT p11 apt uses two bounded mirror passes and rejects inconsistent indexes'
+echo 'OK: ALT p11 apt bounds index and archive retries without repeating RPM transactions'

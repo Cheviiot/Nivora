@@ -50,3 +50,7 @@ Tailscale установлен, служба tailscaled запущена.
 После этого команда tailscale работает без sudo.
 HINT
 fi
+
+if [ "${1:-}" = 1 ]; then
+    printf '%s\n' 'Лицензия Tailscale — BSD-3-Clause. Подробности в /usr/share/licenses/tailscale/' >&2 || :
+fi

@@ -1,7 +1,7 @@
 name='anidesk'
 version='0.0.1-beta.7'
 debian_version='0.0.1.beta.7'
-release=13
+release=14
 summary='Unofficial desktop client for Anixart'
 summary_ru='Неофициальный настольный клиент Anixart'
 group='Video/Players'

@@ -1,6 +1,6 @@
 name='balena-etcher'
 version='2.1.9'
-release=3
+release=4
 summary='Write OS images to USB drives and SD cards'
 summary_ru='Запись образов систем на USB-накопители и SD-карты'
 group='System/Configuration/Hardware'

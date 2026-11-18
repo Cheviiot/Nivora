@@ -1,6 +1,6 @@
 name='telegram'
 version='7.4.4'
-release=3
+release=4
 summary='Desktop messaging with chat synchronization'
 summary_ru='Настольный мессенджер с синхронизацией переписки'
 group='Networking/Instant messaging'

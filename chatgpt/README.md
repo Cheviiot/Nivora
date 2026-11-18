@@ -1,37 +1,19 @@
-<p align="center">
-  <img src="com.openai.chatgpt.png" width="72" height="72" alt="ChatGPT">
-</p>
-
 # ChatGPT
 
-Официальное настольное приложение OpenAI для общения с ChatGPT, работы с файлами и проектами. Встроенный Codex помогает выполнять задачи по разработке.
+Настольное приложение OpenAI для чатов, файлов и проектов. Встроенный Codex помогает работать с кодом в выбранной папке. [Руководство OpenAI](https://learn.chatgpt.com/docs/app)
 
-[Официальный сайт и описание](https://learn.chatgpt.com/docs/app) · [Лицензия](LICENSE)
-
-**Платформа:** ALT Linux p11.
-
-**Архитектуры:** amd64 · arm64 (предварительная поддержка).
+ALT Linux p11 · x86_64 · aarch64 (предварительная поддержка)
 
 ## Установка
 
-Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
-затем выполните:
+**Лицензия приложения** — проприетарная. При интерактивной сборке Stapler предлагает принять [условия использования OpenAI](https://openai.com/policies/terms-of-use/).
 
 ```bash
 sudo stplr install nivora/chatgpt
 ```
 
-Текущая версия указана в [каталоге](../README.md#каталог).
-[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
-
 ## Запуск
 
-Откройте приложение из меню или выполните от своего пользователя:
+Откройте ChatGPT из меню или выполните `chatgpt`, затем войдите в свою учётную запись. Для работы с кодом выберите Codex в самом приложении.
 
-```bash
-chatgpt
-```
-
-Доступные функции зависят от учётной записи и тарифа OpenAI.
-
-[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)
+[Подключение Nivora](../.github/docs/installation.md) · [Каталог приложений](../README.md)

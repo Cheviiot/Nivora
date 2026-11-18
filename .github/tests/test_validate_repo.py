@@ -407,7 +407,7 @@ release=1
 architectures=('amd64')
 compatible_with=('{compatible}')
 maintainer='Demo <demo@example.invalid>'
-license=('MIT')
+license=('{license_id}')
 provides=()
 replaces=('demo')
 conflicts=()
@@ -422,12 +422,12 @@ package() {{ :; }}
 files() {{ :; }}
 """
 
-    def validate(self, version, *, compatible="altlinux_p11", extra=""):
+    def validate(self, version, *, compatible="altlinux_p11", license_id="MIT", extra=""):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "demo").mkdir()
             (root / "demo/Staplerfile").write_text(
-                self.RECIPE.format(version=version, compatible=compatible) + extra,
+                self.RECIPE.format(version=version, compatible=compatible, license_id=license_id) + extra,
                 encoding="utf-8",
             )
             update_check = root / "demo/.stapler/update-check"
@@ -450,6 +450,19 @@ files() {{ :; }}
         self.assertFalse(
             any("single-quoted" in error for error in errors), errors
         )
+
+    def test_proprietary_install_notice(self):
+        fields = [
+            "nonfree=1",
+            "nonfree_msg='Read the publisher terms.'",
+            "nonfree_url='https://publisher.example/terms'",
+        ]
+        for index, message in enumerate(("requires nonfree=1", "missing nonfree install notice", "HTTPS terms link")):
+            with self.subTest(field=fields[index]):
+                extra = "\n".join(fields[:index] + fields[index + 1:])
+                errors = self.validate("'1.2.3'", license_id="LicenseRef-proprietary", extra=extra)
+                self.assertTrue(any(message in error for error in errors), errors)
+        self.assertEqual(self.validate("'1.2.3'", license_id="LicenseRef-proprietary", extra="\n".join(fields)), [])
 
     def test_unquoted_version_is_rejected(self):
         errors = self.validate("1.2.3")

@@ -1,6 +1,6 @@
 name='tailscale'
 version='1.104.7'
-release=3
+release=4
 summary='Private networking with WireGuard encryption'
 summary_ru='Частная сеть между устройствами с шифрованием WireGuard'
 group='Networking/Other'

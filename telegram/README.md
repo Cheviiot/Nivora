@@ -1,36 +1,19 @@
-<p align="center">
-  <img src="org.telegram.desktop.png" width="72" height="72" alt="Telegram Desktop">
-</p>
-
 # Telegram Desktop
 
-Настольное приложение Telegram с синхронизацией переписки между устройствами. Оно даёт доступ к чатам, группам, каналам и обмену файлами на компьютере.
+Официальный клиент Telegram для компьютера. Переписка, группы, каналы и файлы из облачных чатов синхронизируются с другими устройствами вашего аккаунта. [Сайт Telegram Desktop](https://desktop.telegram.org/)
 
-[Официальный сайт и описание](https://desktop.telegram.org/) · [Лицензия](LICENSE)
-
-**Платформа:** ALT Linux p11.
-
-**Архитектуры:** amd64.
+ALT Linux p11 · x86_64
 
 ## Установка
 
-Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
-затем выполните:
+**Лицензия** клиента — [GPL-3.0-only с разрешением на связывание с OpenSSL](https://github.com/telegramdesktop/tdesktop/blob/dev/LICENSE). Для аккаунта действуют [условия Telegram](https://telegram.org/tos).
 
 ```bash
 sudo stplr install nivora/telegram
 ```
 
-Текущая версия указана в [каталоге](../README.md#каталог).
-[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
-
 ## Запуск
 
-Откройте приложение из меню или выполните от своего пользователя:
+Откройте **Telegram Desktop** из меню или выполните `telegram-desktop`. Пакет использует официальную сборку Linux. Обновления клиента устанавливаются через Stapler.
 
-```bash
-telegram-desktop
-```
-
-
-[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)
+[Подключение Nivora](../.github/docs/installation.md) · [Каталог приложений](../README.md)

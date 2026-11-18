@@ -1,37 +1,19 @@
-<p align="center">
-  <img src="com.google.Antigravity.png" width="72" height="72" alt="Google Antigravity App">
-</p>
-
 # Google Antigravity App
 
-Приложение Google для работы с несколькими ИИ-агентами. Разговоры можно объединять в проекты, работать с несколькими папками и выполнять задачи параллельно.
+Настольное приложение Google позволяет поручать задачи нескольким ИИ-агентам параллельно. Переписку можно объединять в проекты и работать с несколькими папками. [Google Antigravity](https://antigravity.google/)
 
-[Официальный сайт и описание](https://antigravity.google/) · [Лицензия](LICENSE)
-
-**Платформа:** ALT Linux p11.
-
-**Архитектуры:** amd64 · arm64 (предварительная поддержка).
+ALT Linux p11 · x86_64 · aarch64 (предварительная поддержка)
 
 ## Установка
 
-Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
-затем выполните:
+**Лицензия приложения** — проприетарная. При интерактивной сборке Stapler предлагает принять [условия Google Antigravity](https://antigravity.google/terms).
 
 ```bash
 sudo stplr install nivora/antigravity
 ```
 
-Текущая версия указана в [каталоге](../README.md#каталог).
-[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
-
 ## Запуск
 
-Откройте приложение из меню или выполните от своего пользователя:
+Откройте Antigravity из меню или выполните `antigravity`, затем войдите в учётную запись Google. Доступность сервиса для учётной записи проверяет Google. Версия из Nivora обновляется через Stapler.
 
-```bash
-antigravity
-```
-
-В Nivora представлен Antigravity App. Доступ к сервису определяется условиями Google и вашей учётной записью.
-
-[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)
+[Подключение Nivora](../.github/docs/installation.md) · [Каталог приложений](../README.md)

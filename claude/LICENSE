@@ -1,21 +1,6 @@
-Сведения о лицензии пакета Claude
+Claude Desktop — проприетарное приложение Anthropic.
 
-Лицензия: Proprietary.
-Исходный продукт: https://claude.ai/download
-Документация desktop-приложения Claude: https://code.claude.com/docs/en/desktop-quickstart
-Официальный Linux-репозиторий: https://downloads.claude.ai/claude-desktop/apt/stable
+Потребительские условия: https://www.anthropic.com/legal/consumer-terms
+Коммерческие условия: https://www.anthropic.com/legal/commercial-terms
 
-Нюансы пакета:
-- Пакет перепаковывает официальный Linux deb-артефакт `claude-desktop` из APT-репозитория Anthropic.
-- В пакет входит десктопное Electron-приложение Claude с поддержкой сценариев Claude Code.
-- Команда `claude-desktop` запускает основное desktop-приложение.
-- Tray-иконка является перекрашенным вариантом штатного глифа Anthropic и регулируется теми же проприетарными условиями, что и исходный продукт.
-- Команда `claude` намеренно не добавляется, чтобы не конфликтовать с отдельным Claude Code CLI.
-- Для полноценной работы требуется учетная запись Anthropic и подходящая подписка или доступ к сервису Claude.
-- Настройки, авторизация, история, рабочие каталоги и данные проектов создаются приложением после запуска и не поставляются внутри пакета.
-- Функции, зависящие от виртуализации или интеграции окружения, могут требовать дополнительные системные компоненты: QEMU, virtiofsd, portal backend, keyring/kwallet и аудиоподсистему.
-- Исходный продукт является проприетарным. Использование Claude, Claude Code, сетевых функций, моделей и учетной записи регулируется юридическими условиями Anthropic.
-- Внутри upstream-пакета также поставляются компоненты Electron/Chromium и virtiofsd со своими лицензиями; их тексты устанавливаются в `/usr/share/licenses/claude-desktop`.
-
-Официальные условия:
-https://www.anthropic.com/legal/consumer-terms
+Лицензии сторонних компонентов, включая Chromium и virtiofsd, входят в пакет отдельными файлами.

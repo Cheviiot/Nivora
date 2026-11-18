@@ -28,6 +28,7 @@ database = root / "rpm-state.json"
 state = json.loads(database.read_text())
 role, *args = sys.argv[1:]
 package = os.environ["TEST_PACKAGE"]
+rpm_license = os.environ["TEST_RPM_LICENSE"]
 config = root / "etc/default/tailscaled"
 
 def trace(message):
@@ -54,6 +55,7 @@ if role == "rpm":
             "%{NAME}": package + "+stplr-default",
             "%{EPOCHNUM}:%{VERSION}-%{RELEASE}": evr("previous" if previous else "current"),
             "%{ARCH}": "noarch" if previous else "x86_64",
+            "%{LICENSE}": rpm_license,
             "%{SUMMARY}": "Previous Nivora package fixture for lifecycle tests",
         }
         print(values[args[2]])
@@ -82,7 +84,16 @@ elif role == "apt":
             kind = "fresh" if state["installed"] is None else "upgrade"
             trace("install current " + kind)
             if kind == "fresh" and os.environ["TEST_FAIL_FRESH"] == "1":
+                print("fixture apt install failed", file=sys.stderr)
                 sys.exit(23)
+            count = os.environ["TEST_NOTICE_COUNT"]
+            count = int(kind == "fresh") if count == "auto" else int(count)
+            if rpm_license == "LicenseRef-proprietary":
+                notice = f"проприетарная. Условия в /usr/share/licenses/{package}/LICENSE.nivora"
+            else:
+                notice = f"{rpm_license}. Подробности в /usr/share/licenses/{package}/"
+            for _ in range(count):
+                print(f"Лицензия {package} — {notice}", file=sys.stderr)
             state["installed"] = "current"
             command = root / "command"
             command.write_text("#!/bin/sh\nexit 0\n")
@@ -118,7 +129,8 @@ else:
 
 class PackageLifecycleTests(unittest.TestCase):
     def run_scenario(self, scenario, *, fail_fresh=False, mutate_stage="", package="demo",
-                     config_mutate_stage="", config_remove="rpmsave", previous_config_flags="0"):
+                     config_mutate_stage="", config_remove="rpmsave", previous_config_flags="0",
+                     rpm_license=None, notice_count=None):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "bin").mkdir()
@@ -160,6 +172,8 @@ class PackageLifecycleTests(unittest.TestCase):
                 "TEST_FAIL_FRESH": "1" if fail_fresh else "0",
                 "TEST_MUTATE_STAGE": mutate_stage,
                 "TEST_PACKAGE": package,
+                "TEST_RPM_LICENSE": rpm_license or ("BSD-3-Clause" if package == "tailscale" else "MIT"),
+                "TEST_NOTICE_COUNT": "auto" if notice_count is None else str(notice_count),
                 "TEST_CONFIG_MUTATE_STAGE": config_mutate_stage,
                 "TEST_CONFIG_REMOVE": config_remove,
                 "TEST_PREVIOUS_CONFIG_FLAGS": previous_config_flags,
@@ -172,13 +186,20 @@ class PackageLifecycleTests(unittest.TestCase):
             return result, transactions
 
     def test_fresh_install_does_not_use_a_previous_rpm(self):
-        result, transactions = self.run_scenario("fresh")
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(transactions, ["install current fresh", "remove current"])
+        for license_id, notice in (
+            ("MIT", "Лицензия demo — MIT. Подробности в /usr/share/licenses/demo/"),
+            ("LicenseRef-proprietary", "Лицензия demo — проприетарная. Условия в /usr/share/licenses/demo/LICENSE.nivora"),
+        ):
+            with self.subTest(license=license_id):
+                result, transactions = self.run_scenario("fresh", rpm_license=license_id)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(transactions, ["install current fresh", "remove current"])
+                self.assertIn(notice, result.stdout + result.stderr)
 
     def test_upgrade_keeps_the_previous_transaction_and_order_check(self):
         result, transactions = self.run_scenario("upgrade", fail_fresh=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("Лицензия demo", result.stdout + result.stderr)
         self.assertEqual(
             transactions,
             ["install previous", "test upgrade", "install current upgrade", "remove current"],
@@ -187,7 +208,29 @@ class PackageLifecycleTests(unittest.TestCase):
     def test_fresh_only_installation_failure_is_a_gate_failure(self):
         result, transactions = self.run_scenario("fresh", fail_fresh=True)
         self.assertEqual(result.returncode, 23, result.stdout + result.stderr)
+        self.assertIn("fixture apt install failed", result.stdout + result.stderr)
         self.assertEqual(transactions, ["install current fresh"])
+
+    def test_fresh_install_requires_one_license_notice(self):
+        for license_id in ("MIT", "LicenseRef-proprietary"):
+            for count in (0, 2):
+                with self.subTest(license=license_id, count=count):
+                    result, transactions = self.run_scenario(
+                        "fresh", rpm_license=license_id, notice_count=count,
+                    )
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn("expected 1", result.stderr)
+                    self.assertEqual(transactions, ["install current fresh"])
+
+    def test_upgrade_rejects_a_repeated_license_notice(self):
+        for license_id in ("MIT", "LicenseRef-proprietary"):
+            with self.subTest(license=license_id):
+                result, transactions = self.run_scenario(
+                    "upgrade", rpm_license=license_id, notice_count=1,
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("expected 0", result.stderr)
+                self.assertEqual(transactions[-1], "install current upgrade")
 
     def test_preserved_filename_cannot_hide_overwritten_user_data(self):
         for scenario in ("fresh", "upgrade"):

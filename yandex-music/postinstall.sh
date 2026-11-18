@@ -31,3 +31,7 @@ if command -v kbuildsycoca6 >/dev/null 2>&1; then
 elif command -v kbuildsycoca5 >/dev/null 2>&1; then
     optional_refresh "кэш KDE" kbuildsycoca5 --noincremental
 fi
+
+if [ "${1:-}" = 1 ]; then
+    printf '%s\n' 'Лицензия Яндекс Музыка — проприетарная. Условия в /usr/share/licenses/yandex-music/LICENSE.nivora' >&2 || :
+fi

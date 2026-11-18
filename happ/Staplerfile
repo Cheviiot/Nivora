@@ -1,13 +1,13 @@
 name='happ'
 version='4.7.2'
-release=4
+release=5
 summary='Graphical proxy client based on Xray'
 summary_ru='Графический прокси-клиент на основе Xray'
 group='Networking/Other'
 desc='Happ is a graphical client for connecting to proxy servers, built on the Xray core.'
 desc_ru='Happ — графический клиент для подключения к прокси-серверам на основе ядра Xray.'
 homepage='https://happ.info/'
-maintainer='FlyFrog LLC <support@happ.su>'
+maintainer='Cheviiot <Cheviiot@users.noreply.github.com>'
 
 architectures=('amd64' 'arm64')
 compatible_with=('altlinux_p11')
@@ -17,9 +17,10 @@ license=('LicenseRef-proprietary')
 
 appstream_app_id='Happ'
 appstream_name='Happ'
+appstream_developer='Veltrixor LLC'
 nonfree=1
-nonfree_msg='Happ является проприетарным приложением FlyFrog LLC. Использование клиента, подписок и сетевых функций регулируется условиями Happ.'
-nonfree_url='https://happ.su/license'
+nonfree_msg='Happ — бесплатное проприетарное приложение Veltrixor LLC. Условия разрешают личное и коммерческое использование и ограничивают использование бренда.'
+nonfree_url='https://happ.info/main/terms-of-services'
 
 provides=()
 replaces=('happ')
@@ -69,8 +70,8 @@ checksums=(
 	'sha256:fa4d741a4e2df82b0a19291e2c7bad4a8753a1e59237b2bfe5fef7de8c22efd2'
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'
 	'sha256:7e105f63e4535676e15e4d613426d6af843376a09fd25674bbbf367778668ae5'
-	'sha256:5f0fbc1b0b0e8399c8a04425512168e3dd87960381e85a7cb62a41d55b054b0f'
-	'sha256:b6f6bb05f29084be178701097f54e4f4475e593cdf48e021077f2498aea087cd'
+	'sha256:c90c4bc654d48cfe61b9d6ccc8d0298f3dd5cbc3df0826315c53edc4b79fff09'
+	'sha256:0549f1a3add37f296a7dbd49a751e35e00cb264fe0c94cbe00c4a93d20f06697'
 )
 
 checksums_arm64=(
@@ -79,8 +80,8 @@ checksums_arm64=(
 	'sha256:fa4d741a4e2df82b0a19291e2c7bad4a8753a1e59237b2bfe5fef7de8c22efd2'
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'
 	'sha256:7e105f63e4535676e15e4d613426d6af843376a09fd25674bbbf367778668ae5'
-	'sha256:5f0fbc1b0b0e8399c8a04425512168e3dd87960381e85a7cb62a41d55b054b0f'
-	'sha256:b6f6bb05f29084be178701097f54e4f4475e593cdf48e021077f2498aea087cd'
+	'sha256:c90c4bc654d48cfe61b9d6ccc8d0298f3dd5cbc3df0826315c53edc4b79fff09'
+	'sha256:0549f1a3add37f296a7dbd49a751e35e00cb264fe0c94cbe00c4a93d20f06697'
 )
 
 scripts=(

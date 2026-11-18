@@ -21,3 +21,7 @@ if command -v kbuildsycoca6 >/dev/null 2>&1; then
 elif command -v kbuildsycoca5 >/dev/null 2>&1; then
     optional_refresh "кэш KDE" kbuildsycoca5 --noincremental
 fi
+
+if [ "${1:-}" = 1 ]; then
+    printf '%s\n' 'Лицензия Telegram Desktop — GPL-3.0-only (с исключением для OpenSSL). Подробности в /usr/share/licenses/telegram/' >&2 || :
+fi

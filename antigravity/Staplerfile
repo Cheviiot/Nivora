@@ -3,7 +3,7 @@
 # The updater refreshes version and the full build pin together.
 name='antigravity'
 version='2.33.0'
-release=2
+release=3
 upstream_hub='2.33.0-4731201358004224'
 summary='Manage AI agents and projects with Google Antigravity'
 summary_ru='Работа с ИИ-агентами и проектами Google Antigravity'
@@ -23,7 +23,7 @@ appstream_desktop_id='antigravity.desktop'
 appstream_name='Google Antigravity App'
 appstream_developer='Google'
 nonfree=1
-nonfree_msg='Antigravity является проприетарным приложением Google. Использование Antigravity, учётной записи Google, сетевых функций и сервиса регулируется условиями Google.'
+nonfree_msg='Google Antigravity — проприетарное приложение. Google публикует условия для Antigravity по ссылке ниже.'
 nonfree_url='https://antigravity.google/terms'
 
 provides=()
@@ -70,7 +70,7 @@ checksums=(
 	'sha256:473b6dc66930847fa137b44bdf675dfaca324467319acaac45b320892d79a64a'
 	'sha256:fc5eb0c847c8eaf3fed166c58e6ebfb6d20fae0060dc7b22c4ebedcfd8f02aa0'
 	'sha256:a172c36f986e7396b1359563eee943b9fa4529a1e31f0eeca80d6f5a768cc611'
-	'sha256:92be9f36d5db1f3db6e7d21c14b58b1b5a7135a0f950bdf25e89f5498fc87a3b'
+	'sha256:b75b3b2cebf96f42157735de9eb013172742f7f7daad463f37737c4bd6131ca3'
 	'sha256:c6dafe87410cdf6ab0dfe59fc3c6602307b7ee2e4710d19470d40798355ee403'
 )
 
@@ -80,7 +80,7 @@ checksums_arm64=(
 	'sha256:473b6dc66930847fa137b44bdf675dfaca324467319acaac45b320892d79a64a'
 	'sha256:fc5eb0c847c8eaf3fed166c58e6ebfb6d20fae0060dc7b22c4ebedcfd8f02aa0'
 	'sha256:a172c36f986e7396b1359563eee943b9fa4529a1e31f0eeca80d6f5a768cc611'
-	'sha256:92be9f36d5db1f3db6e7d21c14b58b1b5a7135a0f950bdf25e89f5498fc87a3b'
+	'sha256:b75b3b2cebf96f42157735de9eb013172742f7f7daad463f37737c4bd6131ca3'
 	'sha256:c6dafe87410cdf6ab0dfe59fc3c6602307b7ee2e4710d19470d40798355ee403'
 )
 

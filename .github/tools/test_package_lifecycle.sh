@@ -398,7 +398,26 @@ if [[ "$state_path" == /home/nivora-test/* ]]; then
     chown -R nivora-test:nivora-test /home/nivora-test
 fi
 
-bash /usr/local/lib/nivora/alt_apt_network.sh run -qq install -y "$artifact"
+# Capture what a real noninteractive RPM transaction shows the user. An
+# informational first-install notice must never block an unattended upgrade.
+install_log="$(mktemp)"
+trap 'rm -f "$install_log"' EXIT
+bash /usr/local/lib/nivora/alt_apt_network.sh run -qq install -y "$artifact" </dev/null 2>&1 | tee "$install_log"
+rpm_license="$(rpm -qp --queryformat '%{LICENSE}' "$artifact")"
+notice_license="$rpm_license"
+notice_path="/usr/share/licenses/${package}/"
+if [[ "$rpm_license" == LicenseRef-proprietary ]]; then
+    notice_license='проприетарная'
+    notice_path+=LICENSE.nivora
+fi
+expected_notices=1
+if [[ "$scenario" == upgrade ]]; then expected_notices=0; fi
+actual_notices="$(awk -v path="$notice_path" -v license=" — ${notice_license}" \
+    'index($0, path) && index($0, license) { n++ } END { print n+0 }' "$install_log")"
+[[ "$actual_notices" == "$expected_notices" ]] || {
+    echo "$package: expected $expected_notices $rpm_license notices during $scenario, got $actual_notices" >&2
+    exit 1
+}
 assert_state_preserved
 if [[ "$package" == tailscale ]]; then
     if [[ "$scenario" == fresh ]]; then

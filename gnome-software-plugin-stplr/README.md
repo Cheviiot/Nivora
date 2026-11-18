@@ -1,25 +1,28 @@
-# GNOME Software: плагин Stapler
+# Плагин Stapler для GNOME Software
 
-Служебный пакет для ALT Linux p11, который подключает каталоги Stapler к
-GNOME Software: поиск, установка, обновление, удаление и открытие приложений.
-Плагин участвует в автоматическом обслуживании Nivora; на главной витрине
-он не отображается.
+Подключает каталоги Stapler к магазину приложений GNOME. Из карточки приложения можно запустить установку, обновление или удаление, а после установки — открыть приложение. Nivora собирает плагин из закреплённого снимка исходников для GNOME Software в p11. [Проект Stapler](https://altlinux.space/stapler/gnome-software-plugin-stplr)
+
+ALT Linux p11 · x86_64 · aarch64 (предварительная поддержка)
 
 ## Установка
 
-После [подключения Nivora](../.github/docs/installation.md):
+**Лицензия плагина** — [GPL-3.0-or-later](LICENSE).
 
 ```bash
 sudo stplr refresh
 sudo stplr install nivora/gnome-software-plugin-stplr
 ```
 
-Пакет заменяет штатный плагин p11. Полностью закройте и снова откройте
-GNOME Software, чтобы он загрузил новую библиотеку.
+Пакет Nivora заменяет штатный плагин p11. Полностью закройте и снова откройте GNOME Software. Если приложение доступно из нескольких источников, выберите **Nivora** в его карточке.
 
-Совместимость, обновление, диагностика и возврат к штатной версии описаны
-в [руководстве по GNOME Software](../.github/docs/gnome-software.md).
-Точные версия, commit исходников и контрольные суммы находятся в [Staplerfile](Staplerfile).
+## Возврат к штатному плагину
 
-[Официальный проект](https://altlinux.space/stapler/gnome-software-plugin-stplr) ·
-[GPL-3.0-or-later](LICENSE)
+Закройте GNOME Software и выполните команды ниже. После установки снова откройте магазин.
+
+```bash
+sudo stplr remove nivora/gnome-software-plugin-stplr
+sudo apt-get update
+sudo apt-get install gnome-software-plugin-stplr
+```
+
+[Подключение Nivora](../.github/docs/installation.md) · [Каталог приложений](../README.md)

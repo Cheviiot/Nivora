@@ -40,13 +40,8 @@ REQUIRED_ROOT_FILES = {
     Path("stapler-repo.toml"),
     Path(".github/assets/readme-hero.svg"),
     Path(".github/support-matrix.toml"),
-    Path(".github/docs/index.md"),
     Path(".github/docs/installation.md"),
-    Path(".github/docs/gnome-software.md"),
-    Path(".github/docs/package-guide.md"),
-    Path(".github/docs/troubleshooting.md"),
     Path(".github/docs/maintenance.md"),
-    Path(".github/docs/security-model.md"),
     *(Path(f"{package}/README.md") for package in EXPECTED_PACKAGES),
 }
 
@@ -686,6 +681,16 @@ def validate_package(
                 f"G0 {package}: license {value!r} is not SPDX; use an SPDX "
                 "identifier or LicenseRef-proprietary"
             )
+
+    # Proprietary recipes use Stapler's existing interactive license viewer.
+    if "LicenseRef-proprietary" in licenses:
+        if flag(text, "nonfree") != 1:
+            errors.append(f"G0 {package}: proprietary software requires nonfree=1")
+        if not (scalar(text, "nonfree_msg") or scalar(text, "nonfree_msgfile")):
+            errors.append(f"G0 {package}: missing nonfree install notice")
+        terms = scalar(text, "nonfree_url") or ""
+        if not re.fullmatch(r"https://[^\s/@?#]+(?:/[^\s]*)?", terms):
+            errors.append(f"G0 {package}: nonfree_url must be an HTTPS terms link")
 
     # Stapler recognises distro_release IDs, so p11 compatibility is enforced
     # by its native repository filter and build pre-checks.

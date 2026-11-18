@@ -39,3 +39,7 @@ if command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
         optional_refresh "happd.service" systemctl try-restart happd.service
     fi
 fi
+
+if [ "${1:-}" = 1 ]; then
+    printf '%s\n' 'Лицензия Happ — проприетарная. Условия в /usr/share/licenses/happ/LICENSE.nivora' >&2 || :
+fi

@@ -1,6 +1,6 @@
 name='pineconemc'
 version='11.1.2'
-release=3
+release=4
 summary='Minecraft launcher based on Prism Launcher'
 summary_ru='Лаунчер Minecraft на основе Prism Launcher'
 group='Games/Other'

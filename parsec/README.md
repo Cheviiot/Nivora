@@ -1,37 +1,21 @@
-<p align="center">
-  <img src="parsecd.png" width="72" height="72" alt="Parsec">
-</p>
-
 # Parsec
 
-Parsec передаёт изображение удалённого рабочего стола с низкой задержкой. Linux-приложение используется для подключения к доступному компьютеру-хосту, в том числе для игр.
+Клиент удалённого рабочего стола с низкой задержкой. С компьютера на ALT можно подключиться к хосту Parsec на Windows или macOS и управлять им с клавиатуры, мыши или геймпада. [Сайт Parsec](https://parsec.app/downloads)
 
-[Официальный сайт и описание](https://parsec.app/downloads) · [Лицензия](LICENSE)
-
-**Платформа:** ALT Linux p11.
-
-**Архитектуры:** amd64.
+ALT Linux p11 · x86_64
 
 ## Установка
 
-Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
-затем выполните:
+**Лицензия** — проприетарная. При интерактивной сборке Stapler предложит принять [условия Parsec](https://parsec.app/terms).
 
 ```bash
 sudo stplr install nivora/parsec
 ```
 
-Текущая версия указана в [каталоге](../README.md#каталог).
-[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
-
 ## Запуск
 
-Откройте приложение из меню или выполните от своего пользователя:
+Откройте **Parsec** из меню или выполните `parsecd`, войдите в аккаунт и выберите доступный компьютер.
 
-```bash
-parsecd
-```
+Если в профиле ещё не выбран режим клавиатуры, Nivora задаёт `client_immersive=2`, чтобы системные сочетания клавиш передавались на хост. Для одного сеанса с локальными сочетаниями выполните `parsecd client_immersive=0`. Команда `PARSEC_NIVORA_IMMERSIVE=0 parsecd` запускает клиент с настройками самого Parsec, включая уже сохранённый выбор. [Параметры Parsec](https://support.parsec.app/hc/en-us/articles/32381443626516-All-Advanced-Configuration-Options)
 
-Возможности подключения и требования к оборудованию описаны в [официальной справке](https://support.parsec.app/).
-
-[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)
+[Подключение Nivora](../.github/docs/installation.md) · [Каталог приложений](../README.md)

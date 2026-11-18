@@ -1,37 +1,19 @@
-<p align="center">
-  <img src="com.anthropic.Claude.png" width="72" height="72" alt="Claude">
-</p>
+# Claude Desktop
 
-# Claude
+Настольное приложение Anthropic объединяет чат Claude, работу с файлами в Cowork и разработку в Claude Code. В Claude Code можно вести несколько сессий и просматривать изменения в коде. [Руководство Anthropic для Linux](https://code.claude.com/docs/en/desktop-linux)
 
-Официальное настольное приложение Anthropic объединяет чат Claude, Cowork и Claude Code. В интерфейсе доступны параллельные сессии, просмотр изменений, терминал и редактор.
-
-[Официальный сайт и описание](https://code.claude.com/docs/en/desktop-linux) · [Лицензия](LICENSE)
-
-**Платформа:** ALT Linux p11.
-
-**Архитектуры:** amd64 · arm64 (предварительная поддержка).
+ALT Linux p11 · x86_64 · aarch64 (предварительная поддержка)
 
 ## Установка
 
-Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
-затем выполните:
+**Лицензия приложения** — проприетарная. При интерактивной сборке Stapler показывает [условия Anthropic для индивидуальных пользователей](https://www.anthropic.com/legal/consumer-terms) и запрашивает подтверждение.
 
 ```bash
 sudo stplr install nivora/claude
 ```
 
-Текущая версия указана в [каталоге](../README.md#каталог).
-[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
-
 ## Запуск
 
-Откройте приложение из меню или выполните от своего пользователя:
+Откройте Claude из меню или выполните `claude-desktop`. Задачи Cowork выполняются в виртуальной машине. Для этого режима нужны QEMU, доступ к KVM и включённая в прошивке аппаратная виртуализация. [Требования Cowork](https://code.claude.com/docs/en/desktop-linux#cowork-requirements)
 
-```bash
-claude-desktop
-```
-
-Версия для Linux у разработчика обозначена как beta. Для Cowork нужна аппаратная виртуализация; подробности — в [официальных требованиях](https://code.claude.com/docs/en/desktop-linux#cowork-requirements). Доступность функций зависит от тарифного плана.
-
-[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)
+[Подключение Nivora](../.github/docs/installation.md) · [Каталог приложений](../README.md)

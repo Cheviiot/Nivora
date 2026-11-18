@@ -1,6 +1,6 @@
 name='gnome-software-plugin-stplr'
 version='0.3.0.git20260525192209'
-release=1
+release=2
 upstream_commit='777b48ffee5f84b411154355e35b68e2347fa0ff'
 source_fingerprint='8ba8b6a70526cc70dcf5ab0d8798c7a79be18cb50e70e29491ed4826bc3c405a'
 summary='Stapler integration for GNOME Software'
@@ -41,6 +41,10 @@ sources=(
 checksums=(
 	'sha256:0dee7a97015461fb4e2f23475f2f92cab4e740cd9b37c864f18bc4e9c529812e'
 	'sha256:3a7b7702bcd2d9cfc2f85a1f2c829b8212739aafad6c99016ce5cfbe1d51d9a7'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
 )
 
 package() {

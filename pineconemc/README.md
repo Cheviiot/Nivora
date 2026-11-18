@@ -1,37 +1,19 @@
-<p align="center">
-  <img src="io.github.elyprismlauncher.ElyPrismLauncher.svg" width="72" height="72" alt="PineconeMC">
-</p>
-
 # PineconeMC
 
-Лаунчер Minecraft на основе Prism Launcher. Он поддерживает управление игровыми сборками, установку модов и модпаков, а также учётные записи Ely.by.
+Лаунчер Minecraft на основе Prism Launcher. Можно держать несколько игровых сборок с разными версиями игры и наборами модов, а для входа использовать учётную запись Ely.by. [Сайт PineconeMC](https://elyprismlauncher.github.io/)
 
-[Официальный сайт и описание](https://elyprismlauncher.github.io/) · [Лицензия](LICENSE)
-
-**Платформа:** ALT Linux p11.
-
-**Архитектуры:** amd64 · arm64 (предварительная поддержка).
+ALT Linux p11 · x86_64 · aarch64 (предварительная поддержка)
 
 ## Установка
 
-Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
-затем выполните:
+**Лицензия** лаунчера — [GPL-3.0-only](https://github.com/ElyPrismLauncher/Launcher/blob/develop/LICENSE). У самой игры и устанавливаемых модов свои условия использования.
 
 ```bash
 sudo stplr install nivora/pineconemc
 ```
 
-Текущая версия указана в [каталоге](../README.md#каталог).
-[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
-
 ## Запуск
 
-Откройте приложение из меню или выполните от своего пользователя:
+Откройте **PineconeMC** из меню или выполните `pineconemc`. Игровые сборки и настройки хранятся в каталоге данных пользователя. Сам лаунчер обновляется через Stapler.
 
-```bash
-pineconemc
-```
-
-Java и требования конкретной версии Minecraft настраиваются для выбранной игровой сборки.
-
-[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)
+[Подключение Nivora](../.github/docs/installation.md) · [Каталог приложений](../README.md)

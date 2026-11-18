@@ -1,37 +1,33 @@
-<p align="center">
-  <img src="https://tailscale.com/favicon.png" width="72" height="72" alt="Tailscale">
-</p>
-
 # Tailscale
 
-Tailscale объединяет устройства и сервисы в частную сеть с шифрованием WireGuard. В Linux работа с подключением доступна через командную строку.
+Tailscale соединяет устройства в частную сеть через WireGuard. В Linux подключением управляет служба `tailscaled`, а команда `tailscale` позволяет войти в сеть и увидеть доступные устройства. [Tailscale для Linux](https://tailscale.com/docs/install/linux)
 
-[Официальный сайт и описание](https://tailscale.com/) · [Лицензия](LICENSE)
-
-**Платформа:** ALT Linux p11.
-
-**Архитектуры:** amd64 · arm64 (предварительная поддержка).
+ALT Linux p11 · x86_64 · aarch64 (предварительная поддержка)
 
 ## Установка
 
-Сначала [подключите Nivora](../.github/docs/installation.md#2-подключить-nivora),
-затем выполните:
+**Лицензия** клиента и службы — [BSD-3-Clause](https://github.com/tailscale/tailscale/blob/main/LICENSE). Для учётной записи в облаке действуют [условия сервиса](https://tailscale.com/legal/terms).
 
 ```bash
 sudo stplr install nivora/tailscale
 ```
 
-Текущая версия указана в [каталоге](../README.md#каталог).
-[Обновление и удаление](../.github/docs/installation.md) выполняются через Stapler.
+## Первое подключение
 
-## Состояние подключения
-
-Проверка текущего подключения:
+При первой установке пакет включает и запускает `tailscaled.service` через systemd. Подключите устройство к сети и пройдите авторизацию по ссылке, которую напечатает команда.
 
 ```bash
-tailscale status
+sudo tailscale up
 ```
 
-Первый вход и дополнительные настройки описаны в [руководстве по Tailscale](../.github/docs/troubleshooting.md#tailscale-первый-вход-и-настройки).
+Посмотреть устройства можно командой `tailscale status`. Если хотите управлять подключением от своего пользователя, **после первого входа** назначьте его оператором из обычного пользовательского терминала.
 
-[Каталог Nivora](../README.md) · [Помощь](../.github/docs/troubleshooting.md)
+```bash
+sudo tailscale set --operator="$USER"
+```
+
+## Настройки и сброс
+
+Параметры службы находятся в `/etc/default/tailscaled`, состояние и ключи узла — в `/var/lib/tailscale`. Обычное удаление пакета сохраняет авторизацию. Для **полного сброса** выполните `sudo tailscale-purge-data --yes`, пока пакет установлен. Команда остановит службу и необратимо удалит локальное состояние. При следующем подключении понадобится новый вход.
+
+[Подключение Nivora](../.github/docs/installation.md) · [Каталог приложений](../README.md)

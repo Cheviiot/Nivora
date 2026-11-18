@@ -1,6 +1,6 @@
 name='opencode'
 version='2.3.2'
-release=2
+release=3
 summary='Open source desktop AI agent for software development'
 summary_ru='Открытый настольный ИИ-агент для разработки'
 group='Development/Tools'

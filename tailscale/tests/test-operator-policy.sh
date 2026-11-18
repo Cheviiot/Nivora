@@ -16,7 +16,7 @@ set -euo pipefail
 
 package_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 postinstall="${package_dir}/postinstall.sh"
-user_guide="${package_dir}/../.github/docs/troubleshooting.md"
+user_guide="${package_dir}/README.md"
 
 # Look at what the hook actually runs: drop comments and the heredoc that
 # only prints the hint, so the literal inside it is not mistaken for a call.

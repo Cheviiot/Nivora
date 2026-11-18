@@ -1,6 +1,6 @@
 name='yandex-music'
 version='5.127.0'
-release=3
+release=4
 summary='Music with personalized recommendations'
 summary_ru='Музыка с персональными рекомендациями'
 group='Sound'
@@ -17,7 +17,7 @@ license=('LicenseRef-proprietary')
 appstream_app_id='yandexmusic'
 appstream_name='Яндекс Музыка'
 nonfree=1
-nonfree_msg='Yandex Music является проприетарным приложением ООО «Яндекс». Использование клиента, учётной записи, подписки и сетевых функций регулируется условиями Яндекс Музыки.'
+nonfree_msg='Яндекс Музыка — проприетарное приложение. Ссылка ведёт на лицензионное соглашение со страницы загрузки Яндекс Музыки.'
 nonfree_url='https://yandex.ru/legal/music_mobile_agreement/'
 
 provides=()
@@ -54,7 +54,7 @@ sources=(
 
 checksums=(
 	'sha256:5e7fc1ea18c4fa28c649fe39df2c3a6affad4d1bf005014381569acc238e557b'
-	'sha256:52a11692975a1dfe999f8cf953522d2ddfc2bd594a3a23c2e52035eb53d2fa2d'
+	'sha256:487360caa13863693763b1323906fbc835ffcf6bad90318191133e0fcab19883'
 	'sha256:b6f6329ada2bb1b4cfd8c3fa360d70407da7012c7236f558215754d955374316'
 )
 

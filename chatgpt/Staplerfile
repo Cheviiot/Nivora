@@ -1,6 +1,6 @@
 name='chatgpt'
 version='26.1111.71025'
-release=2
+release=3
 # SHA-256 of the final HTTP ETag for each mutable /latest/ source. The
 # autonomous detector compares these even when upstream keeps the version.
 source_fingerprint_amd64='f88d561e0a997fd72d602708b0cf6d29b2a6a3ffa6454437980afded2880d78f'
@@ -20,7 +20,7 @@ license=('LicenseRef-proprietary')
 
 appstream_app_id='com.openai.chatgpt'
 nonfree=1
-nonfree_msg='ChatGPT является проприетарным приложением OpenAI. Использование ChatGPT, Codex, учётной записи, подписки и сетевых функций регулируется условиями OpenAI.'
+nonfree_msg='ChatGPT — проприетарное приложение OpenAI. По ссылке указаны условия для личных аккаунтов и приведены ссылки на условия для других регионов и организаций.'
 nonfree_url='https://openai.com/policies/terms-of-use/'
 
 provides=('codex')
@@ -68,13 +68,13 @@ sources_arm64=(
 checksums=(
 	'sha256:8197424cbcea3a7c0d445a544eaa6b99df8b8ef8b1d182e2b743f702753c7a70'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
-	'sha256:ae0362ccf70609d206eeb12e0497cb8fbb6ce6a5b5ea15efbb634d276ad4e32b'
+	'sha256:6544c190e00521350d272715fd8e5d359cf080f37be089c45c9a76e9c78e4d8b'
 	'sha256:5cb8f6d48aa4668285d2d2645ec34d6b2e54894937cbe8fee329ea36608a71a5'
 )
 checksums_arm64=(
 	'sha256:55d861fb4c8d1b54033e4d4178f344f0b9247352bf80290420f44d15dec4a2ba'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
-	'sha256:ae0362ccf70609d206eeb12e0497cb8fbb6ce6a5b5ea15efbb634d276ad4e32b'
+	'sha256:6544c190e00521350d272715fd8e5d359cf080f37be089c45c9a76e9c78e4d8b'
 	'sha256:5cb8f6d48aa4668285d2d2645ec34d6b2e54894937cbe8fee329ea36608a71a5'
 )
 

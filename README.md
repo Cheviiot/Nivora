@@ -10,7 +10,7 @@
 <p align="center">
   <a href=".github/docs/installation.md"><strong>Подключить каталог →</strong></a> &nbsp;·&nbsp;
   <a href="#каталог">Выбрать приложение</a> &nbsp;·&nbsp;
-  <a href=".github/docs/index.md">Помощь</a>
+  <a href=".github/docs/installation.md#если-возникла-ошибка">Помощь</a>
 </p>
 
 <!-- package-count -->

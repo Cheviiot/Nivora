@@ -1,6 +1,6 @@
 name='chatgpt'
 version='26.1111.71025'
-release=4
+release=5
 source_fingerprint_amd64='f88d561e0a997fd72d602708b0cf6d29b2a6a3ffa6454437980afded2880d78f'
 source_fingerprint_arm64='a4638b15c4cc3980fc295816838aa92a7d8a7a5dd9778ac07be90fc510ddd08d'
 
@@ -73,6 +73,13 @@ package() {
 	unpack_dir="$(mktemp -d "${srcdir}/chatgpt-unpack.XXXXXX")" || return 1
 	cd "${unpack_dir}" || return 1
 	ar x "${srcdir}/chatgpt.deb" || return 1
+	# Both architectures use mutable /latest/ URLs. Verify the pinned payload before staging it.
+	tar -xOf control.tar.* ./control > deb-control || return 1
+	if ! grep -Fxq "Version: ${version}" deb-control || ! grep -Fxq "Architecture: ${ARCH}" deb-control; then
+		echo "Expected ChatGPT ${version} for ${ARCH}, got these DEB fields:" >&2
+		grep -E '^(Version|Architecture):' deb-control >&2
+		return 1
+	fi
 	tar -xf data.tar.* || return 1
 
 	# The upstream AppArmor profile grants user namespaces to this exact executable.

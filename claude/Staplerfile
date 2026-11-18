@@ -1,6 +1,6 @@
 name='claude'
 version='5.11492.5'
-release=5
+release=6
 
 summary='Claude desktop app with Chat, Cowork, and Claude Code'
 summary_ru='Настольное приложение Claude с чатом, Cowork и Claude Code'
@@ -32,7 +32,7 @@ auto_prov=0
 
 # Chromium loads these libraries dynamically and uses the desktop portals over D-Bus.
 deps=('libnotify' 'xdg-utils' 'libsecret' 'libXtst' 'libuuid' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk')
-opt_deps=('libalsa' 'libappindicator-gtk3' 'ca-certificates' 'gnome-keyring' 'qemu-system-x86' 'virtiofsd')
+opt_deps=('libappindicator-gtk3' 'ca-certificates' 'gnome-keyring')
 build_deps=('binutils' 'python3')
 
 sources=(

@@ -16,6 +16,7 @@ readonly -a PACKAGES=(
     telegram
     yandex-music
 )
+readonly chatgpt_deb_base_url='https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest'
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../.." && pwd)"
@@ -198,10 +199,10 @@ source_fingerprints() {
         ;;
     chatgpt)
         fingerprint="$(http_etag_fingerprint \
-            'https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_amd64.deb')" || return
+            "${chatgpt_deb_base_url}/chatgpt_amd64.deb")" || return
         printf 'source_fingerprint_amd64\t%s\n' "$fingerprint"
         fingerprint="$(http_etag_fingerprint \
-            'https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_arm64.deb')" || return
+            "${chatgpt_deb_base_url}/chatgpt_arm64.deb")" || return
         printf 'source_fingerprint_arm64\t%s\n' "$fingerprint"
         ;;
     gnome-software-plugin-stplr)
@@ -407,51 +408,64 @@ latest_yandex_music() {
     printf '%s\n' "$version"
 }
 
-latest_chatgpt() {
-    local temp_dir version
-    temp_dir="$(mktemp -d)"
-    # The .deb is 300+ MB; a small Range request is enough to capture
-    # debian-binary + control.tar.xz, which `ar` extracts fine even though
-    # the overall archive is truncated (there's no manifest/latest.yml
-    # published alongside it to check instead).
-    curl --retry 3 --retry-delay 2 --retry-all-errors \
-        --connect-timeout 30 --max-time 60 -fsSL \
-        -r 0-2097151 \
-        -o "${temp_dir}/chatgpt.deb" \
-        'https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_amd64.deb'
-    (cd "$temp_dir" && ar x chatgpt.deb debian-binary control.tar.xz)
-    version="$(tar -xOf "${temp_dir}/control.tar.xz" ./control | awk '$1 == "Version:" {print $2; exit}')"
-    [[ -n "$version" ]] || die 'cannot determine latest ChatGPT version'
-    printf '%s\n' "$version"
-    find "$temp_dir" -mindepth 1 -delete
-    rmdir "$temp_dir"
-}
+latest_chatgpt() (
+    local deb arch version amd64_version=''
+    deb="$(mktemp)" || return
+    trap 'rm -f -- "$deb"' EXIT
+    for arch in amd64 arm64; do
+        # control.tar.xz precedes the large data member in both upstream DEBs.
+        curl --retry 3 --retry-delay 2 --retry-all-errors --retry-max-time 60 \
+            --connect-timeout 30 --max-time 60 -fsSL \
+            --range 0-2097151 --max-filesize 2097152 -o "$deb" \
+            "${chatgpt_deb_base_url}/chatgpt_${arch}.deb" || return
+        version="$(
+            ar p "$deb" control.tar.xz | tar -xJOf - ./control |
+                awk -v arch="$arch" '
+                    /^Architecture:/ { if (NF != 2) exit 1; architecture = $2; architectures++ }
+                    /^Version:/ { if (NF != 2) exit 1; version = $2; versions++ }
+                    END {
+                        if (architectures != 1 || architecture != arch || versions != 1) exit 1
+                        print version
+                    }'
+        )" || die "cannot verify ChatGPT version and architecture for ${arch}"
+        if [[ "$arch" == amd64 ]]; then
+            amd64_version="$version"
+        elif [[ "$version" != "$amd64_version" ]]; then
+            die "ChatGPT versions differ: amd64=${amd64_version}, arm64=${version}"
+        fi
+    done
+    printf '%s\n' "$amd64_version"
+)
 
 upstream_source_published() {
     local url="$1"
-    local headers status
-    headers="$(
-        curl --retry 3 --retry-delay 2 --retry-all-errors \
-            --connect-timeout 30 --max-time 120 -sSIL "$url" 2>/dev/null
-    )" || return 1
+    local status
     status="$(
-        awk 'toupper($1) ~ /^HTTP/ { code = $2; gsub(/\r/, "", code) } END { print code }' <<<"$headers"
-    )"
-    [[ "$status" =~ ^2[0-9][0-9]$ ]]
+        curl --retry 3 --retry-delay 2 --retry-all-errors \
+            --connect-timeout 30 --max-time 120 -sSIL -o /dev/null -w '%{http_code}' "$url"
+    )" || return 2
+    case "$status" in
+    2[0-9][0-9]) return 0 ;;
+    404 | 410) return 1 ;;
+    *) echo "package_updates: source probe returned HTTP ${status} for ${url}" >&2; return 2 ;;
+    esac
 }
 
 latest_telegram() {
-    local version
+    local version probe_status=0
     # Follow the official release asset used by the recipe. The separate
     # td.telegram.org mirror can lag behind an already published GitHub release.
     version="$(github_latest_release telegramdesktop/tdesktop)" || return
-    if upstream_source_published \
-        "https://github.com/telegramdesktop/tdesktop/releases/download/v${version}/td-setup-linux-x64-${version}.tar.xz"; then
-        printf '%s\n' "$version"
-        return 0
-    fi
-    echo "package_updates: telegram ${version} is tagged upstream but its official Linux release asset is not published yet" >&2
-    current_version telegram
+    upstream_source_published \
+        "https://github.com/telegramdesktop/tdesktop/releases/download/v${version}/td-setup-linux-x64-${version}.tar.xz" || probe_status=$?
+    case "$probe_status" in
+    0) printf '%s\n' "$version" ;;
+    1)
+        echo "package_updates: telegram ${version} is tagged upstream but its official Linux release asset is not published yet" >&2
+        current_version telegram
+        ;;
+    *) return "$probe_status" ;;
+    esac
 }
 
 latest_version() {

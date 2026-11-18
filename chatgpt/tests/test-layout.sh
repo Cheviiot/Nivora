@@ -40,7 +40,25 @@ printf 'profile chatgpt "/usr/lib/chatgpt/ChatGPT" { }\n' >"${deb_tree}/etc/appa
 printf '[Desktop Entry]\nExec=/vendor/chatgpt\n' >"${deb_tree}/usr/share/applications/chatgpt.desktop"
 cp "${package_dir}/"{LICENSE,com.openai.chatgpt.png,com.openai.chatgpt.metainfo.xml} "$srcdir"
 tar -czf "${temp_dir}/data.tar.gz" -C "$deb_tree" .
-ar rc "${srcdir}/chatgpt.deb" "${temp_dir}/data.tar.gz"
+write_deb() {
+    printf 'Package: chatgpt\nVersion: %s\nArchitecture: %s\n' "$1" "$2" >"${temp_dir}/control"
+    tar -czf "${temp_dir}/control.tar.gz" -C "$temp_dir" ./control
+    ar rc "${srcdir}/chatgpt.deb" "${temp_dir}/control.tar.gz" "${temp_dir}/data.tar.gz"
+}
+
+ARCH=amd64
+# shellcheck disable=SC2154
+for fields in "${version} arm64" "0.0.1 amd64"; do
+    read -r deb_version deb_arch <<<"$fields"
+    write_deb "$deb_version" "$deb_arch"
+    if ( package ) >"${temp_dir}/error" 2>&1; then
+        echo "Accepted mismatched upstream DEB: ${fields}" >&2
+        exit 1
+    fi
+    grep -Fq "Expected ChatGPT ${version} for ${ARCH}" "${temp_dir}/error"
+    [[ ! -e "${pkgdir}/usr" ]]
+done
+write_deb "$version" "$ARCH"
 
 # Simulate a second build sharing a source directory with a previous extraction.
 mkdir -p "${srcdir}/extracted/usr/lib/chatgpt"

@@ -1,6 +1,6 @@
 name='gnome-software-plugin-stplr'
 version='0.3.0.git20260525192209'
-release=3
+release=4
 upstream_commit='777b48ffee5f84b411154355e35b68e2347fa0ff'
 source_fingerprint='8ba8b6a70526cc70dcf5ab0d8798c7a79be18cb50e70e29491ed4826bc3c405a'
 
@@ -38,10 +38,12 @@ build_deps=(
 sources=(
 	"https://altlinux.space/api/v1/repos/stapler/gnome-software-plugin-stplr/archive/${upstream_commit}.tar.gz?~archive=false&~name=gnome-software-plugin-stplr.tar.gz"
 	'local:///modern-developer.patch'
+	'local:///package-state.patch'
 )
 checksums=(
 	'sha256:0dee7a97015461fb4e2f23475f2f92cab4e740cd9b37c864f18bc4e9c529812e'
 	'sha256:3a7b7702bcd2d9cfc2f85a1f2c829b8212739aafad6c99016ce5cfbe1d51d9a7'
+	'sha256:7078fb9bd401e08bad4409a54365ba8577707d4cb3442b86f1dd48c8378b0b16'
 )
 
 scripts=(
@@ -53,6 +55,7 @@ prepare() {
 	tar --no-same-owner --no-same-permissions -xzf gnome-software-plugin-stplr.tar.gz
 	cd gnome-software-plugin-stplr
 	patch --batch --forward -p1 < "${srcdir}/modern-developer.patch"
+	patch --batch --forward -p1 < "${srcdir}/package-state.patch"
 }
 
 build() {

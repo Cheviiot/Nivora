@@ -12,6 +12,8 @@ Staplerfile text eol=lf
 *.md        text eol=lf
 *.desktop   text eol=lf
 *.pam       text eol=lf
+# Строка контекста в unified diff начинается с пробела, в том числе перед табуляцией.
+*.patch     text eol=lf whitespace=-blank-at-eol,-space-before-tab
 *.svg       text eol=lf
 
 # Иконки для плагина GNOME Software: бинарные, diff по ним бессмыслен.

@@ -14,6 +14,17 @@ sudo stplr install nivora/claude
 
 ## Запуск
 
-Откройте Claude из меню или выполните `claude-desktop`. Задачи Cowork выполняются в виртуальной машине. Для этого режима нужны QEMU, доступ к KVM и включённая в прошивке аппаратная виртуализация. [Требования Cowork](https://code.claude.com/docs/en/desktop-linux#cowork-requirements)
+Откройте Claude из меню или выполните `claude-desktop`.
+
+## Cowork
+
+Cowork выполняет задачи в виртуальной машине с аппаратной виртуализацией KVM. Если планируете пользоваться этим режимом, узнайте архитектуру командой `uname -m` и установите пакеты для неё.
+
+| Архитектура | Команда для ALT p11 |
+| --- | --- |
+| x86_64 | `sudo apt-get install qemu-system-x86-core virtiofsd` |
+| aarch64 | `sudo apt-get install qemu-system-aarch64-core virtiofsd` |
+
+APT установит прошивку UEFI вместе с QEMU. Для обмена файлами с виртуальной машиной Claude использует системный `virtiofsd`. Пользователю нужен доступ на чтение и запись к `/dev/kvm` и `/dev/vhost-vsock`. [Требования Cowork](https://code.claude.com/docs/en/desktop-linux#cowork-requirements)
 
 [Подключение Nivora](../.github/docs/installation.md) · [Каталог приложений](../README.md)

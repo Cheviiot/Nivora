@@ -112,21 +112,12 @@ for removed in kimi-code unsloth casement distroshelf github-desktop; do
     fi
 done
 
-# curl emits CRLF headers; HTTP/2 has no reason phrase after the status code.
-# A successful source probe must not silently suppress a published update.
+# The mutable download's ETag must come from the final successful response.
 (
     curl() {
         printf '%b' "${MOCK_HTTP_HEADERS:?}"
         return "${MOCK_CURL_EXIT:-0}"
     }
-    MOCK_HTTP_HEADERS='HTTP/2 200\r\ncontent-length: 1048576\r\n\r\n' \
-        upstream_source_published 'https://example.invalid/payload'
-    if MOCK_HTTP_HEADERS='HTTP/2 404\r\n\r\n' \
-        upstream_source_published 'https://example.invalid/payload'; then
-        echo 'unpublished source was accepted' >&2
-        exit 1
-    fi
-
     expected_fingerprint="$(printf 'payload-tag' | sha256sum | awk '{print $1}')"
     MOCK_HTTP_HEADERS='HTTP/2 302\r\netag: "redirect-tag"\r\n\r\nHTTP/2 200\r\netag: "payload-tag"\r\n\r\n'
     [[ "$(http_etag_fingerprint https://example.invalid/latest)" == "$expected_fingerprint" ]]
@@ -147,11 +138,69 @@ done
     fi
 )
 
-upstream_source_published() {
-    [[ "$1" == 'https://github.com/telegramdesktop/tdesktop/releases/download/v7.4.3/td-setup-linux-x64-7.4.3.tar.xz' ]]
-    [[ "${MOCK_TELEGRAM_PUBLISHED:-1}" == 1 ]]
-}
-current_version() { printf '%s\n' '7.2.5'; }
-[[ "$(latest_telegram)" == '7.4.3' ]]
-[[ "$(MOCK_TELEGRAM_PUBLISHED=0 latest_telegram 2>/dev/null)" == '7.2.5' ]]
+(
+    curl() {
+        [[ "${!#}" == 'https://github.com/telegramdesktop/tdesktop/releases/download/v7.4.3/td-setup-linux-x64-7.4.3.tar.xz' ]] || return 22
+        [[ " $* " == *" -w %{http_code} "* ]] || return 22
+        printf '%s' "$MOCK_HTTP_STATUS"
+        return "${MOCK_CURL_EXIT:-0}"
+    }
+    current_version() { printf '%s\n' '7.2.5'; }
+    [[ "$(MOCK_HTTP_STATUS=200 check_package telegram)" == '7.2.5 7.4.3' ]]
+    for MOCK_HTTP_STATUS in 404 410; do
+        [[ "$(check_package telegram 2>/dev/null)" == '7.2.5 7.2.5' ]]
+    done
+    for MOCK_HTTP_STATUS in 429 503; do
+        if check_package telegram 2>/dev/null; then
+            echo "Telegram was reported current after HTTP ${MOCK_HTTP_STATUS}" >&2
+            exit 1
+        fi
+    done
+    if MOCK_HTTP_STATUS=404 MOCK_CURL_EXIT=28 check_package telegram 2>/dev/null; then
+        echo 'Telegram was reported current after a transport timeout' >&2
+        exit 1
+    fi
+)
 echo 'OK: catalog removal and official Telegram release assets stay synchronized'
+
+(
+    fixture="$(mktemp -d)"
+    trap 'find "$fixture" -mindepth 1 -delete; rmdir "$fixture"' EXIT
+    cd "$fixture"
+    printf '2.0\n' >debian-binary
+    truncate -s 3M data.tar.xz
+    make_deb() {
+        local target="$1" architecture="$2" version="$3"
+        printf 'Package: chatgpt\nVersion: %s\nArchitecture: %s\n' "$version" "$architecture" >control
+        tar -cJf control.tar.xz ./control
+        rm -f "$target"
+        ar rc "$target" debian-binary control.tar.xz data.tar.xz
+    }
+    curl() {
+        local output='' url="${!#}"
+        [[ " $* " == *" --range 0-2097151 "* ]] || return 22
+        while (($#)); do
+            if [[ "$1" == -o ]]; then output="$2"; break; fi
+            shift
+        done
+        case "$url" in
+        'https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_amd64.deb' | \
+        'https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_arm64.deb')
+            head -c 2097152 "${url##*/}" >"$output" ;;
+        *) return 22 ;;
+        esac
+    }
+    current_version() { printf '1.0\n'; }
+    make_deb chatgpt_amd64.deb amd64 2.0
+    make_deb chatgpt_arm64.deb arm64 2.0
+    [[ "$(check_package chatgpt)" == '1.0 2.0' ]]
+    make_deb chatgpt_arm64.deb arm64 1.0
+    if check_package chatgpt >result 2>error; then exit 1; fi
+    [[ ! -s result ]]
+    grep -Fq 'amd64=2.0, arm64=1.0' error
+    make_deb chatgpt_arm64.deb amd64 2.0
+    if check_package chatgpt >result 2>error; then exit 1; fi
+    [[ ! -s result ]]
+    grep -Fq 'architecture for arm64' error
+)
+echo 'OK: ChatGPT release detection requires matching amd64 and arm64 DEB metadata'

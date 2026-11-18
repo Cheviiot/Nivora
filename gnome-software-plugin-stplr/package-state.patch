@@ -1,0 +1,547 @@
+--- a/src/gs-plugin-stplr.c
++++ b/src/gs-plugin-stplr.c
+@@ -1,6 +1,7 @@
+ #include "gs-plugin-stplr.h"
+ 
+ #include "stplr-vala.h"
++#include "stplr-app-state.h"
+ 
+ #include <glib/gi18n.h>
+ 
+@@ -118,10 +119,33 @@
+ }
+ 
+ static GsApp*
+-stplr_app_to_gs_app(GsPlugin*plugin, const StplrApp*from)
+-{
+-	g_autoptr(GsApp) app = NULL;
+-	app = gs_app_new(NULL);
++stplr_app_to_gs_app(GsPlugin*plugin, const StplrApp*from, gint64 query_started)
++{
++	g_autoptr(GsApp) app = gs_plugin_cache_lookup(plugin, from->stplr_id);
++	gboolean cached = app != NULL;
++	GsAppState state;
++
++	switch (from->state) {
++	case STPLR_STATE_AVAILABLE:
++		state = GS_APP_STATE_AVAILABLE;
++		break;
++	case STPLR_STATE_INSTALLED:
++		state = GS_APP_STATE_INSTALLED;
++		break;
++	case STPLR_STATE_UPDATABLE:
++		state = GS_APP_STATE_UPDATABLE_LIVE;
++		break;
++	default:
++		g_assert_not_reached();
++	}
++
++	if (!cached)
++		app = gs_app_new(NULL);
++	stplr_app_apply_snapshot(app, state, from->version,
++	                         state == GS_APP_STATE_UPDATABLE_LIVE ? from->update_version : NULL,
++	                         query_started);
++	if (cached)
++		return g_steal_pointer(&app);
+ 
+ 	// common to any stplr package
+ 	gs_app_set_size_installed(app, GS_SIZE_TYPE_UNKNOWABLE, 0);
+@@ -130,21 +154,7 @@
+ 	gs_app_set_scope(app, AS_COMPONENT_SCOPE_SYSTEM);
+ 	gs_app_set_kind(app, AS_COMPONENT_KIND_DESKTOP_APP);
+ 
+-	switch (from->state) {
+-	case STPLR_STATE_AVAILABLE:
+-		gs_app_set_state(app, GS_APP_STATE_AVAILABLE);
+-		break;
+-	case STPLR_STATE_INSTALLED:
+-		gs_app_set_state(app, GS_APP_STATE_INSTALLED);
+-		break;
+-	case STPLR_STATE_UPDATABLE:
+-		gs_app_set_state(app, GS_APP_STATE_UPDATABLE_LIVE);
+-		gs_app_set_update_version(app, from->update_version);
+-		break;
+-	}
+-
+ 	gs_app_set_id(app, from->id);
+-	gs_app_set_version(app, from->version);
+ 	gs_app_set_name(app, GS_APP_QUALITY_NORMAL, from->gs_name);
+ 	gs_app_set_summary(app, GS_APP_QUALITY_NORMAL, from->summary);
+ 	gs_app_set_description(app, GS_APP_QUALITY_NORMAL, from->description);
+@@ -392,6 +402,7 @@
+ 	GsPluginStplr       *self = GS_PLUGIN_STPLR(source_object);
+ 	GsPluginListAppsData*data = task_data;
+ 
++	const gint64 query_started = g_get_monotonic_time();
+ 	g_autoptr(GsAppList) list = gs_app_list_new();
+ 	const gchar*const*keywords     = NULL;
+ 	GsApp            *alternate_of = NULL;
+@@ -446,12 +457,8 @@
+ 
+ 		if (search_result != NULL)
+ 			for (gint i = 0; i < result_length; i++) {
+-				g_autoptr(StplrApp) r = NULL;
+-				g_autoptr(GsApp) app  = NULL;
+-				r   = search_result[i];
+-				app = gs_plugin_cache_lookup(GS_PLUGIN(self), r->stplr_id);
+-				if (app == NULL)
+-					app = stplr_app_to_gs_app(GS_PLUGIN(self), r);
++				g_autoptr(StplrApp) r = search_result[i];
++				g_autoptr(GsApp) app = stplr_app_to_gs_app(GS_PLUGIN(self), r, query_started);
+ 				gs_app_list_add(list, app);
+ 			}
+ 		gs_app_list_add(list, alternate_of);
+@@ -473,12 +480,8 @@
+ 
+ 		if (search_result != NULL)
+ 			for (gint i = 0; i < result_length; i++) {
+-				g_autoptr(StplrApp) r = NULL;
+-				g_autoptr(GsApp) app  = NULL;
+-				r   = search_result[i];
+-				app = gs_plugin_cache_lookup(GS_PLUGIN(self), r->stplr_id);
+-				if (app == NULL)
+-					app = stplr_app_to_gs_app(GS_PLUGIN(self), r);
++				g_autoptr(StplrApp) r = search_result[i];
++				g_autoptr(GsApp) app = stplr_app_to_gs_app(GS_PLUGIN(self), r, query_started);
+ 				gs_app_list_add(list, app);
+ 			}
+ 	}
+@@ -499,12 +502,8 @@
+ 
+ 		if (search_result != NULL)
+ 			for (gint i = 0; i < result_length; i++) {
+-				g_autoptr(StplrApp) r = NULL;
+-				g_autoptr(GsApp) app  = NULL;
+-				r   = search_result[i];
+-				app = gs_plugin_cache_lookup(GS_PLUGIN(self), r->stplr_id);
+-				if (app == NULL)
+-					app = stplr_app_to_gs_app(GS_PLUGIN(self), r);
++				g_autoptr(StplrApp) r = search_result[i];
++				g_autoptr(GsApp) app = stplr_app_to_gs_app(GS_PLUGIN(self), r, query_started);
+ 				gs_app_list_add(list, app);
+ 			}
+ 	}
+@@ -526,12 +525,8 @@
+ 
+ 		if (search_result != NULL)
+ 			for (gint i = 0; i < result_length; i++) {
+-				g_autoptr(StplrApp) r = NULL;
+-				g_autoptr(GsApp) app  = NULL;
+-				r   = search_result[i];
+-				app = gs_plugin_cache_lookup(GS_PLUGIN(self), r->stplr_id);
+-				if (app == NULL)
+-					app = stplr_app_to_gs_app(GS_PLUGIN(self), r);
++				g_autoptr(StplrApp) r = search_result[i];
++				g_autoptr(GsApp) app = stplr_app_to_gs_app(GS_PLUGIN(self), r, query_started);
+ 				gs_app_list_add(list, app);
+ 			}
+ 	}
+@@ -587,10 +582,7 @@
+ 							    apps);
+ 				}
+ 
+-				g_autoptr(GsApp) app = gs_plugin_cache_lookup(GS_PLUGIN(self),
+-									      stplr_app->id);
+-				if (app == NULL)
+-					app = stplr_app_to_gs_app(GS_PLUGIN(self), stplr_app);
++				g_autoptr(GsApp) app = stplr_app_to_gs_app(GS_PLUGIN(self), stplr_app, query_started);
+ 				g_ptr_array_add(apps, g_object_ref(app));
+ 			}
+ 
+@@ -700,7 +692,6 @@
+ 			return FALSE;
+ 		}
+ 
+-		gs_app_set_state(app, GS_APP_STATE_INSTALLING);
+ 		packages[pkg_idx++] = g_strdup(pkg);
+ 	}
+ 
+@@ -708,23 +699,19 @@
+ 	if (pkg_idx == 0)
+ 		return TRUE;
+ 
+-	stplr_install_array(packages, (gint)pkg_idx, cancellable, error);
+-	if (*error != NULL) {
+-		for (guint i = 0; i < n_apps; i++) {
+-			GsApp*app = gs_app_list_index(apps, i);
+-			if (gs_app_has_management_plugin(app, plugin))
+-				gs_app_set_state_recover(app);
+-		}
+-		return FALSE;
+-	}
+-
+ 	for (guint i = 0; i < n_apps; i++) {
+-		GsApp*app = gs_app_list_index(apps, i);
++		GsApp *app = gs_app_list_index(apps, i);
+ 		if (gs_app_has_management_plugin(app, plugin))
+-			gs_app_set_state(app, GS_APP_STATE_INSTALLED);
+-	}
+-
+-	return TRUE;
++			stplr_app_begin_transaction(app, GS_APP_STATE_INSTALLING);
++	}
++
++	gboolean success = stplr_install_array(packages, (gint)pkg_idx, cancellable, error);
++	for (guint i = 0; i < n_apps; i++) {
++		GsApp *app = gs_app_list_index(apps, i);
++		if (gs_app_has_management_plugin(app, plugin))
++			stplr_app_finish_transaction(app, success);
++	}
++	return success;
+ }
+ 
+ static void
+@@ -849,17 +836,17 @@
+ 			break;
+ 		}
+ 
+-		gs_app_set_state(app, GS_APP_STATE_REMOVING);
++		stplr_app_begin_transaction(app, GS_APP_STATE_REMOVING);
+ 
+ 		stplr_remove_package(pkg, &local_error);
+ 
+ 		if (local_error != NULL) {
+-			gs_app_set_state_recover(app);
++			stplr_app_finish_transaction(app, FALSE);
+ 			success = FALSE;
+ 			break;
+ 		}
+ 
+-		gs_app_set_state(app, GS_APP_STATE_AVAILABLE);
++		stplr_app_finish_transaction(app, TRUE);
+ 	}
+ 
+ 	if (!success) {
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -13,6 +13,7 @@
+ c_sources_rel = [
+     'gs-plugin-stplr.h',
+     'gs-plugin-stplr.c',
++    'stplr-app-state.c',
+ ]
+ 
+ stplr_lib = static_library(
+@@ -33,17 +34,29 @@
+ )
+ 
+ if get_option('tests')
++    test_cli = executable('test-stplr-cli', 'tests/test-stplr-cli.c')
++    test_config = configure_file(
++        input: 'config.vala.in',
++        output: 'test-config.vala',
++        configuration: {'stplr_path': test_cli.full_path()},
++    )
+     vala_test_sources = [
+         'tests/test-stplr.vala'
+     ]
+     
+     test_exe = executable(
+         'test-stplr',
+-        sources: vala_test_sources + vala_sources,
++        sources: vala_test_sources + vala_sources_rel + [test_config],
+         dependencies: [gio_dep, gee_dep, json_glib_dep],
+     )
+     
+-    test('vala-tests', test_exe)
++    test('vala-tests', test_exe, depends: [test_cli])
++    test('package-state', executable(
++        'test-stplr-state',
++        sources: ['tests/test-stplr-state.c', 'stplr-app-state.c'],
++        c_args: cargs,
++        dependencies: [gio_dep, libgnomesoftware_dep],
++    ))
+ endif
+ 
+ format_cmds = []
+--- /dev/null
++++ b/src/stplr-app-state.c
+@@ -0,0 +1,63 @@
++/* SPDX-License-Identifier: GPL-3.0-or-later */
++#include "stplr-app-state.h"
++
++/* Queries and package transactions run on different worker threads. */
++static GMutex state_mutex;
++
++void
++stplr_app_apply_snapshot(GsApp *app, GsAppState state, const gchar *version,
++                         const gchar *update_version, gint64 query_started)
++{
++	g_autoptr(GMutexLocker) locker = g_mutex_locker_new(&state_mutex);
++	const gint64 *finished = g_object_get_data(G_OBJECT(app), "stplr-transaction-finished");
++
++	if (finished != NULL && *finished >= query_started)
++		return;
++
++	switch (gs_app_get_state(app)) {
++	case GS_APP_STATE_UNKNOWN:
++	case GS_APP_STATE_AVAILABLE:
++	case GS_APP_STATE_INSTALLED:
++	case GS_APP_STATE_UPDATABLE_LIVE:
++		break;
++	default:
++		/* GNOME Software may already have queued or started an operation. */
++		return;
++	}
++
++	if (g_strcmp0(gs_app_get_version(app), version) != 0)
++		gs_app_set_version(app, version);
++	if (g_strcmp0(gs_app_get_update_version(app), update_version) != 0)
++		gs_app_set_update_version(app, update_version);
++	gs_app_set_state(app, state);
++}
++
++void
++stplr_app_begin_transaction(GsApp *app, GsAppState state)
++{
++	g_autoptr(GMutexLocker) locker = g_mutex_locker_new(&state_mutex);
++	gs_app_set_state(app, state);
++}
++
++void
++stplr_app_finish_transaction(GsApp *app, gboolean success)
++{
++	g_autoptr(GMutexLocker) locker = g_mutex_locker_new(&state_mutex);
++	gint64 *finished = g_new(gint64, 1);
++
++	*finished = g_get_monotonic_time();
++	g_object_set_data_full(G_OBJECT(app), "stplr-transaction-finished", finished, g_free);
++
++	if (!success) {
++		gs_app_set_state_recover(app);
++		return;
++	}
++
++	/* After a removal the card shows the version available to reinstall. */
++	if (gs_app_get_update_version(app) != NULL) {
++		gs_app_set_version(app, gs_app_get_update_version(app));
++		gs_app_set_update_version(app, NULL);
++	}
++	gs_app_set_state(app, gs_app_get_state(app) == GS_APP_STATE_REMOVING
++	                      ? GS_APP_STATE_AVAILABLE : GS_APP_STATE_INSTALLED);
++}
+--- /dev/null
++++ b/src/stplr-app-state.h
+@@ -0,0 +1,9 @@
++/* SPDX-License-Identifier: GPL-3.0-or-later */
++#pragma once
++
++#include <gnome-software.h>
++
++void stplr_app_apply_snapshot(GsApp *app, GsAppState state, const gchar *version,
++                              const gchar *update_version, gint64 query_started);
++void stplr_app_begin_transaction(GsApp *app, GsAppState state);
++void stplr_app_finish_transaction(GsApp *app, gboolean success);
+--- a/src/stplr.vala
++++ b/src/stplr.vala
+@@ -34,12 +34,18 @@
+         public string gs_origin_ui;
+         public string gs_origin_hostname;
+ 
+-        public string update_version;
++        public string? update_version;
+ 
+         public string package_name;
+         // {repo}/{package_name};
+         public string stplr_id;
+         public string stplr_repo;
++
++        internal void copy_package_state (App from) {
++            state = from.state;
++            version = from.version;
++            update_version = from.update_version;
++        }
+     }
+ 
+ 
+@@ -81,6 +87,7 @@
+         return refine_all (
+                 installed.all (),
+                 {
++                    new UpdatableRefiner (client),
+                     new RepoInfoRefiner (client)
+                 }
+         );
+@@ -639,19 +646,16 @@
+             foreach (string line in output.split ("\x1e\n")) {
+                 var app = Parser.parse_search (line);
+                 if (app != null) {
+-                    set_as_installed (app);
++                    app.state = State.INSTALLED;
+                     _apps.set (app.stplr_id, app);
+                 }
+             }
+         }
+ 
+-        private void set_as_installed (App app) {
+-            app.state = State.INSTALLED;
+-        }
+-
+         public override void refine (App app) {
+-            if (_apps.has_key (app.stplr_id)) {
+-                set_as_installed (app);
++            var record = _apps.get (app.stplr_id);
++            if (record != null) {
++                app.copy_package_state (record);
+             }
+         }
+ 
+@@ -673,20 +677,15 @@
+             foreach (string line in output.split ("\x1e\n")) {
+                 var app = Parser.parse_updatable (line);
+                 if (app != null) {
+-                    set_as_updatable (app);
+                     _apps.set (app.stplr_id, app);
+                 }
+             }
+         }
+ 
+-        private void set_as_updatable (App app) {
+-            app.state = State.UPDATABLE;
+-        }
+-
+         public override void refine (App app) {
+-            if (_apps.has_key (app.stplr_id)) {
+-                set_as_updatable (app);
+-                app.update_version = _apps.get (app.stplr_id).update_version;
++            var record = _apps.get (app.stplr_id);
++            if (record != null) {
++                app.copy_package_state (record);
+             }
+         }
+ 
+--- /dev/null
++++ b/src/tests/test-stplr-cli.c
+@@ -0,0 +1,30 @@
++/* SPDX-License-Identifier: GPL-3.0-or-later */
++#include <stdio.h>
++#include <string.h>
++
++static void
++record(const char *repo, const char *name, const char *version, const char *update)
++{
++	printf("%s\037%s\037%s\037org.example.Editor\037Editor\037Editor\037Editor%s\036\n",
++	       repo, name, version, update);
++}
++
++int
++main(int argc, char **argv)
++{
++	if (argc < 3)
++		return 1;
++	if (strcmp(argv[1], "search") == 0) {
++		record("Nivora", "editor", "2.0-1", "");
++		record("other", "editor", "3.0-1", "");
++		record("other", "writer", "3.0-1", "");
++	} else if (strcmp(argv[1], "list") == 0 && strcmp(argv[2], "-I") == 0) {
++		record("Nivora", "editor", "1.0-1", "");
++		record("other", "writer", "1.5-1", "");
++	} else if (strcmp(argv[1], "list") == 0 && strcmp(argv[2], "-U") == 0) {
++		record("Nivora", "editor", "2.0-1", "\0371.0-1\0372.0-1");
++	} else if (strcmp(argv[1], "repo") != 0 || strcmp(argv[2], "list") != 0) {
++		return 1;
++	}
++	return 0;
++}
+--- /dev/null
++++ b/src/tests/test-stplr-state.c
+@@ -0,0 +1,57 @@
++/* SPDX-License-Identifier: GPL-3.0-or-later */
++#include "../stplr-app-state.h"
++
++static void
++assert_package(GsApp *app, GsAppState state, const gchar *version, const gchar *update)
++{
++	g_assert_cmpint(gs_app_get_state(app), ==, state);
++	g_assert_cmpstr(gs_app_get_version(app), ==, version);
++	g_assert_cmpstr(gs_app_get_update_version(app), ==, update);
++}
++
++static void
++test_package_state(void)
++{
++	g_autoptr(GsApp) app = gs_app_new("org.example.Editor");
++	gint64 started = g_get_monotonic_time();
++
++	/* Reopening a card after an install or removal in the terminal. */
++	stplr_app_apply_snapshot(app, GS_APP_STATE_AVAILABLE, "1.0-1", NULL, started);
++	stplr_app_apply_snapshot(app, GS_APP_STATE_INSTALLED, "1.0-1", NULL, started);
++	assert_package(app, GS_APP_STATE_INSTALLED, "1.0-1", NULL);
++	stplr_app_apply_snapshot(app, GS_APP_STATE_AVAILABLE, "1.0-1", NULL, started);
++	assert_package(app, GS_APP_STATE_AVAILABLE, "1.0-1", NULL);
++
++	stplr_app_apply_snapshot(app, GS_APP_STATE_INSTALLED, "1.0-1", NULL, started);
++	stplr_app_apply_snapshot(app, GS_APP_STATE_UPDATABLE_LIVE, "1.0-1", "2.0-1", started);
++	assert_package(app, GS_APP_STATE_UPDATABLE_LIVE, "1.0-1", "2.0-1");
++
++	stplr_app_begin_transaction(app, GS_APP_STATE_INSTALLING);
++	stplr_app_apply_snapshot(app, GS_APP_STATE_AVAILABLE, "2.0-1", NULL, started);
++	assert_package(app, GS_APP_STATE_INSTALLING, "1.0-1", "2.0-1");
++	stplr_app_finish_transaction(app, FALSE);
++	assert_package(app, GS_APP_STATE_UPDATABLE_LIVE, "1.0-1", "2.0-1");
++
++	stplr_app_begin_transaction(app, GS_APP_STATE_INSTALLING);
++	stplr_app_finish_transaction(app, TRUE);
++	stplr_app_apply_snapshot(app, GS_APP_STATE_UPDATABLE_LIVE, "1.0-1", "2.0-1", started);
++	assert_package(app, GS_APP_STATE_INSTALLED, "2.0-1", NULL);
++
++	stplr_app_apply_snapshot(app, GS_APP_STATE_UPDATABLE_LIVE, "2.0-1", "3.0-1", G_MAXINT64);
++	stplr_app_apply_snapshot(app, GS_APP_STATE_INSTALLED, "3.0-1", NULL, G_MAXINT64);
++	assert_package(app, GS_APP_STATE_INSTALLED, "3.0-1", NULL);
++
++	stplr_app_begin_transaction(app, GS_APP_STATE_REMOVING);
++	stplr_app_apply_snapshot(app, GS_APP_STATE_INSTALLED, "2.0-1", NULL, G_MAXINT64);
++	assert_package(app, GS_APP_STATE_REMOVING, "3.0-1", NULL);
++	stplr_app_finish_transaction(app, TRUE);
++	assert_package(app, GS_APP_STATE_AVAILABLE, "3.0-1", NULL);
++}
++
++int
++main(int argc, char **argv)
++{
++	g_test_init(&argc, &argv, NULL);
++	g_test_add_func("/stplr/app/package-state", test_package_state);
++	return g_test_run();
++}
+--- a/src/tests/test-stplr.vala
++++ b/src/tests/test-stplr.vala
+@@ -209,8 +209,39 @@
+     }
+ }
+ 
++void test_package_versions () {
++    try {
++        var found = Stplr.search_by_keywords ({ "editor" });
++        assert (found.length == 3);
++        assert (found[0].state == Stplr.State.UPDATABLE);
++        assert_cmpstr (found[0].version, CompareOperator.EQ, "1.0-1");
++        assert_cmpstr (found[0].update_version, CompareOperator.EQ, "2.0-1");
++        assert (found[1].state == Stplr.State.AVAILABLE);
++        assert_cmpstr (found[1].version, CompareOperator.EQ, "3.0-1");
++        assert (found[2].state == Stplr.State.INSTALLED);
++        assert_cmpstr (found[2].version, CompareOperator.EQ, "1.5-1");
++
++        var installed = Stplr.search_installed ();
++        assert (installed.length == 2);
++        foreach (var app in installed) {
++            if (app.stplr_id == "Nivora/editor") {
++                assert (app.state == Stplr.State.UPDATABLE);
++                assert_cmpstr (app.version, CompareOperator.EQ, "1.0-1");
++                assert_cmpstr (app.update_version, CompareOperator.EQ, "2.0-1");
++            } else {
++                assert_cmpstr (app.stplr_id, CompareOperator.EQ, "other/writer");
++                assert (app.state == Stplr.State.INSTALLED);
++                assert_null (app.update_version);
++            }
++        }
++    } catch (Error e) {
++        error ("%s", e.message);
++    }
++}
++
+ void main (string[] args) {
+     Test.init (ref args);
++    Test.add_func ("/stplr/app/package-versions", test_package_versions);
+ 
+     Test.add_func ("/stplr/description/plain_text", test_format_description_plain_text);
+     Test.add_func ("/stplr/description/paragraph", test_format_description_paragraph);

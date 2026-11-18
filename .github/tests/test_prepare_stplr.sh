@@ -13,6 +13,7 @@ fixture_root="$scratch/repo"
 mkdir -p "$fixture_root/.github/tools/lib" "$scratch/mock-bin" "$scratch/downloads"
 cp "$repo_root/.github/tools/prepare_stplr.sh" "$fixture_root/.github/tools/"
 cp "$repo_root/.github/tools/lib/pinned_git_checkout.sh" "$fixture_root/.github/tools/lib/"
+cp "$repo_root/.github/tools/lib/go_build.sh" "$fixture_root/.github/tools/lib/"
 
 for architecture in x86_64 aarch64; do
     mkdir -p "$scratch/payload-$architecture"
@@ -123,4 +124,38 @@ grep -Fq 'Unsupported architecture' "$scratch/unsupported.err"
 [[ ! -f "$scratch/bin/unsupported" ]]
 [[ "$(wc -l <"$NIVORA_TEST_DOWNLOAD_LOG")" -eq "$downloads_before" ]]
 
-echo 'OK: stable release selection, cache integrity and ARM binary preparation'
+# Matching the pinned checksum is necessary but does not make an archive or
+# executable usable. Neither extraction nor a failed smoke may destroy a tool.
+for failure in missing-member broken-binary; do
+    payload="$scratch/$failure"
+    mkdir -p "$payload"
+    if [[ "$failure" == missing-member ]]; then
+        printf 'no executable here\n' >"$payload/other-file"
+    else
+        printf '#!/bin/sh\nexit 7\n' >"$payload/stplr"
+    fi
+    tar -czf "$scratch/downloads/stplr-0.2.0-linux-x86_64.tar.gz" -C "$payload" .
+    # The production archive has a bare stplr entry; make that entry exact for
+    # the executable failure case so the smoke, rather than tar, rejects it.
+    if [[ "$failure" == broken-binary ]]; then
+        tar -czf "$scratch/downloads/stplr-0.2.0-linux-x86_64.tar.gz" -C "$payload" stplr
+    fi
+    digest="$(sha256sum "$scratch/downloads/stplr-0.2.0-linux-x86_64.tar.gz")"
+    sed -i -E "s/^(stable_linux_x86_64_sha256 = ).*/\1\"${digest%% *}\"/" \
+        "$fixture_root/.github/support-matrix.toml"
+    printf 'existing target\n' >"$scratch/existing-stplr"
+    chmod 0755 "$scratch/existing-stplr"
+    if NIVORA_STPLR_CACHE_DIR="$scratch/cache-$failure" \
+        "$prepare" "$scratch/existing-stplr" >"$scratch/$failure.out" 2>"$scratch/$failure.err"; then
+        echo "stable helper accepted ${failure}" >&2
+        exit 1
+    fi
+    grep -Fxq 'existing target' "$scratch/existing-stplr" || {
+        echo "stable helper destroyed the existing target after ${failure}" >&2
+        exit 1
+    }
+    [[ "$(stat -c %a "$scratch/existing-stplr")" == 755 ]]
+    [[ -z "$(find "$scratch" -maxdepth 1 -name 'existing-stplr.tmp.*' -print -quit)" ]]
+done
+
+echo 'OK: verified stable archives, ARM binaries and atomic replacement after smoke'

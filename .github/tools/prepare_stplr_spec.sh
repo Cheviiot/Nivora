@@ -21,10 +21,7 @@ done
 
 # shellcheck source=.github/tools/lib/pinned_git_checkout.sh
 source "${script_dir}/lib/pinned_git_checkout.sh"
+# shellcheck source=.github/tools/lib/go_build.sh
+source "${script_dir}/lib/go_build.sh"
 pinned_git_checkout "$repository" "$commit" "$checkout"
-install -d "$(dirname "$target")"
-GOBIN="$(dirname "$target")" go install -C "$checkout" ./cmd/stplr-spec
-[[ -x "$target" ]] || {
-    echo "prepare_stplr_spec: go install did not produce ${target}" >&2
-    exit 1
-}
+nivora_build_go_binary "$checkout" "$target" ./cmd/stplr-spec --help

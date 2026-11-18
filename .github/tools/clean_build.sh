@@ -79,18 +79,17 @@ cleanup() {
 }
 trap cleanup EXIT
 
-if [[ "$engine" == docker ]]; then
-    docker_config="$(mktemp -d)"
-    printf '{}\n' >"${docker_config}/config.json"
-    export DOCKER_CONFIG="$docker_config"
-fi
-
 for command in curl python3 sha256sum tar; do
     command -v "$command" >/dev/null 2>&1 || {
         echo "clean-build requires ${command}" >&2
         exit 2
     }
 done
+if [[ "$engine" == docker ]]; then
+    docker_config="$(mktemp -d)"
+    nivora_prepare_docker_config "$docker_config"
+    export DOCKER_CONFIG="$docker_config"
+fi
 "${script_dir}/prepare_stplr.sh" "${builder_dir}/stplr"
 "$engine" volume create "$cache_volume" >/dev/null
 nivora_prepare_alt_builder "$engine" "$branch" "$image" "$builder_dir" "$builder_image"

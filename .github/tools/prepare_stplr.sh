@@ -8,6 +8,15 @@ target="${1:?usage: prepare_stplr.sh TARGET}"
 channel="${NIVORA_STPLR_CHANNEL:-stable}"
 # shellcheck source=.github/tools/lib/pinned_git_checkout.sh
 source "${script_dir}/lib/pinned_git_checkout.sh"
+# shellcheck source=.github/tools/lib/go_build.sh
+source "${script_dir}/lib/go_build.sh"
+
+# Resolve against the caller before preparing any checkout or candidate.
+[[ "$target" == /* ]] || target="${PWD}/${target}"
+[[ ! -d "$target" ]] || {
+    echo "stplr target is a directory: ${target}" >&2
+    exit 2
+}
 
 read_matrix() {
     python3 - "$matrix" "$1" <<'PY'
@@ -40,8 +49,10 @@ stable)
     archive="${cache_dir}/stplr-${version}-linux-${architecture}.tar.gz"
     install -d -m0755 "$cache_dir"
     download=''
+    candidate=''
     cleanup_archive() {
         [[ -z "$download" ]] || rm -f -- "$download"
+        [[ -z "$candidate" ]] || rm -f -- "$candidate"
     }
     trap cleanup_archive EXIT
     actual=''
@@ -63,7 +74,13 @@ stable)
         mv -f -- "$download" "$archive"
         download=''
     fi
-    tar -xOf "$archive" stplr >"$target"
+    candidate="$(mktemp "${target}.tmp.XXXXXX")"
+    tar -xOf "$archive" stplr >"$candidate"
+    chmod 0755 "$candidate"
+    version_output="$(timeout --signal=TERM --kill-after=5s 30s "$candidate" version)"
+    mv -fT -- "$candidate" "$target"
+    candidate=''
+    printf '%s\n' "$version_output"
     ;;
 main)
     for command in git go; do
@@ -81,16 +98,11 @@ main)
     }
     trap cleanup_checkout EXIT
     pinned_git_checkout "$repository" "$commit" "$checkout"
-    (
-        cd "$checkout"
-        go build -trimpath -o "$target" ./cmd/stplr
-    )
+    nivora_build_go_binary "$checkout" "$target" ./cmd/stplr version
+    printf 'Prepared Stapler main at %s\n' "$commit"
     ;;
 *)
     echo "Unknown NIVORA_STPLR_CHANNEL: ${channel}" >&2
     exit 2
     ;;
 esac
-
-chmod 0755 "$target"
-"$target" version

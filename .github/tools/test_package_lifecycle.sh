@@ -85,7 +85,7 @@ esac
 
 engine="$(nivora_alt_container_engine)" || exit 2
 
-for command in curl find git rpm rpmbuild sha256sum sqlite3 stplr-spec tar; do
+for command in curl find git python3 rpm rpmbuild sha256sum sqlite3 stplr-spec tar; do
     command -v "$command" >/dev/null 2>&1 || {
         echo "Для lifecycle-теста требуется команда ${command}" >&2
         exit 2
@@ -98,6 +98,7 @@ done
 }
 
 work_dir="$(mktemp -d)"
+docker_config=''
 source_cache="${NIVORA_SOURCE_CACHE:-${XDG_CACHE_HOME:-${HOME}/.cache}/stplr/dl}"
 
 cleanup() {
@@ -105,8 +106,18 @@ cleanup() {
     "$engine" image rm "$rpm_image" >/dev/null 2>&1 || true
     find "$work_dir" -mindepth 1 -delete
     rmdir "$work_dir"
+    if [[ -n "$docker_config" ]]; then
+        find "$docker_config" -mindepth 1 -delete
+        rmdir "$docker_config"
+    fi
 }
 trap cleanup EXIT
+
+if [[ "$engine" == docker ]]; then
+    docker_config="$(mktemp -d)"
+    nivora_prepare_docker_config "$docker_config"
+    export DOCKER_CONFIG="$docker_config"
+fi
 
 install -d "${work_dir}/builder" "${work_dir}/fixtures/previous-rpm"
 

@@ -34,6 +34,45 @@ nivora_alt_container_engine() {
     printf '%s\n' "$selected"
 }
 
+nivora_prepare_docker_config() {
+    local destination="$1" original="${DOCKER_CONFIG:-${HOME}/.docker}"
+    # Keep connection settings while excluding registry credentials and user
+    # build configuration. The caller owns a private directory outside the
+    # uploaded build context and removes it after the last engine command.
+    python3 - "$original" "$destination" <<'PY'
+import json
+import shutil
+import sys
+from pathlib import Path
+
+source, target = map(Path, sys.argv[1:])
+try:
+    config_file = source / "config.json"
+    config = json.loads(config_file.read_text()) if config_file.exists() else {}
+    if not isinstance(config, dict):
+        raise ValueError("Docker config must be an object")
+    # An anonymous entry also prevents Docker from autodetecting a personal
+    # pass/secretservice credential store when auths is otherwise empty.
+    isolated = {"auths": {"registry.altlinux.org": {}}}
+    for key in ("currentContext", "HttpHeaders"):
+        if key in config:
+            isolated[key] = config[key]
+    if (source / "contexts").exists():
+        shutil.copytree(source / "contexts", target / "contexts")
+    # The default context may use DOCKER_HOST + TLS with certificates read
+    # from DOCKER_CONFIG. Explicit DOCKER_CERT_PATH remains inherited.
+    for name in ("ca.pem", "cert.pem", "key.pem"):
+        if (source / name).exists():
+            shutil.copyfile(source / name, target / name)
+            (target / name).chmod(0o600)
+    (target / "config.json").write_text(json.dumps(isolated) + "\n")
+    (target / "config.json").chmod(0o600)
+except (OSError, ValueError):
+    print("ALT builder: cannot isolate Docker connection configuration", file=sys.stderr)
+    raise SystemExit(1)
+PY
+}
+
 nivora_prepare_alt_builder() {
     local engine="$1" branch="$2" base_image="$3" context_dir="$4" image_tag="$5"
     local helper_dir cache_key cache_tag='' pulled=0 attempt

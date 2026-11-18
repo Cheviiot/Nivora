@@ -22,7 +22,8 @@ git init -q "$scratch/seed"
 git -C "$scratch/seed" checkout -qb main
 git -C "$scratch/seed" remote add origin "$scratch/remote.git"
 printf 'pinned\n' >"$scratch/seed/source.txt"
-git -C "$scratch/seed" add source.txt
+printf 'module example.invalid/pinned\n\ngo 1.25.0\n' >"$scratch/seed/go.mod"
+git -C "$scratch/seed" add source.txt go.mod
 git -C "$scratch/seed" commit -qm pinned
 pinned_sha="$(git -C "$scratch/seed" rev-parse HEAD)"
 git -C "$scratch/seed" push -q origin HEAD:main
@@ -117,29 +118,77 @@ mkdir -p "$scratch/mock-go-bin" "$scratch/spec-bin"
 cat >"$scratch/mock-go-bin/go" <<'GO'
 #!/bin/bash
 set -euo pipefail
-printf '%s\n' "$*" >"$NIVORA_GO_CALL_LOG"
-[[ "$1" == install && "$*" == *'./cmd/stplr-spec' ]]
-install -d "$GOBIN"
-cat >"$GOBIN/stplr-spec" <<'SPEC'
+printf '%s\n' "$*" >>"$NIVORA_GO_CALL_LOG"
+[[ "$1" == -C && "$(cat "$2/source.txt")" == pinned ]]
+[[ "$GOTOOLCHAIN" == local && "$GOWORK" == off ]]
+shift 2
+case "$1 $2" in
+'mod download') exit 0 ;;
+'mod verify') [[ "$GOPROXY" == off ]]; exit 0 ;;
+'build -mod=readonly') ;;
+*) exit 99 ;;
+esac
+[[ "$3" == -trimpath && "$4" == -o ]]
+case "$6" in ./cmd/stplr-spec | ./cmd/stplr) ;; *) exit 99 ;; esac
+cat >"$5" <<'SPEC'
 #!/bin/sh
 echo mock-stplr-spec
 SPEC
-chmod +x "$GOBIN/stplr-spec"
+chmod +x "$5"
 GO
 chmod +x "$scratch/mock-go-bin/go"
 export NIVORA_FETCH_MODE=normal
 export NIVORA_FETCH_COUNT_FILE="$scratch/spec-fetch-count"
 export NIVORA_FETCH_ARGS_LOG="$scratch/spec-fetch-args"
 export NIVORA_GO_CALL_LOG="$scratch/go-call"
-PATH="$scratch/mock-go-bin:$PATH" \
-    STPLR_UTILS_COMMIT="$pinned_sha" \
-    "$repo_root/.github/tools/prepare_stplr_spec.sh" \
-    "$scratch/spec-bin/stplr-spec" "$scratch/remote.git"
+(
+    cd "$scratch"
+    PATH="$scratch/mock-go-bin:$PATH" \
+        STPLR_UTILS_COMMIT="$pinned_sha" \
+        "$repo_root/.github/tools/prepare_stplr_spec.sh" \
+        'spec-bin/stplr-spec' "$scratch/remote.git"
+)
 [[ -x "$scratch/spec-bin/stplr-spec" ]]
 [[ "$("$scratch/spec-bin/stplr-spec")" == mock-stplr-spec ]]
-grep -Fq 'install -C ' "$NIVORA_GO_CALL_LOG"
+grep -Fq ' mod download' "$NIVORA_GO_CALL_LOG"
+grep -Fq ' mod verify' "$NIVORA_GO_CALL_LOG"
+grep -Fq ' build -mod=readonly -trimpath -o ' "$NIVORA_GO_CALL_LOG"
 grep -Fq './cmd/stplr-spec' "$NIVORA_GO_CALL_LOG"
 [[ "$(<"$NIVORA_FETCH_COUNT_FILE")" == 1 ]]
+
+# The requested basename is authoritative; go install used to write the fixed
+# stplr-spec name and could then accept an unrelated, pre-existing target.
+default_digest="$(sha256sum "$scratch/spec-bin/stplr-spec")"
+printf 'old unrelated target\n' >"$scratch/spec-bin/renamed-spec"
+chmod +x "$scratch/spec-bin/renamed-spec"
+PATH="$scratch/mock-go-bin:$PATH" STPLR_UTILS_COMMIT="$pinned_sha" \
+    "$repo_root/.github/tools/prepare_stplr_spec.sh" \
+    "$scratch/spec-bin/renamed-spec" "$scratch/remote.git"
+[[ "$("$scratch/spec-bin/renamed-spec")" == mock-stplr-spec ]]
+[[ "$(sha256sum "$scratch/spec-bin/stplr-spec")" == "$default_digest" ]]
+[[ "$(<"$NIVORA_FETCH_COUNT_FILE")" == 2 ]]
+
+# Main Stapler uses the same pinned checkout and honours a relative target
+# instead of building into the disposable checkout then looking in the caller.
+fixture_root="$scratch/repo"
+mkdir -p "$fixture_root/.github/tools/lib"
+cp "$repo_root/.github/tools/prepare_stplr.sh" "$fixture_root/.github/tools/"
+cp "$repo_root/.github/tools/lib/pinned_git_checkout.sh" \
+    "$repo_root/.github/tools/lib/go_build.sh" "$fixture_root/.github/tools/lib/"
+cat >"$fixture_root/.github/support-matrix.toml" <<MATRIX
+[stapler]
+main_repository = "$scratch/remote.git"
+main_commit = "$pinned_sha"
+MATRIX
+(
+    cd "$scratch"
+    PATH="$scratch/mock-go-bin:$PATH" NIVORA_STPLR_CHANNEL=main \
+        "$fixture_root/.github/tools/prepare_stplr.sh" 'main-bin/stplr'
+) >"$scratch/main.out"
+[[ -x "$scratch/main-bin/stplr" ]]
+grep -Fxq "Prepared Stapler main at ${pinned_sha}" "$scratch/main.out"
+grep -Fq './cmd/stplr' "$NIVORA_GO_CALL_LOG"
+[[ "$(<"$NIVORA_FETCH_COUNT_FILE")" == 3 ]]
 
 action_file="$repo_root/.github/actions/setup-stplr-spec/action.yml"
 restore_line="$(grep -n 'id: stplr-spec-cache' "$action_file" | cut -d: -f1)"
@@ -158,5 +207,6 @@ grep -Fq 'runner.arch' "$action_file"
 grep -Fq "ubuntu-24.04-go1.27.4-utils-c6ddbb5e4e5637d97bb7b2587729178d715c6c52-\${{ hashFiles" "$action_file"
 grep -Fq "go-version: 1.27.4" "$action_file"
 grep -Fq "echo 'GOTOOLCHAIN=local' >>\"\$GITHUB_ENV\"" "$action_file"
+[[ "$(grep -c "hashFiles.*'.github/tools/lib/go_build.sh'" "$action_file")" == 2 ]]
 
 echo 'OK: pinned source checkout retries transient failure, rejects bad SHA, and spec setup uses mocked Go'

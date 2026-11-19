@@ -141,6 +141,17 @@ jobs:
           NIVORA_LIFECYCLE_PACKAGES: ${{ matrix.package }}
         run: .github/tools/test_package_lifecycle.sh
 
+      # Keep the very same RPM consumed by all lifecycle scenarios, not a rebuild.
+      - name: Сохранить проверенный RPM плагина GNOME Software
+        if: ${{ success() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && matrix.package == 'gnome-software-plugin-stplr' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: gnome-software-plugin-stplr-p11-x86_64-${{ github.sha }}-${{ github.run_attempt }}
+          path: gnome-software-plugin-stplr/*.rpm
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
   main-canary:
     name: advisory main ALT p11 · ${{ matrix.package }}
     needs: plan

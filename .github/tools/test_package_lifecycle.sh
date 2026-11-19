@@ -451,6 +451,7 @@ import glob
 import os
 import re
 import subprocess
+import xml.etree.ElementTree as ET
 
 plugins = glob.glob('/usr/lib64/gnome-software/plugins-*/libgs_plugin_stplr.so')
 assert len(plugins) == 1, f'duplicate/missing Stapler plugin: {plugins}'
@@ -482,6 +483,13 @@ for helper in ('install', 'remove', 'refresh', 'repo-disable', 'repo-enable'):
     helper_path = f'/usr/libexec/gnome-software-plugin-stplr/stplr-{helper}'
     helper_owner = subprocess.check_output(['rpm', '-qf', '--queryformat', '%{NAME}', helper_path], text=True)
     assert helper_owner == owner, f'{helper_path} belongs to another package'
+policy = '/usr/share/polkit-1/actions/dev.stplr.gnome-software-plugin-stplr.policy'
+policy_owner = subprocess.check_output(['rpm', '-qf', '--queryformat', '%{NAME}', policy], text=True)
+assert policy_owner == owner, f'{policy} belongs to another package'
+document = ET.parse(policy).getroot()
+actions = [action.get('id') for action in document.findall('action')]
+assert document.tag == 'policyconfig' and actions and all(actions), f'{policy} defines no usable actions'
+assert len(set(actions)) == len(actions), f'{policy} declares duplicate action IDs'
 print(f'OK: native GNOME Software plugin loaded: {path} ({owner})')
 PY
     if [[ "$scenario" == distro-upgrade ]]; then
@@ -545,7 +553,11 @@ if [[ "$package" == tailscale ]]; then
 fi
 ! rpm -q "$system_name"
 if [[ "$package" == gnome-software-plugin-stplr ]]; then
-    test ! -e "$command_path"
+    for path in \
+        /usr/libexec/gnome-software-plugin-stplr/stplr-{install,remove,refresh,repo-disable,repo-enable} \
+        /usr/share/polkit-1/actions/dev.stplr.gnome-software-plugin-stplr.policy; do
+        [[ ! -e "$path" && ! -L "$path" ]]
+    done
     ! find /usr/lib64/gnome-software -name libgs_plugin_stplr.so -print | grep -q .
 fi
 EOF

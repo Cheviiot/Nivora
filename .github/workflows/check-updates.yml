@@ -75,6 +75,7 @@ jobs:
           persist-credentials: false
 
       - name: Подготовить инструменты
+        timeout-minutes: 15
         uses: ./.github/actions/setup-stplr-spec
         with:
           system-packages: jq
@@ -169,6 +170,7 @@ jobs:
           persist-credentials: false
 
       - name: Подготовить инструменты
+        timeout-minutes: 15
         uses: ./.github/actions/setup-stplr-spec
         with:
           system-packages: jq rpm cpio libarchive-tools shellcheck sqlite3
@@ -248,6 +250,7 @@ jobs:
           persist-credentials: false
 
       - name: Подготовить инструменты
+        timeout-minutes: 15
         uses: ./.github/actions/setup-stplr-spec
         with:
           system-packages: jq rpm cpio libarchive-tools shellcheck sqlite3
@@ -297,6 +300,7 @@ jobs:
           persist-credentials: false
 
       - name: Подготовить инструменты публикации
+        timeout-minutes: 15
         uses: ./.github/actions/setup-stplr-spec
         with:
           system-packages: jq rpm libarchive-tools shellcheck

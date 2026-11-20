@@ -35,7 +35,7 @@
       <h3><a href="antigravity/README.md">Google Antigravity App</a></h3>
       <p>ИИ-агенты Google для ваших проектов. Ведите несколько задач и разговоров параллельно.</p>
       <!-- package-meta:antigravity -->
-      <p><sub>Версия <code>2.33.0</code> · <code>amd64</code> <code>arm64</code></sub></p>
+      <p><sub>Версия <code>2.34.0</code> · <code>amd64</code> <code>arm64</code></sub></p>
       <!-- /package-meta:antigravity -->
       <p><a href="antigravity/README.md#установка"><strong>Установить →</strong></a> &nbsp;·&nbsp; <a href="https://antigravity.google/download/">Сайт</a></p>
     </td>
@@ -57,7 +57,7 @@
       <h3><a href="claude/README.md">Claude</a></h3>
       <p>Чат Claude, Cowork и Claude Code в одном приложении Anthropic. Для текста, файлов и работы над кодом.</p>
       <!-- package-meta:claude -->
-      <p><sub>Версия <code>5.11492.5</code> · <code>amd64</code> <code>arm64</code></sub></p>
+      <p><sub>Версия <code>6.28899.2</code> · <code>amd64</code> <code>arm64</code></sub></p>
       <!-- /package-meta:claude -->
       <p><a href="claude/README.md#установка"><strong>Установить →</strong></a> &nbsp;·&nbsp; <a href="https://code.claude.com/docs/en/desktop-linux">Сайт</a></p>
     </td>

@@ -30,7 +30,7 @@ pkgdir="${temp_dir}/pkg"
 deb_tree="${temp_dir}/debian"
 app="${deb_tree}/usr/lib/chatgpt"
 mkdir -p "$srcdir" "$pkgdir" "${deb_tree}/etc/apparmor.d" "${deb_tree}/usr/share/applications" \
-    "${app}/node_modules/serialport-linux-x64-musl"
+    "${app}/node_modules/serialport-linux-x64-musl" "${app}/resources"
 for path in ChatGPT codex-launcher browser_crashpad_handler LICENSES.chromium.html \
     libqt5_shim.so libqt6_shim.so node_modules/addon.musl.node \
     node_modules/serialport-linux-x64-musl/addon.node node_modules/addon.glibc.node; do
@@ -38,7 +38,39 @@ for path in ChatGPT codex-launcher browser_crashpad_handler LICENSES.chromium.ht
 done
 printf 'profile chatgpt "/usr/lib/chatgpt/ChatGPT" { }\n' >"${deb_tree}/etc/apparmor.d/chatgpt"
 printf '[Desktop Entry]\nExec=/vendor/chatgpt\n' >"${deb_tree}/usr/share/applications/chatgpt.desktop"
-cp "${package_dir}/"{LICENSE,com.openai.chatgpt.png,com.openai.chatgpt.metainfo.xml} "$srcdir"
+cp "${package_dir}/"{LICENSE,com.openai.chatgpt.png,com.openai.chatgpt.metainfo.xml,patch-documents-dir.py} "$srcdir"
+python3 - "${app}/resources/app.asar" <<'PY'
+import hashlib
+import json
+import struct
+import sys
+from pathlib import Path
+
+prefix = b"prefix"
+resolver = (
+    b'let settings="settings-store",key="projectlessWorkspaceRoot";'
+    b'class Settings{getEffective(e){return this.get(e)??(0,i.crQ)(e).default}}'
+)
+suffix = b"suffix"
+entry = {
+    "offset": str(len(prefix)),
+    "size": len(resolver),
+    "integrity": {"algorithm": "SHA256", "blockSize": 128,
+                  "hash": hashlib.sha256(resolver).hexdigest(),
+                  "blocks": [hashlib.sha256(resolver).hexdigest()]},
+}
+header = json.dumps({"files": {
+    "prefix": {"offset": "0", "size": len(prefix)},
+    ".vite": {"files": {"build": {"files": {"early-bootstrap-1.js": entry}}}},
+    "suffix": {"offset": str(len(prefix) + len(resolver)), "size": len(suffix)},
+    "native.node": {"size": 1, "unpacked": True},
+}}).encode()
+padded_size = (len(header) + 3) & ~3
+Path(sys.argv[1]).write_bytes(
+    struct.pack("<IIII", 4, padded_size + 8, padded_size + 4, len(header))
+    + header.ljust(padded_size, b"\0") + prefix + resolver + suffix
+)
+PY
 tar -czf "${temp_dir}/data.tar.gz" -C "$deb_tree" .
 write_deb() {
     printf 'Package: chatgpt\nVersion: %s\nArchitecture: %s\n' "$1" "$2" >"${temp_dir}/control"
@@ -81,4 +113,34 @@ cmp "${deb_tree}/etc/apparmor.d/chatgpt" "${pkgdir}/etc/apparmor.d/chatgpt"
 cmp "${srcdir}/com.openai.chatgpt.metainfo.xml" "${pkgdir}/usr/share/metainfo/com.openai.chatgpt.metainfo.xml"
 cmp "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/chatgpt/LICENSE.nivora"
 
-echo 'OK: ChatGPT stages the glibc payload, desktop launcher and matching AppArmor profile'
+python3 - "${installed}/resources/app.asar" <<'PY'
+import hashlib
+import json
+import struct
+import sys
+from pathlib import Path
+
+archive = Path(sys.argv[1]).read_bytes()
+_, header_size, _, json_size = struct.unpack_from("<IIII", archive)
+files = json.loads(archive[16:16 + json_size])["files"]
+
+def content(entry):
+    start = 8 + header_size + int(entry["offset"])
+    return archive[start:start + entry["size"]]
+
+assert content(files["prefix"]) == b"prefix"
+assert content(files["suffix"]) == b"suffix"
+assert files["native.node"] == {"size": 1, "unpacked": True}
+entry = files[".vite"]["files"]["build"]["files"]["early-bootstrap-1.js"]
+patched = content(entry)
+assert b'this.get(e)??("linux"===process.platform&&"projectlessWorkspaceRoot"===e?' in patched
+assert b'require("electron").app.getPath("documents"),"Codex"):(0,i.crQ)(e).default' in patched
+integrity = entry["integrity"]
+block_size = integrity["blockSize"]
+assert integrity["hash"] == hashlib.sha256(patched).hexdigest()
+assert integrity["blocks"] == [
+    hashlib.sha256(patched[i:i + block_size]).hexdigest()
+    for i in range(0, len(patched), block_size)
+]
+PY
+echo 'OK: ChatGPT stages the glibc payload, XDG workspace default and matching AppArmor profile'

@@ -1,6 +1,6 @@
 name='chatgpt'
 version='26.1117.31558'
-release=1
+release=2
 source_fingerprint_amd64='85a42957acd5794dfac8b725d1feb3bd92591766c7d71e93ca85a334b5de1e4a'
 source_fingerprint_arm64='389c44423d4f533843c9174886280e5c07b2f68a76cb13bf987391d74c1dfebf'
 
@@ -34,7 +34,7 @@ auto_prov=0
 # Codex calls bubblewrap. Electron also uses the keyring, desktop, GPU and USB services.
 deps=('libnotify' 'libsecret' 'libXtst' 'libXScrnSaver' 'xdg-utils' 'gvfs' 'mesa-dri-drivers' 'libusb' 'xz' 'bubblewrap')
 opt_deps=('git' 'gnome-keyring')
-build_deps=('binutils')
+build_deps=('binutils' 'python3')
 
 # The updater tracks each /latest/ archive by its HTTP ETag fingerprint.
 sources=(
@@ -42,12 +42,14 @@ sources=(
 	'local:///com.openai.chatgpt.png'
 	'local:///LICENSE?nivora=chatgpt'
 	'local:///com.openai.chatgpt.metainfo.xml?nivora=chatgpt'
+	'local:///patch-documents-dir.py'
 )
 checksums=(
 	'sha256:6c07206314f78bc1be51144599e01d27808a51f78e5d78c3deb1c680f7043c03'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
 	'sha256:6544c190e00521350d272715fd8e5d359cf080f37be089c45c9a76e9c78e4d8b'
 	'sha256:5cb8f6d48aa4668285d2d2645ec34d6b2e54894937cbe8fee329ea36608a71a5'
+	'sha256:887433d725212872d2ac643b8276b90c4da3f9fe440eaa6c456fe78ec5c95a6e'
 )
 
 sources_arm64=(
@@ -55,12 +57,14 @@ sources_arm64=(
 	'local:///com.openai.chatgpt.png'
 	'local:///LICENSE?nivora=chatgpt'
 	'local:///com.openai.chatgpt.metainfo.xml?nivora=chatgpt'
+	'local:///patch-documents-dir.py'
 )
 checksums_arm64=(
 	'sha256:81670501c6b7d784ef2b9a62b32da031e81a0eac0f50ebd933d0a9956d7bec77'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
 	'sha256:6544c190e00521350d272715fd8e5d359cf080f37be089c45c9a76e9c78e4d8b'
 	'sha256:5cb8f6d48aa4668285d2d2645ec34d6b2e54894937cbe8fee329ea36608a71a5'
+	'sha256:887433d725212872d2ac643b8276b90c4da3f9fe440eaa6c456fe78ec5c95a6e'
 )
 
 scripts=(
@@ -88,6 +92,7 @@ package() {
 	app_dir="${pkgdir}/usr/lib/chatgpt"
 	install -dm755 "${pkgdir}/usr/lib" "${pkgdir}/usr/bin"
 	mv -T usr/lib/chatgpt "${app_dir}" || return 1
+	python3 "${srcdir}/patch-documents-dir.py" "${app_dir}/resources/app.asar" || return 1
 	chmod 755 \
 		"${app_dir}/ChatGPT" \
 		"${app_dir}/codex-launcher" \

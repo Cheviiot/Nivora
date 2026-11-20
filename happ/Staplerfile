@@ -1,6 +1,6 @@
 name='happ'
-version='4.7.2'
-release=6
+version='4.8.3'
+release=1
 
 summary='Graphical proxy client based on Xray'
 summary_ru='Графический прокси-клиент на основе Xray'
@@ -46,7 +46,7 @@ sources=(
 	'local:///render-desktop-icon.py'
 )
 checksums=(
-	'sha256:85140f2ca07df0ba25d02d482a48f6523750931c47fc24ba3be6dc9702b929f4'
+	'sha256:7c6a4f65c81d1febbb00ac036e79fb9d51a1745937f6da6d4d5d85e9e62de9ed'
 	'sha256:5b0106dda286b039d6bdce45208f44ea3eb7a2deb4e00455190ce7a07177dde0'
 	'sha256:fa4d741a4e2df82b0a19291e2c7bad4a8753a1e59237b2bfe5fef7de8c22efd2'
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'
@@ -67,7 +67,7 @@ sources_arm64=(
 	'local:///render-desktop-icon.py'
 )
 checksums_arm64=(
-	'sha256:4068cc335a22bc7fbbd9a9f4487a9724d14c207af83b9d64a7c666bc45e0f49c'
+	'sha256:bbcc4279b172b50d01db4ef29f20871ae4ffe55dc6a921c511c5070326e30395'
 	'sha256:5b0106dda286b039d6bdce45208f44ea3eb7a2deb4e00455190ce7a07177dde0'
 	'sha256:fa4d741a4e2df82b0a19291e2c7bad4a8753a1e59237b2bfe5fef7de8c22efd2'
 	'sha256:af47a069497a8063b9028549dc6db111776589818c6165c7a46cb8b25a822ead'

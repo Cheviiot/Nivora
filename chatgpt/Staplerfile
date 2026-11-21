@@ -1,8 +1,8 @@
 name='chatgpt'
-version='26.1117.31558'
-release=2
-source_fingerprint_amd64='85a42957acd5794dfac8b725d1feb3bd92591766c7d71e93ca85a334b5de1e4a'
-source_fingerprint_arm64='389c44423d4f533843c9174886280e5c07b2f68a76cb13bf987391d74c1dfebf'
+version='26.1117.41037'
+release=1
+source_fingerprint_amd64='07dd115b1d740c88e3cc279f24e29d233e898856d5f6d0dc058ce6fe30194739'
+source_fingerprint_arm64='e2eeff9e91bbb5055620d24f45520fbc20d0475682b956168cfd157bdad24d49'
 
 summary='ChatGPT desktop app with integrated Codex'
 summary_ru='Настольное приложение ChatGPT со встроенным Codex'
@@ -45,7 +45,7 @@ sources=(
 	'local:///patch-documents-dir.py'
 )
 checksums=(
-	'sha256:6c07206314f78bc1be51144599e01d27808a51f78e5d78c3deb1c680f7043c03'
+	'sha256:830e251b6ca4ad45fe6904127a790e8f00f7c26ed4c8039473f7323c7c4e2692'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
 	'sha256:6544c190e00521350d272715fd8e5d359cf080f37be089c45c9a76e9c78e4d8b'
 	'sha256:5cb8f6d48aa4668285d2d2645ec34d6b2e54894937cbe8fee329ea36608a71a5'
@@ -60,7 +60,7 @@ sources_arm64=(
 	'local:///patch-documents-dir.py'
 )
 checksums_arm64=(
-	'sha256:81670501c6b7d784ef2b9a62b32da031e81a0eac0f50ebd933d0a9956d7bec77'
+	'sha256:714146e9c667b26a1bd4e57633c544334a9ed47c399989bfd98cf764140bdc53'
 	'sha256:cfe031774dd6aabdceca35338f329bc4844592767d043b7b4a56d8fb097dffd0'
 	'sha256:6544c190e00521350d272715fd8e5d359cf080f37be089c45c9a76e9c78e4d8b'
 	'sha256:5cb8f6d48aa4668285d2d2645ec34d6b2e54894937cbe8fee329ea36608a71a5'

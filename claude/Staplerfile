@@ -1,5 +1,5 @@
 name='claude'
-version='6.28899.2'
+version='6.28899.6'
 release=1
 
 summary='Claude desktop app with Chat, Cowork, and Claude Code'
@@ -42,7 +42,7 @@ sources=(
 	'local:///com.anthropic.Claude.metainfo.xml?nivora=claude'
 )
 checksums=(
-	'sha256:b7cbcc47a8c37cfe409eb146885b0196ffcd9b1f29be1642eb78a894d89ef6b1'
+	'sha256:7e381601d86570149643d52e9b89c26575ab12fa788aa41ffdd4cca5b0638cf8'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
 	'sha256:cbdb8c1be73ce581ffa84df5608d1ff80a56be917bb7490b8774b325c40b13cd'
 	'sha256:86cafacaf7f5df2b5efa46b18aa43e62581ee315b162f7a526703e0203645980'
@@ -55,7 +55,7 @@ sources_arm64=(
 	'local:///com.anthropic.Claude.metainfo.xml?nivora=claude'
 )
 checksums_arm64=(
-	'sha256:7ec2a354ecb8bafae3e3ccafe620144232b7429b216ab59a05a0d6cc340f1455'
+	'sha256:239c20d218456cacc656d48382fd59116325ac679aa4e476377af1456ac85715'
 	'sha256:be51081c0e0b2eec3489c25da38194dccf68fe7445928b32c30e1b8051eb557b'
 	'sha256:cbdb8c1be73ce581ffa84df5608d1ff80a56be917bb7490b8774b325c40b13cd'
 	'sha256:86cafacaf7f5df2b5efa46b18aa43e62581ee315b162f7a526703e0203645980'

@@ -1,6 +1,6 @@
 name='opencode'
-version='2.3.2'
-release=4
+version='2.4.0'
+release=1
 
 summary='Open source desktop AI agent for software development'
 summary_ru='Открытый настольный ИИ-агент для разработки'
@@ -40,7 +40,7 @@ sources=(
 	'local:///ai.opencode.desktop.metainfo.xml?nivora=opencode'
 )
 checksums=(
-	'sha256:ed7000e2e1fd9b98f4367118e6d1eebef3baa9a4b02d6c6090f397dfaa787b17'
+	'sha256:02dd04fde230e05e05f799b00ff8de1f832d23b1be1fc81933e35194be555d4b'
 	'sha256:625f0f619133f89bbbb2abe37369613dfa1885eba1e50d02170deb62bb42cb6b'
 	'sha256:9eb56d05980830707c8b8222b18eb50c4550d67c5a37effb27936795fb724938'
 	'sha256:9a1bf1901fdaf853430d3015b33dc268f58c7303ddbae2e5aa67e8daedc7e16a'
@@ -53,7 +53,7 @@ sources_arm64=(
 	'local:///ai.opencode.desktop.metainfo.xml?nivora=opencode'
 )
 checksums_arm64=(
-	'sha256:d8db8aba49772c4db8788fa3020f71958450c85cf6a80943ab32f8ee675d81d3'
+	'sha256:9b56a809a643a87da4ce8677a807f0fdf7ebf65af5f07d33778b0c7e1258a117'
 	'sha256:625f0f619133f89bbbb2abe37369613dfa1885eba1e50d02170deb62bb42cb6b'
 	'sha256:9eb56d05980830707c8b8222b18eb50c4550d67c5a37effb27936795fb724938'
 	'sha256:9a1bf1901fdaf853430d3015b33dc268f58c7303ddbae2e5aa67e8daedc7e16a'

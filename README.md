@@ -84,7 +84,7 @@
       <h3><a href="happ/README.md">Happ</a></h3>
       <p>Прокси-клиент на основе Xray. Добавьте подписку или файл настроек для доступа к своим серверам.</p>
       <!-- package-meta:happ -->
-      <p><sub>Версия <code>4.8.6</code> · <code>amd64</code> <code>arm64</code></sub></p>
+      <p><sub>Версия <code>4.8.7</code> · <code>amd64</code> <code>arm64</code></sub></p>
       <!-- /package-meta:happ -->
       <p><a href="happ/README.md#установка"><strong>Установить →</strong></a> &nbsp;·&nbsp; <a href="https://happ.info/">Сайт</a></p>
     </td>

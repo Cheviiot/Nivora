@@ -1,7 +1,7 @@
 name='antigravity'
-version='2.35.1'
+version='2.35.2'
 release=1
-upstream_hub='2.35.1-4615540875067392'
+upstream_hub='2.35.2-4585983447007232'
 
 summary='Manage AI agents and projects with Google Antigravity'
 summary_ru='Работа с ИИ-агентами и проектами Google Antigravity'
@@ -48,7 +48,7 @@ sources=(
 	'local:///com.google.Antigravity.metainfo.xml?nivora=antigravity'
 )
 checksums=(
-	'sha256:d921039a86fbfa0d06968c973eadffa83572b434a351a771b8ad9f241a493d7e'
+	'sha256:2d33db282b1e9b3c7582c140dab9e86848f1b37a05bfa4a1dff7f44de1bf304f'
 	'sha256:957ab13288c26cc4bca3de59e1b6402a2b5c00c776245e3b1a3d3ad25ed32885'
 	'sha256:473b6dc66930847fa137b44bdf675dfaca324467319acaac45b320892d79a64a'
 	'sha256:fc5eb0c847c8eaf3fed166c58e6ebfb6d20fae0060dc7b22c4ebedcfd8f02aa0'
@@ -67,7 +67,7 @@ sources_arm64=(
 	'local:///com.google.Antigravity.metainfo.xml?nivora=antigravity'
 )
 checksums_arm64=(
-	'sha256:c36a98e6dfe06ed9589df95cbe26a00264131021ab779c7a0f305c808cba8973'
+	'sha256:8debe0be11a9a89ab44a10233e3fdefb8e8ad25b5cefeb58f2457d18d0ab9070'
 	'sha256:957ab13288c26cc4bca3de59e1b6402a2b5c00c776245e3b1a3d3ad25ed32885'
 	'sha256:473b6dc66930847fa137b44bdf675dfaca324467319acaac45b320892d79a64a'
 	'sha256:fc5eb0c847c8eaf3fed166c58e6ebfb6d20fae0060dc7b22c4ebedcfd8f02aa0'

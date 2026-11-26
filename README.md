@@ -155,7 +155,7 @@
       <h3><a href="yandex-music/README.md">Яндекс Музыка</a></h3>
       <p>Музыка, «Моя волна» и подборки на ваш вкус в приложении Яндекса.</p>
       <!-- package-meta:yandex-music -->
-      <p><sub>Версия <code>5.128.0</code> · <code>amd64</code></sub></p>
+      <p><sub>Версия <code>5.129.0</code> · <code>amd64</code></sub></p>
       <!-- /package-meta:yandex-music -->
       <p><a href="yandex-music/README.md#установка"><strong>Установить →</strong></a> &nbsp;·&nbsp; <a href="https://music.yandex.ru/download/">Сайт</a></p>
     </td>

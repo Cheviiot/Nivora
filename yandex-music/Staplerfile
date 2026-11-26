@@ -1,5 +1,5 @@
 name='yandex-music'
-version='5.128.0'
+version='5.129.0'
 release=1
 
 summary='Music with personalized recommendations'
@@ -41,7 +41,7 @@ sources=(
 	'local:///yandexmusic.metainfo.xml?nivora=yandex-music'
 )
 checksums=(
-	'sha256:36f35a8d3b30d2cc72f378a7800ab70abdf8af37150e9692009f8e97d93223e9'
+	'sha256:e48c837665d4c30056ac986f12033b2ad90aa837f0acb642b9da8e17c5955688'
 	'sha256:487360caa13863693763b1323906fbc835ffcf6bad90318191133e0fcab19883'
 	'sha256:b6f6329ada2bb1b4cfd8c3fa360d70407da7012c7236f558215754d955374316'
 )

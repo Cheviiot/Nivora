@@ -67,7 +67,7 @@
       <h3><a href="opencode/README.md">OpenCode</a></h3>
       <p>Открытый ИИ-агент для разработки. Выбирайте провайдера моделей и ведите несколько сессий над проектом.</p>
       <!-- package-meta:opencode -->
-      <p><sub>Версия <code>2.4.1</code> · <code>amd64</code> <code>arm64</code></sub></p>
+      <p><sub>Версия <code>2.4.2</code> · <code>amd64</code> <code>arm64</code></sub></p>
       <!-- /package-meta:opencode -->
       <p><a href="opencode/README.md#установка"><strong>Установить →</strong></a> &nbsp;·&nbsp; <a href="https://opencode.ai">Сайт</a></p>
     </td>

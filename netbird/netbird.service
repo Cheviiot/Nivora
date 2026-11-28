@@ -1,0 +1,19 @@
+[Unit]
+Description=NetBird Client
+Documentation=https://docs.netbird.io/
+Wants=network-online.target
+After=network-online.target NetworkManager.service
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/sysconfig/netbird
+ExecStart=/usr/bin/netbird service run
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=10s
+StateDirectory=netbird
+StateDirectoryMode=0700
+LogsDirectory=netbird
+
+[Install]
+WantedBy=multi-user.target

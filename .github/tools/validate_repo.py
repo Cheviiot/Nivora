@@ -23,6 +23,7 @@ EXPECTED_PACKAGES = (
     "claude",
     "gnome-software-plugin-stplr",
     "happ",
+    "netbird",
     "opencode",
     "parsec",
     "pineconemc",

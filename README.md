@@ -14,7 +14,7 @@
 </p>
 
 <!-- package-count -->
-<p align="center"><strong>12 приложений</strong> &nbsp;·&nbsp; 4 категории</p>
+<p align="center"><strong>13 приложений</strong> &nbsp;·&nbsp; 4 категории</p>
 
 ## Каталог
 
@@ -100,9 +100,19 @@
     </td>
   </tr>
   <tr>
-    <td colspan="2" valign="top">
+    <td width="50%" valign="top">
+      <!-- package-card:netbird -->
+      <p><a href="netbird/README.md"><img src=".github/assets/netbird.svg" width="64" height="64" alt="NetBird"></a></p>
+      <h3><a href="netbird/README.md">NetBird</a></h3>
+      <p>Частная сеть WireGuard для устройств и серверов. Клиент командной строки с системной службой.</p>
+      <!-- package-meta:netbird -->
+      <p><sub>Версия <code>0.84.0</code> · <code>amd64</code> <code>arm64</code></sub></p>
+      <!-- /package-meta:netbird -->
+      <p><a href="netbird/README.md#установка"><strong>Установить →</strong></a> &nbsp;·&nbsp; <a href="https://netbird.io">Сайт</a></p>
+    </td>
+    <td width="50%" valign="top">
       <!-- package-card:telegram -->
-      <p><a href="telegram/README.md"><img src="telegram/org.telegram.desktop.png" width="64" height="64" align="right" alt="Telegram Desktop"></a></p>
+      <p><a href="telegram/README.md"><img src="telegram/org.telegram.desktop.png" width="64" height="64" alt="Telegram Desktop"></a></p>
       <h3><a href="telegram/README.md">Telegram Desktop</a></h3>
       <p>Сообщения, группы, каналы и обмен файлами на компьютере. Переписка синхронизируется с другими устройствами.</p>
       <!-- package-meta:telegram -->

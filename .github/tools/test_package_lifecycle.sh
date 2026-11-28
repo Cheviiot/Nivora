@@ -27,6 +27,7 @@ readonly -a lifecycle_package_catalog=(
     'claude|/usr/bin/claude-desktop|/home/nivora-test/.config/Claude/nivora-lifecycle-state|/usr/share/applications/com.anthropic.Claude.desktop|/usr/share/icons/hicolor/128x128/apps/claude-desktop.png|/usr/lib/claude-desktop/chrome-sandbox'
     'gnome-software-plugin-stplr|/usr/libexec/gnome-software-plugin-stplr/stplr-install|/home/nivora-test/.cache/gnome-software/nivora-lifecycle-state|-|-|-'
     'happ|/usr/bin/happ|/home/nivora-test/.config/happ/nivora-lifecycle-state|/usr/share/applications/Happ.desktop|/usr/lib/systemd/system/happd.service|-'
+    'netbird|/usr/bin/netbird|/var/lib/netbird/nivora-lifecycle-state|/usr/lib/systemd/system/netbird.service|-|-'
     'opencode|/usr/bin/opencode-desktop|/home/nivora-test/.config/opencode/nivora-lifecycle-state|/usr/share/applications/ai.opencode.desktop.desktop|/usr/share/icons/hicolor/128x128/apps/ai.opencode.png|/opt/OpenCode/chrome-sandbox'
     'parsec|/usr/bin/parsecd|/home/nivora-test/.parsec/nivora-lifecycle-state|/usr/share/applications/parsecd.desktop|/usr/share/icons/hicolor/256x256/apps/parsecd.png|-'
     'pineconemc|/usr/bin/pineconemc|/home/nivora-test/.config/pineconemc/nivora-lifecycle-state|/usr/share/applications/io.github.elyprismlauncher.ElyPrismLauncher.desktop|/usr/share/icons/hicolor/scalable/apps/io.github.elyprismlauncher.ElyPrismLauncher.svg|-'
@@ -436,6 +437,9 @@ if [[ "$sandbox_path" != '-' ]]; then
 fi
 if [[ "$package" == opencode ]]; then
     runuser -u nivora-test -- /opt/OpenCode/resources/opencode-cli --version >/dev/null
+fi
+if [[ "$package" == netbird ]]; then
+    runuser -u nivora-test -- "$command_path" version >/dev/null
 fi
 if [[ "$package" == antigravity ]]; then
     test ! -e /usr/share/applications/com.google.Antigravity.desktop

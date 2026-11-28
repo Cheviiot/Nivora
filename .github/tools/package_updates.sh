@@ -9,6 +9,7 @@ readonly -a PACKAGES=(
     claude
     gnome-software-plugin-stplr
     happ
+    netbird
     opencode
     parsec
     pineconemc
@@ -477,6 +478,7 @@ latest_version() {
     claude) latest_claude_desktop ;;
     gnome-software-plugin-stplr) "${repo_root}/$1/.stapler/update-run" --latest ;;
     happ) github_latest_release Happ-proxy/happ-desktop ;;
+    netbird) github_latest_release netbirdio/netbird ;;
     opencode) github_latest_release anomalyco/opencode ;;
     parsec) latest_parsec ;;
     pineconemc) github_latest_release ElyPrismLauncher/Launcher ;;

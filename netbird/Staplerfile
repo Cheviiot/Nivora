@@ -1,0 +1,68 @@
+name='netbird'
+version='0.84.0'
+release=1
+
+summary='Peer-to-peer private networking with WireGuard'
+summary_ru='Частная сеть между устройствами через WireGuard'
+desc='NetBird connects peers over WireGuard and provides a command-line client and a system service.'
+desc_ru='Клиент NetBird объединяет устройства в сеть WireGuard. В пакет входят команда netbird и системная служба.'
+group='Networking/Other'
+homepage='https://netbird.io'
+maintainer='NetBird <dev@netbird.io>'
+license=('BSD-3-Clause')
+
+architectures=('amd64' 'arm64')
+compatible_with=('altlinux_p11')
+disable_network=1
+
+provides=()
+replaces=('netbird')
+conflicts=()
+backup=('/etc/sysconfig/netbird')
+
+auto_reqprov_method='dirty'
+auto_req=0
+auto_prov=0
+deps=('ca-certificates' 'iproute2' 'iptables' 'systemd')
+build_deps=('rpm' 'cpio')
+
+sources=(
+	"https://github.com/netbirdio/netbird/releases/download/v${version}/netbird_${version}_linux_amd64.rpm?~archive=false&~name=upstream.rpm"
+	'local:///netbird.service'
+)
+checksums=(
+	'sha256:93d19347838e49f9f6baa08add02186b1a21709295404d1589306a9b0f951d27'
+	'sha256:d1929d1c902ffd7b5774eb03b5e11243d910f28acacc601e7d1a045b18419ace'
+)
+sources_arm64=(
+	"https://github.com/netbirdio/netbird/releases/download/v${version}/netbird_${version}_linux_arm64.rpm?~archive=false&~name=upstream.rpm"
+	'local:///netbird.service'
+)
+checksums_arm64=(
+	'sha256:4d5b54f2c958d701c6e61be3ec795ab1b92c6d5c29d82c1b456985f2dbdb8958'
+	'sha256:d1929d1c902ffd7b5774eb03b5e11243d910f28acacc601e7d1a045b18419ace'
+)
+
+scripts=(
+	['postinstall']='postinstall.sh'
+	['preremove']='preremove.sh'
+	['postremove']='postremove.sh'
+)
+
+package() {
+	rpm2cpio upstream.rpm > upstream.cpio
+	mkdir -p payload
+	(cd payload && cpio -id --quiet --no-absolute-filenames < ../upstream.cpio)
+
+	install-binary payload/usr/bin/netbird
+	install-systemd netbird.service
+	install -Dm600 payload/etc/sysconfig/netbird "${pkgdir}/etc/sysconfig/netbird"
+	install-license payload/usr/share/licenses/netbird/LICENSE 'netbird/LICENSE'
+}
+
+files() {
+	files-find-binary
+	files-find-systemd
+	files-find-license
+	printf '%s\n' '/etc/sysconfig/netbird'
+}

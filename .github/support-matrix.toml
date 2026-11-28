@@ -14,13 +14,13 @@ main_repository = "https://altlinux.space/stapler/stplr.git"
 alt_p11 = "registry.altlinux.org/p11/base@sha256:8024e8175572804b1b6bcfde76d464d7e12bbd09583af067e8b1386ff6b123e9"
 
 [expectations]
-package_count = 13
+package_count = 14
 target_count = 1
-logical_runtime_cells = 21
-declared_supported_runtime_cells = 21
-verified_runtime_cells = 13
-blocking_ci_build_cells_full_common_change = 13
-advisory_main_build_cells_full_common_change = 13
+logical_runtime_cells = 23
+declared_supported_runtime_cells = 23
+verified_runtime_cells = 14
+blocking_ci_build_cells_full_common_change = 14
+advisory_main_build_cells_full_common_change = 14
 
 [tiers]
 verified = "build, package metadata, install, safe smoke and remove all run as required gates in a disposable ALT p11 container"
@@ -110,6 +110,15 @@ smoke_path = "/usr/bin/happ"
 support = [
   { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["external-network-tunnel"] },
   { targets = ["alt-p11"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "external-network-tunnel"] },
+]
+
+[[packages]]
+id = "netbird"
+architectures = ["amd64", "arm64"]
+smoke_path = "/usr/bin/netbird"
+support = [
+  { targets = ["alt-p11"], architectures = ["amd64"], tier = "verified", caveats = ["network-control-plane-out-of-scope"] },
+  { targets = ["alt-p11"], architectures = ["arm64"], tier = "partial", caveats = ["arm64-not-gated", "network-control-plane-out-of-scope"] },
 ]
 
 [[packages]]

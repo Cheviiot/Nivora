@@ -24,23 +24,26 @@ auto_reqprov_method='dirty'
 auto_req=0
 auto_prov=0
 deps=('ca-certificates' 'iproute2' 'iptables' 'systemd')
-build_deps=('rpm' 'cpio')
 
 sources=(
-	"https://github.com/netbirdio/netbird/releases/download/v${version}/netbird_${version}_linux_amd64.rpm?~archive=false&~name=upstream.rpm"
+	"https://github.com/netbirdio/netbird/releases/download/v${version}/netbird_${version}_linux_amd64.tar.gz?~archive=false&~name=netbird.tar.gz"
 	'local:///netbird.service'
+	'local:///netbird.sysconfig'
 )
 checksums=(
-	'sha256:93d19347838e49f9f6baa08add02186b1a21709295404d1589306a9b0f951d27'
+	'sha256:2d570cd4edba9231bb2d71133d6d8128c19073d189ec319631ca43429b9e614e'
 	'sha256:d1929d1c902ffd7b5774eb03b5e11243d910f28acacc601e7d1a045b18419ace'
+	'sha256:9a7da6daa92bddaf0fd2286cbbe2688291cb0bdc84fe3b9935fb2df84bdedea3'
 )
 sources_arm64=(
-	"https://github.com/netbirdio/netbird/releases/download/v${version}/netbird_${version}_linux_arm64.rpm?~archive=false&~name=upstream.rpm"
+	"https://github.com/netbirdio/netbird/releases/download/v${version}/netbird_${version}_linux_arm64.tar.gz?~archive=false&~name=netbird.tar.gz"
 	'local:///netbird.service'
+	'local:///netbird.sysconfig'
 )
 checksums_arm64=(
-	'sha256:4d5b54f2c958d701c6e61be3ec795ab1b92c6d5c29d82c1b456985f2dbdb8958'
+	'sha256:8099c6095ff6dfe4468ae23095c65850d5c4ae3c823492e73574984d3553816e'
 	'sha256:d1929d1c902ffd7b5774eb03b5e11243d910f28acacc601e7d1a045b18419ace'
+	'sha256:9a7da6daa92bddaf0fd2286cbbe2688291cb0bdc84fe3b9935fb2df84bdedea3'
 )
 
 scripts=(
@@ -50,14 +53,11 @@ scripts=(
 )
 
 package() {
-	rpm2cpio upstream.rpm > upstream.cpio
-	mkdir -p payload
-	(cd payload && cpio -id --quiet --no-absolute-filenames < ../upstream.cpio)
-
-	install-binary payload/usr/bin/netbird
+	tar --no-same-owner --no-same-permissions -xzf netbird.tar.gz netbird LICENSE
+	install-binary netbird
 	install-systemd netbird.service
-	install -Dm600 payload/etc/sysconfig/netbird "${pkgdir}/etc/sysconfig/netbird"
-	install-license payload/usr/share/licenses/netbird/LICENSE 'netbird/LICENSE'
+	install -Dm600 netbird.sysconfig "${pkgdir}/etc/sysconfig/netbird"
+	install-license LICENSE 'netbird/LICENSE'
 }
 
 files() {
